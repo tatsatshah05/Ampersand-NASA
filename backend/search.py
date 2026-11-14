@@ -172,11 +172,16 @@ IRSA_GATOR = "https://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query"
 VSX_API = ("https://vsx.aavso.org/index.php", "https://www.aavso.org/vsx/index.php")
 # SIMBAD object types that mean "known to vary" (stars that pulsate, erupt, rotate with spots or
 # eclipse; young stars; active galaxies).
+# SIMBAD object types that say the object IS a variable star (it is listed as one).
 SIMBAD_VARIABLE = frozenset((
     "V*", "Ir*", "Er*", "Ro*", "Pu*", "EB*", "El*", "BY*", "RS*", "CV*", "No*", "SN*", "LP*", "Mi*", "Ce*",
-    "cC*", "RR*", "WV*", "RV*", "dS*", "bC*", "gD*", "SX*", "a2*", "TT*", "Or*", "YSO", "Y*O", "Ae*", "HH",
-    "FU*", "RC*", "Be*", "sg*", "s*r", "s*y", "s*b", "C*", "S*", "AB*", "OH*", "pA*", "WR*", "Sy*", "XB*",
-    "LXB", "HXB", "Psr", "AGN", "QSO", "Bla", "BLL", "Sy1", "Sy2", "SyG", "LIN", "Fl*"))
+    "cC*", "RR*", "WV*", "RV*", "dS*", "bC*", "gD*", "SX*", "a2*", "Or*", "FU*", "RC*", "Fl*"))
+# Kinds of object that commonly vary, without the object being listed as variable:
+# young stars, evolved giants, X-ray binaries, active galaxies. A change in one of these
+# is reported as "not listed as variable", with its kind named.
+SIMBAD_VARYING_KIND = frozenset((
+    "TT*", "YSO", "Y*O", "Ae*", "HH", "Be*", "sg*", "s*r", "s*y", "s*b", "C*", "S*", "AB*", "OH*", "pA*", "WR*",
+    "XB*", "LXB", "HXB", "Psr", "AGN", "QSO", "Bla", "BLL", "Sy*", "Sy1", "Sy2", "SyG", "LIN"))
 
 OK, SATURATED, FLAGGED, NO_DATA, NO_SKY, OFF_IMAGE = range(6)
 _SOURCE_OUTLIER = (1 << pipeline.BIT["SOURCE"]) | (1 << pipeline.BIT["OUTLIER"])
@@ -200,6 +205,34 @@ def cached_only(exposures: list[dict], ra: float, dec: float, size_deg: float,
         if progress:
             progress(k, len(exposures))
     return out
+
+
+def fetch_to_own_cache(exposures: list[dict], ra: float, dec: float, size_deg: float,
+                       progress: Callable[[int, int], None] | None = None
+                       ) -> list[tuple[dict, Path | None, str | None]]:
+    """Cutouts for a search run that must not add to the shared cutout cache.
+
+    A cutout already in the shared cache is read from there (never changed). Any other
+    is read from the public S3 copy of the archive (`s3fetch`) into this module's own
+    folder, SEARCH_DIR/cutouts, named the same way. Same arguments and return value as
+    `spherex.fetch_cutouts`, so it can be passed to `search` as `fetch`.
+    """
+    from . import s3fetch  # here, so that the search still imports where s3fetch is absent
+
+    out: dict[int, tuple[dict, Path | None, str | None]] = {}
+    missing = []
+    for k, exp in enumerate(exposures):
+        shared = spherex._cutout_path(exp, ra, dec, size_deg)
+        if shared.exists():
+            out[k] = (exp, shared, None)
+        else:
+            missing.append(k)
+    if missing:
+        got = s3fetch.fetch_cutouts([exposures[k] for k in missing], ra, dec, size_deg, SEARCH_DIR / "cutouts",
+                                    progress=progress)
+        for k, res in zip(missing, got, strict=True):
+            out[k] = res
+    return [out[k] for k in range(len(exposures))]
 
 
 def _exposures(ra: float, dec: float, offline: bool) -> list[dict]:
@@ -1655,6 +1688,11 @@ def _check_catalogues(cand: dict[str, Any], mjd_of: dict[int, float]) -> dict[st
             continue
         entry = {k: obj[k] for k in ("catalogue", "name", "type", "variable", "gmag", "w1", "w2", "pmra", "pmdec",
                                      "parallax", "pm_err_arcsec_yr") if obj.get(k) is not None}
+        if obj["catalogue"] == "SIMBAD":
+            # Decided from the type here, not stored, so that answers kept from earlier runs mean the same.
+            entry["variable"] = obj.get("type") in SIMBAD_VARIABLE
+            if obj.get("type") in SIMBAD_VARYING_KIND:
+                entry["kind_that_varies"] = True
         entry["separation_arcsec"] = round(rms, 2)
         if len(track) >= 2:
             entry["separation_by_visit_arcsec"] = [round(x, 2) for x in seps]
@@ -1737,9 +1775,12 @@ def _changer_agreement(check: dict[str, Any]) -> None:
         near = at_place[0] if at_place else check["matches"][0]
         check["counterpart"] = near
         check["category"] = "changer_not_listed_as_variable"
+        kinds = [m for m in in_circle if m.get("kind_that_varies")]
+        kind_note = (" SIMBAD lists " + "; ".join(f"{m['name']} as {m['type']}" for m in kinds[:3])
+                     + ", a kind of object that commonly varies." if kinds else "")
         check["summary"] = (f"{_describe(near)} is {near['separation_arcsec']} arcsec away; nothing within the "
                             f"{APERTURE_ARCSEC:.0f} arcsec measuring circle is listed as variable in: "
-                            f"{', '.join(asked) or 'any source that answered'}." + tail)
+                            f"{', '.join(asked) or 'any source that answered'}." + kind_note + tail)
     else:
         check["counterpart"] = None
         check["category"] = "changer_no_counterpart"
@@ -2277,13 +2318,15 @@ def _evidence(cand: dict[str, Any]) -> dict[str, Any]:
 
 def search(ra: float, dec: float, fov: float = 0.1, detectors: tuple[int, ...] = (1, 2, 3, 4, 5, 6), *,
            offline: bool = False, catalogues: bool = True, figures_dir: Path | None = None,
-           detail: bool = False) -> dict[str, Any]:
+           fetch: Fetch | None = None, bin_days: float | None = None, detail: bool = False) -> dict[str, Any]:
     """Search a field for sources that move or change, blind: no target is given.
 
     ra, dec: field centre in degrees (ICRS); fov: side of the square field in degrees
     (0.02 to 0.5); detectors: which of SPHEREx's six to search. `offline` uses only
-    cutouts already in the cache (never downloads). Returns plain data, ready for
-    json.dumps:
+    cutouts already in the cache (never downloads); `fetch` replaces the way cutouts
+    are got (`spherex.fetch_cutouts` by default; `fetch_to_own_cache` keeps new ones
+    out of the shared cache). `bin_days` also splits each visit at gaps longer than
+    that for the brightness test. Returns plain data, ready for json.dumps:
 
     - objects: everything that passed, most trustworthy first. Each has `kind`
       ("mover" or "changer"), `verdict` ("clean" or "caution", with `flags`), place,
@@ -2299,7 +2342,7 @@ def search(ra: float, dec: float, fov: float = 0.1, detectors: tuple[int, ...] =
     With `detail` the full per-detector results (every source tested) are added.
     """
     result = search_detectors(ra, dec, fov, tuple(detectors), figures_dir=figures_dir, offline=offline,
-                              catalogues=catalogues)
+                              catalogues=catalogues, fetch=fetch, bin_days=bin_days)
     per = result["per_detector"]
     objects = []
     for obj in result["objects"]:
