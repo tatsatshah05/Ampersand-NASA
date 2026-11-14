@@ -3,7 +3,7 @@ main {
   margin: 0 auto;
   padding: 16px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 8px 24px;
   align-items: start;
 }
@@ -44,6 +44,11 @@ h1 {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.stage img.flags {
+  opacity: 0.75;
+  image-rendering: pixelated; /* keep each flagged pixel's edges sharp */
 }
 
 .compass {
@@ -92,6 +97,48 @@ h1 {
 
 .key.measured {
   color: var(--measured);
+}
+
+.key.nodata {
+  color: rgb(70 130 255);
+}
+
+.key.saturated {
+  color: rgb(255 60 60);
+}
+
+.hint {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.aladin {
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 8px 0;
+}
+
+.context-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+select {
+  font: inherit;
+  color: var(--text);
+  background: #232734;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  max-width: 100%;
 }
 
 .panel {
