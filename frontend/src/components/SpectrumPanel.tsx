@@ -5,6 +5,7 @@
 // is a tick on a rail above the chart, never a value.
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { fetchSpectrum, type SpectrumPoint, type SpectrumRequest, type SpectrumResponse } from '../spectrum'
+import { circleStarsSentence, measuredSentence } from '../detection'
 import './SpectrumPanel.css'
 
 // Visits 1 to 3 get a colour each (checked to stay distinguishable with colour-blindness
@@ -152,6 +153,9 @@ function layout(data: SpectrumResponse, hidden: ReadonlySet<number>): Chart {
 /** What was measured, in words, from what the backend says it followed. */
 function describeTarget(request: SpectrumRequest, data: SpectrumResponse) {
   const place = `RA ${request.ra.toFixed(5)}°, Dec ${request.dec.toFixed(5)}°`
+  // The backend says what it measured; the guesses below are for an older response without that.
+  const measured = measuredSentence(data.measured)
+  if (measured) return `${measured} (${place})`
   const t = data.target
   if (t?.origin === 'request') return `The target of this view (${place} in 2026), followed with its known motion.`
   if (t?.source_id) return `Gaia DR3 ${t.source_id}, the catalogued star at ${place}, followed with its Gaia motion.`
@@ -276,6 +280,9 @@ function Panel({ request, onClose }: Props) {
         </button>
       </div>
       <p className="spectrum-what">{data ? describeTarget(request, data) : place}</p>
+      {data && circleStarsSentence(data.stars_in_circle) && (
+        <p className="spectrum-what stars-in-circle">{circleStarsSentence(data.stars_in_circle)}</p>
+      )}
 
       {!confirmed && (
         <>

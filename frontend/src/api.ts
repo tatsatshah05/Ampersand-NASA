@@ -10,9 +10,32 @@ export interface SkyPixel {
 }
 
 export interface Centroid extends SkyPixel {
+  /** The position's uncertainty. When `saturated_core` is true it is 1 or 2 arcseconds, not the fit's own error. */
   err_arcsec: number | null
+  /** The fit's own error, which is far too small when the core is saturated. */
+  err_arcsec_fit?: number | null
+  /** The bright core is overexposed, so the fitted position is only about as good as err_arcsec says. */
+  saturated_core?: boolean
+  /** True when a Gaia star close by shares the light, so the marker is pulled toward it. Null when not looked for. */
+  blended?: boolean | null
+  /** Kept by the backend for compatibility; it is not how strongly the target is detected. */
   snr: number | null
   fwhm_arcsec: number
+}
+
+/** How strongly the target is detected in one frame. "unknown": too few empty places to measure the noise. */
+export type Detection = 'clear' | 'marginal' | 'none' | 'saturated' | 'unknown'
+
+/** A Gaia star close enough to the target to share its light in one frame. */
+export interface BlendStar {
+  source_id: string
+  gmag: number
+  distance_arcsec: number
+  east_arcsec?: number
+  north_arcsec?: number
+  flux_mjy?: number | null
+  /** Its part of the light fitted at the target and the blended stars together (0 to 1); null when too close to separate. */
+  light_share: number | null
 }
 
 /** normal: one picture per visit. difference: each visit minus a reference. sum: every visit in one picture. */
@@ -42,6 +65,12 @@ export interface Frame {
   rejected_readings: number
   /** Measured position of the source nearest the target; null when nothing could be measured. */
   centroid: Centroid | null
+  /** Times the background scatter that the target is detected at its predicted position; null when not measured. */
+  detection_sigma?: number | null
+  detection?: Detection | null
+  detection_measure?: Record<string, unknown> | null
+  /** Gaia stars close enough to share the target's light in this frame. */
+  blend?: BlendStar[]
   /** Where the target should be on this frame's mean date; null when no target is known. */
   predicted: SkyPixel | null
   /** Sum mode only: the visits that were added together. */
@@ -109,6 +138,12 @@ export interface FramesResponse {
   gaia_error?: string | null
   exposures_total_all_detectors?: number
   credit?: string
+  /** What `detection` means, in the backend's words. */
+  detection_note?: string
+  /** What the position uncertainty means when the core is saturated. */
+  error_note?: string
+  /** What `blend` means. */
+  blend_note?: string
   /** Null in a difference view that has no frames. */
   stretch?: Stretch | null
   /** Difference mode, and sum mode following the target: how to read the picture. */

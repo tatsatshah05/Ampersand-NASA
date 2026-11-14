@@ -2,6 +2,50 @@
 // SPHEREx exposure. Each exposure sees the object at a different wavelength, so the
 // measurements together are its spectrum. Field names are the backend's.
 
+/** What was actually measured, as /api/spectrum and /api/lightcurve describe it. */
+export interface Measured {
+  what?: string
+  source_id?: string | null
+  gmag?: number | null
+  offset_from_request_arcsec?: number | null
+  epoch?: number | null
+  nearest_gaia_not_followed?: {
+    source_id?: string
+    gmag?: number
+    distance_arcsec?: number
+    [key: string]: unknown
+  } | null
+  /** A plain-words sentence on what the measurement follows. */
+  description?: string
+}
+
+/** A Gaia star inside the measuring circle in one visit. */
+export interface CircleStar {
+  source_id: string
+  gmag: number
+  distance_arcsec: number
+}
+
+/** A Gaia star inside the measuring circle over the whole run. */
+export interface CircleStarOverall {
+  source_id: string
+  gmag: number
+  nearest_arcsec: number
+  farthest_arcsec: number
+  epochs: number[]
+}
+
+/** The Gaia stars (G < 17) inside the measuring circle. Nothing is subtracted: their light is in the numbers. */
+export interface StarsInCircle {
+  radius_arcsec?: number
+  g_limit?: number
+  /** False when Gaia did not answer, so nothing can be said about stars in the circle. */
+  known?: boolean
+  by_epoch?: { epoch: number; date: string; stars: CircleStar[] }[]
+  stars?: CircleStarOverall[]
+  note?: string
+}
+
 /** Motion of the object, as /api/resolve returns it (mas per year, mas, Julian year). */
 export interface Motion {
   pmra: number
@@ -44,6 +88,8 @@ export interface SpectrumResponse {
   dec: number
   /** The object that was followed: a Gaia star, the motion given in the request, or null. */
   target?: { origin?: string; source_id?: string | null } | null
+  measured?: Measured
+  stars_in_circle?: StarsInCircle
   points?: SpectrumPoint[]
   epochs?: SpectrumEpoch[]
   n_exposures?: number

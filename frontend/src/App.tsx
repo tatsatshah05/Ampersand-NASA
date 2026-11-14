@@ -9,6 +9,8 @@ import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
 import { BrightnessPanel } from './components/BrightnessPanel'
 import { ContextView } from './components/ContextView'
 import { FieldStars } from './components/FieldStars'
+import { DetectionReadout } from './components/DetectionReadout'
+import { isMarginal } from './detection'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
@@ -316,6 +318,7 @@ export default function App() {
                       start={start && path.length > 1 ? toPicture(start) : null}
                       path={path.map(toPicture)}
                       here={frame.centroid && toPicture(frame.centroid)}
+                      hereMarginal={isMarginal(frame)}
                       arrow={arrow}
                     />
                   )}
@@ -352,6 +355,7 @@ export default function App() {
                 {frameLabel(frame, load.data)}
               </p>
               <p className="motion-readout">{motionSentence(frame, load.data)}</p>
+              <DetectionReadout frame={frame} />
             </div>
 
             <PlayerControls
@@ -424,6 +428,7 @@ export default function App() {
                 start={path.length > 1}
                 path={path.length > 1}
                 arrow={arrow}
+                marginal={load.data.frames.some(isMarginal)}
                 note={load.data.mode === 'difference' ? "The positions were measured in each visit's own image, not in the difference." : undefined}
               />
             )}

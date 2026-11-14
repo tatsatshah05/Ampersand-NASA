@@ -126,3 +126,9 @@
 .spectrum-foot details {
   margin-top: 6px;
 }
+
+/* Stars whose light is inside the measuring circle: the reader should not miss it. */
+.stars-in-circle {
+  border-left: 3px solid currentColor;
+  padding-left: 0.6rem;
+}
