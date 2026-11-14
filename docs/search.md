@@ -374,7 +374,8 @@ variable.** Candidate, and the strongest change found today.
     light, it cannot create a brightening.
   - Spacecraft orientation: the September 2025 and September 2026 visits were taken the same way
     round, and the brightening holds between them in every detector.
-  - One or two bad exposures: survives leaving out the two most helpful ones, in every detector.
+  - One or two bad exposures: survives leaving out the two most helpful ones in detectors 4, 5 and 6
+    (6.4, 7.1 and 8.8 sigma).
   - Only one detector: no, three at 5 sigma or more and a fourth at 7 sigma (on a glow).
   - Catalogues: all five answered. None lists it as variable (AllWISE's variability flag is
     "nnnn", i.e. no information; Gaia DR3 has nothing within 6 arcsec; nothing in AAVSO VSX).
@@ -409,6 +410,13 @@ The other eight objects in Serpens South:
 - Four "not listed" changes are seen in one detector only (5.2 to 5.6 sigma, one flagged as
   appearing only with the spacecraft one way round) or are below 5 sigma in every detector. None
   is claimed.
+
+### Chamaeleon I (RA 167.4, Dec -77.0), six detectors
+
+One object passed: VY Cha, a listed variable (SIMBAD: Orion-type variable; AAVSO VSX; AllWISE
+flag), changing in five detectors (11.8 sigma combined). Three "movers" at 5.0 to 5.8 sigma were
+rejected as faint diffuse blobs (17 to 23 arcsec wide against 9 to 10); by eye they are blobs
+with nothing moving. Nothing else reached the bar in 962 sources.
 
 ## What the search cannot find, and why
 
