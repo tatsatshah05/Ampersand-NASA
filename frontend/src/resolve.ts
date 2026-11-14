@@ -162,6 +162,52 @@ export async function resolveName(
   throw new ResolveError('failed', `The name lookup failed (HTTP ${r.status}).`, r.status, detail)
 }
 
+// Look-alike characters are given by number here, because several cannot be told from
+// their plain twins on screen.
+const chars = (...points: number[]) => String.fromCodePoint(...points)
+// Curly and slanted marks typed or pasted for an apostrophe: ‘ ’ ‛ ʼ ′ ´ `
+const APOSTROPHE_LIKE = new RegExp(`[${chars(0x2018, 0x2019, 0x201b, 0x02bc, 0x2032, 0x00b4, 0x0060)}]`, 'g')
+// Every kind of hyphen and dash, and the true minus sign.
+const DASH_LIKE = new RegExp(`[\\p{Pd}${chars(0x2212)}]`, 'gu')
+// Straight or curly double quotes put around a name.
+const WRAPPING_QUOTES = new RegExp(`^["${chars(0x201c, 0x201d)}]+|["${chars(0x201c, 0x201d)}]+$`, 'g')
+
+const GREEK: Record<string, string> = {
+  α: 'alpha', β: 'beta', γ: 'gamma', δ: 'delta', ε: 'epsilon', ζ: 'zeta', η: 'eta', θ: 'theta',
+  ι: 'iota', κ: 'kappa', λ: 'lambda', μ: 'mu', ν: 'nu', ξ: 'xi', ο: 'omicron', π: 'pi',
+  ρ: 'rho', σ: 'sigma', ς: 'sigma', τ: 'tau', υ: 'upsilon', φ: 'phi', χ: 'chi', ψ: 'psi', ω: 'omega',
+}
+
+/**
+ * A typed or pasted name in the plain characters the name service knows names by.
+ * Phones turn ' into a curly apostrophe; web pages write "WISE 0855−0714" with a true
+ * minus sign, "ε Indi B" with a Greek letter and "Bételgeuse" with an accent. SIMBAD
+ * lists none of those spellings, and the backend answers 502 for any character outside
+ * plain ASCII, so they are put into plain form before the lookup.
+ */
+export function nameForLookup(typed: string): string {
+  return typed
+    .replace(APOSTROPHE_LIKE, "'") // before the accents go, or ´ would vanish with them
+    .replace(DASH_LIKE, '-')
+    .normalize('NFKD') // é becomes e plus an accent; full-width letters become plain
+    .replace(/\p{M}/gu, '') // drop the accents
+    .replace(/[α-ωΑ-Ω]/g, (letter, at: number, whole: string) => {
+      // "εIndi" needs a space after the word; "π3 Ori" must stay "pi3 Ori".
+      const before = at > 0 && /[\p{L}\p{N}]/u.test(whole[at - 1]) ? ' ' : ''
+      const after = /\p{L}/u.test(whole[at + 1] ?? '') ? ' ' : ''
+      return `${before}${GREEK[letter.toLowerCase()] ?? letter}${after}`
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(WRAPPING_QUOTES, '')
+    .trim()
+}
+
+/** Whether a name, once in plain form, still has a character the name service cannot take. */
+export function hasUnusableCharacters(name: string): boolean {
+  return /[^ -~]/.test(name) // anything outside printable ASCII
+}
+
 /**
  * SIMBAD's main name without its catalogue prefix, for showing to people:
  * "NAME Barnard's star" -> "Barnard's star", "V* RW Aur" -> "RW Aur", "* eps Ind B" -> "eps Ind B".

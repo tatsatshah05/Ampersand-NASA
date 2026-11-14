@@ -15,7 +15,14 @@ import {
   looksLikeCoords,
   parseCoords,
 } from '../coords'
-import { plainName, resolveName, ResolveError, type ResolvedName } from '../resolve'
+import {
+  hasUnusableCharacters,
+  nameForLookup,
+  plainName,
+  resolveName,
+  ResolveError,
+  type ResolvedName,
+} from '../resolve'
 import './SearchBar.css'
 
 /** What a search hands to the app: where to look and, when known, how the object there moves. */
@@ -203,9 +210,11 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
 
   function search(typed: string, preset?: Preset) {
     const query = typed.replace(/\s+/g, ' ').trim()
+    // As a name: curly apostrophes, long dashes, Greek letters and accents made plain.
+    const name = nameForLookup(query)
     // Enter pressed again while this very name is being looked up: keep waiting for the
     // answer that is on its way instead of asking the name service a second time.
-    if (pending.current?.name === query) return
+    if (pending.current?.name === name) return
     const mine = begin()
     if (!/[\p{L}\p{N}]/u.test(query)) {
       setStatus({ kind: 'error', text: 'Type a name or coordinates first.', fix: FIX.empty })
@@ -227,7 +236,7 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
       onSelect({ ra, dec }) // no motion: nothing is known about what is at a typed position
       return
     }
-    if (query.length > MAX_NAME_LENGTH) {
+    if (name.length > MAX_NAME_LENGTH) {
       setStatus({
         kind: 'error',
         text: `That name is too long to look up (${MAX_NAME_LENGTH} characters at most).`,
@@ -235,7 +244,15 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
       })
       return
     }
-    void lookUp(query, mine, preset ?? presetNamed(query))
+    if (hasUnusableCharacters(name)) {
+      setStatus({
+        kind: 'error',
+        text: 'Names are looked up in plain letters and digits, and this one has other characters.',
+        fix: FIX.either,
+      })
+      return
+    }
+    void lookUp(name, mine, preset ?? presetNamed(name))
   }
 
   const hintId = `${id}-hint`
