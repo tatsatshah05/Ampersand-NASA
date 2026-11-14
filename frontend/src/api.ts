@@ -30,11 +30,15 @@ export interface Frame {
   date_mean: string
   mjd_mean: number
   image: string
+  /** Normal and sum modes: an overlay PNG, blue where there is no data and red where saturated. */
+  flags_image?: string
   n_exposures: number
   /** Null when no exposure recorded a wavelength at the centre of the request. */
   wavelength_um: [number, number] | null
   flagged_fraction: number
   saturated_pixels: number
+  /** In how many of this frame's exposures the target's core is saturated for measuring brightness. */
+  photometry_saturated_exposures?: number
   rejected_readings: number
   /** Measured position of the source nearest the target; null when nothing could be measured. */
   centroid: Centroid | null
