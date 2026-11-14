@@ -66,6 +66,9 @@ export interface FramesQuery {
   dec: number
   fov: number
   detector: number
+  // Optional known motion of the object at (ra, dec), as /api/resolve returns it (mas/yr, mas).
+  // With it, the backend follows that object even when Gaia does not list it.
+  motion?: { pmra: number; pmdec: number; parallax?: number }
 }
 
 export async function fetchFrames(q: FramesQuery, signal?: AbortSignal): Promise<FramesResponse> {
@@ -76,6 +79,11 @@ export async function fetchFrames(q: FramesQuery, signal?: AbortSignal): Promise
     detector: String(q.detector),
     mode: 'normal',
   })
+  if (q.motion) {
+    params.set('pmra', String(q.motion.pmra))
+    params.set('pmdec', String(q.motion.pmdec))
+    if (q.motion.parallax !== undefined) params.set('parallax', String(q.motion.parallax))
+  }
   const r = await fetch(`/api/frames?${params}`, { signal })
   if (!r.ok) {
     let detail = `HTTP ${r.status}`

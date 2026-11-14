@@ -5,6 +5,7 @@ import { fetchFrames, type FramesQuery, type FramesResponse } from './api'
 import { ContextView } from './components/ContextView'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
+import { BrightnessPanel } from './components/BrightnessPanel'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { targetMotion, type SpectrumRequest } from './spectrum'
 import './App.css'
@@ -20,12 +21,21 @@ function queryFromUrl(): FramesQuery {
     const v = Number(raw)
     return Number.isFinite(v) ? v : fallback
   }
-  return {
+  const query: FramesQuery = {
     ra: num('ra', DEFAULTS.ra),
     dec: num('dec', DEFAULTS.dec),
     fov: num('fov', DEFAULTS.fov),
     detector: num('detector', DEFAULTS.detector),
   }
+  // Optional motion (?pmra=&pmdec=&parallax=, as /api/resolve gives it). Both pmra and pmdec
+  // are needed; the backend refuses one without the other.
+  const pmra = num('pmra', NaN)
+  const pmdec = num('pmdec', NaN)
+  if (Number.isFinite(pmra) && Number.isFinite(pmdec)) {
+    const parallax = num('parallax', NaN)
+    query.motion = Number.isFinite(parallax) ? { pmra, pmdec, parallax } : { pmra, pmdec }
+  }
+  return query
 }
 
 // The earlier single-file viewer (public/viewer.html) has features this app does not
@@ -48,6 +58,8 @@ export default function App() {
   // Issue #11: what the spectrum panel is showing, or null when it is closed.
   const [spectrum, setSpectrum] = useState<SpectrumRequest | null>(null)
   const [showFlags, setShowFlags] = useState(false)
+  // Issue #9: whose brightness over time is shown, or null when that panel is closed.
+  const [brightness, setBrightness] = useState<SpectrumRequest | null>(null)
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -151,6 +163,14 @@ export default function App() {
               >
                 Spectrum of the target
               </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setBrightness({ kind: 'target', ra: load.data.ra, dec: load.data.dec, motion: targetMotion(load.data.target) })
+                }
+              >
+                Brightness over time
+              </button>
               <label>
                 <input
                   type="checkbox"
@@ -191,6 +211,7 @@ export default function App() {
             <ContextView ra={query.ra} dec={query.dec} fov={query.fov} />
           </div>
           {spectrum && <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />}
+          {brightness && <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} />}
         </>
       )}
 
