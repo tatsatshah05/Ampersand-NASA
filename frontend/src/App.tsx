@@ -458,6 +458,8 @@ function Viewer() {
                     : '. It moves too little in a year to draw as an arrow.'}
                 </p>
               ))}
+            {/* Shown whether or not the overlay is on: it warns about shapes in the picture itself. */}
+            {starsData?.bright_note && <p className="hint bright-star">{starsData.bright_note}</p>}
             {showGaia && starsData && starsFrame >= 0 && <p className="readout">{fieldStarsSummary(starsData, load.data.pixel_arcsec)}</p>}
             {showGaia && starsData && starsFrame < 0 && (
               <p className="hint">The other Gaia stars are drawn on single visits only, so not on a sum of all visits.</p>

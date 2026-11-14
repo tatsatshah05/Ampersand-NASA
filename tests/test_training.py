@@ -37,7 +37,7 @@ def test_a_round_is_marked_as_a_simulation_everywhere(complete: None, barnard: S
     assert len(meta["frames"]) == 3
     for frame in meta["frames"]:
         image = picture(meta, frame)
-        corner = image[:training.STAMP_BOX[1], :training.STAMP_BOX[0], :3].reshape(-1, 3)
+        corner = image[-training.STAMP_BOX[1] - 1:, -training.STAMP_BOX[0] - 1:, :3].reshape(-1, 3)
         orange = (corner[:, 0] > 200) & (corner[:, 1] > 100) & (corner[:, 2] < 50)
         assert orange.sum() > 40, "the word SIMULATION should be drawn in the corner of every picture"
 

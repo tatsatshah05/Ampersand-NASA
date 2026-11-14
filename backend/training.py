@@ -25,12 +25,13 @@ from PIL import Image, ImageDraw
 
 from . import astrometry, pipeline, spherex
 
-VERSION = 1
+VERSION = 2
 
 NOTICE = ("Simulation: one made-up moving object has been added to these real SPHEREx images. "
           "It is not a real detection, and nothing here is a discovery.")
 STAMP = "SIMULATION"
-STAMP_BOX = (62, 13)     # pixels the stamp covers in the top-left corner of each picture
+STAMP_BOX = (62, 13)     # pixels the stamp covers in the bottom-right corner of each picture: the one
+                         # corner the page leaves free (compass, zoom buttons and scale bar take the others)
 
 # Height of the planted object's peak, in units of the frame's background scatter.
 LEVELS = {"easy": 12.0, "medium": 7.0, "hard": 4.5}
@@ -122,7 +123,7 @@ def place(motion: dict, grid: WCS, n: int, images: dict[int, np.ndarray], mjds: 
         trial = {**motion, "ra": float(ra), "dec": float(dec)}
         spots = {ep: _pixel(grid, *astrometry.position_at(trial, mjds[ep])) for ep in images}
         ok = all(lo <= x <= hi and lo <= y <= hi
-                 and not (x < STAMP_BOX[0] + 8 and (n - 1 - y) < STAMP_BOX[1] + 8)
+                 and not (x > n - STAMP_BOX[0] - 8 and y < STAMP_BOX[1] + 8)   # y counts from the bottom
                  and _clear(images[ep], x, y, limits[ep])
                  for ep, (x, y) in spots.items())
         if ok:
@@ -142,8 +143,9 @@ def stamp(path: Path) -> None:
     with Image.open(path) as opened:
         picture = opened.convert("RGBA")
     draw = ImageDraw.Draw(picture)
-    draw.rectangle((0, 0, STAMP_BOX[0], STAMP_BOX[1]), fill=(0, 0, 0, 255))
-    draw.text((2, 1), STAMP, fill=(255, 150, 0, 255))
+    left, top = picture.width - STAMP_BOX[0] - 1, picture.height - STAMP_BOX[1] - 1
+    draw.rectangle((left, top, picture.width - 1, picture.height - 1), fill=(0, 0, 0, 255))
+    draw.text((left + 2, top + 1), STAMP, fill=(255, 150, 0, 255))
     picture.save(path)
 
 

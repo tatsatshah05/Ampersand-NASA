@@ -25,6 +25,10 @@ export interface StarsResponse {
   target_source_id?: string | null
   gaia_error?: string | null
   message?: string
+  /** Very bright stars near the view (brighter than Gaia G 7 within 0.25°); null when Gaia did not answer. */
+  bright_nearby?: { source_id: string; gmag: number; distance_arcmin: number; inside_picture: boolean }[] | null
+  /** One plain paragraph about them: such stars leave rings and streaks that move between visits. */
+  bright_note?: string | null
 }
 
 export interface StarsQuery {

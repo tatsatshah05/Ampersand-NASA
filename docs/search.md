@@ -407,6 +407,70 @@ variable.** Candidate, and the strongest change found today.
 ![Same, detector 5](search/fresh_serpsouth_iras18274_D5.png)
 ![Same, detector 4](search/fresh_serpsouth_iras18274_D4.png)
 
+#### Checked from outside: ten years of NEOWISE, and a second brightness code
+
+The search compares SPHEREx with itself. To test this candidate from outside, two things were
+done on the evening of 14 November, both by `scripts/check_neowise.py`:
+
+- NASA's archive was asked for every measurement the NEOWISE mission made of this position
+  between 2014 and 2024: 485 single exposures within 8 arcsec, 269 of them within 1.5 arcsec on
+  frames NEOWISE rates usable, in 21 visits about half a year apart.
+- The SPHEREx images were measured again with the viewer's own brightness code (the one behind
+  the brightness chart), which shares nothing with the search's.
+
+| | Faintest | Brightest | Range |
+|---|---|---|---|
+| NEOWISE at 4.6 microns, 2014 to 2024 | 177 mJy (March 2024) | 1,603 mJy (September 2017; partly saturated) | a factor of 9 |
+| NEOWISE at 3.4 microns, 2014 to 2024 | 32 mJy (March 2024) | 236 mJy (September 2017) | a factor of 7 |
+| SPHEREx at 4.0 to 5.0 microns, viewer's code | 178 mJy (September 2025) | 805 mJy (September 2026) | a factor of 4.5 |
+| SPHEREx at 2.8 to 3.8 microns, viewer's code | 17 mJy (September 2025) | 114 mJy (September 2026) | a factor of 7 |
+
+Magnitudes were turned into millijanskys with the zero points of the WISE Explanatory Supplement
+(section IV.4.h, Table 1: 309.540 Jy at 3.4 microns, 171.787 Jy at 4.6 microns, read on 14
+November). The SPHEREx numbers are the median of each visit's exposures in that wavelength range.
+
+![NEOWISE 2014 to 2024 and SPHEREx 2025 to 2026 on one chart](search/serpsouth_neowise_spherex.png)
+
+What this settles:
+- **The star really does vary, and by this much.** A different telescope recorded swings of a
+  factor of 7 to 9 over ten years. The brightening the search flagged is not an artefact of
+  SPHEREx or of our code.
+- **The two telescopes agree on how bright it is.** NEOWISE's last visit, in March 2024, found
+  it at 177 mJy at 4.6 microns, fainter than in any of its 20 earlier visits (240 to 1,600 mJy,
+  mostly 400 to 600). SPHEREx's first visit, in September 2025, found 178 mJy. In March, May and
+  September 2026 SPHEREx has it at 793, 656 and 805 mJy, back inside NEOWISE's usual range.
+- **So what SPHEREx watched is the star coming back from the deepest dip in the ten-year
+  record.** The dip began between September 2023 (738 mJy) and March 2024 and lasted at least
+  until September 2025. NEOWISE shows an earlier, shallower one in September 2015 (244 mJy).
+- **The two codes agree.** The viewer's code gives 178 mJy rising to about 800; the search gave
+  150 to 290 rising to 760 to 1,250 for the channels of detector 6 alone.
+
+What it changes in the claim:
+- This is **not a first outburst and not a new kind of behaviour**. It is a young star that
+  varies strongly and has done so for at least ten years. The earlier guess in this section
+  ("probably a star that swings widely") is now established.
+- What stands is narrower: **none of the lists we asked records it as variable** (AAVSO's
+  variable star index, Gaia DR3, SIMBAD's object type, AllWISE's variability flag), although its
+  variability is plain in NEOWISE's public measurements.
+- It is very likely known to specialists all the same. Surveys of how young stars vary in the
+  infrared cover this cloud: one made from six years of NEOWISE data for about 5,400 young stars
+  of the nearby clouds (Park and others 2021, arXiv 2107.10751), and a 38-day campaign on Serpens
+  South with the Spitzer telescope (Wolk and others 2018). We did not check whether this star is
+  in their tables. The service that hosts such tables (VizieR, in Strasbourg) could not be
+  reached on 14 November.
+- What SPHEREx adds that neither of those has: the rise seen in 102 colours from 0.75 to 5
+  microns at once, including the wavelengths where ices absorb.
+
+What it does not settle:
+- NEOWISE blurs about as much as SPHEREx (6 arcsec), so it measured the same tight group. Which
+  member varies is still unknown.
+- NEOWISE saturates near this brightness (the share of saturated pixels reaches 0.45 in the
+  brightest visits), so its brightest values are less certain than its faint ones. The faint
+  states, where the agreement with SPHEREx is, are not saturated.
+
+To repeat it: `python scripts/check_neowise.py 277.50547 -2.06198 --out chart.png` (about three
+minutes the first time, because 400 SPHEREx cutouts are fetched).
+
 The other eight objects in Serpens South:
 - Three are listed as variable only by AllWISE's flag (changes of 8 to 29 per cent).
 - One embedded young star 2 arcmin to the north (RA 277.50529, Dec -2.03018) fell to about 0.6
@@ -451,8 +515,11 @@ with nothing moving. Nothing else reached the bar in 962 sources.
 between the same two visits in at least two detectors, at least one at 5 sigma, with all five
 catalogues answering: two, both candidates.
 1. The embedded young star in Serpens South at RA 277.50547, Dec -2.06198, about 5 times brighter
-   at 2.4 to 5 microns in 2026 than in September 2025. Confidence that the brightening is real:
-   high. Which member of the compact group changed: unknown.
+   at 2.4 to 5 microns in 2026 than in September 2025. Confirmed from outside: ten years of
+   NEOWISE measurements show the same star swinging by a factor of 9, and its last NEOWISE visit
+   (March 2024, 177 mJy) matches SPHEREx's first (September 2025, 178 mJy). So the brightening is
+   real, and it is the recovery from a deep dip, not a first outburst. What remains of the claim:
+   no variable-star list we asked records it. Which member of the compact group changed: unknown.
 2. HH 17 in NGC 1333 at RA 52.33509, Dec +31.30940, 10 to 18 per cent fainter in February 2026
    at 1.1 to 5 microns, and still fainter at 3.8 to 5 microns in August 2026. Confidence: moderate
    (nebulous surroundings, modest change).
@@ -516,10 +583,19 @@ What we are comfortable saying:
 > already listed as variable. Two are not listed as variable in Gaia, AAVSO's variable star index
 > or AllWISE, and passed every test we have. The strongest is a young star buried in the Serpens
 > South cloud that became about five times brighter at 2.4 to 5 microns between September 2025 and
-> March 2026 and stayed bright through September 2026. It is a candidate: SPHEREx's pixels cannot
-> tell which star of a tight group changed, and we have not searched the literature for it.
+> March 2026 and stayed bright through September 2026.
+>
+> We then checked it against another telescope. NASA's NEOWISE mission measured the same spot
+> twice a year from 2014 to 2024, and its public archive shows this star swinging by a factor of
+> nine. NEOWISE's last look, in March 2024, caught it at its faintest in ten years, at exactly the
+> level SPHEREx found in September 2025. So our search, knowing nothing, picked out a star that
+> really is strongly variable, and SPHEREx watched it climb back out of its deepest dip on record,
+> in 102 colours at once. It is not a new kind of event, and specialists who study young stars
+> have very likely seen it vary. What we can say is that none of the variable-star lists we asked
+> has it, and that SPHEREx's pixels cannot tell which star of a tight group is the one changing.
 
-Say "not listed as variable in Gaia DR3, AAVSO VSX or AllWISE", never "new". If asked about the
+Say "not listed as variable in Gaia DR3, AAVSO VSX or AllWISE", never "new", and say "it came
+back from a dip", not "it erupted": NEOWISE shows the 2026 level is its usual one. If asked about the
 cluster results in general: in crowded, nebulous fields some single-detector changes could not be
 confirmed or ruled out, so we only quote changes seen the same way in at least two detectors.
 
