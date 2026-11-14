@@ -16,6 +16,7 @@ pixel (3 arcsec) in the moving one.
 from __future__ import annotations
 
 import io
+from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -55,8 +56,16 @@ def grey_at(image: np.ndarray, place: dict) -> int:
     return int(image[int(round(place["y"])), int(round(place["x"])), 0])
 
 
-def unreachable(*args: object, **kwargs: object) -> list[dict]:
-    raise spherex.ArchiveError("Gaia did not answer (made to fail by a test)")
+@pytest.fixture
+def gaia_down(barnard: SimpleNamespace, cache_dir: Path) -> Iterator[None]:
+    """Take the cached Gaia stars away for one test. The network is blocked, so Gaia then does not answer."""
+    aside = [(path, path.with_suffix(".aside")) for path in (cache_dir / "queries").glob("gaia_*.json")]
+    assert aside, "the Gaia answer should be in the test cache"
+    for path, hidden in aside:
+        path.rename(hidden)
+    yield
+    for path, hidden in aside:
+        hidden.rename(path)
 
 
 @pytest.fixture(scope="module")
@@ -243,26 +252,25 @@ def test_api_returns_the_frames_and_serves_their_pictures(client: TestClient, no
 
 
 def test_without_gaia_the_frames_still_come_back_but_are_not_cached(barnard: SimpleNamespace, normal: SimpleNamespace,
-                                                                    monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(astrometry, "gaia_cone", unreachable)
+                                                                    gaia_down: None, network: list[str]):
     meta = pipeline.build_frames(barnard.ra, barnard.dec)
-    assert meta["target"] is None
-    assert "Gaia did not answer" in meta["gaia_error"]
+    assert astrometry.GAIA_TAP in network                                 # it was asked, and did not answer
+    assert meta["target"] is None and meta["gaia_error"]
     assert [f["predicted"] for f in meta["frames"]] == [None, None, None]
     assert [f["centroid"] for f in meta["frames"]] == [f["centroid"] for f in normal.frames]
     assert not (pipeline.FRAMES_DIR / meta["key"] / "frames.json").exists()
 
 
 def test_a_motion_given_in_the_request_makes_the_request_the_target(client: TestClient, barnard: SimpleNamespace,
-                                                                    normal: SimpleNamespace,
-                                                                    monkeypatch: pytest.MonkeyPatch):
+                                                                    normal: SimpleNamespace, gaia_down: None,
+                                                                    network: list[str]):
     """How an object Gaia does not list (WISE 0855) gets an expected position: the page passes on
     pmra, pmdec and parallax from /api/resolve, for an object that is at (ra, dec) in 2026.0."""
-    monkeypatch.setattr(astrometry, "gaia_cone", unreachable)             # Gaia must not be needed
     response = client.get("/api/frames", params={"ra": barnard.ra, "dec": barnard.dec, **barnard.motion})
     assert response.status_code == 200, response.text
     answer = response.json()
     assert answer["target"]["origin"] == "request" and answer["gaia_error"] is None
+    assert astrometry.GAIA_TAP not in network                             # Gaia is not needed, so not asked
     for frame, by_gaia in zip(answer["frames"], normal.frames, strict=True):
         # Same star, started from 2026.0 instead of Gaia's 2016.0. The two predictions differ by the
         # radial velocity that only astrometry.propagate applies. Measured: 0.063 arcsec. Leaving
@@ -348,13 +356,12 @@ def test_sum_mode_is_sharper_when_it_follows_the_star(complete: None, barnard: S
 
 
 def test_following_a_target_without_a_known_motion_is_refused(client: TestClient, barnard: SimpleNamespace,
-                                                              monkeypatch: pytest.MonkeyPatch):
+                                                              gaia_down: None):
     """CLAUDE.md: track=target answers 400 if no motion is known. Here: none given, and Gaia is down.
 
     This relies on no test caching a Gaia-based track=target sum for this position (the
     test above passes the motion in the request instead): a cached one would be served.
     """
-    monkeypatch.setattr(astrometry, "gaia_cone", unreachable)
     response = client.get("/api/frames", params={"ra": barnard.ra, "dec": barnard.dec, "mode": "sum",
                                                  "track": "target"})
     assert response.status_code in (400, 422), response.text

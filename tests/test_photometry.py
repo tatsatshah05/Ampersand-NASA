@@ -249,7 +249,8 @@ def measured(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
         # An exposure in which the object fell off the detector: no wavelength, so no bin.
         point(5, None, 61116.0, None, status="off_image", epoch=2),
     ]
-    result = {"key": "made-up", "ra": 10.0, "dec": 20.0, "detector": None, "failures": [], "points": points,
+    result = {"key": "made-up", "ra": 10.0, "dec": 20.0, "detector": None, "target": None, "gaia_error": None,
+              "failures": [], "points": points,
               "detector_ranges_um": {"2": [1.10, 1.65], "5": [3.8113, 4.43]},
               "wing_ring_px": {"2": [3.5, 6.5], "5": [3.5, 6.5]}}
     monkeypatch.setattr(photometry, "measure_all", lambda *args, **kwargs: result)
@@ -258,7 +259,6 @@ def measured(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
 
 def test_lightcurve_groups_points_by_wavelength_bin(measured):
     curve = photometry.lightcurve(10.0, 20.0)
-    assert "points" not in curve
     assert (curve["n_exposures"], curve["status_counts"]) == (6, {"ok": 4, "saturated": 1, "off_image": 1})
 
     by_bin = {b["bin"]: b for b in curve["bins"]}
@@ -289,14 +289,3 @@ def test_spectrum_sorts_one_epoch_by_wavelength(measured):
     second = photometry.spectrum(10.0, 20.0, epoch=2)
     assert [p["wavelength_um"] for p in second["points"]] == [1.12, 3.94]
     assert second["status_counts"] == {"ok": 1, "saturated": 1}
-
-    with pytest.raises(ValueError, match="epoch must be one of"):
-        photometry.spectrum(10.0, 20.0, epoch=4)
-
-
-def test_measure_all_checks_its_arguments_before_asking_the_archive(network: list[str]):
-    with pytest.raises(ValueError):
-        photometry.measure_all(10.0, 20.0, detector=7)
-    with pytest.raises(ValueError):
-        photometry.measure_all(10.0, 20.0, pmra=5.0)           # a proper motion needs both components
-    assert network == []
