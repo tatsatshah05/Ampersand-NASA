@@ -1,0 +1,84 @@
+:root {
+  --bg: #0d0f14;
+  --panel: #171a22;
+  --text: #e7e9ee;
+  --muted: #9aa1ad;
+  --border: #2b303b;
+  --control: #232734;
+  --control-hover: #2d3242;
+  /* Colours that say where a position comes from. Each also has its own shape on the picture. */
+  --gaia: #38d6e8; /* predicted from a catalogued motion */
+  --measured: #ff8a3d; /* measured in the picture */
+  --start: #ffffff; /* the first measured position */
+  --notice: #f0c36a;
+  --error: #ff7b7b;
+  --focus: #9cc2ff;
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+button,
+select {
+  font: inherit;
+  color: var(--text);
+  background: var(--control);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover:not(:disabled),
+select:hover:not(:disabled) {
+  background: var(--control-hover);
+}
+
+button:disabled,
+select:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Keyboard focus is always visible, on every control and on the picture. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* An on/off button: a tick box before the words, so that "on" is not told by colour alone. */
+button.toggle::before {
+  content: '';
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-right: 0.5em;
+  vertical-align: -0.08em;
+  border: 1.5px solid var(--muted);
+  border-radius: 3px;
+}
+
+button.toggle[aria-pressed='true'] {
+  border-color: var(--muted);
+}
+
+button.toggle[aria-pressed='true']::before {
+  border-color: var(--text);
+  background: var(--text)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.3l2.4 2.4 4.6-5.2' fill='none' stroke='%230d0f14' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 100% no-repeat;
+}

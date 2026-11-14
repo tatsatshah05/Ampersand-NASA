@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import threading
 import warnings
 from pathlib import Path
 
@@ -17,19 +18,35 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from PIL import Image
 from reproject import reproject_interp
-from scipy.ndimage import maximum_filter
+from scipy.ndimage import label, maximum_filter
 from scipy.optimize import least_squares
 
 from . import astrometry, spherex
 
 logging.getLogger("astropy").setLevel(logging.ERROR)  # silence the per-file SIP notice
 
-GRID_ARCSEC = 2.0        # output pixel size; native SPHEREx pixels are 6.15 arcsec
+GRID_ARCSEC = 2.0        # output pixel size
+NATIVE_ARCSEC = 6.15     # SPHEREx pixel size
 EPOCH_GAP_DAYS = 30.0    # a gap longer than this between exposures starts a new epoch
 FRAMES_DIR = spherex.CACHE / "frames"
 # Part of every cache key. Raise it whenever a change here alters the pictures or the
-# numbers: results made by older code are then never served again.
-VERSION = 2
+# numbers: results made by older code are then never served again. (3 is taken by the
+# flags image of pull request #24; 4 was the new stacking rule; 5 centroid meaning the
+# target or nothing; 6 photometry_saturated_exposures.)
+VERSION = 6
+
+# Dropping glitches when exposures are stacked (see Stacker).
+MIN_EXPOSURES_TO_REJECT = 5   # with fewer exposures nothing is dropped
+GLITCH_SIGMA = 6.0
+GLITCH_NEARBY_PX = 9          # side of the box in which "the brightest nearby pixel" is looked for
+# Largest patch a glitch makes on the grid: a 2 x 2 block of native pixels, which
+# resampling spreads over 3 x 3 native pixels (85 grid pixels).
+GLITCH_MAX_PX = int(round(9 * (NATIVE_ARCSEC / GRID_ARCSEC) ** 2))
+# Stacking needs memory in proportion to the picture. One build at a time keeps that
+# to one picture's worth however many requests arrive together, and lets a second
+# request for the same view (a page asks for frames and stars at once) wait and read
+# the cache instead of repeating the work.
+_BUILD_LOCK = threading.Lock()
 
 # Flag bits: Table 16 of the SPHEREx Explanatory Supplement v2.1 (2026-11-10).
 BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7,
@@ -106,10 +123,16 @@ def prepare_cutout(path: Path, grid: WCS, n: int, ra: float, dec: float) -> dict
         wave = hdul["WAVE"].data
     wcs = WCS(header)
 
+    from . import photometry  # here and not at the top: photometry imports this module
+
     data = image - zodi
+    impossible = impossible_pixels(image, variance)
+    # Pixels the brightness measurement calls saturated (a stricter rule than the one
+    # for the picture; see photometry.saturated_pixels), kept as their positions.
+    lost = photometry.saturated_pixels(flags, np.where(impossible, np.nan, data))
     bloom = (flags & BLOOM) != 0
     bad = (((flags & ALWAYS_BAD) != 0) | (((flags & COSMIC_RAY) != 0) & ~bloom) | ~np.isfinite(data)
-           | impossible_pixels(image, variance))
+           | impossible)
     saturated = ~np.isfinite(image) & ((flags & OVERFLOW) != 0)
     data[bad] = np.nan
     good = ~bad
@@ -145,42 +168,132 @@ def prepare_cutout(path: Path, grid: WCS, n: int, ra: float, dec: float) -> dict
         "mjd": float(header["MJD-AVG"]),
         "wave_at_target": float(wave[yi, xi]) if inside else None,
         "masked_fraction": float(bad.mean()),
+        "wcs": wcs,
+        "saturated_for_photometry": np.nonzero(lost),     # (rows, columns) in the cutout
     }
 
 
-def stack(items: list[dict]) -> dict:
-    """Weighted mean of the resampled exposures, ignoring missing pixels.
+def core_saturated(item: dict, ra: float, dec: float) -> bool:
+    """Would /api/lightcurve call (ra, dec) saturated in this exposure?
 
-    Before averaging, single readings far from the per-pixel median are dropped.
-    The archive's flags miss some glitches (seen: one pixel at -7 MJy/sr among 22
-    readings near 0.01). The tolerance grows with the brightness of the brightest
-    nearby pixel, because a star's reading at a fixed sky position legitimately
-    swings by a factor of a few between exposures: the image is undersampled (PSF
-    about 1.2 pixels wide) and every exposure is at a different wavelength.
+    True if a pixel that its measuring circle touches is saturated by the photometry
+    rule. `item` is what prepare_cutout returned.
     """
-    cube = np.stack([it["data"] for it in items])
-    weights = np.array([it["weight"] for it in items])
-    rejected = 0
-    if len(items) >= 5:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")          # all-NaN columns are expected
-            median = np.nanmedian(cube, axis=0)
-        local_peak = maximum_filter(np.nan_to_num(np.abs(median)), size=9)
-        noise = (1.0 / np.sqrt(weights))[:, None, None]
-        with np.errstate(invalid="ignore"):
-            outlier = np.abs(cube - median) > 6.0 * noise + 1.0 * local_peak
-        rejected = int(outlier.sum())
-        cube = np.where(outlier, np.nan, cube)
-    w = weights[:, None, None] * np.isfinite(cube)
-    wsum = w.sum(axis=0)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        mean = np.nansum(np.nan_to_num(cube) * w, axis=0) / wsum
-    mean[wsum == 0] = np.nan
-    n_valid = np.isfinite(cube).sum(axis=0)
-    sat_count = np.sum([it["saturated"] for it in items], axis=0)
-    return {"image": mean, "n_valid": n_valid, "rejected_readings": rejected,
-            # No usable value in any exposure, and at least one of them overflowed here.
-            "saturated": ~np.isfinite(mean) & (sat_count > 0)}
+    from . import photometry
+
+    rows, columns = item["saturated_for_photometry"]
+    if rows.size == 0:
+        return False
+    x, y = item["wcs"].all_world2pix(ra, dec, 0, quiet=True)
+    touched = photometry._coverage(columns, rows, float(x), float(y), 0.0, photometry.APERTURE_PX) > 0
+    return bool(touched.any())
+
+
+class Stacker:
+    """Weighted mean of resampled exposures, taken in one at a time.
+
+    Glitches. The archive's flags miss some (seen: one pixel at -7 MJy/sr among 22
+    readings near 0.01), so one reading per pixel can be dropped at each end:
+
+    - the highest of at least three readings, if it is far above the second highest,
+      and the lowest, if it is far below the second lowest. "Far" is GLITCH_SIGMA times
+      that exposure's noise plus the brightness of the brightest nearby pixel in the
+      second-highest image, because a star's reading at a fixed sky position
+      legitimately swings by a factor of a few between exposures: the image is
+      undersampled (PSF about 1.2 pixels wide) and each exposure is at its own wavelength.
+    - and only where that exposure stands out in a small patch: the connected patch
+      in which it is the extreme by half the threshold must be no larger than
+      GLITCH_MAX_PX, and then that whole patch is dropped. A cosmic ray or bad pixel
+      is a few native pixels. A larger patch is one exposure whose background differs
+      from the rest (stray light from a bright star nearby); dropping parts of it
+      leaves steps in the picture.
+
+    Anything seen in two exposures therefore stays. An earlier version dropped every
+    reading far from the per-pixel median, which removed real light: a brown dwarf is
+    bright only in the exposures at one end of a detector's wavelength range, so the
+    median sat near the sky and the bright readings went (Epsilon Indi B, detector 1,
+    lost four fifths of its brightness in one visit).
+
+    Memory. Only running sums and the two highest and two lowest readings per pixel
+    are kept, never the exposures, so memory does not grow with their number.
+    """
+
+    def __init__(self, n: int) -> None:
+        shape = (n, n)
+        self.weights: list[float] = []
+        self.sum_w = np.zeros(shape)
+        self.sum_wv = np.zeros(shape)
+        self.count = np.zeros(shape, dtype="int32")
+        self.overflowed = np.zeros(shape, dtype="int32")    # exposures saturated here
+        self.high = np.full(shape, -np.inf)                  # highest reading, and which exposure gave it
+        self.high_from = np.full(shape, -1, dtype="int32")
+        self.high2 = np.full(shape, -np.inf)                 # second highest
+        self.low = np.full(shape, np.inf)
+        self.low_from = np.full(shape, -1, dtype="int32")
+        self.low2 = np.full(shape, np.inf)
+
+    def add(self, data: np.ndarray, saturated: np.ndarray, weight: float) -> None:
+        i = len(self.weights)
+        self.weights.append(float(weight))
+        ok = np.isfinite(data)
+        self.sum_w += float(weight) * ok
+        self.sum_wv += float(weight) * np.where(ok, data, 0.0)
+        self.count += ok
+        self.overflowed += saturated
+        up = np.where(ok, data, -np.inf)
+        top = up > self.high
+        self.high2 = np.where(top, self.high, np.maximum(self.high2, up))
+        self.high_from[top] = i
+        self.high[top] = up[top]
+        down = np.where(ok, data, np.inf)
+        bottom = down < self.low
+        self.low2 = np.where(bottom, self.low, np.minimum(self.low2, down))
+        self.low_from[bottom] = i
+        self.low[bottom] = down[bottom]
+
+    def result(self) -> dict:
+        """The stacked image. Call once: it uses up the running sums."""
+        rejected = 0
+        if len(self.weights) >= MIN_EXPOSURES_TO_REJECT:
+            weights = np.array(self.weights)
+            noise = 1.0 / np.sqrt(weights)
+            enough = self.count >= 3
+            nearby = maximum_filter(np.where(np.isfinite(self.high2), np.abs(self.high2), 0.0),
+                                    size=GLITCH_NEARBY_PX)
+            drops = []
+            with np.errstate(invalid="ignore"):
+                for first, second, source, sign in ((self.high, self.high2, self.high_from, 1.0),
+                                                    (self.low, self.low2, self.low_from, -1.0)):
+                    gap = sign * (first - second)
+                    limit = GLITCH_SIGMA * noise[source] + nearby
+                    seed = enough & (gap > limit)
+                    wide = enough & (gap > 0.5 * limit)
+                    for i in np.unique(source[seed]):
+                        patches, _ = label(wide & (source == i))
+                        sizes = np.bincount(patches.ravel())
+                        hit = np.unique(patches[seed & (source == i)])
+                        # The whole patch goes, not only its core: resampling spreads a
+                        # glitch, and the rim left behind would show as a ring.
+                        drops.append((np.isin(patches, hit[sizes[hit] <= GLITCH_MAX_PX]), first, weights[i]))
+            for drop, first, weight in drops:
+                self.sum_wv[drop] -= weight * first[drop]
+                self.sum_w[drop] -= weight
+                self.count[drop] -= 1
+                rejected += int(drop.sum())
+        with np.errstate(invalid="ignore", divide="ignore"):
+            mean = self.sum_wv / self.sum_w
+        mean[self.count == 0] = np.nan
+        return {"image": mean, "n_valid": self.count, "rejected_readings": rejected,
+                # No usable value in any exposure, and at least one of them overflowed here.
+                "saturated": ~np.isfinite(mean) & (self.overflowed > 0)}
+
+
+def stack(items: list[dict]) -> dict:
+    """Weighted mean of resampled exposures (what prepare_cutout returns); see Stacker."""
+    stacker = Stacker(items[0]["data"].shape[0])
+    for it in items:
+        stacker.add(it["data"], it["saturated"], it["weight"])
+    return stacker.result()
 
 
 def fit_source(image: np.ndarray, x0: float, y0: float, search: int = 7, half: int = 10) -> dict | None:
@@ -308,6 +421,73 @@ def _find_target(ra: float, dec: float, fov: float, mid_mjd: float,
     return (best[1] if best else None), None
 
 
+# When the view has a target, `centroid` is that target measured, or nothing. The old
+# way (fit whatever is brightest within 14 arcsec) put the marker on a neighbouring star
+# wherever the target itself was invisible: WISE 0855 in detectors 1 to 4.
+TARGET_SEARCH_PX = 3              # start from the brightest pixel this close to the predicted place (6 arcsec)
+TARGET_MAX_OFFSET_ARCSEC = 3.0    # a source further off than this (or a quarter of its own width) is another object
+TARGET_MIN_SNR = 4.0              # fitted height over the scatter around the fit
+# A star is about 10 arcsec wide here, and up to 30 when it is saturated and fitted from
+# its wings (R Draconis). Narrower is a leftover glitch; at 37.7 the fit has run into
+# its own limit, which means a slope rather than a source.
+TARGET_FWHM_ARCSEC = (6.0, 36.0)
+CENTROID_NOTES = {
+    "target": ("centroid is the target, measured: a source fitted within "
+               f"{TARGET_MAX_OFFSET_ARCSEC:.0f} arcsec of the predicted position (or a quarter of its own width, for "
+               f"a saturated star located from its wings) with signal to noise of at least {TARGET_MIN_SNR:.0f}. "
+               "Otherwise it is null and centroid_reason says why; nearest_source then holds what was found "
+               "instead, if anything. centroid_offset_arcsec is centroid minus predicted (east, north, total)."),
+    "brightest_near_centre": ("No target is known for this view (no motion in the request and no Gaia star within "
+                              "15 arcsec of the centre), so centroid is simply the brightest source within 14 arcsec "
+                              "of the centre of the picture."),
+}
+
+
+SATURATION_NOTE = (
+    "Two different counts. saturated_pixels: picture pixels with no value in any exposure because the detector "
+    "overflowed there (drawn white). photometry_saturated_exposures: how many of the frame's n_exposures have a "
+    "saturated pixel inside the 15 arcsec circle in which /api/lightcurve measures the target (or the centre of "
+    "the picture, if there is no target), by its stricter rule: overflow within the first seconds, charge spilled "
+    "from a saturated neighbour, or no reliable correction. Such pixels usually still hold a value, so the picture "
+    "can look fine and show 0 saturated_pixels while no brightness can be measured in those exposures.")
+
+
+def _centroid(fit: dict, grid: WCS, n: int) -> dict:
+    """A fitted source as the response gives it."""
+    cra, cdec = grid.all_pix2world(fit["x"], fit["y"], 0)
+    return {"ra": float(cra), "dec": float(cdec),
+            "x": fit["x"], "y": n - 1 - fit["y"],  # y counted from the top of the PNG
+            "err_arcsec": fit["err_px"] * GRID_ARCSEC if fit["err_px"] is not None else None,
+            "snr": fit["snr"], "fwhm_arcsec": fit["sigma_px"] * 2.3548 * GRID_ARCSEC}
+
+
+def _measure_target(image: np.ndarray, grid: WCS, n: int, predicted: dict
+                    ) -> tuple[dict | None, dict | None, str | None, dict | None]:
+    """The target's measured place and its offset from the predicted one, or why there is
+    none: (centroid, offset, reason, nearest other source)."""
+    x0, y0 = predicted["x"], n - 1 - predicted["y"]
+    # A saturated core leaves no value near the centre, so the second try looks wider
+    # and finds the star from its wings; the checks below still apply to what it finds.
+    fit = fit_source(image, x0, y0, search=TARGET_SEARCH_PX) or fit_source(image, x0, y0)
+    if fit is None:
+        return None, None, ("The predicted position is off the picture, too near its edge, or has no data "
+                            "around it."), None
+    found = _centroid(fit, grid, n)
+    east, north = astrometry.offset_arcsec(predicted["ra"], predicted["dec"], found["ra"], found["dec"])
+    offset = {"east": east, "north": north, "total": float(np.hypot(east, north))}
+    narrowest, widest = TARGET_FWHM_ARCSEC
+    if fit["snr"] is None or fit["snr"] < TARGET_MIN_SNR:
+        return None, None, (f"Nothing is detected at the predicted position (signal to noise "
+                            f"{fit['snr'] or 0:.1f}; {TARGET_MIN_SNR:.0f} is needed)."), None
+    if not narrowest <= found["fwhm_arcsec"] <= widest:
+        return None, None, (f"What is at the predicted position is not shaped like a star (width "
+                            f"{found['fwhm_arcsec']:.0f} arcsec)."), None
+    if offset["total"] > max(TARGET_MAX_OFFSET_ARCSEC, 0.25 * found["fwhm_arcsec"]):
+        return None, None, (f"The nearest source is {offset['total']:.1f} arcsec from the predicted position, "
+                            "too far to be the target."), {**found, "offset_arcsec": offset}
+    return found, offset, None, None
+
+
 def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | None) -> dict:
     """Everything reported about one stacked image except where its picture is."""
     mjds = np.array([it["mjd"] for it in items])
@@ -315,21 +495,25 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
     mjd_mean = float(np.average(mjds, weights=weights))
     waves = [it["wave_at_target"] for it in items if it["wave_at_target"] is not None]
 
-    predicted = None
-    x0 = y0 = (n - 1) / 2.0
+    predicted = centroid = offset = reason = nearest = None
     if target:
         pra, pdec = astrometry.position_at(target, mjd_mean)
         px, py = grid.all_world2pix(pra, pdec, 0)
-        x0, y0 = float(px), float(py)
-        predicted = {"ra": pra, "dec": pdec, "x": x0, "y": n - 1 - y0}
-    fit = fit_source(st["image"], x0, y0)
-    centroid = None
-    if fit:
-        cra, cdec = grid.all_pix2world(fit["x"], fit["y"], 0)
-        centroid = {"ra": float(cra), "dec": float(cdec),
-                    "x": fit["x"], "y": n - 1 - fit["y"],  # y counted from the top of the PNG
-                    "err_arcsec": fit["err_px"] * GRID_ARCSEC if fit["err_px"] is not None else None,
-                    "snr": fit["snr"], "fwhm_arcsec": fit["sigma_px"] * 2.3548 * GRID_ARCSEC}
+        predicted = {"ra": pra, "dec": pdec, "x": float(px), "y": n - 1 - float(py)}
+        centroid, offset, reason, nearest = _measure_target(st["image"], grid, n, predicted)
+    else:
+        fit = fit_source(st["image"], (n - 1) / 2.0, (n - 1) / 2.0)
+        if fit:
+            centroid = _centroid(fit, grid, n)
+        else:
+            reason = "No source near the centre of the picture is bright enough to measure."
+    # In how many of these exposures would /api/lightcurve find the object saturated?
+    # Asked where the object is on each exposure's own date (the centre, if there is no target).
+    if target:
+        t_ra, t_dec = astrometry.path_of(target, mjds)
+    else:
+        t_ra, t_dec = (np.full(len(items), float(v)) for v in grid.wcs.crval)
+    lost = sum(core_saturated(it, float(r), float(d)) for it, r, d in zip(items, t_ra, t_dec, strict=True))
     return {
         "date_start": Time(mjds.min(), format="mjd").iso[:10],
         "date_end": Time(mjds.max(), format="mjd").iso[:10],
@@ -339,8 +523,12 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
         "wavelength_um": [min(waves), max(waves)] if waves else None,
         "flagged_fraction": float(np.mean([it["masked_fraction"] for it in items])),
         "saturated_pixels": int(st["saturated"].sum()),
+        "photometry_saturated_exposures": int(lost),
         "rejected_readings": st["rejected_readings"],
         "centroid": centroid,
+        "centroid_offset_arcsec": offset,
+        "centroid_reason": reason,
+        "nearest_source": nearest,
         "predicted": predicted,
     }
 
@@ -410,22 +598,54 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     epoch_of = assign_epochs(all_exposures)
     chosen = [(e, ep) for e, ep in zip(all_exposures, epoch_of, strict=True) if e["detector"] == detector]
 
-    grid, n = make_grid(ra, dec, fov)
     # The detector can sit at any angle on the sky, so fetch the diagonal of the field.
     cutout_deg = round(fov * 1.5, 4)
     fetched = spherex.fetch_cutouts([e for e, _ in chosen], ra, dec, cutout_deg, progress=progress)
     failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None]
+    usable = [(path, ep) for (_, path, _), (_, ep) in zip(fetched, chosen, strict=True) if path is not None]
 
-    by_epoch: dict[int, list[dict]] = {}
+    with _BUILD_LOCK:
+        if meta_file.exists():          # another request built this view while we waited
+            return json.loads(meta_file.read_text())
+        return _build(key, usable, failures, len(all_exposures), ra, dec, fov, detector, mode, motion,
+                      reference, track)
+
+
+def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all: int, ra: float, dec: float,
+           fov: float, detector: int, mode: str, motion: dict | None, reference: str, track: str) -> dict:
+    """Stack the cutouts of one view and write its pictures (the part of build_frames that needs memory).
+
+    Exposures are taken in one at a time and never kept: an epoch's Stacker is turned
+    into its image as soon as the next epoch starts, and at most one more Stacker
+    (every epoch together, for the sum and the mean reference) lives beside it.
+    """
+    out_dir = FRAMES_DIR / key
+    meta_file = out_dir / "frames.json"
+    grid, n = make_grid(ra, dec, fov)
+    want_total = (mode == "sum" and track == "sky") or (mode == "difference" and reference == "mean")
+    total = Stacker(n) if want_total else None
+    stacks: dict[int, dict] = {}
+    by_epoch: dict[int, list[dict]] = {}     # what is known about each exposure, without its pixels
     paths: dict[int, list[Path]] = {}
-    for (_, path, _), (_, ep) in zip(fetched, chosen, strict=True):
-        if path is None:
-            continue
+    open_epoch = -1
+    open_stacker: Stacker | None = None
+    for path, ep in usable:                  # oldest first, so each epoch's exposures come together
         item = prepare_cutout(path, grid, n, ra, dec)
-        if item is not None:
-            by_epoch.setdefault(ep, []).append(item)
-            paths.setdefault(ep, []).append(path)
-    by_epoch = dict(sorted(by_epoch.items()))
+        if item is None:
+            continue
+        data, saturated = item.pop("data"), item.pop("saturated")
+        if mode != "sum":
+            if open_stacker is None or ep != open_epoch:
+                if open_stacker is not None:
+                    stacks[open_epoch] = open_stacker.result()
+                open_epoch, open_stacker = ep, Stacker(n)
+            open_stacker.add(data, saturated, item["weight"])
+        if total is not None:
+            total.add(data, saturated, item["weight"])
+        by_epoch.setdefault(ep, []).append(item)
+        paths.setdefault(ep, []).append(path)
+    if open_stacker is not None:
+        stacks[open_epoch] = open_stacker.result()
     if not by_epoch:
         return {"key": key, "frames": [], "failures": failures,
                 "message": f"No usable detector {detector} exposures at this position."}
@@ -440,7 +660,10 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
         "key": key, "ra": ra, "dec": dec, "fov": fov, "detector": detector, "mode": mode,
         "size_px": n, "pixel_arcsec": GRID_ARCSEC,
         "target": target, "gaia_error": gaia_error,
-        "exposures_total_all_detectors": len(all_exposures),
+        "centroid_is": "target" if target else "brightest_near_centre",
+        "centroid_note": CENTROID_NOTES["target" if target else "brightest_near_centre"],
+        "saturation_note": SATURATION_NOTE,
+        "exposures_total_all_detectors": n_all,
         "failures": failures, "frames": [], "credit": CREDIT,
     }
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -457,17 +680,20 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
             ref_mjd = float(np.average([it["mjd"] for it in every], weights=[it["weight"] for it in every]))
             ref_ra, ref_dec = astrometry.position_at(target, ref_mjd)
             every = []
+            total = Stacker(n)
             for ep in by_epoch:
                 for path, first_pass in zip(paths[ep], by_epoch[ep], strict=True):
                     t_ra, t_dec = astrometry.position_at(target, first_pass["mjd"])
                     shifted, _ = make_grid(ra + (t_ra - ref_ra), dec + (t_dec - ref_dec), fov)
                     item = prepare_cutout(path, shifted, n, ra, dec)
                     if item is not None:
+                        total.add(item.pop("data"), item.pop("saturated"), item["weight"])
                         every.append(item)
             note = ("Exposures were shifted by the target's known proper motion and parallax before "
                     "adding, so the target is sharp and every other object is smeared along its track. "
                     "Sky coordinates in this frame are right for the target only, on the mean date.")
-        st = stack(every)
+        assert total is not None
+        st = total.result()
         limits = stretch_limits([st["image"]])
         name = "sum.png" if track == "sky" else "sum_target.png"
         to_png(st, limits, out_dir / name)
@@ -481,7 +707,6 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
         _save(meta_file, meta)
         return meta
 
-    stacks = {ep: stack(items) for ep, items in by_epoch.items()}
     if mode == "normal":
         limits = stretch_limits([s["image"] for s in stacks.values()])
         for ep, st in stacks.items():
@@ -505,7 +730,8 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
         shown = [ep for ep in stacks if ep != first]
         meta["reference_description"] = f"epoch {first + 1} ({len(by_epoch[first])} exposures)"
     else:
-        ref_image, ref_epoch = stack(every)["image"], None
+        assert total is not None
+        ref_image, ref_epoch = total.result()["image"], None
         shown = list(stacks)
         meta["reference_description"] = f"all {len(stacks)} epochs stacked together ({len(every)} exposures)"
     diffs = {ep: stacks[ep]["image"] - ref_image for ep in shown}

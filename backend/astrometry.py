@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import re
+import unicodedata
 import warnings
 
 import astropy.units as u
@@ -38,11 +39,13 @@ def _num(v) -> float | None:
     return None if v is None or np.ma.is_masked(v) or not np.isfinite(v) else float(v)
 
 
-def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0) -> list[dict]:
+def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0, *,
+              tries: int = 10, timeout: float = 90) -> list[dict]:
     """Gaia DR3 sources within radius_deg of (ra, dec), brightest first. Cached on disk.
 
     Positions are at epoch 2016.0. A fast star can be arcminutes from where it is
     today, so callers should search wider than the field they want to cover.
+    `tries` and `timeout` only matter when the answer is not cached yet.
     """
     key = hashlib.sha1(f"{ra:.5f},{dec:.5f},{radius_deg:.4f},{g_limit}".encode()).hexdigest()[:16]
     cache_file = CACHE / "queries" / f"gaia_{key}.json"
@@ -53,7 +56,8 @@ def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0) -
         "FROM gaiadr3.gaia_source WHERE 1=CONTAINS(POINT('ICRS', ra, dec), "
         f"CIRCLE('ICRS', {ra}, {dec}, {radius_deg})) AND phot_g_mean_mag < {g_limit} "
         "ORDER BY phot_g_mean_mag")
-    raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query})
+    raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query},
+                   tries=tries, timeout=timeout)
     sources = _gaia_rows(raw)
     write_json(cache_file, sources)
     return sources
@@ -132,24 +136,114 @@ def position_at(src: dict, mjd: float, parallax: bool = True) -> tuple[float, fl
     return ra + d_ra * mas / np.cos(np.radians(dec)), dec + d_dec * mas
 
 
+def _apparent(ra, dec, pmra, pmdec, plx, ref_epoch, t: Time, parallax: bool) -> tuple[np.ndarray, np.ndarray]:
+    """The arithmetic of position_at() on arrays; the source fields and the dates broadcast."""
+    dt = t.jyear - ref_epoch
+    d_ra = pmra * dt
+    d_dec = pmdec * dt
+    if parallax:
+        ex, ey, ez = get_body_barycentric("earth", t).xyz.to_value("au")
+        a, d = np.radians(ra), np.radians(dec)
+        d_ra = d_ra + plx * (ex * np.sin(a) - ey * np.cos(a))
+        d_dec = d_dec + plx * (ex * np.cos(a) * np.sin(d) + ey * np.sin(a) * np.sin(d) - ez * np.cos(d))
+    mas = 1.0 / 3.6e6
+    return ra + d_ra * mas / np.cos(np.radians(dec)), dec + d_dec * mas
+
+
+def _columns(sources: list[dict]) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """ra, dec, pmra, pmdec, parallax and reference epoch of many sources, as position_at() reads them."""
+    def column(key: str, default: float) -> np.ndarray:
+        return np.array([s.get(key) or default for s in sources], dtype=float)
+
+    plx = column("parallax", 0.0)
+    return (np.array([s["ra"] for s in sources], dtype=float), np.array([s["dec"] for s in sources], dtype=float),
+            column("pmra", 0.0), column("pmdec", 0.0), np.where(plx > 0, plx, 0.0), column("ref_epoch", GAIA_EPOCH))
+
+
+def positions_at(sources: list[dict], mjd: float, parallax: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    """position_at() for many sources on one date: arrays of ra and dec, in the order given."""
+    if not sources:
+        return np.zeros(0), np.zeros(0)
+    ra, dec, pmra, pmdec, plx, ref = _columns(sources)
+    return _apparent(ra, dec, pmra, pmdec, plx, ref, Time(mjd, format="mjd"), parallax)
+
+
+def path_of(src: dict, mjds, parallax: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    """position_at() for one source on many dates: arrays of ra and dec, one per date."""
+    ra, dec, pmra, pmdec, plx, ref = (c[0] for c in _columns([src]))
+    return _apparent(ra, dec, pmra, pmdec, plx, ref, Time(np.atleast_1d(np.asarray(mjds, dtype=float)), format="mjd"),
+                     parallax)
+
+
 def offset_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> tuple[float, float]:
     """Small-angle offset of point 2 from point 1: (east, north) in arcseconds."""
-    east = (ra2 - ra1) * np.cos(np.radians(0.5 * (dec1 + dec2))) * 3600.0
+    d_ra = ra2 - ra1
+    if d_ra > 180.0:            # the short way round: the two points are either side of RA 0h
+        d_ra -= 360.0
+    elif d_ra < -180.0:
+        d_ra += 360.0
+    east = d_ra * np.cos(np.radians(0.5 * (dec1 + dec2))) * 3600.0
     north = (dec2 - dec1) * 3600.0
     return float(east), float(north)
 
 
 def _simbad(adql: str) -> list[list]:
-    """Run one ADQL query on SIMBAD and return its rows, trying each mirror in turn."""
+    """Run one ADQL query on SIMBAD and return its rows, trying each mirror in turn.
+
+    A mirror that answers HTTP 400 has read the query and refused it: the name is not
+    one it can look up. That is "not found", not "service down", even when the other
+    mirror is down at the same moment.
+    """
     last: Exception | None = None
+    refused = False
     for url in SIMBAD_TAP:
         try:
             raw = http_get(url, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "json", "QUERY": adql},
                            tries=3, timeout=30)
             return json.loads(raw)["data"]
         except (ArchiveError, ValueError, KeyError) as e:
+            refused = refused or str(e).startswith("HTTP 400")
             last = e
+    if refused:
+        raise NameNotFound("SIMBAD could not read this as an object name.")
     raise ArchiveError(f"SIMBAD did not answer ({last})")
+
+
+# What people type and paste, in the plain characters SIMBAD's identifiers use.
+_PLAIN = str.maketrans({"’": "'", "‘": "'", "ʼ": "'", "′": "'", "`": "'", "´": "'", "“": '"', "”": '"', "″": '"',
+                        "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "―": "-", "−": "-"})
+# Greek letters as SIMBAD abbreviates them in star names ("* eps Ind B", "* alf Ori").
+_GREEK = {"α": "alf", "β": "bet", "γ": "gam", "δ": "del", "ε": "eps", "ζ": "zet", "η": "eta", "θ": "tet",
+          "ι": "iot", "κ": "kap", "λ": "lam", "μ": "mu", "ν": "nu", "ξ": "ksi", "ο": "omi", "π": "pi", "ρ": "rho",
+          "σ": "sig", "ς": "sig", "τ": "tau", "υ": "ups", "φ": "phi", "χ": "chi", "ψ": "psi", "ω": "ome"}
+_SIMBAD_PREFIX = re.compile(r"^(NAME|V\*|EM\*|\*\*|\*)\s+")
+
+
+def clean_name(name: str) -> str:
+    """An object name as typed, reduced to plain characters: straight quotes, a hyphen
+    for every kind of dash and minus sign, no accents, Greek letters as SIMBAD's
+    three-letter abbreviations, single spaces, no invisible characters."""
+    text = unicodedata.normalize("NFKC", name).translate(_PLAIN)
+    text = "".join(" " if unicodedata.category(c) in ("Cc", "Cf") else c for c in text)   # tabs, zero-width space
+    text = "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c))
+    text = "".join(f" {_GREEK[c.lower()]} " if c.lower() in _GREEK else c for c in text)
+    return " ".join(text.split())
+
+
+def _display_name(main_id: str) -> str:
+    """SIMBAD's identifier without its catalogue prefix and doubled spaces: "NAME Barnard's
+    star" becomes "Barnard's star", "* eps Ind B" "eps Ind B", "M  31" "M 31"."""
+    return " ".join(_SIMBAD_PREFIX.sub("", main_id).split())
+
+
+def _presented(result: dict) -> dict:
+    """A resolve result as it is returned. Applied to cached answers too, so answers
+    cached before these fields existed come back the same as new ones."""
+    out = dict(result)
+    out["display_name"] = _display_name(str(result.get("name") or ""))
+    if not result.get("moved_to_epoch"):
+        out["moved_since_2000_arcsec"] = None      # no motion known: "has not moved" would be a claim
+    return out
 
 
 _BASIC = ("SELECT DISTINCT b.oid, b.main_id, b.ra, b.dec, b.pmra, b.pmdec, b.plx_value, b.otype, "
@@ -192,15 +286,22 @@ def resolve_name(name: str) -> dict:
     applied: it shifts the object by at most `parallax` mas around this position over
     a year, and position_at() adds it for a given date.
 
+    The name is cleaned first (clean_name), and the cache is keyed on the cleaned name,
+    so "Barnard’s Star" with a curly apostrophe is the same lookup as "Barnard's Star".
+
     Raises NameNotFound if SIMBAD has no such object, ArchiveError if SIMBAD is down.
     """
-    query = " ".join(name.split())
+    query = clean_name(name)
     if not query or len(query) > 80:
         raise NameNotFound("Give an object name of 1 to 80 characters.")
+    if not (query.isascii() and query.isprintable()):
+        # SIMBAD's identifiers are plain ASCII; its service refuses anything else.
+        odd = "".join(sorted({c for c in query if not (c.isascii() and c.isprintable())}))
+        raise NameNotFound(f"'{query}' has characters that object names do not use ({odd}).")
     key = hashlib.sha1(query.lower().encode()).hexdigest()[:16]
     cache_file = CACHE / "queries" / f"resolve_{key}.json"
     if cache_file.exists():
-        return json.loads(cache_file.read_text())
+        return _presented(json.loads(cache_file.read_text()))
 
     oid, main_id, ra0, dec0, pmra, pmdec, plx, otype, coo_ref, pm_ref = _simbad_object(query)
     if ra0 is None or dec0 is None:
@@ -248,4 +349,4 @@ def resolve_name(name: str) -> dict:
     }
     if complete:
         write_json(cache_file, result)
-    return result
+    return _presented(result)

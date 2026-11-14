@@ -102,12 +102,18 @@ answers about one request in three with an immediate 502.
   Does all data access and image processing. Disk cache under `backend/cache/`:
   `cutouts/`, `queries/`, `frames/` (keyed by ra, dec, fov, detector, mode and options)
   and `photometry/` (keyed by ra, dec, detector, motion and code version).
-- `frontend/index.html`: one plain HTML + JavaScript file, no build step (started by
-  Anu for issue #8; the Vite + React plan was dropped). The backend serves it at `/`.
-  It plays the frames with zoom, pan, a marker on each measured position, a trail and
-  a first/last blink, and has detector, field-of-view and mode selectors. Search box,
-  charts, Gaia overlay and the Aladin Lite context panel are not built. It shows only
-  what the API returns: no sample or simulated data.
+- `frontend/`: the React app (Vite + TypeScript, Swara's PR #19). Tatsat chose it as
+  the frontend on 2026-11-14. It has a basic player, the Gaia overlay (predicted
+  against measured position) and a frame details panel. `npm run dev` serves it on
+  port 5173 and passes `/api` and `/frames` to the backend on port 8000. `npm run build`
+  writes `frontend/dist`, which the backend serves at `/` when it exists.
+- `frontend/public/viewer.html`: the earlier single-file viewer (plain HTML +
+  JavaScript, no build step, started by Anu for issue #8), kept at `/viewer.html` until
+  the app has its features: zoom, pan, a marker on each measured position, a trail, a
+  first/last blink, detector, field-of-view and mode selectors, the motion parameters,
+  and the spectrum on click. Search box, brightness chart and the Aladin Lite context
+  panel are not built in either. Both show only what the API returns: no sample or
+  simulated data.
 - `scripts/`: one-off exploration and the cache warm-up script for the five targets.
 
 Endpoints (adjust if something better emerges, and keep this list current):
@@ -115,9 +121,16 @@ Endpoints (adjust if something better emerges, and keep this list current):
 - `GET /api/resolve?name=` BUILT. Object name to coordinates at the fixed date 2026.0
   (`ra`, `dec`, `epoch`), with `pmra`, `pmdec` (mas/yr), `parallax` (mas) when known,
   `source` ("Gaia DR3" or "SIMBAD"), `catalogue` (the position and epoch the motion
-  starts from), `j2000`, `moved_since_2000_arcsec` and `notes`. 404 if SIMBAD does not
-  know the name, 502 if SIMBAD is down. Same logic without a server:
+  starts from), `j2000`, `moved_since_2000_arcsec` (null when no motion is known) and
+  `notes`. `name` is SIMBAD's own identifier ("NAME Barnard's star", "M  31");
+  `display_name` is the same without the catalogue prefix and doubled spaces. 404 if
+  SIMBAD does not know the name, 502 if SIMBAD is down. Same logic without a server:
   `backend.astrometry.resolve_name(name)`. Check: `scripts/check_resolve.py`.
+  - The name is cleaned before the lookup (`astrometry.clean_name`): curly quotes to
+    straight ones, every dash and minus sign to a hyphen, accents dropped, Greek letters
+    to SIMBAD's abbreviations (ε to eps), invisible characters and repeated spaces
+    removed. The cache is keyed on the cleaned name, and `query` returns it. A name that
+    still has characters outside plain ASCII is answered 404 without asking SIMBAD.
 - `GET /api/frames?ra=&dec=&fov=&detector=&mode=` BUILT for `mode=normal`, `difference`
   and `sum` (anything else answers 400). Defaults: fov 0.1 degrees, detector 5. Returns
   `size_px`, `pixel_arcsec`, `stretch`, `target`, `failures` and `frames`. Each frame has
@@ -126,6 +139,27 @@ Endpoints (adjust if something better emerges, and keep this list current):
   `saturated_pixels`, `rejected_readings`, `centroid` and `predicted` (each with ra, dec,
   and x, y in PNG pixels from the top-left). In the PNG, north is up and east is left;
   white-with-no-detail pixels are saturated and transparent pixels have no data.
+  - Two saturation counts, which mean different things (`saturation_note` in the
+    response says the same). `saturated_pixels`: picture pixels with no value in any
+    exposure because the detector overflowed there; these are the white ones.
+    `photometry_saturated_exposures`: how many of the frame's `n_exposures` have a
+    saturated pixel inside the circle in which `/api/lightcurve` measures the target
+    (the centre of the picture if there is no target), by the photometry rule, which also
+    counts overflow within the first seconds, charge spilled from a neighbour and
+    uncorrectable pixels. Those pixels usually still hold a value, so a frame can look
+    fine, report 0 `saturated_pixels`, and have every exposure unusable for brightness.
+  - `centroid` is the target, measured, or null. When the view has a `target`
+    (`centroid_is` "target"), a source is fitted starting within 6 arcsec of `predicted`
+    and kept only if it is a detection (fitted S/N 4 or more, width 6 to 36 arcsec) no
+    further from `predicted` than 3 arcsec, or a quarter of its own width if that is more
+    (a saturated star is located from its wings). Otherwise `centroid` is null,
+    `centroid_reason` says why in plain words, and `nearest_source` holds what was found
+    instead when that was another object (the same fields as `centroid`, plus its own
+    `offset_arcsec`). `centroid_offset_arcsec` is centroid minus predicted: `east`,
+    `north`, `total`. With no target at all (`centroid_is` "brightest_near_centre")
+    `centroid` is the brightest source within 14 arcsec of the centre, as before, and
+    the offset is null. `centroid_note` states which of the two applies. The fields
+    inside `centroid` itself are unchanged.
   - Optional `pmra=&pmdec=&parallax=` (mas/yr, mas, exactly as `/api/resolve` returns
     them; `pm_epoch` defaults to 2026.0): the object at (ra, dec) with that motion becomes
     `target`, so `predicted` works for objects Gaia does not list. Without them `target`
@@ -145,6 +179,29 @@ Endpoints (adjust if something better emerges, and keep this list current):
     shifts each exposure by the target's motion first (`registration` "target_motion",
     and a `note` saying stars are smeared and coordinates hold for the target only);
     it answers 400 if no motion is known.
+- `GET /api/stars?ra=&dec=&fov=&detector=` BUILT. Gaia DR3 stars in the frames of a view,
+  for the catalogue overlay. Takes every parameter `/api/frames` takes (`mode`,
+  `reference`, `track`, `pmra`, `pmdec`, `parallax`, `pm_epoch`) plus `limit`, and describes
+  exactly the frames that request returns: `frames` (each with `epoch`, `mjd_mean`,
+  `date_mean`, in the same order), `size_px`, `pixel_arcsec` and `stars`, brightest first.
+  A star has `source_id`, `gmag`, `pmra`, `pmdec`, `parallax` (mas/yr and mas; null when
+  Gaia has no motion for it), `is_target` and `positions`: one `{ra, dec, x, y}` per
+  frame, for that frame's mean date with the star's own proper motion and parallax
+  applied, x and y in PNG pixels exactly as for `centroid`. `target_source_id` names the
+  star that is the view's target, if one is (by identifier, or, when the target came
+  from the request's motion, the star that stays within 1.5 arcsec of `predicted`).
+  - Keeping it small: only stars brighter than G = 17 that are inside the picture on at
+    least one frame's date; at most `limit` of them (default 300, largest 2000), brightest
+    first, except that stars faster than 100 mas/yr are always kept. `n_in_field`,
+    `n_returned` and `truncated` say what was cut. Numbers are rounded (0.001 pixel,
+    1e-7 degree). About 0.3 kB per star with three frames.
+  - It has no cache of its own. It is worked out in milliseconds from two things that
+    are on disk once `/api/frames` has run for the view: the frames metadata and the Gaia
+    search around the centre. It calls `build_frames` with the same parameters, so it
+    never fetches a cutout that `/api/frames` would not. If the Gaia search is not on
+    disk (the view was only ever requested with a motion) it is made once, with 3 tries;
+    if Gaia does not answer, `gaia_error` is set and `stars` is empty.
+  - Check: `scripts/check_stars.py [name] [detector] [fov]`.
 - `GET /api/lightcurve?ra=&dec=` BUILT. Brightness of the object at (ra, dec) in every
   exposure of all six detectors, grouped into `bins` (SPHEREx's 102 wavelength channels,
   17 per detector). Each bin has `wavelength_um` [min, max], `detector`, counts, and
@@ -190,17 +247,33 @@ same entry at the same time.
 5. Reproject every cutout onto one shared north-up grid centred on the request,
    oversampled to about 2 arcsec per pixel.
 6. Group by epoch (a gap of more than 30 days starts a new one; computed over all
-   detectors so epoch numbers agree between detectors) and detector. Drop single
-   readings far from the per-pixel median (the flags miss some glitches), then take a
-   weighted mean with ONE weight per exposure, the inverse of its median variance.
-   Per-pixel inverse-variance weights would down-weight the exposures in which a source
-   is brightest, because VARIANCE includes source photon noise.
+   detectors so epoch numbers agree between detectors) and detector. Take a weighted
+   mean with ONE weight per exposure, the inverse of its median variance. Per-pixel
+   inverse-variance weights would down-weight the exposures in which a source is
+   brightest, because VARIANCE includes source photon noise.
+   - Glitches (the flags miss some): with 5 or more exposures, at each pixel the highest
+     of at least three readings is dropped if it is far above the SECOND highest, and
+     the lowest if it is far below the second lowest. Far means 6 times that exposure's
+     noise plus the brightest value within 4 grid pixels in the second-highest image.
+     It is dropped only as part of a small patch: the connected patch in which that
+     exposure is the extreme by half that margin must be 85 grid pixels or less (what a
+     2 x 2 block of native pixels spreads over), and then the whole patch goes.
+   - Never go back to "drop what disagrees with the median". Each exposure is at its
+     own wavelength, so a source with a steep spectrum is bright in a minority of them
+     and such a rule throws its light away (see "Stacking and glitches").
+   - `pipeline.Stacker` takes the exposures one at a time and keeps only running sums
+     and the two highest and two lowest readings per pixel, so memory does not grow
+     with the number of exposures. Builds run one at a time (a lock in `build_frames`).
 7. Apply ONE brightness stretch per detector across all epochs (asinh, limits from the
    combined pixel distribution; the top of the scale is the brightest pixel so bright
    stars keep their shape). Per-frame auto-scaling would make brightness changes
    look fake or hide real ones.
-8. Measure the centroid of the source nearest the target in each frame (round Gaussian
-   fitted to valid pixels only, so a saturated star is located from its wings).
+8. Measure the target in each frame: a round Gaussian fitted to valid pixels only (so a
+   saturated star is located from its wings), started at the brightest pixel within 6
+   arcsec of the predicted place. It counts as the target only if it is detected and
+   within 3 arcsec of the prediction (see `centroid` under Endpoints); otherwise there
+   is no centroid, and the reason is given. Only a view with no target at all falls back
+   to the brightest source near the centre.
 9. Write PNGs and return the metadata.
 
 Difference mode subtracts the stacked images of step 6 pixel by pixel, with no flux
@@ -332,6 +405,62 @@ Step 1 result (detector 5, fov 0.1 degrees, 2 arcsec grid)
   frees disk space. A process that was already running keeps the old code and the old
   keys: restart the server and re-run the warm-up script after a version change.
 
+Stacking and glitches (`pipeline.Stacker`, `scripts/check_stack.py`, 2026-11-14)
+- The first rule dropped every reading more than 6 sigma (plus local brightness) from
+  the per-pixel median. It threw away real light. Epsilon Indi B in detector 1 is 17
+  times brighter at 1.08 microns than at 0.85 (6.65 against 0.39 MJy/sr in visit 2), so
+  the median sat near the faint end and the bright readings were dropped. Brightness at
+  the target (3 x 3 grid pixels minus the frame median, MJy/sr), old rule / present rule
+  / nothing dropped: detector 1 visit 2, 0.235 / 1.222 / 1.222; visit 3, 0.813 / 1.879 /
+  1.879; all visits following the target, 0.51 (from `docs/results.md`) / 1.527 / 1.527;
+  detector 2 visit 3 (7 exposures), 4.84 / 7.707 / 7.707. The old rule also took 0.6 per
+  cent off the core of Barnard's Star in visit 3 of detector 5.
+- Real glitches are small: in Barnard's Star detector 5, WISE 0855 detector 6 and
+  Epsilon Indi B detector 2 (visits 1 to 3) every patch that qualified was under 40 grid
+  pixels. Large
+  patches are whole exposures with a different background. Epsilon Indi B, detector 1,
+  visit 3: `2026W16_2A_0434_1`, `2026W16_2A_0434_2` and `2026W18_2A_0819_1` differ from
+  the other 17 by -1.0 to +0.9 MJy/sr over a third to two thirds of the frame (stray
+  light from Epsilon Indi A 6.7 arcmin away; no flag marks it). Dropping pieces of them
+  left visible steps, which is why a patch must be small to be dropped. They stay in the
+  mean with their low weight and add a smooth gradient.
+- The rule alone removes the dark spots it was first written for: with
+  `impossible_pixels` switched off, Barnard's Star detector 5 visit 3 has a darkest
+  pixel of -3.9 sigma with nothing dropped and -0.8 with the rule. WISE 0855 detector 6
+  visit 3: -11.4 against -3.6; the target's brightness, S/N (5.0, 18.6, 27.4) and
+  position are the same as under the old rule.
+- Barnard's Star detector 5 against the old rule: the same shifts (`check_barnard.py`),
+  and 38 to 139 of the 32400 pixels of each frame differ, none by more than 2 grey levels.
+- Known cost: something that two exposures show at overlapping places counts as seen
+  twice and stays. WISE 0855 detector 6 visit 3 has two such places, at PNG pixels
+  (102, 8) and (76, 168): a compact blob of 7 to 18 MJy/sr in one exposure and another
+  8 arcsec away in an exposure 8 to 13 days later (not a moving object, cause unknown).
+  The parts that overlap stay and the cores are dropped, leaving two small ring-shaped
+  marks that the old rule removed completely.
+- A source seen in only one exposure of a visit is still dropped, as before. Visits
+  with fewer than 5 exposures still get no glitch removal at all.
+- Memory, largest cached view (Epsilon Indi B, detector 5, fov 0.3, 86 exposures, 540 x
+  540 grid), peak of a fresh process, old / new: normal 835 / 290 MB, sum 1154 / 261 MB,
+  difference against the mean 1735 / 321 MB. Importing the backend alone is 123 MB.
+  Barnard's Star fov 0.2 sum: 556 / 196 MB. The streaming stack gives the same image as
+  the same rule applied to all exposures held at once, to 4e-16 MJy/sr. A 0.5 degree
+  field (900 x 900) needs about 50 MB per stack being built, whatever the exposure count.
+
+Gaia field stars (`/api/stars`, `scripts/check_stars.py`, 2026-11-14)
+- Stars brighter than G = 17 inside the picture: Barnard's Star 64 at fov 0.1 and 280 at
+  fov 0.2; WISE 0855 15 at fov 0.1; Epsilon Indi B 103 at fov 0.3. The answer is 20 kB for
+  64 stars and three frames, 96 kB for 280, and a repeat request takes 2 to 5 ms.
+- The listed places agree with the pictures: for isolated stars fitted in each frame, the
+  median distance from the catalogue place is 0.15 to 0.37 arcsec (Barnard's Star 8 to 9
+  stars per frame at fov 0.1 and 42 to 46 at fov 0.2; Epsilon Indi B 36 to 46 at fov 0.3;
+  WISE 0855 detector 6, 4 to 5 stars, 0.16 to 0.53).
+- Epsilon Indi B itself (G = 18.0) is fainter than the G = 17 search limit, so it is not
+  in the list; it is drawn from `target` and `predicted` when the motion is passed.
+  Epsilon Indi A (G = 4.3, 4.7 arcsec/yr) is listed when the field is wide enough.
+- Gaia's synchronous TAP returned all 4288 stars (G < 17) within 0.435 degrees of
+  Barnard's Star, the search a 0.5 degree field makes, in 3.9 s with QUERY_STATUS OK: no
+  2000-row cut.
+
 Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
 - SIMBAD TAP: `GET <mirror>/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=json&
   QUERY=...` answers in about 0.3 s with `{"metadata": [...], "data": [[...], ...]}`.
@@ -347,6 +476,12 @@ Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
   `WISE J085510.83-071442.5` and `WISEA J085510.74-071442.5`. The backend handles the
   first with `i.id LIKE 'WISE% J0855%-0714%'` (1.6 s, one object) and the second with a
   small alias table. "barnards star" without the apostrophe also needs the alias table.
+- The CfA mirror answers HTTP 400 to any name with a character outside plain ASCII
+  ("Barnard’s Star" with a curly apostrophe, "ε Indi B", "Bételgeuse", a true minus
+  sign). With Strasbourg down that used to come back as 502 "service down". Now the
+  name is cleaned first and all four resolve; "eps Indi B", "alf Ori", "mu Cep" and
+  "mu. Cep" each match one object. A 400 from a mirror is reported as "not found"
+  (404); with every mirror unreachable an uncached name still answers 502.
 - `basic` columns used: `oid`, `main_id`, `ra`, `dec` (degrees, ICRS, epoch J2000),
   `pmra`, `pmdec` (mas/yr), `plx_value` (mas), `otype`, `coo_bibcode`, `pm_bibcode`.
   The Gaia identifier, when there is one: `SELECT id FROM ident WHERE oidref = <oid>
@@ -432,6 +567,13 @@ Photometry checks (`scripts/check_photometry.py`, `scripts/check_flux_scale.py`)
 - Counts: RW Aurigae has 336 exposures (56 per detector), R Draconis 548 (89 to 93 per
   detector; it is 9 degrees from the north ecliptic pole). Measuring all exposures of a
   target from cached cutouts takes about 10 s.
+- The frames' `photometry_saturated_exposures` agrees with the lightcurve's own count.
+  RW Aurigae, every frame reporting 0 `saturated_pixels`: detector 2, 7/18, 8/19 and
+  13/19 exposures in the three visits against 7, 8 and 13 "saturated" in
+  `/api/lightcurve`; detector 3, 14/19, 16/18, 16/18 against 14, 16, 16; detector 5,
+  17/18, 6/19, 0/19 against 17, 5, 0. Over all detectors 171 against 167 (the frames
+  also count the 10 exposures that have no wavelength and so no lightcurve point).
+  Barnard's Star 354 against 350 of 354; WISE 0855 0 against 0.
 
 Unflagged negative pixels (found 2026-11-14)
 - Every target has pixels whose raw IMAGE value is more than 10 sigma below zero and
@@ -461,3 +603,25 @@ WISE 0855 in detector 6 (fov 0.1, motion from `/api/resolve`; `scripts/check_mod
 - Without `pmra`/`pmdec`, `/api/frames` at this position picks that Gaia star as
   `target` (it is within 15 arcsec of the centre). The frontend must pass the motion
   from `/api/resolve` for objects Gaia does not list.
+
+The marker is the target or nothing (`centroid`, checked 2026-11-14 on 41 views)
+- Before, `centroid` was whatever was brightest within 14 arcsec of the predicted place.
+  At WISE 0855 in detector 1, with the motion passed, that was the Gaia star of the
+  section above: S/N 41, 59 and 48 at 11.4, 8.6 and 4.4 arcsec from the prediction. Now
+  those three frames have `centroid` null, `centroid_reason` "The nearest source is 4.4
+  arcsec from the predicted position, too far to be the target." and that star in
+  `nearest_source`.
+- WISE 0855 detector 6 with the motion keeps its three markers (S/N 5.0, 18.6, 27.4;
+  0.8, 1.3 and 1.1 arcsec from the prediction). Without the motion the target is the
+  Gaia star, what is measured is the brown dwarf 10.5, 6.8 and 3.3 arcsec from it, and
+  all three frames now say so with a null `centroid`.
+- Every other marker of the 41 views is where it was: Barnard's Star in all six
+  detectors (0.1 to 1.5 arcsec from the prediction), Epsilon Indi B detector 5 (0.5 to
+  0.8), RW Aurigae detectors 1, 3, 5 (0.1 to 1.5) and R Draconis detectors 1, 3, 5 (0.3
+  to 2.9). The `check_barnard.py` shifts are unchanged.
+- Why the limits are what they are: the largest offset of a real target is R Draconis in
+  detector 3 (2.9 arcsec; it is saturated and fitted from its wings, 19 to 30 arcsec
+  wide), the smallest offset of a wrong object is 3.3 arcsec with a width of 10. Hence
+  3 arcsec, or a quarter of the fitted width if that is more. The margin is thin.
+- `astrometry.offset_arcsec` now takes the short way round in right ascension, so two
+  points either side of RA 0h are no longer 360 degrees apart.

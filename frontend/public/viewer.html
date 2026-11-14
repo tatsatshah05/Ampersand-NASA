@@ -1,0 +1,781 @@
+<!doctype html>
+<!--
+  SPHEREx motion viewer.
+
+  Plays the frames that the backend builds for a patch of sky and makes a one-to-two
+  pixel motion easy to see: zoom and pan, a marker on each frame's measured position,
+  a fixed crosshair at the first position, a trail, a first/last blink, keyboard keys.
+
+  Click a star (or the "Spectrum of the target" button) to see its spectrum: its
+  brightness at each wavelength, one point per SPHEREx exposure.
+
+  It shows only what GET /api/frames and GET /api/spectrum return. There is no built-in
+  sample data.
+
+  The page reads its options from its own address:
+      ?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal
+  For an object whose motion is known, add what /api/resolve returns
+  (&pmra=..&pmdec=..&parallax=..); the backend then follows that object instead of
+  picking the nearest catalogue star.
+  It finds the backend at the address the page itself was served from. When the page
+  is opened as a file, or served from somewhere else during development, it uses
+  http://localhost:8000, or whatever ?api=... says.
+
+  Adding &spec=1 to the address opens the spectrum of the target straight away.
+
+  Viewer by Anu (issue #8); wired to the real API afterwards. Spectrum panel: issue #11.
+-->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPHEREx motion viewer</title>
+<style>
+  /* Dark theme: astronomical images are easier to judge on a dark background. */
+  body{margin:0;background:#111;color:#eee;font-family:system-ui,sans-serif;text-align:center}
+  canvas{width:100%;max-width:760px;background:#000;cursor:grab;touch-action:none}
+  button,select{background:#2a2a2a;color:#eee;border:1px solid #555;border-radius:6px;
+    padding:7px 10px;margin:3px}
+  button{cursor:pointer} button.on{background:#0a6;border-color:#0c8}
+  label{margin:0 8px;font-size:.95em}
+  #info{min-height:2.6em;font-size:1.05em;margin:4px 10px}
+  #note{min-height:1.4em;color:#fc6;font-size:.95em;margin:4px 10px}
+  small{color:#999;display:block;margin:6px 10px}
+  /* Spectrum panel. Colours for the visits were checked for colour-blind safety on this
+     surface; text stays in the page's text colours and never takes a data colour. */
+  #spec{max-width:760px;margin:10px auto;padding:12px 14px;background:#181818;
+    border:1px solid #333;border-radius:8px;text-align:left;box-sizing:border-box}
+  #specHead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  #specTitle{font-size:1.08em}
+  #specWhat,#specMsg{color:#c3c2b7;font-size:.93em;margin:4px 0}
+  #specVisits{margin:6px 0 2px -3px}
+  #specVisits button{font-size:.88em;padding:4px 9px;opacity:.45}
+  #specVisits button[aria-pressed=true]{opacity:1;border-color:#999}
+  #specVisits i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  #specPlot{position:relative}
+  #specSvg{width:100%;height:auto;display:block}
+  #specSvg text{fill:#c3c2b7;font-size:12px;font-family:system-ui,sans-serif}
+  #specTip{position:absolute;pointer-events:none;background:#000;border:1px solid #555;
+    border-radius:6px;padding:6px 9px;font-size:.85em;white-space:nowrap;color:#c3c2b7}
+  #specTip b{display:block;color:#f0efec;font-size:1.12em}
+  #specTip i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;
+    vertical-align:middle}
+  #specFoot{color:#aaa;font-size:.86em;line-height:1.45}
+  #specFoot p{margin:6px 0} #specFoot button{margin-left:0}
+</style></head><body>
+<h2>SPHEREx motion viewer</h2>
+<div>
+  <label>Detector <select id="selDet"></select></label>
+  <label>Field of view <select id="selFov"></select></label>
+  <label>Mode <select id="selMode"></select></label>
+</div>
+<div id="note"></div>
+<canvas id="cv" width="760" height="600" tabindex="0"></canvas>
+<div id="info"></div>
+<div>
+  <button id="bPlay">Pause (space)</button>
+  <button id="bBlink">Blink first/last</button>
+  <button id="bTrail">Trail</button>
+  <button id="bPix">Show pixels</button>
+  <button id="bPrev">&larr;</button><button id="bNext">&rarr;</button>
+  <button id="bIn">Zoom +</button><button id="bOut">Zoom &minus;</button>
+  <button id="bReset">Reset view</button>
+  <button id="bSpec">Spectrum of the target</button>
+</div>
+<div id="spec" hidden>
+  <div id="specHead"><b id="specTitle"></b><button id="specClose">Close</button></div>
+  <div id="specWhat"></div>
+  <div id="specMsg"></div>
+  <button id="specGo" hidden>Measure this spot</button>
+  <div id="specBody" hidden>
+    <div id="specVisits"></div>
+    <div id="specPlot">
+      <svg id="specSvg" viewBox="0 0 760 360" role="img"
+           aria-label="Brightness against wavelength, one point per SPHEREx exposure"></svg>
+      <div id="specTip" hidden></div>
+    </div>
+    <div id="specFoot">
+      <p>Each dot is one SPHEREx exposure. Every exposure sees the sky through a different
+      colour of infrared light, so together they show how bright the object is at each
+      wavelength: its spectrum. The brightness is added up inside the dashed circle on the
+      image (15&Prime; in radius), so anything else inside that circle is included.</p>
+      <p id="specNote"></p>
+      <button id="specCsv">Download these numbers (CSV)</button>
+      <details><summary>How this is measured</summary><p id="specMethod"></p></details>
+    </div>
+  </div>
+</div>
+<small>Scroll to zoom, drag to pan, click a star to see its spectrum, space = play/pause,
+arrow keys = step. North is up, east is left.</small>
+<small>Images: NASA/JPL-Caltech SPHEREx, from the NASA/IPAC Infrared Science Archive (IRSA).
+Star positions: ESA Gaia.</small>
+<script>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+
+// ---- options ---------------------------------------------------------------
+// Detector number and its wavelength range in microns.
+const DETECTORS = [[1, 0.75, 1.12], [2, 1.10, 1.65], [3, 1.63, 2.43],
+                   [4, 2.40, 3.85], [5, 3.81, 4.43], [6, 4.41, 5.01]];
+const MODES = [['normal', 'Normal'], ['difference', 'Difference'], ['sum', 'Sum']];
+const FOVS = [0.05, 0.1, 0.2, 0.5];       // presets in degrees; the API needs more than 0.02
+// Barnard's Star where it is in 2026, not its catalogue (year 2000) position, which is
+// 4.5 arcminutes away and outside a 0.1 degree frame.
+const DEFAULT = {ra: 269.446267, dec: 4.768222, det: 5, fov: 0.1, mode: 'normal'};
+const Q = {...DEFAULT};                   // the selected options
+// Known motion of the object, as /api/resolve returns it. Passed through to the API.
+const MOTION = {};
+
+const params = new URLSearchParams(location.search);
+// Where the backend is. Same address as the page, unless the page is a local file.
+const API = (params.get('api') ||
+             (location.protocol === 'file:' ? 'http://localhost:8000' : '')).replace(/\/+$/, '');
+
+function numberIn(text, lo, hi, fallback, loOpen){
+  // A number from the page address, or the fallback when it is missing or out of range.
+  const v = text === null || text.trim() === '' ? NaN : Number(text);
+  return Number.isFinite(v) && (loOpen ? v > lo : v >= lo) && v <= hi ? v : fallback;
+}
+function readURL(){
+  // Restore options from the page address; anything missing or invalid falls back to a default.
+  Q.ra = numberIn(params.get('ra'), 0, 359.999999, DEFAULT.ra);
+  Q.dec = numberIn(params.get('dec'), -90, 90, DEFAULT.dec);
+  Q.det = Math.round(numberIn(params.get('det'), 1, 6, DEFAULT.det));
+  Q.fov = numberIn(params.get('fov'), 0.02, 0.5, DEFAULT.fov, true);
+  Q.mode = MODES.some(m => m[0] === params.get('mode')) ? params.get('mode') : DEFAULT.mode;
+  const pmra = numberIn(params.get('pmra'), -1e5, 1e5, null);
+  const pmdec = numberIn(params.get('pmdec'), -1e5, 1e5, null);
+  if (pmra !== null && pmdec !== null){              // the API wants both or neither
+    MOTION.pmra = pmra; MOTION.pmdec = pmdec;
+    const plx = numberIn(params.get('parallax'), -1e4, 1e4, null);
+    if (plx !== null) MOTION.parallax = plx;
+  }
+}
+function writeURL(){
+  // Keep the address in sync so a reload or a shared link restores the same view.
+  const p = new URLSearchParams({ra: Q.ra, dec: Q.dec, det: Q.det, fov: Q.fov, mode: Q.mode, ...MOTION});
+  if (SP && SP.kind === 'target') p.set('spec', '1');   // the link reopens the spectrum
+  if (params.get('api')) p.set('api', params.get('api'));
+  try { history.replaceState(null, '', '?' + p); } catch (e) { /* not allowed for local files */ }
+}
+function fill(sel, items, value){
+  // Fill a <select> from [value, text] pairs and select `value`.
+  sel.innerHTML = '';
+  items.forEach(([v, t]) => sel.add(new Option(t, v)));
+  sel.value = String(value);
+}
+function buildControls(){
+  fill($('selDet'), DETECTORS.map(([d, lo, hi]) => [d, `D${d}  ${lo}-${hi} µm`]), Q.det);
+  // Keep a field of view that came from the address even if it is not a preset.
+  const fovs = FOVS.includes(Q.fov) ? FOVS : [...FOVS, Q.fov].sort((a, b) => a - b);
+  fill($('selFov'), fovs.map(f => [f, `${f}°` + (f === 0.1 ? ' (default)' : '')]), Q.fov);
+  fill($('selMode'), MODES, Q.mode);
+}
+
+// ---- frames (reloaded whenever an option changes) -------------------------
+// D.scale is arcseconds per image pixel, as reported by the API.
+let D = {w: 1, h: 1, scale: 2, frames: [], start: null}, imgs = [], N = 0, loading = false, loadId = 0;
+const notes = {mode: '', sat: ''};
+function showNotes(){ $('note').textContent = [notes.mode, notes.sat].filter(Boolean).join('  '); }
+
+// normalizeFrame and frameLabel are the only places that know the API's field names.
+function spot(c){
+  // The API counts pixels from the top-left with whole numbers at pixel centres; the
+  // canvas puts pixel centres at +0.5. `centroid` is null when nothing could be measured.
+  return c ? {cx: c.x + 0.5, cy: c.y + 0.5} : {cx: null, cy: null};
+}
+function frameLabel(f, body){
+  const when = `${f.date_start} to ${f.date_end}, ${f.n_exposures} exposures`;
+  if (body.mode === 'sum') return `All ${f.epochs_combined.length} visits added together: ${when}`;
+  if (body.mode === 'difference'){
+    const ref = f.reference_epoch ? `visit ${f.reference_epoch}` : 'the average of all visits';
+    return `Visit ${f.epoch} minus ${ref}: ${when}`;
+  }
+  return `Visit ${f.epoch}: ${when}`;
+}
+function normalizeFrame(f, body){
+  const p = f.predicted;                               // where the target is expected, if its motion is known
+  return {src: API + f.image, label: frameLabel(f, body), ...spot(f.centroid), sat: f.saturated_pixels || 0,
+          px: p ? p.x + 0.5 : null, py: p ? p.y + 0.5 : null};
+}
+const measured = () => D.frames.filter(f => f.cx !== null);   // frames with a measured position
+// Where the object started. In a difference view the first visit is the one subtracted
+// and is not among the frames, so the API reports its position separately.
+const startSpot = () => (D.start && D.start.cx !== null) ? D.start : measured()[0];
+
+async function loadFrames(){
+  const my = ++loadId;                                  // ignore replies that arrive out of order
+  loading = true; notes.sat = ''; showNotes();
+  $('info').textContent = 'Loading frames… a new position or detector can take about a minute.';
+  const url = API + '/api/frames?' + new URLSearchParams(
+    {ra: Q.ra, dec: Q.dec, detector: Q.det, fov: Q.fov, mode: Q.mode, ...MOTION});
+  try {
+    const r = await fetch(url).catch(() => { throw new Error('the server could not be reached.'); });
+    if (my !== loadId) return;
+    if (r.status === 501 && Q.mode !== 'normal'){       // the backend does not have this mode yet
+      notes.mode = MODES.find(m => m[0] === Q.mode)[1] + ' mode is not available yet; showing Normal.';
+      Q.mode = 'normal'; $('selMode').value = 'normal'; writeURL();
+      return loadFrames();
+    }
+    if (!r.ok) throw new Error('the server answered ' + r.status);
+    const body = await r.json();
+    if (!body.frames || !body.frames.length)
+      throw new Error(body.message || 'SPHEREx has no frames for this position and detector.');
+    const fr = body.frames.map(f => normalizeFrame(f, body));
+    const im = fr.map(f => { const i = new Image(); i.src = f.src; return i; });
+    await Promise.all(im.map(i => i.decode()));         // wait until every image is ready
+    if (my !== loadId) return;
+    imgs = im; N = fr.length;
+    D = {w: im[0].naturalWidth, h: im[0].naturalHeight, scale: body.pixel_arcsec || 2, frames: fr,
+         start: body.reference_frame ? spot(body.reference_frame.centroid) : null,
+         ra: body.ra ?? Q.ra, dec: body.dec ?? Q.dec, target: body.target || null};
+    if (SP && SP.centre !== centreKey()) closeSpectrum();   // a spectrum of another field
+    notes.mode = body.mode === 'difference'
+      ? 'Difference view: grey = no change, white = brighter than before, black = fainter.'
+      : body.mode === 'sum' ? 'Sum view: one deeper image from every visit. Nothing moves in it.' : notes.mode;
+    const k = fr.filter(f => f.sat > 0).length;         // detectors 1-4 overload on bright stars
+    notes.sat = k ? `Saturated pixels in ${k} of ${N} frames (bright star). Try detector 5 or 6.` : '';
+    showNotes(); S.frame = 0; S.tick = 0; loading = false; resetView(); draw();
+  } catch (e) {
+    if (my !== loadId) return;
+    N = 0; loading = false; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+    $('info').textContent = 'Could not load frames: ' + e.message;
+  }
+}
+function onChange(){
+  Q.det = +$('selDet').value; Q.fov = +$('selFov').value; Q.mode = $('selMode').value;
+  notes.mode = ''; writeURL(); loadFrames(); document.activeElement.blur();
+}
+['selDet', 'selFov', 'selMode'].forEach(id => $(id).onchange = onChange);
+
+// ---- view/state ----------------------------------------------------------
+// zoom = canvas pixels per image pixel; panX/panY = canvas position of the image corner.
+const S = {zoom:1, panX:0, panY:0, frame:0, playing:true, blink:false,
+           trail:true, pixels:false, tick:0};
+const fitZoom = () => Math.min(cv.width / D.w, cv.height / D.h);   // whole frame visible
+
+function resetView(){
+  // Start zoomed in on the target, centred on its first measured position: about 80
+  // image pixels (160 arcseconds) top to bottom. A real star image is about 5 pixels
+  // wide, so this keeps a few neighbouring stars in view as a still reference while a
+  // shift of a few pixels still spans tens of screen pixels.
+  // With no measured position, show the whole frame.
+  const first = startSpot();
+  S.zoom = first ? Math.max(fitZoom(), cv.height / 80) : fitZoom();
+  const [x, y] = first ? [first.cx, first.cy] : [D.w / 2, D.h / 2];
+  S.panX = cv.width  / 2 - x * S.zoom;
+  S.panY = cv.height / 2 - y * S.zoom;
+}
+// Image -> canvas coordinates (overlays use this so markers keep a constant screen size).
+const toScreen = (x, y) => [x * S.zoom + S.panX, y * S.zoom + S.panY];
+
+function zoomAt(k, mx, my){
+  // Zoom by factor k keeping the point under (mx, my) fixed. Zooming out stops when
+  // the whole frame fits (or at 1:1 if the frame is smaller than the canvas).
+  const z = Math.min(Math.max(S.zoom * k, Math.min(fitZoom(), 1)), 120);
+  k = z / S.zoom; S.zoom = z;
+  S.panX = mx - (mx - S.panX) * k;
+  S.panY = my - (my - S.panY) * k;
+  draw();
+}
+
+// ---- drawing ---------------------------------------------------------------
+function currentIndex(){ return S.blink ? (S.tick % 2 ? N - 1 : 0) : S.frame; }  // blink = first/last
+
+function drawCrosshair(x, y){
+  // Fixed reference at the FIRST measured position, with a gap so the star stays visible.
+  const [sx, sy] = toScreen(x, y), g = 9, L = 26;
+  ctx.strokeStyle = '#0ff'; ctx.lineWidth = 1.5; ctx.beginPath();
+  ctx.moveTo(sx - L, sy); ctx.lineTo(sx - g, sy); ctx.moveTo(sx + g, sy); ctx.lineTo(sx + L, sy);
+  ctx.moveTo(sx, sy - L); ctx.lineTo(sx, sy - g); ctx.moveTo(sx, sy + g); ctx.lineTo(sx, sy + L);
+  ctx.stroke();
+}
+
+function drawTrail(){
+  // Every measured position at once, joined by a line, with an arrow head at the end.
+  const from = D.start && D.start.cx !== null ? [D.start] : [];
+  const pts = [...from, ...measured()].map(f => toScreen(f.cx, f.cy));
+  if (pts.length < 2) return;
+  ctx.strokeStyle = '#fa0'; ctx.fillStyle = '#fa0'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+  ctx.stroke();
+  pts.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); });
+  const a = pts[0], b = pts[pts.length - 1];
+  if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 1) return;  // no visible motion, no arrow
+  const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+  ctx.beginPath(); ctx.moveTo(b[0], b[1]);
+  ctx.lineTo(b[0] - 14 * Math.cos(ang - .4), b[1] - 14 * Math.sin(ang - .4));
+  ctx.lineTo(b[0] - 14 * Math.cos(ang + .4), b[1] - 14 * Math.sin(ang + .4));
+  ctx.closePath(); ctx.fill();
+}
+
+function drawPixelGrid(){
+  // 'Show pixels' also draws pixel edges once zoomed in far enough to see them.
+  if (S.zoom < 8) return;
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let i = 0; i <= D.w; i++){
+    const [x] = toScreen(i, 0); ctx.moveTo(x, S.panY); ctx.lineTo(x, S.panY + D.h * S.zoom);
+  }
+  for (let j = 0; j <= D.h; j++){
+    const [, y] = toScreen(0, j); ctx.moveTo(S.panX, y); ctx.lineTo(S.panX + D.w * S.zoom, y);
+  }
+  ctx.stroke();
+}
+
+function drawCompass(){
+  // Small N/E arrows in the corner so 'which way' is answered at a glance.
+  ctx.strokeStyle = ctx.fillStyle = '#fff'; ctx.lineWidth = 2; ctx.font = '14px sans-serif';
+  ctx.beginPath(); ctx.moveTo(60, 60); ctx.lineTo(60, 22); ctx.moveTo(60, 60); ctx.lineTo(22, 60);
+  ctx.stroke();
+  ctx.fillText('N', 55, 16); ctx.fillText('E', 6, 65);   // north up, east left
+}
+
+function draw(){
+  if (!N || loading) return;                           // nothing to show while (re)loading
+  const i = currentIndex(), f = D.frames[i], f0 = startSpot();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  // Smooth scaling by default; 'show pixels' switches to hard-edged pixels.
+  ctx.imageSmoothingEnabled = !S.pixels; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(imgs[i], S.panX, S.panY, D.w * S.zoom, D.h * S.zoom);
+  if (S.pixels) drawPixelGrid();
+  if (S.trail) drawTrail();
+  if (f0) drawCrosshair(f0.cx, f0.cy);                 // fixed reference, never moves
+  if (f.cx !== null){                                  // marker follows this frame's measured position
+    const [mx, my] = toScreen(f.cx, f.cy);
+    ctx.strokeStyle = '#f50'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(mx, my, 12, 0, 7); ctx.stroke();
+  }
+  drawSpectrumMark(f);
+  drawCompass();
+  // Readout: shift since the first measured position (north = up = -y, east = left = -x).
+  const lab = (S.blink ? (i ? 'LAST: ' : 'FIRST: ') : '') + f.label;
+  let moved = 'no position could be measured in this frame';
+  if (N === 1 && !D.start) moved = f.cx !== null ? 'the ring marks the measured position' : moved;
+  else if (f.cx !== null && f0){
+    const dx = f.cx - f0.cx, dy = f.cy - f0.cy, arc = Math.hypot(dx, dy) * D.scale;
+    const ns = dy < 0 ? 'N' : 'S', ew = dx < 0 ? 'E' : 'W';
+    moved = f === f0 ? 'starting position' : `moved ${arc.toFixed(1)}″ from start: ` +
+      `${Math.abs(dy * D.scale).toFixed(1)}″ ${ns}, ${Math.abs(dx * D.scale).toFixed(1)}″ ${ew}`;
+  }
+  $('info').textContent = `${lab} (${i + 1}/${N})  —  ${moved}`;
+}
+
+// ---- animation loop -----------------------------------------------------------
+setInterval(() => {
+  // One timer drives both play and blink.
+  if (!N || loading) return;
+  S.tick++;
+  if (S.playing && !S.blink) S.frame = (S.frame + 1) % N;
+  if (S.playing || S.blink) draw();
+}, 450);
+
+// ---- controls ----------------------------------------------------------------------
+function setOn(id, on){ $(id).classList.toggle('on', on); }
+function setPlaying(p){ S.playing = p; $('bPlay').textContent = p ? 'Pause (space)' : 'Play (space)'; }
+function step(d){
+  if (!N) return;
+  setPlaying(false); S.blink = false; setOn('bBlink', false); S.frame = (S.frame + d + N) % N; draw();
+}
+function bind(id, fn){ const b = $(id); b.onclick = () => { fn(); b.blur(); }; }
+
+bind('bPlay',  () => { S.blink = false; setOn('bBlink', false); setPlaying(!S.playing); draw(); });
+bind('bBlink', () => { S.blink = !S.blink; setOn('bBlink', S.blink); draw(); });
+bind('bTrail', () => { S.trail = !S.trail; setOn('bTrail', S.trail); draw(); });
+bind('bPix',   () => { S.pixels = !S.pixels; setOn('bPix', S.pixels); draw(); });
+bind('bPrev',  () => step(-1));
+bind('bNext',  () => step(1));
+bind('bIn',    () => zoomAt(1.5, cv.width / 2, cv.height / 2));
+bind('bOut',   () => zoomAt(1 / 1.5, cv.width / 2, cv.height / 2));
+bind('bReset', () => { if (N){ resetView(); draw(); } });
+
+// Mouse position in canvas pixels (the canvas is scaled by CSS, so correct for it).
+function pos(e){
+  const r = cv.getBoundingClientRect();
+  return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height];
+}
+cv.addEventListener('wheel', e => {
+  e.preventDefault(); if (!N) return;
+  const [x, y] = pos(e); zoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, x, y);
+}, {passive:false});
+let drag = null;                                          // drag-to-pan
+cv.addEventListener('pointerdown', e => {
+  drag = pos(e); cv.setPointerCapture(e.pointerId); cv.style.cursor = 'grabbing';
+});
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const [x, y] = pos(e); S.panX += x - drag[0]; S.panY += y - drag[1]; drag = [x, y]; draw();
+});
+const endDrag = () => { drag = null; cv.style.cursor = 'grab'; };
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+window.addEventListener('keydown', e => {                 // keyboard: space and arrows
+  if (e.target.tagName === 'SELECT') return;              // let the dropdowns use their own keys
+  if (e.code === 'Space'){
+    e.preventDefault(); S.blink = false; setOn('bBlink', false); setPlaying(!S.playing); draw();
+  }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); step(1); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); step(-1); }
+});
+
+// Test hook: ?still=<n> shows frame n (1-based) without playing, ?still=last the last one.
+function applyStill(){
+  const s = params.get('still');
+  if (s === null || !N) return;
+  setPlaying(false);
+  S.frame = s === 'last' ? N - 1 : Math.min(Math.max(parseInt(s) - 1 || 0, 0), N - 1);
+  draw();
+}
+
+// ---- spectrum on click ---------------------------------------------------------------
+// Click a point of the image to measure it in every SPHEREx exposure. Each exposure sees
+// the sky through a different colour of infrared light, so the measurements together
+// are a spectrum: brightness against wavelength. Shows only what GET /api/spectrum
+// returns; an exposure with no clean measurement is shown as such, never as a value.
+const APERTURE_ARCSEC = 2.5 * 6.15;   // the circle the backend adds up: 2.5 SPHEREx pixels
+const SNAP_ARCSEC = 10;               // a click this close to the target means the target
+// Visits 1 to 3 get a colour each (checked to stay distinguishable with colour-blindness
+// on this background; a fourth colour does not pass, so later visits share a grey).
+const VISIT_COLOURS = ['#3987e5', '#d95926', '#199e70'], LATER_COLOUR = '#9a9a94';
+const SATURATED_COLOUR = '#fab219', FLAGGED_COLOUR = '#77776f';
+const visitColour = ep => VISIT_COLOURS[ep - 1] || LATER_COLOUR;
+const RAD = Math.PI / 180;
+
+// The open spectrum: {kind: 'target' | 'spot', ra, dec, centre, state, data, shown, error}.
+let SP = null, specAbort = null, specHits = [];
+const centreKey = () => D.ra + ',' + D.dec;
+
+// The frame is a tangent-plane picture centred on the request, north up and east left.
+// These two are that projection and its inverse, in the drawing's image coordinates.
+function skyAt(ix, iy){
+  const xi = -(ix - D.w / 2) * D.scale / 3600 * RAD, eta = -(iy - D.h / 2) * D.scale / 3600 * RAD;
+  const d0 = D.dec * RAD, den = Math.cos(d0) - eta * Math.sin(d0);
+  const dra = Math.atan2(xi, den);
+  const dec = Math.atan((Math.sin(d0) + eta * Math.cos(d0)) * Math.cos(dra) / den);
+  return [((D.ra + dra / RAD) % 360 + 360) % 360, dec / RAD];
+}
+function imageAt(ra, dec){
+  const d0 = D.dec * RAD, d = dec * RAD, dra = (ra - D.ra) * RAD;
+  const c = Math.sin(d0) * Math.sin(d) + Math.cos(d0) * Math.cos(d) * Math.cos(dra);
+  const xi = Math.cos(d) * Math.sin(dra) / c;
+  const eta = (Math.cos(d0) * Math.sin(d) - Math.sin(d0) * Math.cos(d) * Math.cos(dra)) / c;
+  return [D.w / 2 - xi / RAD * 3600 / D.scale, D.h / 2 - eta / RAD * 3600 / D.scale];
+}
+// Where the measured target is in a frame: its expected place when the backend knows
+// its motion, otherwise the centre of the picture (the position that was asked for).
+const targetPlace = f => f.px !== null ? [f.px, f.py] : [D.w / 2, D.h / 2];
+
+function targetMotion(){
+  // The motion the frames were made with, so the spectrum follows the same object.
+  const t = D.target;
+  if (!t || t.origin !== 'request' || t.pmra == null || t.pmdec == null) return {};
+  const m = {pmra: t.pmra, pmdec: t.pmdec};
+  if (t.parallax != null) m.parallax = t.parallax;
+  if (t.ref_epoch != null) m.pm_epoch = t.ref_epoch;
+  return m;
+}
+
+function onImageClick(mx, my){
+  if (!N || loading) return;
+  const ix = (mx - S.panX) / S.zoom, iy = (my - S.panY) / S.zoom;
+  if (ix < 0 || iy < 0 || ix > D.w || iy > D.h) return;
+  const [tx, ty] = targetPlace(D.frames[currentIndex()]);
+  if (Math.hypot(ix - tx, iy - ty) * D.scale <= SNAP_ARCSEC) return openSpectrum({kind: 'target'}, true);
+  const [ra, dec] = skyAt(ix, iy);
+  openSpectrum({kind: 'spot', ra: +ra.toFixed(5), dec: +dec.toFixed(5)}, true);
+}
+
+function openSpectrum(spot, scroll){
+  if (!N) return;
+  if (specAbort) specAbort.abort();
+  // The target is measured at the centre of the request, whose exposures the backend
+  // already holds. Any other spot is new to it, so that is asked about first.
+  SP = {...spot, centre: centreKey(), state: spot.kind === 'target' ? 'loading' : 'ask',
+        data: null, shown: new Set(), error: ''};
+  if (SP.kind === 'target'){ SP.ra = D.ra; SP.dec = D.dec; }
+  writeURL(); renderSpectrum(); draw();
+  if (SP.state === 'loading') fetchSpectrum();
+  if (scroll) $('spec').scrollIntoView({block: 'nearest', behavior: 'smooth'});
+}
+function closeSpectrum(){
+  if (specAbort) specAbort.abort();
+  SP = null; writeURL(); renderSpectrum(); draw();
+}
+
+async function fetchSpectrum(){
+  const sp = SP;
+  sp.state = 'loading'; renderSpectrum();
+  specAbort = new AbortController();
+  const q = {ra: sp.ra, dec: sp.dec, ...(sp.kind === 'target' ? targetMotion() : {})};
+  try {
+    const r = await fetch(API + '/api/spectrum?' + new URLSearchParams(q), {signal: specAbort.signal})
+      .catch(() => { throw new Error('the server could not be reached.'); });
+    if (r.status === 404) throw new Error('this server does not offer spectra yet.');
+    if (!r.ok){
+      const detail = await r.json().then(b => b.detail, () => '');
+      throw new Error(typeof detail === 'string' && detail ? detail : 'the server answered ' + r.status);
+    }
+    const body = await r.json();
+    if (sp !== SP) return;
+    sp.data = body; sp.state = 'done';
+    sp.shown = new Set((body.epochs || []).map(e => e.epoch));
+  } catch (e) {
+    if (sp !== SP) return;                              // closed or replaced meanwhile
+    sp.state = 'error'; sp.error = e.message;
+  }
+  renderSpectrum();
+}
+
+function drawSpectrumMark(f){
+  // Dashed circle on the image: the area whose light is added up for the spectrum.
+  if (!SP) return;
+  const [ix, iy] = SP.kind === 'target' ? targetPlace(f) : imageAt(SP.ra, SP.dec);
+  const [sx, sy] = toScreen(ix, iy);
+  ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(sx, sy, APERTURE_ARCSEC / D.scale * S.zoom, 0, 7); ctx.stroke();
+  ctx.restore();
+}
+
+// ---- spectrum panel ------------------------------------------------------------------
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svgEl(name, attrs, text){
+  const e = document.createElementNS(SVGNS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function niceStep(raw){
+  const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+}
+function fmtValue(v){                                   // a brightness, to about three figures
+  const a = Math.abs(v);
+  return v.toFixed(a >= 100 ? 0 : a >= 10 ? 1 : a >= 1 ? 2 : 3);
+}
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+function describeTarget(){
+  // What was measured, in words, from what the backend says it followed.
+  const t = SP.data && SP.data.target, place = `RA ${SP.ra.toFixed(5)}°, Dec ${SP.dec.toFixed(5)}°`;
+  if (t && t.origin === 'request') return `The target of this view (${place} in 2026), followed with its known motion.`;
+  if (t && t.source_id) return `Gaia DR3 ${t.source_id}, the catalogued star at ${place}, followed with its Gaia motion.`;
+  return `The spot at ${place}. No catalogued star with a known motion is there, so the same place is measured in every exposure.`;
+}
+
+function renderSpectrum(){
+  const box = $('spec');
+  box.hidden = !SP;
+  $('specTip').hidden = true;
+  if (!SP) return;
+  const state = SP.state, place = `RA ${SP.ra.toFixed(5)}°, Dec ${SP.dec.toFixed(5)}°`;
+  $('specTitle').textContent = state === 'ask' ? 'Measure the spectrum of this spot?'
+    : 'Spectrum: brightness at each wavelength';
+  $('specWhat').textContent = state === 'done' ? describeTarget() : place;
+  $('specGo').hidden = state !== 'ask';
+  $('specBody').hidden = state !== 'done';
+  let msg = '';
+  if (state === 'ask')
+    msg = 'This spot has to be fetched from NASA\'s archive in every SPHEREx exposure (a few hundred ' +
+          'downloads), which takes a few minutes the first time. The target of the view is quick: ' +
+          'use "Spectrum of the target".';
+  else if (state === 'loading')
+    msg = SP.kind === 'target'
+      ? 'Measuring the target in every exposure… a few seconds if it has been viewed before, a few minutes if not.'
+      : 'Measuring this spot in every exposure… a new spot takes a few minutes.';
+  else if (state === 'error') msg = 'Could not get the spectrum: ' + SP.error;
+  else {
+    const d = SP.data, c = d.status_counts || {}, n = d.n_exposures || 0, ok = c.ok || 0;
+    const sat = c.saturated || 0, rest = n - ok - sat;
+    msg = d.message || `${ok} of ${plural(n, 'exposure', 'exposures')} gave a clean measurement.`;
+    if (sat) msg += ` ${sat} are saturated: the object is too bright there for SPHEREx to give a value.`;
+    if (rest > 0) msg += ` ${rest} are flagged or incomplete.`;
+    if (d.failures && d.failures.length)
+      msg += ` ${plural(d.failures.length, 'exposure', 'exposures')} could not be downloaded and are missing.`;
+  }
+  $('specMsg').textContent = msg;
+  if (state !== 'done') return;
+
+  // One button per visit: the legend, and the way to compare visits.
+  const visits = $('specVisits');
+  visits.replaceChildren();
+  (SP.data.epochs || []).forEach(e => {
+    const b = document.createElement('button'), dot = document.createElement('i');
+    dot.style.background = visitColour(e.epoch);
+    b.append(dot, `Visit ${e.epoch}: ${e.date_start} to ${e.date_end}`);
+    b.setAttribute('aria-pressed', SP.shown.has(e.epoch));
+    b.onclick = () => {
+      if (SP.shown.has(e.epoch)) SP.shown.delete(e.epoch); else SP.shown.add(e.epoch);
+      renderSpectrum();
+    };
+    visits.append(b);
+  });
+  const m = SP.data.method || {};
+  $('specMethod').textContent = [m.flux, m.error, m.rejection].filter(Boolean).join(' ');
+  drawSpectrumChart();
+}
+
+function drawSpectrumChart(){
+  const svg = $('specSvg'), data = SP.data, W = 760, H = 360, M = {l: 66, r: 14, t: 50, b: 44};
+  const X0 = 0.7, X1 = 5.05, pw = W - M.l - M.r, ph = H - M.t - M.b;
+  const x = w => M.l + (w - X0) / (X1 - X0) * pw;
+  svg.replaceChildren(); specHits = [];
+  // An invisible sheet over the whole chart, so the pointer is followed between the marks too.
+  svg.append(svgEl('rect', {width: W, height: H, fill: 'transparent'}));
+  const pts = (data.points || []).filter(p => SP.shown.has(p.epoch) && p.wavelength_um !== null);
+  const ok = pts.filter(p => p.status === 'ok' && p.flux_mjy !== null);
+
+  // Vertical range. One wild reading must not flatten everything else, so the axis
+  // stops a little above the 98th percentile and readings beyond it are drawn as
+  // arrowheads at the edge (their values are in the hover text and the CSV).
+  let lo = 0, hi = 1;
+  if (ok.length){
+    const v = ok.map(p => p.flux_mjy).sort((a, b) => a - b);
+    const top = Math.max(...ok.map(p => p.flux_mjy + (p.flux_err_mjy || 0)));
+    const p98 = v[Math.floor(0.98 * (v.length - 1))];
+    hi = v.length >= 20 && p98 > 0 && top > 3 * p98 ? 1.3 * p98 : top;
+    if (!(hi > 0)) hi = Math.abs(v[0]) || 1;
+    const bottom = Math.min(...ok.map(p => p.flux_mjy - (p.flux_err_mjy || 0)));
+    lo = Math.min(0, Math.max(bottom, -0.35 * hi));
+  }
+  const step = niceStep((hi - lo) / 5), yTop = hi + 0.04 * (hi - lo);
+  const y = v => M.t + ph - (v - lo) / (yTop - lo) * ph;
+  const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+  const tickText = v => hi >= 10000 ? (v / 1000).toFixed(step >= 1000 ? 0 : 1) + 'K' : v.toFixed(decimals);
+
+  // Detector bands: which detector saw which wavelengths, as faint stripes with names.
+  const ranges = Object.entries(data.detector_ranges_um || {}).map(([d, r]) => [+d, r[0], r[1]])
+    .sort((a, b) => a[1] - b[1]);
+  ranges.forEach(([det, a, b], i) => {
+    const left = i ? (ranges[i - 1][2] + a) / 2 : a, right = i < ranges.length - 1 ? (b + ranges[i + 1][1]) / 2 : b;
+    if (i % 2 === 0) svg.append(svgEl('rect', {x: x(left), y: M.t, width: x(right) - x(left), height: ph,
+                                               fill: '#fff', 'fill-opacity': 0.035}));
+    svg.append(svgEl('text', {x: (x(left) + x(right)) / 2, y: 13, 'text-anchor': 'middle'}, 'D' + det));   // as in the Detector menu
+  });
+
+  // Grid and axes: thin and quiet.
+  for (let t = Math.ceil(lo / step) * step; t <= yTop + 1e-9; t += step){
+    const zero = Math.abs(t) < step / 1e6;
+    svg.append(svgEl('line', {x1: M.l, x2: W - M.r, y1: y(t), y2: y(t), stroke: zero ? '#666' : '#2c2c2a'}));
+    svg.append(svgEl('text', {x: M.l - 8, y: y(t) + 4, 'text-anchor': 'end'}, tickText(zero ? 0 : t)));
+  }
+  for (let w = 1; w <= 5; w++){
+    svg.append(svgEl('line', {x1: x(w), x2: x(w), y1: M.t + ph, y2: M.t + ph + 5, stroke: '#666'}));
+    svg.append(svgEl('text', {x: x(w), y: M.t + ph + 19, 'text-anchor': 'middle'}, w));
+  }
+  svg.append(svgEl('text', {x: M.l + pw / 2, y: H - 6, 'text-anchor': 'middle'}, 'Wavelength (micrometres)'));
+  svg.append(svgEl('text', {x: 14, y: M.t + ph / 2, 'text-anchor': 'middle',
+                            transform: `rotate(-90 14 ${M.t + ph / 2})`}, 'Brightness (mJy)'));
+
+  // Exposures without a value: a tick at their wavelength on a labelled rail above the plot.
+  [['saturated', p => p.status === 'saturated', SATURATED_COLOUR, 26],
+   ['no value', p => p.status !== 'ok' && p.status !== 'saturated', FLAGGED_COLOUR, 40]]
+    .forEach(([name, test, colour, ry]) => {
+      const row = pts.filter(test);
+      if (!row.length) return;
+      svg.append(svgEl('text', {x: M.l - 8, y: ry + 4, 'text-anchor': 'end', style: 'font-size:11px'}, name));
+      row.forEach(p => {
+        const sx = x(p.wavelength_um);
+        svg.append(svgEl('line', {x1: sx, x2: sx, y1: ry - 4, y2: ry + 4, stroke: colour, 'stroke-width': 1.5}));
+        specHits.push({sx, sy: ry, p});
+      });
+    });
+
+  // The measurements: error bars first, dots on top.
+  const marks = svgEl('g', {});
+  ok.forEach(p => {
+    const sx = x(p.wavelength_um), colour = visitColour(p.epoch), e = p.flux_err_mjy || 0;
+    const above = p.flux_mjy > yTop, below = p.flux_mjy < lo;
+    const sy = above ? M.t + 5 : below ? M.t + ph - 5 : y(p.flux_mjy);
+    if (above || below){
+      const s = above ? -1 : 1;                           // arrowhead pointing off the chart
+      marks.append(svgEl('path', {d: `M${sx} ${sy + 5 * s} L${sx - 4.5} ${sy - 3 * s} L${sx + 4.5} ${sy - 3 * s} Z`,
+                                  fill: colour, stroke: '#181818'}));
+    } else {
+      svg.append(svgEl('line', {x1: sx, x2: sx, y1: y(Math.min(p.flux_mjy + e, yTop)), y2: y(Math.max(p.flux_mjy - e, lo)),
+                                stroke: colour, 'stroke-opacity': 0.5}));
+      marks.append(svgEl('circle', {cx: sx, cy: sy, r: 3.5, fill: colour, stroke: '#181818'}));
+    }
+    specHits.push({sx, sy, p});
+  });
+  svg.append(marks);
+  svg.append(svgEl('circle', {id: 'specRing', r: 7, fill: 'none', stroke: '#f0efec', 'stroke-width': 1.5,
+                              visibility: 'hidden'}));
+
+  if (!ok.length){
+    const why = !SP.shown.size ? 'No visit is switched on.'
+      : pts.length && pts.every(p => p.status === 'saturated')
+        ? 'Too bright: every exposure is saturated here, so there is no value to plot.'
+        : pts.length ? 'No exposure gave a clean measurement here.' : 'SPHEREx has no exposure of this spot.';
+    svg.append(svgEl('text', {x: M.l + pw / 2, y: M.t + ph / 2, 'text-anchor': 'middle',
+                              style: 'font-size:14px;fill:#f0efec'}, why));
+  }
+  const off = ok.filter(p => p.flux_mjy > yTop || p.flux_mjy < lo).length;
+  $('specNote').textContent = off
+    ? `${plural(off, 'reading is', 'readings are')} beyond the edge of the chart and drawn as ` +
+      `${off === 1 ? 'an arrowhead' : 'arrowheads'}; hover for the value. A single reading far from its ` +
+      'neighbours is usually a glitch in that exposure, not the object.'
+    : '';
+}
+
+function spectrumHover(e){
+  // Nearest mark to the pointer, so a small dot does not have to be hit exactly.
+  const svg = $('specSvg'), tip = $('specTip'), ring = svg.querySelector('#specRing');
+  if (!SP || SP.state !== 'done' || !ring) return;
+  const r = svg.getBoundingClientRect(), k = 760 / r.width;
+  const mx = (e.clientX - r.left) * k, my = (e.clientY - r.top) * k;
+  let best = null, bestD = 24;
+  specHits.forEach(h => { const d = Math.hypot(h.sx - mx, h.sy - my); if (d < bestD){ bestD = d; best = h; } });
+  if (!best){ tip.hidden = true; ring.setAttribute('visibility', 'hidden'); return; }
+  const p = best.p, value = document.createElement('b'), key = document.createElement('i');
+  value.textContent = p.status === 'ok' && p.flux_mjy !== null
+    ? `${fmtValue(p.flux_mjy)} ± ${fmtValue(p.flux_err_mjy || 0)} mJy`
+    : p.status === 'saturated' ? 'Saturated: no value' : 'No value (' + String(p.status).replace('_', ' ') + ')';
+  key.style.background = visitColour(p.epoch);
+  const visit = document.createElement('div');
+  visit.append(key, `Visit ${p.epoch}, ${String(p.date).slice(0, 10)}`);
+  const where = document.createElement('div');
+  where.textContent = `${p.wavelength_um.toFixed(3)} µm, detector ${p.detector}`;
+  tip.replaceChildren(value, where, visit);
+  ring.setAttribute('cx', best.sx); ring.setAttribute('cy', best.sy); ring.setAttribute('visibility', 'visible');
+  tip.hidden = false;
+  const left = best.sx / k + 14, flip = left + tip.offsetWidth > r.width;
+  tip.style.left = (flip ? best.sx / k - 14 - tip.offsetWidth : left) + 'px';
+  tip.style.top = Math.max(0, best.sy / k - tip.offsetHeight - 8) + 'px';
+}
+$('specSvg').addEventListener('pointermove', spectrumHover);
+$('specSvg').addEventListener('pointerleave', () => {
+  $('specTip').hidden = true;
+  const ring = $('specSvg').querySelector('#specRing');
+  if (ring) ring.setAttribute('visibility', 'hidden');
+});
+
+function downloadSpectrum(){
+  // Every exposure, with or without a value, as the backend returned it.
+  const cols = ['date', 'mjd', 'epoch', 'detector', 'wavelength_um', 'bandwidth_um', 'status',
+                'flux_mjy', 'flux_err_mjy', 'obs_id'];
+  const rows = SP.data.points.map(p => cols.map(c => p[c] ?? '').join(','));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([cols.join(',') + '\n' + rows.join('\n') + '\n'], {type: 'text/csv'}));
+  a.download = `spherex_spectrum_${SP.ra.toFixed(5)}_${SP.dec.toFixed(5)}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+bind('bSpec', () => openSpectrum({kind: 'target'}, true));
+bind('specClose', closeSpectrum);
+bind('specGo', fetchSpectrum);
+bind('specCsv', downloadSpectrum);
+
+// A click on the image (a press and release without a drag) asks for a spectrum there.
+let downAt = null;
+cv.addEventListener('pointerdown', e => { downAt = pos(e); });
+cv.addEventListener('pointerup', e => {
+  const up = pos(e), d = downAt;
+  downAt = null;
+  if (d && Math.hypot(up[0] - d[0], up[1] - d[1]) < 5) onImageClick(up[0], up[1]);
+});
+
+// ---- start-up -------------------------------------------------------------------------
+readURL(); buildControls(); writeURL();                   // restore options, show them, tidy the address
+setOn('bTrail', true);
+loadFrames().then(() => {                                 // first load uses the restored options
+  applyStill();
+  if (params.get('spec') !== null && N) openSpectrum({kind: 'target'}, false);
+});
+</script></body></html>

@@ -9,5 +9,10 @@
 **/__pycache__
 **/*.pyc
 backend/cache
+**/node_modules
+frontend/dist
 scripts/out
 docs
+
+# Private checkouts used by AI agent sessions
+.claude

@@ -1,4 +1,4 @@
-# Lint and typecheck settings for the Python code. See plan.md.
+# Lint, typecheck and test settings for the Python code. See plan.md.
 [tool.ruff]
 line-length = 120
 target-version = "py311"
@@ -20,3 +20,10 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 # astropy, reproject and scipy ship without complete type information.
 ignore_missing_imports = true
+
+# Tests: run `pytest` from the project root. They need no network and never touch
+# backend/cache (tests/conftest.py points the backend at a temporary folder).
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]  # so that tests can `import backend` without installing anything
+addopts = "-ra"     # after the run, list skipped and expected-to-fail tests with the reason
