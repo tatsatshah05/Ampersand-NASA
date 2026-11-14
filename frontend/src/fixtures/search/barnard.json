@@ -1,0 +1,295 @@
+{
+ "status": "done",
+ "ra": 269.446267,
+ "dec": 4.768222,
+ "fov": 0.1,
+ "detectors": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "seconds": 30.3,
+ "detector_now": null,
+ "detectors_done": 6,
+ "detectors_total": 6,
+ "searches_ahead": 0,
+ "result": {
+  "field": {
+   "ra": 269.446267,
+   "dec": 4.768222,
+   "fov": 0.1,
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "offline": false
+  },
+  "objects": [
+   {
+    "id": "01",
+    "kind": "mover",
+    "verdict": "caution",
+    "flags": [
+     "saturated"
+    ],
+    "ra": 269.446224,
+    "dec": 4.768987,
+    "sigma_best": 6.1,
+    "best_detector": 5,
+    "sigma_combined": 8.2,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     5,
+     6
+    ],
+    "detectors_at_3_sigma": [
+     5,
+     6
+    ],
+    "motion_all_detectors": {
+     "pm_east": -1.906,
+     "pm_north": 9.992,
+     "pm_err": 1.066,
+     "n_detectors": 2,
+     "disagreement_sigma": 0.0
+    },
+    "catalogue_status": {
+     "category": "known_mover",
+     "meaning": "known moving object: a catalogue object at this place has the measured motion",
+     "label": "known",
+     "summary": "Gaia DR3 4472832130942575872 (Gaia DR3): the catalogue predicts a shift of (-0.77, +10.26) arcsec east, north between the first and last visit used; measured (-2.17, +9.91) +/- 2.07.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "Gaia DR3",
+      "name": "Gaia DR3 4472832130942575872",
+      "variable": false,
+      "gmag": 8.193974494934082,
+      "pmra": -801.5509783684709,
+      "pmdec": 10362.394206546573,
+      "parallax": 546.975939730948,
+      "separation_arcsec": 0.86,
+      "separation_by_visit_arcsec": [
+       1.45,
+       0.25,
+       0.2
+      ],
+      "predicted_shift_first_to_last": {
+       "east": -0.774,
+       "north": 10.255
+      },
+      "motion_difference_arcsec": 1.44,
+      "motion_agrees": true
+     },
+     "nearest": [
+      {
+       "catalogue": "Gaia DR3",
+       "name": "Gaia DR3 4472832130942575872",
+       "variable": false,
+       "gmag": 8.193974494934082,
+       "pmra": -801.5509783684709,
+       "pmdec": 10362.394206546573,
+       "parallax": 546.975939730948,
+       "separation_arcsec": 0.86,
+       "separation_by_visit_arcsec": [
+        1.45,
+        0.25,
+        0.2
+       ],
+       "predicted_shift_first_to_last": {
+        "east": -0.774,
+        "north": 10.255
+       },
+       "motion_difference_arcsec": 1.44,
+       "motion_agrees": true
+      },
+      {
+       "catalogue": "SIMBAD",
+       "name": "NAME Barnard's Star c",
+       "type": "Pl",
+       "variable": false,
+       "pmra": -801.551,
+       "pmdec": 10362.394,
+       "parallax": 546.9759,
+       "separation_arcsec": 0.86,
+       "separation_by_visit_arcsec": [
+        1.45,
+        0.25,
+        0.2
+       ],
+       "predicted_shift_first_to_last": {
+        "east": -0.774,
+        "north": 10.255
+       },
+       "motion_difference_arcsec": 1.44,
+       "motion_agrees": true
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 5,
+     "id": "D5-01",
+     "kind": "mover",
+     "sigma": 6.1,
+     "grade": "caution",
+     "flags": [
+      "saturated"
+     ],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 71648.5,
+     "typical_flux_mjy": 5601.7723,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-08-26",
+       "n_exposures": 18,
+       "snr": 42.8,
+       "times_noise": 49662.1,
+       "empty_places_as_bright": 0,
+       "ra": 269.44661159671983,
+       "dec": 4.7672703879641585,
+       "east_arcsec": 1.39,
+       "north_arcsec": -6.177,
+       "err_east_arcsec": 1.057,
+       "err_north_arcsec": 1.057,
+       "largest_shift_from_one_exposure_arcsec": 0.217,
+       "peak_mjy_sr": 1543.0948,
+       "misfit": 0.016,
+       "fwhm_arcsec": 10.2
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-03-17",
+       "n_exposures": 19,
+       "snr": 42.0,
+       "times_noise": 91373.9,
+       "empty_places_as_bright": 0,
+       "ra": 269.4463353071958,
+       "dec": 4.7688561313284525,
+       "east_arcsec": 0.405,
+       "north_arcsec": -0.457,
+       "err_east_arcsec": 1.02,
+       "err_north_arcsec": 1.02,
+       "largest_shift_from_one_exposure_arcsec": 0.072,
+       "peak_mjy_sr": 1657.3475,
+       "misfit": 0.012,
+       "fwhm_arcsec": 10.2
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-08-22",
+       "n_exposures": 25,
+       "snr": 54.9,
+       "times_noise": 73494.3,
+       "empty_places_as_bright": 0,
+       "ra": 269.44600866851954,
+       "dec": 4.770027784821348,
+       "east_arcsec": -0.778,
+       "north_arcsec": 3.734,
+       "err_east_arcsec": 1.015,
+       "err_north_arcsec": 1.015,
+       "largest_shift_from_one_exposure_arcsec": 0.085,
+       "peak_mjy_sr": 1541.7592,
+       "misfit": 0.021,
+       "fwhm_arcsec": 10.7
+      }
+     ],
+     "motion": {
+      "visits_used": [
+       1,
+       2,
+       3
+      ],
+      "span_years": 0.988,
+      "pm_east": -2.18,
+      "pm_east_err": 1.482,
+      "pm_north": 10.04,
+      "pm_north_err": 1.482,
+      "speed": 10.274,
+      "speed_err": 1.482,
+      "direction_deg_east_of_north": 347.747,
+      "shift_first_to_last": {
+       "east": -2.168,
+       "north": 9.911
+      },
+      "shift_error_arcsec": 2.073,
+      "chi2_static": 48.137,
+      "dof": 4,
+      "sigma_any_shift": 6.129,
+      "sigma_drift": 6.619,
+      "sigma": 6.129,
+      "presence": [
+       {
+        "epoch": 1,
+        "times_noise": 88568.1,
+        "expected_times_noise": 88568.1,
+        "empty_places_as_bright": 0,
+        "empty_places": 301
+       },
+       {
+        "epoch": 2,
+        "times_noise": 91146.2,
+        "expected_times_noise": 89085.9,
+        "empty_places_as_bright": 0,
+        "empty_places": 301
+       },
+       {
+        "epoch": 3,
+        "times_noise": 91387.1,
+        "expected_times_noise": 91511.3,
+        "empty_places_as_bright": 0,
+        "empty_places": 301
+       }
+      ],
+      "n_visits_seen": 3,
+      "missing_in": []
+     }
+    }
+   }
+  ],
+  "rejected": [],
+  "summary": {
+   "n_objects": 1,
+   "n_rejected": 0,
+   "n_below_threshold": 0,
+   "sources_tested": 130,
+   "seconds": 30.3,
+   "catalogues_answered": [
+    "AAVSO VSX",
+    "AllWISE",
+    "CatWISE2020",
+    "Gaia DR3",
+    "SIMBAD"
+   ],
+   "catalogues_failed": {},
+   "messages": {},
+   "download_failures": {},
+   "exposures": {
+    "1": 60,
+    "2": 62,
+    "3": 59,
+    "4": 59,
+    "5": 62,
+    "6": 60
+   }
+  },
+  "limits": "Finds only what stands 5 times above the noise of empty places in the picture of one visit or of all visits together, in at least one detector. A mover must move between visits (not within one: asteroids are averaged away), by less than 8 arcsec from one visit to the next (about 16 arcsec/yr for visits six months apart), and by more than about 1.2 to 3 arcsec/yr for 5 sigma, depending on brightness. Saturated stars are placed only to 1 to 2 arcsec. A brightness change must be at least 10 per cent (25 per cent for a saturated star's ring), seen at the same wavelength in at least 6 channels. Sources on the glow of a much brighter star are not tested, and a mover blended with catalogued neighbours is rejected. In nebulous young clusters, quote only changes seen the same way in two or more detectors. See docs/search.md.",
+  "version": 4,
+  "credit": "NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive (IRSA); ESA Gaia DR3; SIMBAD (CDS); AAVSO VSX; CatWISE2020 and AllWISE (NASA/IPAC IRSA)"
+ },
+ "_note": "A real response of GET /api/search, trimmed: per-channel tables and per-detector tables removed, nearest catalogue entries cut to 2."
+}

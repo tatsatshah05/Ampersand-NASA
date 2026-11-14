@@ -1,0 +1,1658 @@
+{
+ "status": "done",
+ "ra": 277.51,
+ "dec": -2.05,
+ "fov": 0.2,
+ "detectors": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "seconds": 0.0,
+ "detector_now": null,
+ "detectors_done": 6,
+ "detectors_total": 6,
+ "searches_ahead": 0,
+ "result": {
+  "field": {
+   "ra": 277.51,
+   "dec": -2.05,
+   "fov": 0.2,
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "offline": false
+  },
+  "objects": [
+   {
+    "id": "01",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.505473,
+    "dec": -2.061979,
+    "sigma_best": 9.4,
+    "best_detector": 6,
+    "sigma_combined": 13.4,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     6,
+     5,
+     4
+    ],
+    "detectors_at_3_sigma": [
+     4,
+     5,
+     6
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "changer_not_listed_as_variable",
+     "meaning": "changed brightness; the object here is not listed as variable in the catalogues that answered (candidate)",
+     "label": "known",
+     "summary": "MSX6C G028.6477+03.8174 (SIMBAD, Y*O) is 0.1 arcsec away; nothing within the 15 arcsec measuring circle is listed as variable in: Gaia DR3 (variability flag and classifier), SIMBAD (object type), AAVSO VSX, AllWISE (variability flag). SIMBAD lists MSX6C G028.6477+03.8174 as Y*O; [PFA2018] serps12 as Y*O; SSTYSV J183001.60-020330.2 as Y*O, a kind of object that commonly varies.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "SIMBAD",
+      "name": "MSX6C G028.6477+03.8174",
+      "type": "Y*O",
+      "variable": false,
+      "kind_that_varies": true,
+      "separation_arcsec": 0.1
+     },
+     "nearest": [
+      {
+       "catalogue": "SIMBAD",
+       "name": "MSX6C G028.6477+03.8174",
+       "type": "Y*O",
+       "variable": false,
+       "kind_that_varies": true,
+       "separation_arcsec": 0.1
+      },
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J183001.30-020343.2",
+       "type": "var_flg nnnn",
+       "variable": false,
+       "w1": 8.089,
+       "w2": 5.922,
+       "separation_arcsec": 0.16
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 6,
+     "id": "D6-01",
+     "kind": "changer",
+     "sigma": 9.4,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 2988.8,
+     "typical_flux_mjy": 714.1287,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-03",
+       "n_exposures": 24,
+       "snr": 8.1,
+       "times_noise": 929.4,
+       "empty_places_as_bright": 0,
+       "ra": 277.50546241793825,
+       "dec": -2.0619849441877567,
+       "east_arcsec": 0.043,
+       "north_arcsec": -0.093,
+       "err_east_arcsec": 0.118,
+       "err_north_arcsec": 0.118,
+       "largest_shift_from_one_exposure_arcsec": 0.126,
+       "peak_mjy_sr": 63.5744,
+       "misfit": 0.015,
+       "fwhm_arcsec": 10.6
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-04-01",
+       "n_exposures": 18,
+       "snr": 28.4,
+       "times_noise": 3942.5,
+       "empty_places_as_bright": 0,
+       "ra": 277.5054959962982,
+       "dec": -2.0619683557349626,
+       "east_arcsec": -0.024,
+       "north_arcsec": 0.083,
+       "err_east_arcsec": 0.108,
+       "err_north_arcsec": 0.108,
+       "largest_shift_from_one_exposure_arcsec": 0.051,
+       "peak_mjy_sr": 269.1139,
+       "misfit": 0.016,
+       "fwhm_arcsec": 10.7
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 6,
+       "snr": 17.2,
+       "times_noise": 3708.6,
+       "empty_places_as_bright": 0,
+       "ra": 277.5055194228111,
+       "dec": -2.061995385845308,
+       "east_arcsec": 0.118,
+       "north_arcsec": -0.023,
+       "err_east_arcsec": 0.188,
+       "err_north_arcsec": 0.188,
+       "largest_shift_from_one_exposure_arcsec": 0.119,
+       "peak_mjy_sr": 267.2661,
+       "misfit": 0.026,
+       "fwhm_arcsec": 10.7
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-08-30",
+       "n_exposures": 19,
+       "snr": 35.0,
+       "times_noise": 4199.5,
+       "empty_places_as_bright": 0,
+       "ra": 277.50546782806674,
+       "dec": -2.0619842121338205,
+       "east_arcsec": 0.053,
+       "north_arcsec": -0.024,
+       "err_east_arcsec": 0.105,
+       "err_north_arcsec": 0.105,
+       "largest_shift_from_one_exposure_arcsec": 0.081,
+       "peak_mjy_sr": 279.4187,
+       "misfit": 0.02,
+       "fwhm_arcsec": 11.0
+      }
+     ],
+     "figure": "D6-01_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       0,
+       3
+      ],
+      "n_channels": 10,
+      "change": 1.0866711810502399,
+      "change_err": 0.032810324545495616,
+      "channels_up": 10,
+      "channels_down": 0,
+      "ratio": 4.500649898520933,
+      "sigma": 9.381128517759903
+     },
+     "two_out": {
+      "left_out": [
+       59,
+       62
+      ],
+      "change": 1.0875,
+      "sigma": 8.8,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "02",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.492661,
+    "dec": -1.968165,
+    "sigma_best": 7.1,
+    "best_detector": 5,
+    "sigma_combined": 8.5,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     5,
+     6
+    ],
+    "detectors_at_3_sigma": [
+     5,
+     6
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "known_variable",
+     "meaning": "known variable star: listed as variable in a catalogue that answered",
+     "label": "known",
+     "summary": "Listed as variable: WISEA J182958.23-015805.3 (AllWISE, var_flg 99n0) at 0.1 arcsec.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "AllWISE",
+      "name": "WISEA J182958.23-015805.3",
+      "type": "var_flg 99n0",
+      "variable": true,
+      "w1": 8.721,
+      "w2": 7.672,
+      "separation_arcsec": 0.1
+     },
+     "nearest": [
+      {
+       "catalogue": "CatWISE2020",
+       "name": "CWISE J182958.23-015805.3",
+       "variable": false,
+       "w1": 8.984,
+       "w2": 7.984,
+       "pmra": 13.350000000000001,
+       "pmdec": -7.119999999999999,
+       "pm_err_arcsec_yr": [
+        0.0051,
+        0.0051
+       ],
+       "separation_arcsec": 0.04
+      },
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J182958.23-015805.3",
+       "type": "var_flg 99n0",
+       "variable": true,
+       "w1": 8.721,
+       "w2": 7.672,
+       "separation_arcsec": 0.1
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 5,
+     "id": "D5-02",
+     "kind": "changer",
+     "sigma": 7.1,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 504.0,
+     "typical_flux_mjy": 120.6081,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-08",
+       "n_exposures": 19,
+       "snr": 30.0,
+       "times_noise": 492.4,
+       "empty_places_as_bright": 0,
+       "ra": 277.4926514896755,
+       "dec": -1.9682213171803646,
+       "east_arcsec": -0.036,
+       "north_arcsec": -0.184,
+       "err_east_arcsec": 0.1,
+       "err_north_arcsec": 0.1,
+       "largest_shift_from_one_exposure_arcsec": 0.056,
+       "peak_mjy_sr": 39.0339,
+       "misfit": 0.012,
+       "fwhm_arcsec": 10.1
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-03-28",
+       "n_exposures": 19,
+       "snr": 26.4,
+       "times_noise": 474.6,
+       "empty_places_as_bright": 0,
+       "ra": 277.49268532200557,
+       "dec": -1.9681173161831633,
+       "east_arcsec": 0.057,
+       "north_arcsec": 0.209,
+       "err_east_arcsec": 0.1,
+       "err_north_arcsec": 0.1,
+       "largest_shift_from_one_exposure_arcsec": 0.055,
+       "peak_mjy_sr": 38.4461,
+       "misfit": 0.016,
+       "fwhm_arcsec": 9.7
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 11,
+       "snr": 21.2,
+       "times_noise": 498.6,
+       "empty_places_as_bright": 0,
+       "ra": 277.4927009458912,
+       "dec": -1.9681316602489745,
+       "east_arcsec": 0.122,
+       "north_arcsec": 0.079,
+       "err_east_arcsec": 0.147,
+       "err_north_arcsec": 0.147,
+       "largest_shift_from_one_exposure_arcsec": 0.092,
+       "peak_mjy_sr": 38.6639,
+       "misfit": 0.014,
+       "fwhm_arcsec": 9.7
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-09-05",
+       "n_exposures": 31,
+       "snr": 40.1,
+       "times_noise": 531.6,
+       "empty_places_as_bright": 0,
+       "ra": 277.4926430136694,
+       "dec": -1.9681668912706045,
+       "east_arcsec": -0.058,
+       "north_arcsec": 0.002,
+       "err_east_arcsec": 0.079,
+       "err_north_arcsec": 0.079,
+       "largest_shift_from_one_exposure_arcsec": 0.032,
+       "peak_mjy_sr": 43.6812,
+       "misfit": 0.012,
+       "fwhm_arcsec": 9.9
+      }
+     ],
+     "figure": "D5-02_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       1,
+       3
+      ],
+      "n_channels": 10,
+      "change": 0.13873580603251623,
+      "change_err": 0.010272920714997616,
+      "channels_up": 10,
+      "channels_down": 0,
+      "ratio": 1.138746546680035,
+      "sigma": 7.379627039795958
+     },
+     "two_out": {
+      "left_out": [
+       68,
+       34
+      ],
+      "change": 0.1378,
+      "sigma": 6.8,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "03",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.427963,
+    "dec": -2.067226,
+    "sigma_best": 5.4,
+    "best_detector": 2,
+    "sigma_combined": 7.8,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     2
+    ],
+    "detectors_at_3_sigma": [
+     2,
+     5,
+     6
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "known_variable",
+     "meaning": "known variable star: listed as variable in a catalogue that answered",
+     "label": "known",
+     "summary": "Listed as variable: WISEA J182942.72-020401.8 (AllWISE, var_flg 6411) at 0.22 arcsec.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "AllWISE",
+      "name": "WISEA J182942.72-020401.8",
+      "type": "var_flg 6411",
+      "variable": true,
+      "w1": 7.981,
+      "w2": 7.609,
+      "separation_arcsec": 0.22
+     },
+     "nearest": [
+      {
+       "catalogue": "SIMBAD",
+       "name": "2MASS J18294273-0204018",
+       "type": "Y*?",
+       "variable": false,
+       "pmra": -0.394,
+       "pmdec": -2.616,
+       "separation_arcsec": 0.18
+      },
+      {
+       "catalogue": "Gaia DR3",
+       "name": "Gaia DR3 4270245296741570560",
+       "variable": false,
+       "gmag": 20.621103286743164,
+       "separation_arcsec": 0.19
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 2,
+     "id": "D2-02",
+     "kind": "changer",
+     "sigma": 5.4,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 1433.5,
+     "typical_flux_mjy": 27.3535,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-08",
+       "n_exposures": 19,
+       "snr": 4.8,
+       "times_noise": 1190.1,
+       "empty_places_as_bright": 0,
+       "ra": 277.42798453055275,
+       "dec": -2.0672705417288073,
+       "east_arcsec": 0.214,
+       "north_arcsec": -0.134,
+       "err_east_arcsec": 0.243,
+       "err_north_arcsec": 0.243,
+       "largest_shift_from_one_exposure_arcsec": 0.223,
+       "peak_mjy_sr": 14.2117,
+       "misfit": 0.023,
+       "fwhm_arcsec": 9.5
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-03-28",
+       "n_exposures": 19,
+       "snr": 4.1,
+       "times_noise": 1080.7,
+       "empty_places_as_bright": 0,
+       "ra": 277.42792887365886,
+       "dec": -2.0672413484570344,
+       "east_arcsec": -0.127,
+       "north_arcsec": -0.096,
+       "err_east_arcsec": 0.219,
+       "err_north_arcsec": 0.219,
+       "largest_shift_from_one_exposure_arcsec": 0.161,
+       "peak_mjy_sr": 14.934,
+       "misfit": 0.015,
+       "fwhm_arcsec": 9.1
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 11,
+       "snr": 6.4,
+       "times_noise": 1373.6,
+       "empty_places_as_bright": 0,
+       "ra": 277.42796232011466,
+       "dec": -2.0671441828225765,
+       "east_arcsec": -0.119,
+       "north_arcsec": 0.279,
+       "err_east_arcsec": 0.288,
+       "err_north_arcsec": 0.288,
+       "largest_shift_from_one_exposure_arcsec": 0.177,
+       "peak_mjy_sr": 24.8019,
+       "misfit": 0.018,
+       "fwhm_arcsec": 9.0
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-09-05",
+       "n_exposures": 31,
+       "snr": 5.2,
+       "times_noise": 1459.5,
+       "empty_places_as_bright": 0,
+       "ra": 277.42797192951804,
+       "dec": -2.0672442662046975,
+       "east_arcsec": 0.022,
+       "north_arcsec": -0.131,
+       "err_east_arcsec": 0.186,
+       "err_north_arcsec": 0.186,
+       "largest_shift_from_one_exposure_arcsec": 0.124,
+       "peak_mjy_sr": 15.418,
+       "misfit": 0.013,
+       "fwhm_arcsec": 9.1
+      }
+     ],
+     "figure": "D2-02_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       1,
+       3
+      ],
+      "n_channels": 12,
+      "change": 0.1146191734170604,
+      "change_err": 0.0167568039361667,
+      "channels_up": 11,
+      "channels_down": 1,
+      "ratio": 1.0831629689108497,
+      "sigma": 5.300812586074463
+     },
+     "two_out": {
+      "left_out": [
+       31,
+       54
+      ],
+      "change": 0.1006,
+      "sigma": 3.9,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "04",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.505289,
+    "dec": -2.030182,
+    "sigma_best": 5.2,
+    "best_detector": 6,
+    "sigma_combined": 7.0,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     6,
+     5
+    ],
+    "detectors_at_3_sigma": [
+     5,
+     6
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "changer_not_listed_as_variable",
+     "meaning": "changed brightness; the object here is not listed as variable in the catalogues that answered (candidate)",
+     "label": "known",
+     "summary": "WISEA J183001.27-020148.3 (AllWISE, var_flg 4413) is 0.28 arcsec away; nothing within the 15 arcsec measuring circle is listed as variable in: Gaia DR3 (variability flag and classifier), SIMBAD (object type), AAVSO VSX, AllWISE (variability flag). SIMBAD lists MIRES G028.6757+03.8327 as Y*O; MIRES G028.6744+03.8291 as Y*O, a kind of object that commonly varies.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "AllWISE",
+      "name": "WISEA J183001.27-020148.3",
+      "type": "var_flg 4413",
+      "variable": false,
+      "w1": 10.375,
+      "w2": 7.075,
+      "separation_arcsec": 0.28
+     },
+     "nearest": [
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J183001.27-020148.3",
+       "type": "var_flg 4413",
+       "variable": false,
+       "w1": 10.375,
+       "w2": 7.075,
+       "separation_arcsec": 0.28
+      },
+      {
+       "catalogue": "SIMBAD",
+       "name": "MIRES G028.6757+03.8327",
+       "type": "Y*O",
+       "variable": false,
+       "kind_that_varies": true,
+       "separation_arcsec": 0.53
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 6,
+     "id": "D6-05",
+     "kind": "changer",
+     "sigma": 5.2,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 951.6,
+     "typical_flux_mjy": 228.3091,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-03",
+       "n_exposures": 24,
+       "snr": 13.0,
+       "times_noise": 956.8,
+       "empty_places_as_bright": 0,
+       "ra": 277.50530854760507,
+       "dec": -2.0301820477129136,
+       "east_arcsec": 0.15,
+       "north_arcsec": -0.072,
+       "err_east_arcsec": 0.077,
+       "err_north_arcsec": 0.077,
+       "largest_shift_from_one_exposure_arcsec": 0.043,
+       "peak_mjy_sr": 61.781,
+       "misfit": 0.032,
+       "fwhm_arcsec": 10.5
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-04-01",
+       "n_exposures": 18,
+       "snr": 6.2,
+       "times_noise": 543.5,
+       "empty_places_as_bright": 0,
+       "ra": 277.50526574785465,
+       "dec": -2.030172621045275,
+       "east_arcsec": -0.192,
+       "north_arcsec": 0.078,
+       "err_east_arcsec": 0.101,
+       "err_north_arcsec": 0.101,
+       "largest_shift_from_one_exposure_arcsec": 0.065,
+       "peak_mjy_sr": 35.38,
+       "misfit": 0.041,
+       "fwhm_arcsec": 10.7
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 6,
+       "snr": 3.8,
+       "times_noise": 562.1,
+       "empty_places_as_bright": 0,
+       "ra": null,
+       "dec": null,
+       "east_arcsec": null,
+       "north_arcsec": null,
+       "err_east_arcsec": null,
+       "err_north_arcsec": null,
+       "largest_shift_from_one_exposure_arcsec": null,
+       "peak_mjy_sr": null,
+       "misfit": null,
+       "fwhm_arcsec": null
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-08-30",
+       "n_exposures": 19,
+       "snr": 16.2,
+       "times_noise": 1318.8,
+       "empty_places_as_bright": 0,
+       "ra": 277.5052745434015,
+       "dec": -2.0302254462418707,
+       "east_arcsec": 0.019,
+       "north_arcsec": -0.162,
+       "err_east_arcsec": 0.087,
+       "err_north_arcsec": 0.087,
+       "largest_shift_from_one_exposure_arcsec": 0.063,
+       "peak_mjy_sr": 86.7806,
+       "misfit": 0.025,
+       "fwhm_arcsec": 10.2
+      }
+     ],
+     "figure": "D6-05_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       1,
+       3
+      ],
+      "n_channels": 9,
+      "change": 0.769783973030326,
+      "change_err": 0.10143082536147795,
+      "channels_up": 9,
+      "channels_down": 0,
+      "ratio": 2.166845760930988,
+      "sigma": 5.3689562400469875
+     },
+     "two_out": {
+      "left_out": [
+       56,
+       50
+      ],
+      "change": 0.755,
+      "sigma": 4.9,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "05",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.510308,
+    "dec": -2.049482,
+    "sigma_best": 5.5,
+    "best_detector": 6,
+    "sigma_combined": 6.5,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     6
+    ],
+    "detectors_at_3_sigma": [
+     4,
+     6
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "known_variable",
+     "meaning": "known variable star: listed as variable in a catalogue that answered",
+     "label": "known",
+     "summary": "Listed as variable: WISEA J183002.46-020258.0 (AllWISE, var_flg 6703) at 0.08 arcsec.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "AllWISE",
+      "name": "WISEA J183002.46-020258.0",
+      "type": "var_flg 6703",
+      "variable": true,
+      "w1": 8.532,
+      "w2": 6.383,
+      "separation_arcsec": 0.08
+     },
+     "nearest": [
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J183002.46-020258.0",
+       "type": "var_flg 6703",
+       "variable": true,
+       "w1": 8.532,
+       "w2": 6.383,
+       "separation_arcsec": 0.08
+      },
+      {
+       "catalogue": "CatWISE2020",
+       "name": "CWISE J183002.49-020258.1",
+       "variable": false,
+       "w1": 8.681,
+       "w2": 6.621,
+       "pmra": -3.3800000000000003,
+       "pmdec": -29.36,
+       "pm_err_arcsec_yr": [
+        0.0041,
+        0.0042
+       ],
+       "separation_arcsec": 0.38
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 6,
+     "id": "D6-03",
+     "kind": "changer",
+     "sigma": 5.5,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 2315.8,
+     "typical_flux_mjy": 561.5799,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-03",
+       "n_exposures": 24,
+       "snr": 21.8,
+       "times_noise": 2053.4,
+       "empty_places_as_bright": 0,
+       "ra": 277.51027048852626,
+       "dec": -2.0494580428251363,
+       "east_arcsec": -0.053,
+       "north_arcsec": 0.014,
+       "err_east_arcsec": 0.144,
+       "err_north_arcsec": 0.144,
+       "largest_shift_from_one_exposure_arcsec": 0.178,
+       "peak_mjy_sr": 135.7548,
+       "misfit": 0.023,
+       "fwhm_arcsec": 11.1
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-04-01",
+       "n_exposures": 18,
+       "snr": 20.7,
+       "times_noise": 2327.5,
+       "empty_places_as_bright": 0,
+       "ra": 277.51035578960443,
+       "dec": -2.049496746037197,
+       "east_arcsec": 0.066,
+       "north_arcsec": -0.009,
+       "err_east_arcsec": 0.117,
+       "err_north_arcsec": 0.117,
+       "largest_shift_from_one_exposure_arcsec": 0.035,
+       "peak_mjy_sr": 159.4792,
+       "misfit": 0.017,
+       "fwhm_arcsec": 10.7
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 6,
+       "snr": 12.8,
+       "times_noise": 2258.0,
+       "empty_places_as_bright": 0,
+       "ra": 277.51036813227734,
+       "dec": -2.0495327091568174,
+       "east_arcsec": 0.168,
+       "north_arcsec": -0.147,
+       "err_east_arcsec": 0.203,
+       "err_north_arcsec": 0.203,
+       "largest_shift_from_one_exposure_arcsec": 0.119,
+       "peak_mjy_sr": 162.0814,
+       "misfit": 0.021,
+       "fwhm_arcsec": 10.4
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-08-30",
+       "n_exposures": 19,
+       "snr": 24.5,
+       "times_noise": 2488.9,
+       "empty_places_as_bright": 0,
+       "ra": 277.5102859575585,
+       "dec": -2.04947630020389,
+       "east_arcsec": -0.006,
+       "north_arcsec": 0.015,
+       "err_east_arcsec": 0.114,
+       "err_north_arcsec": 0.114,
+       "largest_shift_from_one_exposure_arcsec": 0.065,
+       "peak_mjy_sr": 163.7434,
+       "misfit": 0.019,
+       "fwhm_arcsec": 10.6
+      }
+     ],
+     "figure": "D6-03_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       0,
+       3
+      ],
+      "n_channels": 8,
+      "change": 0.13830003325475204,
+      "change_err": 0.017483005475635128,
+      "channels_up": 8,
+      "channels_down": 0,
+      "ratio": 1.1647457078517616,
+      "sigma": 5.5968577876280285
+     },
+     "two_out": {
+      "left_out": [
+       50,
+       52
+      ],
+      "change": 0.1322,
+      "sigma": 5.0,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "06",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.565872,
+    "dec": -2.122724,
+    "sigma_best": 5.4,
+    "best_detector": 6,
+    "sigma_combined": 5.7,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     6
+    ],
+    "detectors_at_3_sigma": [
+     6
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "changer_not_listed_as_variable",
+     "meaning": "changed brightness; the object here is not listed as variable in the catalogues that answered (candidate)",
+     "label": "known",
+     "summary": "WISEA J183015.69-020720.5 (AllWISE, var_flg nnnn) is 2.17 arcsec away; nothing within the 15 arcsec measuring circle is listed as variable in: Gaia DR3 (variability flag and classifier), SIMBAD (object type), AAVSO VSX, AllWISE (variability flag). SIMBAD lists JCMTPP J183016.0-020721 as Y*O; HGBS J183016.2-020716 as Y*O, a kind of object that commonly varies.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "AllWISE",
+      "name": "WISEA J183015.69-020720.5",
+      "type": "var_flg nnnn",
+      "variable": false,
+      "w1": 13.589,
+      "w2": 12.04,
+      "separation_arcsec": 2.17
+     },
+     "nearest": [
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J183015.69-020720.5",
+       "type": "var_flg nnnn",
+       "variable": false,
+       "w1": 13.589,
+       "w2": 12.04,
+       "separation_arcsec": 2.17
+      },
+      {
+       "catalogue": "CatWISE2020",
+       "name": "CWISE J183015.67-020719.6",
+       "variable": false,
+       "w1": 13.82,
+       "w2": 12.261,
+       "pmra": 10.45,
+       "pmdec": -5.45,
+       "pm_err_arcsec_yr": [
+        0.009,
+        0.01
+       ],
+       "separation_arcsec": 2.73
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 6,
+     "id": "D6-04",
+     "kind": "changer",
+     "sigma": 5.4,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 20.4,
+     "typical_flux_mjy": 6.3898,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-03",
+       "n_exposures": 24,
+       "snr": 18.9,
+       "times_noise": 18.4,
+       "empty_places_as_bright": 2,
+       "ra": 277.56587885418367,
+       "dec": -2.122693691187833,
+       "east_arcsec": 0.105,
+       "north_arcsec": 0.038,
+       "err_east_arcsec": 0.116,
+       "err_north_arcsec": 0.116,
+       "largest_shift_from_one_exposure_arcsec": 0.095,
+       "peak_mjy_sr": 1.1857,
+       "misfit": 0.102,
+       "fwhm_arcsec": 13.1
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-04-01",
+       "n_exposures": 18,
+       "snr": 18.3,
+       "times_noise": 21.3,
+       "empty_places_as_bright": 2,
+       "ra": 277.5658599895998,
+       "dec": -2.122621301210708,
+       "east_arcsec": -0.151,
+       "north_arcsec": 0.415,
+       "err_east_arcsec": 0.115,
+       "err_north_arcsec": 0.115,
+       "largest_shift_from_one_exposure_arcsec": 0.067,
+       "peak_mjy_sr": 1.3917,
+       "misfit": 0.094,
+       "fwhm_arcsec": 13.1
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 6,
+       "snr": 10.4,
+       "times_noise": 18.8,
+       "empty_places_as_bright": 2,
+       "ra": 277.5660203820331,
+       "dec": -2.122684572369449,
+       "east_arcsec": 0.484,
+       "north_arcsec": 0.179,
+       "err_east_arcsec": 0.2,
+       "err_north_arcsec": 0.2,
+       "largest_shift_from_one_exposure_arcsec": 0.13,
+       "peak_mjy_sr": 1.2837,
+       "misfit": 0.109,
+       "fwhm_arcsec": 13.6
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-08-30",
+       "n_exposures": 19,
+       "snr": 19.9,
+       "times_noise": 21.3,
+       "empty_places_as_bright": 1,
+       "ra": 277.56589011920585,
+       "dec": -2.1227111006531554,
+       "east_arcsec": 0.136,
+       "north_arcsec": 0.042,
+       "err_east_arcsec": 0.112,
+       "err_north_arcsec": 0.112,
+       "largest_shift_from_one_exposure_arcsec": 0.072,
+       "peak_mjy_sr": 1.3577,
+       "misfit": 0.1,
+       "fwhm_arcsec": 13.0
+      }
+     ],
+     "figure": "D6-04_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       0,
+       1
+      ],
+      "n_channels": 11,
+      "change": 0.19125651821546763,
+      "change_err": 0.024246406441475094,
+      "channels_up": 11,
+      "channels_down": 0,
+      "ratio": 1.2376298363226788,
+      "sigma": 5.587650118210922
+     },
+     "two_out": {
+      "left_out": [
+       8,
+       9
+      ],
+      "change": 0.1809,
+      "sigma": 5.0,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "07",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.532775,
+    "dec": -2.042059,
+    "sigma_best": 5.2,
+    "best_detector": 2,
+    "sigma_combined": 5.1,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     2
+    ],
+    "detectors_at_3_sigma": [
+     1,
+     2
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "changer_not_listed_as_variable",
+     "meaning": "changed brightness; the object here is not listed as variable in the catalogues that answered (candidate)",
+     "label": "known",
+     "summary": "Gaia DR3 4270246258814194304 (Gaia DR3) is 0.07 arcsec away; nothing within the 15 arcsec measuring circle is listed as variable in: Gaia DR3 (variability flag and classifier), SIMBAD (object type), AAVSO VSX, AllWISE (variability flag).",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "Gaia DR3",
+      "name": "Gaia DR3 4270246258814194304",
+      "variable": false,
+      "gmag": 17.607524871826172,
+      "pmra": -0.07746829212167466,
+      "pmdec": 4.1450718970734295,
+      "parallax": 1.905822987710529,
+      "separation_arcsec": 0.07
+     },
+     "nearest": [
+      {
+       "catalogue": "Gaia DR3",
+       "name": "Gaia DR3 4270246258814194304",
+       "variable": false,
+       "gmag": 17.607524871826172,
+       "pmra": -0.07746829212167466,
+       "pmdec": 4.1450718970734295,
+       "parallax": 1.905822987710529,
+       "separation_arcsec": 0.07
+      },
+      {
+       "catalogue": "SIMBAD",
+       "name": "2MASS J18300785-0202318",
+       "type": "Y*?",
+       "variable": false,
+       "pmra": -0.077,
+       "pmdec": 4.145,
+       "parallax": 1.9058,
+       "separation_arcsec": 0.07
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 2,
+     "id": "D2-03",
+     "kind": "changer",
+     "sigma": 5.2,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 8225.4,
+     "typical_flux_mjy": 153.182,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-08",
+       "n_exposures": 19,
+       "snr": 6.3,
+       "times_noise": 7349.1,
+       "empty_places_as_bright": 0,
+       "ra": 277.5328534383537,
+       "dec": -2.0420779800250703,
+       "east_arcsec": 0.418,
+       "north_arcsec": -0.044,
+       "err_east_arcsec": 0.197,
+       "err_north_arcsec": 0.197,
+       "largest_shift_from_one_exposure_arcsec": 0.149,
+       "peak_mjy_sr": 90.9447,
+       "misfit": 0.015,
+       "fwhm_arcsec": 9.5
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-03-28",
+       "n_exposures": 19,
+       "snr": 6.4,
+       "times_noise": 7318.5,
+       "empty_places_as_bright": 0,
+       "ra": 277.5327064208563,
+       "dec": -2.0420077454931884,
+       "east_arcsec": -0.251,
+       "north_arcsec": 0.143,
+       "err_east_arcsec": 0.198,
+       "err_north_arcsec": 0.198,
+       "largest_shift_from_one_exposure_arcsec": 0.196,
+       "peak_mjy_sr": 94.3146,
+       "misfit": 0.013,
+       "fwhm_arcsec": 9.0
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 11,
+       "snr": 7.7,
+       "times_noise": 8040.2,
+       "empty_places_as_bright": 0,
+       "ra": 277.53277552828155,
+       "dec": -2.0420730509694107,
+       "east_arcsec": -0.115,
+       "north_arcsec": -0.068,
+       "err_east_arcsec": 0.236,
+       "err_north_arcsec": 0.236,
+       "largest_shift_from_one_exposure_arcsec": 0.137,
+       "peak_mjy_sr": 147.8391,
+       "misfit": 0.017,
+       "fwhm_arcsec": 8.9
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-09-05",
+       "n_exposures": 31,
+       "snr": 7.0,
+       "times_noise": 7441.1,
+       "empty_places_as_bright": 0,
+       "ra": 277.5327592897441,
+       "dec": -2.0420622034040097,
+       "east_arcsec": -0.067,
+       "north_arcsec": -0.078,
+       "err_east_arcsec": 0.141,
+       "err_north_arcsec": 0.141,
+       "largest_shift_from_one_exposure_arcsec": 0.071,
+       "peak_mjy_sr": 78.6303,
+       "misfit": 0.01,
+       "fwhm_arcsec": 9.1
+      }
+     ],
+     "figure": "D2-03_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       0,
+       3
+      ],
+      "n_channels": 11,
+      "change": 0.15629255834493427,
+      "change_err": 0.020617838392683937,
+      "channels_up": 11,
+      "channels_down": 0,
+      "ratio": 1.1392355674751924,
+      "sigma": 5.314894491296848
+     },
+     "two_out": {
+      "left_out": [
+       55,
+       70
+      ],
+      "change": 0.1422,
+      "sigma": 4.6,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "08",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 277.430478,
+    "dec": -2.050551,
+    "sigma_best": 4.7,
+    "best_detector": 2,
+    "sigma_combined": 5.1,
+    "found_by": "several detectors together",
+    "detectors_at_5_sigma": [],
+    "detectors_at_3_sigma": [
+     2,
+     4
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "changer_not_listed_as_variable",
+     "meaning": "changed brightness; the object here is not listed as variable in the catalogues that answered (candidate)",
+     "label": "known",
+     "summary": "WISEA J182943.32-020302.1 (AllWISE, var_flg 111n) is 0.19 arcsec away; nothing within the 15 arcsec measuring circle is listed as variable in: Gaia DR3 (variability flag and classifier), SIMBAD (object type), AAVSO VSX, AllWISE (variability flag).",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "AllWISE",
+      "name": "WISEA J182943.32-020302.1",
+      "type": "var_flg 111n",
+      "variable": false,
+      "w1": 9.24,
+      "w2": 8.964,
+      "separation_arcsec": 0.19
+     },
+     "nearest": [
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J182943.32-020302.1",
+       "type": "var_flg 111n",
+       "variable": false,
+       "w1": 9.24,
+       "w2": 8.964,
+       "separation_arcsec": 0.19
+      },
+      {
+       "catalogue": "CatWISE2020",
+       "name": "CWISE J182943.32-020302.1",
+       "variable": false,
+       "w1": 9.252,
+       "w2": 8.989,
+       "pmra": -3.63,
+       "pmdec": -24.25,
+       "pm_err_arcsec_yr": [
+        0.0047,
+        0.004
+       ],
+       "separation_arcsec": 0.48
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 2,
+     "id": "D2-04",
+     "kind": "changer",
+     "sigma": 4.7,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 376.4,
+     "typical_flux_mjy": 8.8524,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-08",
+       "n_exposures": 19,
+       "snr": 5.2,
+       "times_noise": 351.3,
+       "empty_places_as_bright": 0,
+       "ra": 277.43044303355066,
+       "dec": -2.050605583245167,
+       "east_arcsec": 0.01,
+       "north_arcsec": -0.171,
+       "err_east_arcsec": 0.26,
+       "err_north_arcsec": 0.26,
+       "largest_shift_from_one_exposure_arcsec": 0.145,
+       "peak_mjy_sr": 4.4575,
+       "misfit": 0.017,
+       "fwhm_arcsec": 9.0
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-03-28",
+       "n_exposures": 19,
+       "snr": 3.4,
+       "times_noise": 173.6,
+       "empty_places_as_bright": 0,
+       "ra": null,
+       "dec": null,
+       "east_arcsec": null,
+       "north_arcsec": null,
+       "err_east_arcsec": null,
+       "err_north_arcsec": null,
+       "largest_shift_from_one_exposure_arcsec": null,
+       "peak_mjy_sr": null,
+       "misfit": null,
+       "fwhm_arcsec": null
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 11,
+       "snr": 6.5,
+       "times_noise": 417.6,
+       "empty_places_as_bright": 0,
+       "ra": 277.4305157090865,
+       "dec": -2.050630098803876,
+       "east_arcsec": 0.019,
+       "north_arcsec": -0.301,
+       "err_east_arcsec": 0.342,
+       "err_north_arcsec": 0.342,
+       "largest_shift_from_one_exposure_arcsec": 0.18,
+       "peak_mjy_sr": 7.7924,
+       "misfit": 0.017,
+       "fwhm_arcsec": 9.2
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-09-05",
+       "n_exposures": 31,
+       "snr": 5.5,
+       "times_noise": 379.1,
+       "empty_places_as_bright": 0,
+       "ra": 277.43040375510475,
+       "dec": -2.0505358727825103,
+       "east_arcsec": -0.277,
+       "north_arcsec": -0.011,
+       "err_east_arcsec": 0.248,
+       "err_north_arcsec": 0.248,
+       "largest_shift_from_one_exposure_arcsec": 0.219,
+       "peak_mjy_sr": 4.3402,
+       "misfit": 0.021,
+       "fwhm_arcsec": 9.0
+      }
+     ],
+     "figure": "D2-04_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       0,
+       2
+      ],
+      "n_channels": 8,
+      "change": 0.17560096972497374,
+      "change_err": 0.028262665677805197,
+      "channels_up": 8,
+      "channels_down": 0,
+      "ratio": 1.2214887921744302,
+      "sigma": 4.7873456734616635
+     },
+     "two_out": {
+      "left_out": [
+       42,
+       3
+      ],
+      "change": 0.1599,
+      "sigma": 4.1,
+      "survives": true
+     }
+    }
+   },
+   {
+    "id": "09",
+    "kind": "changer",
+    "verdict": "caution",
+    "flags": [
+     "one_roll_only"
+    ],
+    "ra": 277.529971,
+    "dec": -2.050382,
+    "sigma_best": 5.6,
+    "best_detector": 2,
+    "sigma_combined": 5.0,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     2
+    ],
+    "detectors_at_3_sigma": [
+     2
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "changer_not_listed_as_variable",
+     "meaning": "changed brightness; the object here is not listed as variable in the catalogues that answered (candidate)",
+     "label": "known",
+     "summary": "CWISE J183007.18-020301.1 (CatWISE2020) is 0.09 arcsec away; nothing within the 15 arcsec measuring circle is listed as variable in: Gaia DR3 (variability flag and classifier), SIMBAD (object type), AAVSO VSX, AllWISE (variability flag). SIMBAD lists SSTgbs J1830062-020304 as Y*O, a kind of object that commonly varies.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "CatWISE2020",
+      "name": "CWISE J183007.18-020301.1",
+      "variable": false,
+      "w1": 8.342,
+      "w2": 7.804,
+      "pmra": 11.59,
+      "pmdec": -23.64,
+      "pm_err_arcsec_yr": [
+       0.0043,
+       0.0044
+      ],
+      "separation_arcsec": 0.09
+     },
+     "nearest": [
+      {
+       "catalogue": "CatWISE2020",
+       "name": "CWISE J183007.18-020301.1",
+       "variable": false,
+       "w1": 8.342,
+       "w2": 7.804,
+       "pmra": 11.59,
+       "pmdec": -23.64,
+       "pm_err_arcsec_yr": [
+        0.0043,
+        0.0044
+       ],
+       "separation_arcsec": 0.09
+      },
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J183007.17-020301.0",
+       "type": "var_flg 110n",
+       "variable": false,
+       "w1": 8.33,
+       "w2": 7.779,
+       "separation_arcsec": 0.43
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 2,
+     "id": "D2-01",
+     "kind": "changer",
+     "sigma": 5.6,
+     "grade": "caution",
+     "flags": [
+      "one_roll_only"
+     ],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 764.3,
+     "typical_flux_mjy": 16.1409,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-08",
+       "n_exposures": 19,
+       "snr": 3.9,
+       "times_noise": 624.0,
+       "empty_places_as_bright": 0,
+       "ra": null,
+       "dec": null,
+       "east_arcsec": null,
+       "north_arcsec": null,
+       "err_east_arcsec": null,
+       "err_north_arcsec": null,
+       "largest_shift_from_one_exposure_arcsec": null,
+       "peak_mjy_sr": null,
+       "misfit": null,
+       "fwhm_arcsec": null
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-03-28",
+       "n_exposures": 19,
+       "snr": 4.5,
+       "times_noise": 747.8,
+       "empty_places_as_bright": 0,
+       "ra": 277.5299842802844,
+       "dec": -2.050356585065509,
+       "east_arcsec": 0.047,
+       "north_arcsec": 0.052,
+       "err_east_arcsec": 0.187,
+       "err_north_arcsec": 0.187,
+       "largest_shift_from_one_exposure_arcsec": 0.145,
+       "peak_mjy_sr": 10.4082,
+       "misfit": 0.012,
+       "fwhm_arcsec": 8.9
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-05-07",
+       "n_exposures": 11,
+       "snr": 5.6,
+       "times_noise": 893.9,
+       "empty_places_as_bright": 0,
+       "ra": 277.5300003948865,
+       "dec": -2.050453761862856,
+       "east_arcsec": -0.008,
+       "north_arcsec": -0.274,
+       "err_east_arcsec": 0.263,
+       "err_north_arcsec": 0.263,
+       "largest_shift_from_one_exposure_arcsec": 0.207,
+       "peak_mjy_sr": 16.9362,
+       "misfit": 0.015,
+       "fwhm_arcsec": 8.8
+      },
+      {
+       "epoch": 4,
+       "date_mean": "2026-09-05",
+       "n_exposures": 31,
+       "snr": 3.9,
+       "times_noise": 621.9,
+       "empty_places_as_bright": 0,
+       "ra": null,
+       "dec": null,
+       "east_arcsec": null,
+       "north_arcsec": null,
+       "err_east_arcsec": null,
+       "err_north_arcsec": null,
+       "largest_shift_from_one_exposure_arcsec": null,
+       "peak_mjy_sr": null,
+       "misfit": null,
+       "fwhm_arcsec": null
+      }
+     ],
+     "figure": "D2-01_changer.png",
+     "measure": "aperture",
+     "change": {
+      "bins": [
+       0,
+       3
+      ],
+      "n_channels": 14,
+      "change": 0.17135266986574182,
+      "change_err": 0.025613091720470424,
+      "channels_up": 14,
+      "channels_down": 0,
+      "ratio": 1.1624125344473157,
+      "sigma": 5.161792892309208
+     },
+     "two_out": {
+      "left_out": [
+       12,
+       15
+      ],
+      "change": 0.1596,
+      "sigma": 4.7,
+      "survives": true
+     }
+    }
+   }
+  ],
+  "rejected": [],
+  "summary": {
+   "n_objects": 9,
+   "n_rejected": 0,
+   "n_below_threshold": 3,
+   "sources_tested": 521,
+   "seconds": 81.6,
+   "catalogues_answered": [
+    "AAVSO VSX",
+    "AllWISE",
+    "CatWISE2020",
+    "Gaia DR3",
+    "SIMBAD"
+   ],
+   "catalogues_failed": {},
+   "messages": {},
+   "download_failures": {},
+   "exposures": {
+    "1": 56,
+    "2": 80,
+    "3": 66,
+    "4": 56,
+    "5": 80,
+    "6": 67
+   }
+  },
+  "limits": "Finds only what stands 5 times above the noise of empty places in the picture of one visit or of all visits together, in at least one detector. A mover must move between visits (not within one: asteroids are averaged away), by less than 8 arcsec from one visit to the next (about 16 arcsec/yr for visits six months apart), and by more than about 1.2 to 3 arcsec/yr for 5 sigma, depending on brightness. Saturated stars are placed only to 1 to 2 arcsec. A brightness change must be at least 10 per cent (25 per cent for a saturated star's ring), seen at the same wavelength in at least 6 channels. Sources on the glow of a much brighter star are not tested, and a mover blended with catalogued neighbours is rejected. In nebulous young clusters, quote only changes seen the same way in two or more detectors. See docs/search.md.",
+  "version": 4,
+  "credit": "NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive (IRSA); ESA Gaia DR3; SIMBAD (CDS); AAVSO VSX; CatWISE2020 and AllWISE (NASA/IPAC IRSA)"
+ },
+ "_note": "A real response of GET /api/search, trimmed: per-channel tables and per-detector tables removed, nearest catalogue entries cut to 2."
+}
