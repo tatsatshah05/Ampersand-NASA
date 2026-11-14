@@ -13,6 +13,7 @@ Writes, under docs/results/:
   <slug>_modes_sheet.jpg     the same for the sum and difference frames
   <slug>_brightness.png      brightness against wavelength per epoch, and its change
   <slug>_D<n>_epoch<k>.png   the frames themselves, as the site serves them
+  <slug>_D<n>_sum_sky.png, _sum_target.png, _diff_epoch<k>_minus_<j>.png   likewise
   measured.json         every number, for later passes
   measured_tables.md    the same as markdown tables, pasted into docs/results.md
 
@@ -137,7 +138,8 @@ def field_star_shifts(meta: dict, stacks: dict[int, dict], grid, n: int) -> dict
     """How far ordinary Gaia stars move between the first frame and each later one.
 
     They should not move. Same selection as scripts/check_barnard.py: slow (under
-    50 mas/yr), well inside the frame, cleanly fitted in every frame, not blended.
+    50 mas/yr), well inside the frame, cleanly fitted in every frame, not blended;
+    and at least 25 arcsec from the centre, where the target is.
     """
     epochs = sorted(stacks)
     if len(epochs) < 2:
@@ -150,6 +152,9 @@ def field_star_shifts(meta: dict, stacks: dict[int, dict], grid, n: int) -> dict
         if src["source_id"] == target_id or src["gmag"] is None:
             continue
         if np.hypot(src["pmra"] or 0, src["pmdec"] or 0) > 50:
+            continue
+        # Not the target itself or anything inside its glare (the target sits at the centre).
+        if np.hypot(*astrometry.offset_arcsec(meta["ra"], meta["dec"], src["ra"], src["dec"])) < 25:
             continue
         x, y = grid.all_world2pix(*astrometry.position_at(src, mjd0), 0)
         if not (14 <= x < n - 14 and 14 <= y < n - 14):
@@ -356,7 +361,7 @@ def target_sum_no_rejection(pos: dict, fov: float, detector: int, out_png: Path)
     return result
 
 
-def measure_modes(target: dict, pos: dict, fov: float, detectors: list[int]) -> list[dict]:
+def measure_modes(target: dict, pos: dict, fov: float, detectors: list[int], tag: str = "") -> list[dict]:
     """Sum frames (on the sky, and following the target) and difference frames, per detector."""
     motion = warm_cache.motion_options(pos)
     out = []
@@ -372,6 +377,8 @@ def measure_modes(target: dict, pos: dict, fov: float, detectors: list[int]) -> 
                              n_exposures=f.get("n_exposures"), epochs=f.get("epochs_combined"),
                              saturated_pixels=f.get("saturated_pixels"), centroid=f.get("centroid"),
                              predicted=f.get("predicted"), note=meta.get("note"))
+                shutil.copy(pipeline.FRAMES_DIR / meta["key"] / Path(f["image"]).name,
+                            OUT / f"{target['slug']}{tag}_D{det}_sum_{track}.png")
                 image = png_to_image(meta, f)
                 pred = f.get("predicted")
                 if image is not None and pred:
@@ -382,7 +389,7 @@ def measure_modes(target: dict, pos: dict, fov: float, detectors: list[int]) -> 
             row["sum"][track] = entry
         try:
             row["sum"]["target_no_rejection"] = target_sum_no_rejection(
-                pos, fov, det, OUT / f"{target['slug']}_D{det}_sum_target_no_rejection.png")
+                pos, fov, det, OUT / f"{target['slug']}{tag}_D{det}_sum_target_no_rejection.png")
         except Exception as e:  # noqa: BLE001 - leans on pipeline internals that may change
             row["sum"]["target_no_rejection"] = {"error": f"{type(e).__name__}: {e}"}
         res = warm_cache.warm_view(pos["ra"], pos["dec"], fov, det, "difference", reference="first", **motion)
@@ -392,6 +399,9 @@ def measure_modes(target: dict, pos: dict, fov: float, detectors: list[int]) -> 
                                          "image": f["image"], "predicted": f.get("predicted"),
                                          "valid_fraction": f.get("difference_valid_fraction")}
                                         for f in (meta or {}).get("frames", [])]}
+        for f in (meta or {}).get("frames", []):
+            name = f"{target['slug']}{tag}_D{det}_diff_epoch{f['epoch']}_minus_{f.get('reference_epoch')}.png"
+            shutil.copy(pipeline.FRAMES_DIR / meta["key"] / Path(f["image"]).name, OUT / name)
         out.append(row)
         print(f"   D{det}: sum sky {row['sum']['sky']['status']}, sum target {row['sum']['target']['status']}, "
               f"difference {row['difference']['status']} ({len(row['difference']['frames'])} frames)", flush=True)
@@ -808,8 +818,10 @@ def main() -> int:
     def git(*cmd: str) -> str:
         return subprocess.run(["git", *cmd], cwd=ROOT, capture_output=True, text=True, check=False).stdout.strip()
     # The code that actually ran: the commit, and a warning if backend/ differed from it.
-    backend_commit = git("log", "-1", "--format=%h", "--", "backend")
-    commit = f"{git('rev-parse', '--short', 'HEAD')} (backend/ last changed in {backend_commit})"
+    # The files that decide the pictures and the numbers (not the web server around them).
+    core = ["backend/pipeline.py", "backend/photometry.py", "backend/astrometry.py", "backend/spherex.py"]
+    commit = (f"{git('rev-parse', '--short', 'HEAD')} (pipeline, photometry, astrometry and archive code "
+              f"last changed in {git('log', '-1', '--format=%h', '--', *core)})")
     dirty = [line.split()[-1] for line in git("status", "--porcelain", "--", "backend").splitlines()]
     if dirty:
         commit += " plus uncommitted " + ", ".join(dirty)
@@ -833,14 +845,17 @@ def main() -> int:
         contact_sheet(t, views, OUT / f"{t['slug']}{args.tag}_sheet.jpg")
         modes: list[dict] = []
         if not args.no_modes:
-            modes = measure_modes(t, pos, args.fov, args.detectors)
+            modes = measure_modes(t, pos, args.fov, args.detectors, args.tag)
             modes_sheet(t, modes, OUT / f"{t['slug']}{args.tag}_modes_sheet.jpg")
         brightness = None
         try:
             brightness = measure_brightness(pos)
             if brightness:
-                normal = max(views, key=lambda v: len(v["frames"]))
-                dates = {f["epoch"]: f"{f['date_start']} to {f['date_end'][5:]}" for f in normal["frames"]}
+                spans: dict[int, list[str]] = {}          # each epoch's dates over all detectors
+                for v in views:
+                    for f in v["frames"]:
+                        spans.setdefault(f["epoch"], []).extend([f["date_start"], f["date_end"]])
+                dates = {ep: f"{min(d)} to {max(d)}" for ep, d in sorted(spans.items())}
                 brightness_chart(t, brightness, dates, OUT / f"{t['slug']}{args.tag}_brightness.png")
                 brightness = {k: v for k, v in brightness.items() if k != "points"}   # keep the record small
         except Exception as e:  # noqa: BLE001 - leans on the backend's photometry, which may change
