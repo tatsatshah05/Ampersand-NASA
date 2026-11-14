@@ -1,7 +1,8 @@
 # Search mode: looking for things that move or change, with no target given
 
-Written 2026-11-14 for teammates who are not astronomers. Everything here was measured on the
-SPHEREx cutouts already in the shared cache; nothing was downloaded, simulated or injected.
+Written 2026-11-14 for teammates who are not astronomers. The recovery test and the first hunt
+used only SPHEREx cutouts already in the shared cache; four fresh fields were then read from the
+public S3 copy of the archive into the search's own folder. Nothing was simulated or injected.
 
 ## What the search does, in plain words
 
@@ -25,7 +26,8 @@ not tell it what to look for. For each detector it:
 A detection is never taken from the fitting code's own "signal to noise": that number is not a
 detection strength (on empty sky it reaches 5 at a quarter of places; see
 `docs/verification.md`). Instead every brightness the search calls a detection is the same
-measurement made at 300 to 600 empty places of the same picture, and the source's value is given
+measurement made at hundreds of empty places of the same picture (235 to 579 in a 0.1-degree
+picture, over a thousand in larger ones), and the source's value is given
 as "times the noise of those empty places" and "how many empty places were as bright".
 
 ### The tests that kill a candidate
@@ -48,7 +50,7 @@ look at), or **clean**.
 
 The search was given only each field's centre (where the cached cutouts are) and a 0.1 degree
 (6 arcmin) field, and run in all six detectors. It was never told what the target was or how it
-moves. Command (about 30 s per field, all six detectors):
+moves. Command (18 to 41 s per field for all six detectors, from cached cutouts):
 
 ```
 export SPHEREX_CACHE_DIR=<the shared cache>
@@ -241,6 +243,104 @@ artefacts: the three movers in the table above, each confirmed by eye. With 1578
 brightness and none passing falsely, the false-alarm rate is below about 1 in 500 sources per
 test (95 per cent confidence). What that does not cover: fields unlike these (crowded Galactic
 plane, bright nebulae beyond what NGC 1333 and Serpens show), and artefacts we have not met.
+
+## The hunt in four fresh fields (read from the public S3 copy of the archive)
+
+Chosen where this method has the best odds of finding something no catalogue lists:
+
+- **NGC 1333 and Serpens Main, all six detectors.** Only detector 3 was on disk, and three weak
+  changers (3.6 to 4.8 sigma) were already sitting in NGC 1333. Six detectors let a change be
+  confirmed between the same two visits in independent detectors, which an artefact rarely
+  manages. Young star clusters: their stars vary, and many are hidden from optical surveys by
+  dust, so Gaia's and AAVSO's variable lists miss them.
+- **Serpens South, all six detectors.** A young cluster so deeply embedded that most of its stars
+  are invisible to optical surveys, which are where most variable-star listings come from; four
+  visits.
+- **Chamaeleon I, all six detectors.** A young cluster with the most exposures per detector among
+  the candidates (about 80).
+- Not chosen: the ecliptic poles, although SPHEREx looks there most. Only two detectors cover the
+  exact pole points, and the coverage is so continuous that the 30-day-gap rule makes one or two
+  "visits" a year long, which smears any motion. This method needs separate visits.
+
+All at 0.2 degrees. Cutouts not already in the shared cache were read from the S3 copy into the
+search's own folder (`backend/cache/search2/cutouts`), never into the shared `cutouts/`. About 2
+seconds per cutout on this machine today (the S3 module quotes 0.13 s under better conditions);
+about 3 minutes per field and detector set of some 360 to 480 exposures, plus 30 s per detector to
+search.
+
+### NGC 1333 (RA 52.265, Dec +31.31), six detectors
+
+Ten objects passed. Eight are stars the catalogues already list as variable (category a, below),
+one is a candidate of category b, and one "mover" was then rejected by a rule added after looking
+at it.
+
+**b. HH 17 (Gaia DR3 121394192607752192), RA 52.33509, Dec +31.30940: changed, not listed as
+variable.** Candidate.
+
+- Between 19 - 26 Aug 2025 and 1 - 12 Feb 2026 it faded, in all four detectors that measure it
+  well, between the same two visits: 3.8 to 4.4 microns 0.84 (4.7 sigma), 4.4 to 5.0 microns 0.86
+  (5.3 sigma, all 15 channels fainter), 1.6 to 2.4 microns 0.84 (4.7 sigma), 1.1 to 1.65 microns
+  0.90 (3.1 sigma). By 16 Aug - 5 Sep 2026 it was back at 1.1 to 2.4 microns (1.20 and 1.29 times
+  the February value) but not at 3.8 to 5 microns (still 0.84 to 0.90 of August 2025).
+- Combined over detectors 9.8 sigma. In detectors 2 and 6 the change survives leaving out the two
+  most helpful exposures (5.9 and 4.9 sigma). No flags in those two detectors; in detector 3 the
+  change follows the spacecraft's turn (visit 2 low, visits 1 and 3 equal).
+- Catalogues (all five answered): Gaia DR3 121394192607752192 (G = 20.3) at 0.3 arcsec, no
+  variability flag; SIMBAD lists it as HH 17, a young stellar object; CatWISE2020 and AllWISE
+  have it (AllWISE variability flag 5 and 4 at 3.4 and 4.6 microns, below the catalogue's "likely
+  variable" level of 6); nothing in AAVSO VSX. So: **not listed as variable in Gaia DR3, AAVSO
+  VSX, AllWISE or SIMBAD**; SIMBAD lists it as a young star, a kind of star that commonly varies.
+- Tried to kill it: a reflection would add light in some visits, so it would have to be present
+  only in August 2025 and not in August 2026, taken with the spacecraft the same way round (the
+  brightest star near the field, K = 3.0, is 14 arcmin from its centre); not on a brighter star's
+  glow; not blended (nearest catalogued
+  neighbour 9.8 arcsec away and 60 times fainter at 3.4 microns); the August 2025 to August 2026
+  drop at 4 to 5 microns is between visits taken with the spacecraft the same way round, so it is
+  not light that turns with the spacecraft; four detectors agree on the first step.
+- What weakens it: it sits in the nebula of NGC 1333 (in detector 2 the level around it is 30 per
+  cent of its own brightness, and the detector-2 difference picture shows the four-leaf pattern of
+  a small change of image shape); the errors in this field had to be scaled up 1.7 to 2.4 times on
+  its own stars, a sign of a difficult field; young stars of this kind usually vary, so the
+  change is not surprising.
+- What would confirm it: a near- or mid-infrared light curve from another telescope covering Aug
+  2025 to Aug 2026, or SPHEREx's next visits.
+
+![HH 17, detector 6](search/fresh_hh17_ngc1333_D6.png)
+![HH 17, detector 2](search/fresh_hh17_ngc1333_D2.png)
+
+**a. Listed variables that changed** (each in several detectors): NSV 1155 (faded to 0.68 at 0.75
+to 1.65 microns and 0.83 at 4.4 to 5 microns, Aug 2025 to Aug 2026, 16 sigma combined); LkHA 352
+(down to 0.56 at 0.75 to 1.1 microns, up 1.18 to 1.26 at 2.4 to 4.4 microns, Aug 2025 to Feb
+2026); NSV 15700; a Gaia-classified young star at 52.22749, +31.28090 (0.74 at 3.8 to 4.4
+microns); and three sources listed as variable only by AllWISE's flag, at 52.21335 +31.33181
+(1.40 times brighter at 4.4 to 5 microns), 52.28790 +31.35792 (1.64 times) and 52.19860 +31.40163
+(1.43 times; near the frame edge).
+
+**Not claimed:** a source at 52.25565 +31.33948 next to the radio source [RAC97] VLA 43 (SIMBAD:
+young star), 16 per cent brighter, 5.4 sigma only when two detectors are combined (4.6 and 3.6),
+and wider than a star in detector 3.
+
+**Rejected:** NSV 1155 "moved" 1.3 arcsec/yr in detector 1 (6.8 sigma, 3 to 4 sigma in four more
+detectors). It is two catalogued young stars 3.4 arcsec apart (NSV 1155 and HBC 341, separate in
+Gaia); one faded and the centre of the pair shifted. This led to a new rule: a mover with two or
+more catalogued objects within one pixel of its track, none with the measured motion, is
+rejected. Also rejected: a 15.9-sigma "mover" in detector 5 that is a faint diffuse patch beside
+a bright star (18 arcsec wide against 10).
+
+![Rejected: NSV 1155 and HBC 341, detector 1](search/rejected_pair_nsv1155_D1.png)
+
+### Serpens Main (RA 277.485, Dec +1.23), six detectors
+
+Nine objects passed. Six are listed variables, now seen in several detectors: V371 Ser fell to
+0.22 to 0.38 of its brightness at every wavelength from 1.1 to 5 microns (Sep 2025 to Sep 2026);
+the dipper 2MASS J18295688+0114463 rose 1.33 times at 3.8 to 5 microns; a Gaia-classified young
+star rose 1.37 to 1.45 times at 3.8 to 5 microns; a source flagged by AllWISE rose 1.33 to 1.36
+times; and two long-period variables changed by about 10 per cent (caution: below 5 sigma in
+every single detector, and following the spacecraft's turn in one). Three are "not
+listed as variable" but none is claimable: one is below 5 sigma in every detector (5.8 combined)
+and in detector 5 its change follows the spacecraft's turn; two are seen in one detector only
+(5.2 sigma each), with the neighbouring detector showing a blend or a blob. Two "movers" were
+rejected as not point-like (24 and 26 arcsec wide).
 
 ## What the search cannot find, and why
 
