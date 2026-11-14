@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import astrometry, pipeline, spherex
+from . import astrometry, photometry, pipeline, spherex
 
 app = FastAPI(title="SPHEREx sky-change viewer")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
@@ -37,6 +37,43 @@ def frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90,
     try:
         return pipeline.build_frames(ra, dec, fov, detector, mode, pmra=pmra, pmdec=pmdec, parallax=parallax,
                                      pm_epoch=pm_epoch, reference=reference, track=track)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except spherex.ArchiveError as e:
+        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+
+
+_PMRA = Query(None, description="mas/yr, including cos(dec); from /api/resolve")
+_PMDEC = Query(None, description="mas/yr")
+_PARALLAX = Query(None, ge=0, description="mas")
+_PM_EPOCH = Query(astrometry.RESOLVE_EPOCH, ge=1990, le=2040,
+                  description="Julian year at which the object is at (ra, dec)")
+
+
+@app.get("/api/lightcurve")
+def lightcurve(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+               detector: int | None = Query(None, ge=1, le=6, description="one detector only; default all six"),
+               pmra: float | None = _PMRA, pmdec: float | None = _PMDEC, parallax: float | None = _PARALLAX,
+               pm_epoch: float = _PM_EPOCH):
+    """Brightness of the object at (ra, dec) against time, grouped by wavelength bin."""
+    try:
+        return photometry.lightcurve(ra, dec, detector, pmra=pmra, pmdec=pmdec, parallax=parallax, pm_epoch=pm_epoch)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except spherex.ArchiveError as e:
+        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+
+
+@app.get("/api/spectrum")
+def spectrum(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+             epoch: int | None = Query(None, ge=1, description="epoch number as in /api/frames; default all"),
+             detector: int | None = Query(None, ge=1, le=6, description="one detector only; default all six"),
+             pmra: float | None = _PMRA, pmdec: float | None = _PMDEC, parallax: float | None = _PARALLAX,
+             pm_epoch: float = _PM_EPOCH):
+    """Brightness of the object at (ra, dec) against wavelength, one point per exposure."""
+    try:
+        return photometry.spectrum(ra, dec, epoch, detector, pmra=pmra, pmdec=pmdec, parallax=parallax,
+                                   pm_epoch=pm_epoch)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
     except spherex.ArchiveError as e:
