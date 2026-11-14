@@ -1,0 +1,346 @@
+<!doctype html>
+<!--
+  SPHEREx motion viewer.
+
+  Plays the frames that the backend builds for a patch of sky and makes a one-to-two
+  pixel motion easy to see: zoom and pan, a marker on each frame's measured position,
+  a fixed crosshair at the first position, a trail, a first/last blink, keyboard keys.
+
+  It shows only what GET /api/frames returns. There is no built-in sample data.
+
+  The page reads its options from its own address:
+      ?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal
+  and finds the backend at the address the page itself was served from. When the page
+  is opened as a file, or served from somewhere else during development, it uses
+  http://localhost:8000, or whatever ?api=... says.
+
+  Viewer by Anu (issue #8); wired to the real API afterwards.
+-->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPHEREx motion viewer</title>
+<style>
+  /* Dark theme: astronomical images are easier to judge on a dark background. */
+  body{margin:0;background:#111;color:#eee;font-family:system-ui,sans-serif;text-align:center}
+  canvas{width:100%;max-width:760px;background:#000;cursor:grab;touch-action:none}
+  button,select{background:#2a2a2a;color:#eee;border:1px solid #555;border-radius:6px;
+    padding:7px 10px;margin:3px}
+  button{cursor:pointer} button.on{background:#0a6;border-color:#0c8}
+  label{margin:0 8px;font-size:.95em}
+  #info{min-height:2.6em;font-size:1.05em;margin:4px 10px}
+  #note{min-height:1.4em;color:#fc6;font-size:.95em;margin:4px 10px}
+  small{color:#999;display:block;margin:6px 10px}
+</style></head><body>
+<h2>SPHEREx motion viewer</h2>
+<div>
+  <label>Detector <select id="selDet"></select></label>
+  <label>Field of view <select id="selFov"></select></label>
+  <label>Mode <select id="selMode"></select></label>
+</div>
+<div id="note"></div>
+<canvas id="cv" width="760" height="600" tabindex="0"></canvas>
+<div id="info"></div>
+<div>
+  <button id="bPlay">Pause (space)</button>
+  <button id="bBlink">Blink first/last</button>
+  <button id="bTrail">Trail</button>
+  <button id="bPix">Show pixels</button>
+  <button id="bPrev">&larr;</button><button id="bNext">&rarr;</button>
+  <button id="bIn">Zoom +</button><button id="bOut">Zoom &minus;</button>
+  <button id="bReset">Reset view</button>
+</div>
+<small>Scroll to zoom, drag to pan, space = play/pause, arrow keys = step.
+North is up, east is left.</small>
+<small>Images: NASA/JPL-Caltech SPHEREx, from the NASA/IPAC Infrared Science Archive (IRSA).
+Star positions: ESA Gaia.</small>
+<script>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+
+// ---- options ---------------------------------------------------------------
+// Detector number and its wavelength range in microns.
+const DETECTORS = [[1, 0.75, 1.12], [2, 1.10, 1.65], [3, 1.63, 2.43],
+                   [4, 2.40, 3.85], [5, 3.81, 4.43], [6, 4.41, 5.01]];
+const MODES = [['normal', 'Normal'], ['difference', 'Difference'], ['sum', 'Sum']];
+const FOVS = [0.05, 0.1, 0.2, 0.5];       // presets in degrees; the API needs more than 0.02
+// Barnard's Star where it is in 2026, not its catalogue (year 2000) position, which is
+// 4.5 arcminutes away and outside a 0.1 degree frame.
+const DEFAULT = {ra: 269.446267, dec: 4.768222, det: 5, fov: 0.1, mode: 'normal'};
+const Q = {...DEFAULT};                   // the selected options
+
+const params = new URLSearchParams(location.search);
+// Where the backend is. Same address as the page, unless the page is a local file.
+const API = (params.get('api') ||
+             (location.protocol === 'file:' ? 'http://localhost:8000' : '')).replace(/\/+$/, '');
+
+function numberIn(text, lo, hi, fallback, loOpen){
+  // A number from the page address, or the fallback when it is missing or out of range.
+  const v = text === null || text.trim() === '' ? NaN : Number(text);
+  return Number.isFinite(v) && (loOpen ? v > lo : v >= lo) && v <= hi ? v : fallback;
+}
+function readURL(){
+  // Restore options from the page address; anything missing or invalid falls back to a default.
+  Q.ra = numberIn(params.get('ra'), 0, 359.999999, DEFAULT.ra);
+  Q.dec = numberIn(params.get('dec'), -90, 90, DEFAULT.dec);
+  Q.det = Math.round(numberIn(params.get('det'), 1, 6, DEFAULT.det));
+  Q.fov = numberIn(params.get('fov'), 0.02, 0.5, DEFAULT.fov, true);
+  Q.mode = MODES.some(m => m[0] === params.get('mode')) ? params.get('mode') : DEFAULT.mode;
+}
+function writeURL(){
+  // Keep the address in sync so a reload or a shared link restores the same view.
+  const p = new URLSearchParams({ra: Q.ra, dec: Q.dec, det: Q.det, fov: Q.fov, mode: Q.mode});
+  if (params.get('api')) p.set('api', params.get('api'));
+  try { history.replaceState(null, '', '?' + p); } catch (e) { /* not allowed for local files */ }
+}
+function fill(sel, items, value){
+  // Fill a <select> from [value, text] pairs and select `value`.
+  sel.innerHTML = '';
+  items.forEach(([v, t]) => sel.add(new Option(t, v)));
+  sel.value = String(value);
+}
+function buildControls(){
+  fill($('selDet'), DETECTORS.map(([d, lo, hi]) => [d, `D${d}  ${lo}-${hi} µm`]), Q.det);
+  // Keep a field of view that came from the address even if it is not a preset.
+  const fovs = FOVS.includes(Q.fov) ? FOVS : [...FOVS, Q.fov].sort((a, b) => a - b);
+  fill($('selFov'), fovs.map(f => [f, `${f}°` + (f === 0.1 ? ' (default)' : '')]), Q.fov);
+  fill($('selMode'), MODES, Q.mode);
+}
+
+// ---- frames (reloaded whenever an option changes) -------------------------
+// D.scale is arcseconds per image pixel, as reported by the API.
+let D = {w: 1, h: 1, scale: 2, frames: []}, imgs = [], N = 0, loading = false, loadId = 0;
+const notes = {mode: '', sat: ''};
+function showNotes(){ $('note').textContent = [notes.mode, notes.sat].filter(Boolean).join('  '); }
+
+function normalizeFrame(f){
+  // The only place that knows the API's field names.
+  // The API counts pixels from the top-left with whole numbers at pixel centres; the
+  // canvas puts pixel centres at +0.5. `centroid` is null when nothing could be measured.
+  const c = f.centroid;
+  return {src: API + f.image,
+          label: `Visit ${f.epoch}: ${f.date_start} to ${f.date_end}, ${f.n_exposures} exposures`,
+          cx: c ? c.x + 0.5 : null, cy: c ? c.y + 0.5 : null,
+          sat: f.saturated_pixels || 0};
+}
+const measured = () => D.frames.filter(f => f.cx !== null);   // frames with a measured position
+
+async function loadFrames(){
+  const my = ++loadId;                                  // ignore replies that arrive out of order
+  loading = true; notes.sat = ''; showNotes();
+  $('info').textContent = 'Loading frames… a new position or detector can take about a minute.';
+  const url = API + '/api/frames?' + new URLSearchParams(
+    {ra: Q.ra, dec: Q.dec, detector: Q.det, fov: Q.fov, mode: Q.mode});
+  try {
+    const r = await fetch(url).catch(() => { throw new Error('the server could not be reached.'); });
+    if (my !== loadId) return;
+    if (r.status === 501 && Q.mode !== 'normal'){       // the backend does not have this mode yet
+      notes.mode = MODES.find(m => m[0] === Q.mode)[1] + ' mode is not available yet; showing Normal.';
+      Q.mode = 'normal'; $('selMode').value = 'normal'; writeURL();
+      return loadFrames();
+    }
+    if (!r.ok) throw new Error('the server answered ' + r.status);
+    const body = await r.json();
+    if (!body.frames || !body.frames.length)
+      throw new Error(body.message || 'SPHEREx has no frames for this position and detector.');
+    const fr = body.frames.map(normalizeFrame);
+    const im = fr.map(f => { const i = new Image(); i.src = f.src; return i; });
+    await Promise.all(im.map(i => i.decode()));         // wait until every image is ready
+    if (my !== loadId) return;
+    imgs = im; N = fr.length;
+    D = {w: im[0].naturalWidth, h: im[0].naturalHeight, scale: body.pixel_arcsec || 2, frames: fr};
+    const k = fr.filter(f => f.sat > 0).length;         // detectors 1-4 overload on bright stars
+    notes.sat = k ? `Saturated pixels in ${k} of ${N} frames (bright star). Try detector 5 or 6.` : '';
+    showNotes(); S.frame = 0; S.tick = 0; loading = false; resetView(); draw();
+  } catch (e) {
+    if (my !== loadId) return;
+    N = 0; loading = false; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+    $('info').textContent = 'Could not load frames: ' + e.message;
+  }
+}
+function onChange(){
+  Q.det = +$('selDet').value; Q.fov = +$('selFov').value; Q.mode = $('selMode').value;
+  notes.mode = ''; writeURL(); loadFrames(); document.activeElement.blur();
+}
+['selDet', 'selFov', 'selMode'].forEach(id => $(id).onchange = onChange);
+
+// ---- view/state ----------------------------------------------------------
+// zoom = canvas pixels per image pixel; panX/panY = canvas position of the image corner.
+const S = {zoom:1, panX:0, panY:0, frame:0, playing:true, blink:false,
+           trail:true, pixels:false, tick:0};
+const fitZoom = () => Math.min(cv.width / D.w, cv.height / D.h);   // whole frame visible
+
+function resetView(){
+  // Start zoomed in on the target, centred on its first measured position: about 80
+  // image pixels (160 arcseconds) top to bottom. A real star image is about 5 pixels
+  // wide, so this keeps a few neighbouring stars in view as a still reference while a
+  // shift of a few pixels still spans tens of screen pixels.
+  // With no measured position, show the whole frame.
+  const first = measured()[0];
+  S.zoom = first ? Math.max(fitZoom(), cv.height / 80) : fitZoom();
+  const [x, y] = first ? [first.cx, first.cy] : [D.w / 2, D.h / 2];
+  S.panX = cv.width  / 2 - x * S.zoom;
+  S.panY = cv.height / 2 - y * S.zoom;
+}
+// Image -> canvas coordinates (overlays use this so markers keep a constant screen size).
+const toScreen = (x, y) => [x * S.zoom + S.panX, y * S.zoom + S.panY];
+
+function zoomAt(k, mx, my){
+  // Zoom by factor k keeping the point under (mx, my) fixed. Zooming out stops when
+  // the whole frame fits (or at 1:1 if the frame is smaller than the canvas).
+  const z = Math.min(Math.max(S.zoom * k, Math.min(fitZoom(), 1)), 120);
+  k = z / S.zoom; S.zoom = z;
+  S.panX = mx - (mx - S.panX) * k;
+  S.panY = my - (my - S.panY) * k;
+  draw();
+}
+
+// ---- drawing ---------------------------------------------------------------
+function currentIndex(){ return S.blink ? (S.tick % 2 ? N - 1 : 0) : S.frame; }  // blink = first/last
+
+function drawCrosshair(x, y){
+  // Fixed reference at the FIRST measured position, with a gap so the star stays visible.
+  const [sx, sy] = toScreen(x, y), g = 9, L = 26;
+  ctx.strokeStyle = '#0ff'; ctx.lineWidth = 1.5; ctx.beginPath();
+  ctx.moveTo(sx - L, sy); ctx.lineTo(sx - g, sy); ctx.moveTo(sx + g, sy); ctx.lineTo(sx + L, sy);
+  ctx.moveTo(sx, sy - L); ctx.lineTo(sx, sy - g); ctx.moveTo(sx, sy + g); ctx.lineTo(sx, sy + L);
+  ctx.stroke();
+}
+
+function drawTrail(){
+  // Every measured position at once, joined by a line, with an arrow head at the end.
+  const pts = measured().map(f => toScreen(f.cx, f.cy));
+  if (pts.length < 2) return;
+  ctx.strokeStyle = '#fa0'; ctx.fillStyle = '#fa0'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+  ctx.stroke();
+  pts.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); });
+  const a = pts[0], b = pts[pts.length - 1];
+  if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 1) return;  // no visible motion, no arrow
+  const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+  ctx.beginPath(); ctx.moveTo(b[0], b[1]);
+  ctx.lineTo(b[0] - 14 * Math.cos(ang - .4), b[1] - 14 * Math.sin(ang - .4));
+  ctx.lineTo(b[0] - 14 * Math.cos(ang + .4), b[1] - 14 * Math.sin(ang + .4));
+  ctx.closePath(); ctx.fill();
+}
+
+function drawPixelGrid(){
+  // 'Show pixels' also draws pixel edges once zoomed in far enough to see them.
+  if (S.zoom < 8) return;
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let i = 0; i <= D.w; i++){
+    const [x] = toScreen(i, 0); ctx.moveTo(x, S.panY); ctx.lineTo(x, S.panY + D.h * S.zoom);
+  }
+  for (let j = 0; j <= D.h; j++){
+    const [, y] = toScreen(0, j); ctx.moveTo(S.panX, y); ctx.lineTo(S.panX + D.w * S.zoom, y);
+  }
+  ctx.stroke();
+}
+
+function drawCompass(){
+  // Small N/E arrows in the corner so 'which way' is answered at a glance.
+  ctx.strokeStyle = ctx.fillStyle = '#fff'; ctx.lineWidth = 2; ctx.font = '14px sans-serif';
+  ctx.beginPath(); ctx.moveTo(60, 60); ctx.lineTo(60, 22); ctx.moveTo(60, 60); ctx.lineTo(22, 60);
+  ctx.stroke();
+  ctx.fillText('N', 55, 16); ctx.fillText('E', 6, 65);   // north up, east left
+}
+
+function draw(){
+  if (!N || loading) return;                           // nothing to show while (re)loading
+  const i = currentIndex(), f = D.frames[i], f0 = measured()[0];
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  // Smooth scaling by default; 'show pixels' switches to hard-edged pixels.
+  ctx.imageSmoothingEnabled = !S.pixels; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(imgs[i], S.panX, S.panY, D.w * S.zoom, D.h * S.zoom);
+  if (S.pixels) drawPixelGrid();
+  if (S.trail) drawTrail();
+  if (f0) drawCrosshair(f0.cx, f0.cy);                 // fixed reference, never moves
+  if (f.cx !== null){                                  // marker follows this frame's measured position
+    const [mx, my] = toScreen(f.cx, f.cy);
+    ctx.strokeStyle = '#f50'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(mx, my, 12, 0, 7); ctx.stroke();
+  }
+  drawCompass();
+  // Readout: shift since the first measured position (north = up = -y, east = left = -x).
+  const lab = (S.blink ? (i ? 'LAST: ' : 'FIRST: ') : '') + f.label;
+  let moved = 'no position could be measured in this frame';
+  if (f.cx !== null && f0){
+    const dx = f.cx - f0.cx, dy = f.cy - f0.cy, arc = Math.hypot(dx, dy) * D.scale;
+    const ns = dy < 0 ? 'N' : 'S', ew = dx < 0 ? 'E' : 'W';
+    moved = f === f0 ? 'starting position' : `moved ${arc.toFixed(1)}″ from start: ` +
+      `${Math.abs(dy * D.scale).toFixed(1)}″ ${ns}, ${Math.abs(dx * D.scale).toFixed(1)}″ ${ew}`;
+  }
+  $('info').textContent = `${lab} (${i + 1}/${N})  —  ${moved}`;
+}
+
+// ---- animation loop -----------------------------------------------------------
+setInterval(() => {
+  // One timer drives both play and blink.
+  if (!N || loading) return;
+  S.tick++;
+  if (S.playing && !S.blink) S.frame = (S.frame + 1) % N;
+  if (S.playing || S.blink) draw();
+}, 450);
+
+// ---- controls ----------------------------------------------------------------------
+function setOn(id, on){ $(id).classList.toggle('on', on); }
+function setPlaying(p){ S.playing = p; $('bPlay').textContent = p ? 'Pause (space)' : 'Play (space)'; }
+function step(d){
+  if (!N) return;
+  setPlaying(false); S.blink = false; setOn('bBlink', false); S.frame = (S.frame + d + N) % N; draw();
+}
+function bind(id, fn){ const b = $(id); b.onclick = () => { fn(); b.blur(); }; }
+
+bind('bPlay',  () => { S.blink = false; setOn('bBlink', false); setPlaying(!S.playing); draw(); });
+bind('bBlink', () => { S.blink = !S.blink; setOn('bBlink', S.blink); draw(); });
+bind('bTrail', () => { S.trail = !S.trail; setOn('bTrail', S.trail); draw(); });
+bind('bPix',   () => { S.pixels = !S.pixels; setOn('bPix', S.pixels); draw(); });
+bind('bPrev',  () => step(-1));
+bind('bNext',  () => step(1));
+bind('bIn',    () => zoomAt(1.5, cv.width / 2, cv.height / 2));
+bind('bOut',   () => zoomAt(1 / 1.5, cv.width / 2, cv.height / 2));
+bind('bReset', () => { if (N){ resetView(); draw(); } });
+
+// Mouse position in canvas pixels (the canvas is scaled by CSS, so correct for it).
+function pos(e){
+  const r = cv.getBoundingClientRect();
+  return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height];
+}
+cv.addEventListener('wheel', e => {
+  e.preventDefault(); if (!N) return;
+  const [x, y] = pos(e); zoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, x, y);
+}, {passive:false});
+let drag = null;                                          // drag-to-pan
+cv.addEventListener('pointerdown', e => {
+  drag = pos(e); cv.setPointerCapture(e.pointerId); cv.style.cursor = 'grabbing';
+});
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const [x, y] = pos(e); S.panX += x - drag[0]; S.panY += y - drag[1]; drag = [x, y]; draw();
+});
+const endDrag = () => { drag = null; cv.style.cursor = 'grab'; };
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+window.addEventListener('keydown', e => {                 // keyboard: space and arrows
+  if (e.target.tagName === 'SELECT') return;              // let the dropdowns use their own keys
+  if (e.code === 'Space'){
+    e.preventDefault(); S.blink = false; setOn('bBlink', false); setPlaying(!S.playing); draw();
+  }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); step(1); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); step(-1); }
+});
+
+// Test hook: ?still=<n> shows frame n (1-based) without playing, ?still=last the last one.
+function applyStill(){
+  const s = params.get('still');
+  if (s === null || !N) return;
+  setPlaying(false);
+  S.frame = s === 'last' ? N - 1 : Math.min(Math.max(parseInt(s) - 1 || 0, 0), N - 1);
+  draw();
+}
+
+// ---- start-up -------------------------------------------------------------------------
+readURL(); buildControls(); writeURL();                   // restore options, show them, tidy the address
+setOn('bTrail', true);
+loadFrames().then(applyStill);                            // first load uses the restored options
+</script></body></html>
