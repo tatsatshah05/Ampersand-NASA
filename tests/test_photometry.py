@@ -217,6 +217,34 @@ def test_no_sky_when_the_ring_is_all_defects(block_star):
     assert photometry.measure(path, ra, dec)["status"] == "no_sky"
 
 
+# ---------------------------------------------------- what is measured, and where
+
+def test_a_gaia_star_is_followed_only_when_it_is_at_the_requested_place(barnard):
+    """Barnard's Star asked for at its 2026.0 position, with no motion: the Gaia star is
+    0.06 arcsec away and is followed. The same request 7 arcsec off measures that spot."""
+    from backend import astrometry
+
+    cone = astrometry.gaia_cone(barnard.ra, barnard.dec, 0.135)          # the real answer, in the test cache
+    target, measured = photometry.choose_object(barnard.ra, barnard.dec, cone, None)
+    assert target is not None and target["source_id"] == barnard.gaia_id
+    assert measured["what"] == "gaia_star" and measured["offset_from_request_arcsec"] < 0.1
+    assert measured["gmag"] == 8.19 and "followed" in measured["description"]
+
+    off = barnard.dec + 7.0 / 3600.0
+    target, measured = photometry.choose_object(barnard.ra, off, cone, None)
+    assert target is None and measured["what"] == "fixed_position"
+    assert measured["nearest_gaia_not_followed"]["source_id"] == barnard.gaia_id
+    assert measured["nearest_gaia_not_followed"]["distance_arcsec"] == pytest.approx(7.0, abs=0.1)
+    assert "not followed" in measured["description"]
+
+    motion = {"ra": barnard.ra, "dec": barnard.dec, "pmra": 1.0, "pmdec": 1.0, "ref_epoch": 2026.0}
+    target, measured = photometry.choose_object(barnard.ra, barnard.dec, cone, motion)
+    assert target is motion and measured["what"] == "request_motion"
+
+    target, measured = photometry.choose_object(barnard.ra, barnard.dec, None, None)   # Gaia did not answer
+    assert target is None and "not known" in measured["description"]
+
+
 # ------------------------------------------------------- stars inside the circle
 
 def test_stars_inside_the_measuring_circle_are_listed_per_visit():

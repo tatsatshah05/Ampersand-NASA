@@ -147,8 +147,9 @@ Endpoints (adjust if something better emerges, and keep this list current):
     response says the same). `saturated_pixels`: picture pixels with no value in any
     exposure because the detector overflowed there; these are the white ones.
     `photometry_saturated_exposures`: how many of the frame's `n_exposures` have a
-    saturated pixel inside the circle in which `/api/lightcurve` measures the target
-    (the centre of the picture if there is no target), by the photometry rule, which also
+    saturated pixel inside the circle in which `/api/lightcurve` measures (its `measured`:
+    the target with the request's motion, else the Gaia star within 3 arcsec of the
+    centre, else the centre of the picture), by the photometry rule, which also
     counts overflow within the first seconds, charge spilled from a neighbour and
     uncorrectable pixels. Those pixels usually still hold a value, so a frame can look
     fine, report 0 `saturated_pixels`, and have every exposure unusable for brightness.
@@ -259,8 +260,19 @@ Endpoints (adjust if something better emerges, and keep this list current):
   `status` is "ok", "saturated", "flagged", "no_data", "no_sky" or "off_image"; only
   "ok" has a flux. Only points in the same bin are comparable in time. Optional
   `detector=` (one detector), and `pmra=&pmdec=&parallax=` as for `/api/frames`: the
-  object is followed with that motion, else with that of the Gaia star within 15 arcsec.
+  object is followed with that motion. Without a motion it follows a Gaia star only if
+  one is within 3 arcsec of (ra, dec) on 2026.0 (the date `/api/resolve` gives positions
+  for); otherwise it measures the spot (ra, dec) itself in every exposure (`target`
+  null). It used to follow any Gaia star within 15 arcsec, which at WISE 0855's position
+  measured the G = 16.3 star 6.8 arcsec away instead. Barnard's Star asked for at its
+  2026.0 position (269.446267, 4.768222) with no motion is still followed (0.06 arcsec).
   `method` in the response explains the measurement in plain words.
+  - `measured` says what was measured: `what` ("request_motion", "gaia_star" or
+    "fixed_position"), `source_id` and `gmag` (for a Gaia star),
+    `offset_from_request_arcsec` (how far the object was from (ra, dec) on `epoch`,
+    2026.0), `nearest_gaia_not_followed` (a Gaia star within 15 arcsec that was not
+    followed: `source_id`, `gmag`, `distance_arcsec`) and `description` in plain words.
+    Show the description with every brightness chart.
   - `stars_in_circle`: the Gaia stars (G < 17) whose place falls inside the measuring
     circle (`radius_arcsec`, 15.4) around the object: `by_epoch` (per visit, at its
     middle date: `epoch`, `date`, `stars` with `source_id`, `gmag`, `distance_arcsec`,
@@ -633,7 +645,9 @@ Photometry checks (`scripts/check_photometry.py`, `scripts/check_flux_scale.py`)
   `/api/lightcurve`; detector 3, 14/19, 16/18, 16/18 against 14, 16, 16; detector 5,
   17/18, 6/19, 0/19 against 17, 5, 0. Over all detectors 171 against 167 (the frames
   also count the 10 exposures that have no wavelength and so no lightcurve point).
-  Barnard's Star 354 against 350 of 354; WISE 0855 0 against 0.
+  Barnard's Star 354 against 350 of 354; WISE 0855 0 against 0. The same after the 3
+  arcsec rule for what the light curve follows (pipeline.VERSION 11, photometry.VERSION
+  8), now that the frames count on the light curve's own choice (`measured`).
 
 Unflagged negative pixels (found 2026-11-14)
 - Every target has pixels whose raw IMAGE value is more than 10 sigma below zero and

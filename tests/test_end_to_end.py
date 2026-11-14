@@ -428,3 +428,15 @@ def test_lightcurve_and_spectrum_of_a_star_too_bright_to_measure(client: TestCli
     assert waves == pytest.approx([4.223, 4.259, 4.296], abs=0.001)
 
     assert client.get("/api/spectrum", params={**params, "epoch": 4}).status_code in (400, 422)
+
+
+def test_lightcurve_without_a_motion_says_what_it_measured(client: TestClient, barnard: SimpleNamespace):
+    """Asked for at its 2026.0 position with no motion, Barnard's Star is still followed: the
+    Gaia star is 0.06 arcsec from the request. The answer says so."""
+    response = client.get("/api/lightcurve", params={"ra": barnard.ra, "dec": barnard.dec, "detector": 5})
+    assert response.status_code == 200, response.text
+    curve = response.json()
+    assert curve["target"]["source_id"] == barnard.gaia_id
+    assert curve["measured"]["what"] == "gaia_star" and curve["measured"]["offset_from_request_arcsec"] < 0.1
+    assert curve["stars_in_circle"]["known"] is True
+    assert sorted(p["epoch"] for b in curve["bins"] for p in b["points"]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]

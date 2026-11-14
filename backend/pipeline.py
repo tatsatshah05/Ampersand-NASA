@@ -33,8 +33,9 @@ FRAMES_DIR = spherex.CACHE / "frames"
 # numbers: results made by older code are then never served again. (3 is taken by the
 # flags image of pull request #24; 4 was the new stacking rule; 5 centroid meaning the
 # target or nothing; 6 photometry_saturated_exposures; 7 flags_image; 8 detection_sigma;
-# 9 saturated_core and its position uncertainty; 10 blend.)
-VERSION = 10
+# 9 saturated_core and its position uncertainty; 10 blend; 11 photometry_saturated_exposures
+# counted on what /api/lightcurve now measures.)
+VERSION = 11
 
 # Dropping glitches when exposures are stacked (see Stacker).
 MIN_EXPOSURES_TO_REJECT = 5   # with fewer exposures nothing is dropped
@@ -756,8 +757,9 @@ DETECTION_NOTE = (
 SATURATION_NOTE = (
     "Two different counts. saturated_pixels: picture pixels with no value in any exposure because the detector "
     "overflowed there (drawn white). photometry_saturated_exposures: how many of the frame's n_exposures have a "
-    "saturated pixel inside the 15 arcsec circle in which /api/lightcurve measures the target (or the centre of "
-    "the picture, if there is no target), by its stricter rule: overflow within the first seconds, charge spilled "
+    "saturated pixel inside the 15 arcsec circle in which /api/lightcurve measures (the target with the motion in the "
+    "request, else the Gaia star within 3 arcsec of the centre, else the centre of the picture; see its `measured`), "
+    "by its stricter rule: overflow within the first seconds, charge spilled "
     "from a saturated neighbour, or no reliable correction. Such pixels usually still hold a value, so the picture "
     "can look fine and show 0 saturated_pixels while no brightness can be measured in those exposures.")
 
@@ -873,11 +875,13 @@ def _measure_target(st: dict, grid: WCS, n: int, detector: int, predicted: dict,
 
 
 def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | None,
-              cone: list[dict] | None, detector: int) -> dict:
+              cone: list[dict] | None, detector: int, measured_object: dict | None = None) -> dict:
     """Everything reported about one stacked image except where its picture is.
 
     `cone` holds the Gaia stars around the view (None if Gaia did not answer): they are
     the known neighbours of detection_sigma and are kept off its empty places.
+    `measured_object` is what /api/lightcurve follows here (photometry.choose_object;
+    None: the centre of the picture), for photometry_saturated_exposures.
     """
     mjds = np.array([it["mjd"] for it in items])
     weights = np.array([it["weight"] for it in items])
@@ -917,9 +921,10 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
         else:
             reason = "No source near the centre of the picture is bright enough to measure."
     # In how many of these exposures would /api/lightcurve find the object saturated?
-    # Asked where the object is on each exposure's own date (the centre, if there is no target).
-    if target:
-        t_ra, t_dec = astrometry.path_of(target, mjds)
+    # Asked where the object it measures is on each exposure's own date (the centre, if
+    # it follows nothing).
+    if measured_object:
+        t_ra, t_dec = astrometry.path_of(measured_object, mjds)
     else:
         t_ra, t_dec = (np.full(len(items), float(v)) for v in grid.wcs.crval)
     lost = sum(core_saturated(it, float(r), float(d)) for it, r, d in zip(items, t_ra, t_dec, strict=True))
@@ -1087,8 +1092,14 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
         nearest = nearest_gaia(cone, ra, dec, mid_mjd)
         target = {"origin": "gaia_nearest", "ref_epoch": astrometry.GAIA_EPOCH, **nearest} if nearest else None
 
+    # What /api/lightcurve measures here, for photometry_saturated_exposures: not always
+    # the frames' target, which may be a Gaia star up to 15 arcsec away.
+    from . import photometry  # here and not at the top: photometry imports this module
+
+    measured_object, _ = photometry.choose_object(ra, dec, cone, motion)
+
     def describe(items: list[dict], st: dict) -> dict:
-        return _describe(items, st, grid, n, target, cone, detector)
+        return _describe(items, st, grid, n, target, cone, detector, measured_object)
 
     meta: dict = {
         "key": key, "ra": ra, "dec": dec, "fov": fov, "detector": detector, "mode": mode,

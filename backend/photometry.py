@@ -46,7 +46,9 @@ from astropy.wcs.utils import proj_plane_pixel_area
 
 from . import astrometry, pipeline, spherex
 
-VERSION = 7                      # part of the cache key: raise it when the measurement changes (7: stars_in_circle)
+# Part of the cache key: raise it when the measurement changes (7: stars_in_circle;
+# 8: a Gaia star is followed only within 3 arcsec of the request, and `measured`).
+VERSION = 8
 PHOT_DIR = spherex.CACHE / "photometry"
 CUTOUT_DEG = 0.15                # same cutouts as /api/frames at its default field of view
 
@@ -204,6 +206,62 @@ def _choose_wing_ring(points: list[dict]) -> int | None:
     return int(np.argmax(counts)) if max(counts) > 0 else None
 
 
+# Without a motion in the request, a Gaia star this close to the requested position (on
+# 2026.0, the date /api/resolve gives positions for) is taken to be the object asked for
+# and followed. Farther than that, it is a different object: it used to be followed up
+# to 15 arcsec, which at WISE 0855's position measured the G = 16.3 star 6.8 arcsec away.
+FOLLOW_ARCSEC = 3.0
+NOT_FOLLOWED_REPORT_ARCSEC = 15.0   # a nearer star that is not followed is named in `measured`
+
+
+def choose_object(ra: float, dec: float, cone: list[dict] | None, motion: dict | None) -> tuple[dict | None, dict]:
+    """What the brightness is measured on, and that in words: (target or None, measured).
+
+    The object at (ra, dec) with the request's motion; else the Gaia star within
+    FOLLOW_ARCSEC of (ra, dec) on 2026.0, with its own motion; else the spot (ra, dec)
+    itself in every exposure (target None). `measured` says which, how far the object
+    is from the request on that date, and names a nearer Gaia star that was not followed.
+    """
+    epoch = astrometry.RESOLVE_EPOCH
+    if motion is not None:
+        return motion, {"what": "request_motion", "source_id": None, "gmag": None, "offset_from_request_arcsec": 0.0,
+                        "epoch": motion.get("ref_epoch", epoch), "nearest_gaia_not_followed": None,
+                        "description": (f"The object at the requested position in {motion.get('ref_epoch', epoch):g}, "
+                                        "followed with the proper motion and parallax given in the request.")}
+    mjd = Time(epoch, format="jyear").mjd
+    nearest = None
+    for src in cone or []:
+        s_ra, s_dec = astrometry.position_at(src, mjd, parallax=False)
+        distance = float(np.hypot(*astrometry.offset_arcsec(ra, dec, s_ra, s_dec)))
+        if nearest is None or distance < nearest[0]:
+            nearest = (distance, src)
+    def gmag(src: dict) -> float | None:
+        return round(src["gmag"], 2) if src.get("gmag") is not None else None
+
+    if nearest is not None and nearest[0] <= FOLLOW_ARCSEC:
+        distance, src = nearest
+        target = {"origin": "gaia_nearest", "ref_epoch": astrometry.GAIA_EPOCH, **src}
+        g = f" (G = {src['gmag']:.2f})" if src.get("gmag") is not None else ""
+        return target, {"what": "gaia_star", "source_id": src["source_id"], "gmag": gmag(src),
+                        "offset_from_request_arcsec": round(distance, 2), "epoch": epoch,
+                        "nearest_gaia_not_followed": None,
+                        "description": (f"Gaia DR3 {src['source_id']}{g}, {distance:.1f} arcsec from the requested "
+                                        f"position in {epoch:g}, followed with its Gaia proper motion and parallax.")}
+    text = "The requested position itself, the same spot in every exposure: no motion was given, and "
+    if cone is None:
+        text += "Gaia did not answer, so it is not known whether a catalogued star is there."
+    else:
+        text += f"no Gaia star (G < 17) is within {FOLLOW_ARCSEC:.0f} arcsec of it in {epoch:g}."
+    other = None
+    if nearest is not None and nearest[0] <= NOT_FOLLOWED_REPORT_ARCSEC:
+        distance, src = nearest
+        other = {"source_id": src["source_id"], "gmag": gmag(src), "distance_arcsec": round(distance, 2)}
+        text += (f" The nearest, Gaia DR3 {src['source_id']}, is {distance:.1f} arcsec away and was not followed "
+                 "(see stars_in_circle for whether its light is in the measurements).")
+    return None, {"what": "fixed_position", "source_id": None, "gmag": None, "offset_from_request_arcsec": 0.0,
+                  "epoch": epoch, "nearest_gaia_not_followed": other, "description": text}
+
+
 CIRCLE_ARCSEC = APERTURE_PX * pipeline.NATIVE_ARCSEC   # radius of the measuring circle on the sky
 STARS_IN_CIRCLE_NOTE = (
     "Gaia DR3 stars (G < 17) whose place falls inside the measuring circle (radius_arcsec) around the object, per "
@@ -260,8 +318,9 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
     """One measurement per exposure of the object at (ra, dec). Cached on disk.
 
     The object is followed with its proper motion and parallax: those given in the
-    request (as /api/resolve returns them), else those of the Gaia star within 15 arcsec
-    of (ra, dec), else it is taken to stay at (ra, dec).
+    request (as /api/resolve returns them), else those of the Gaia star within 3 arcsec
+    of (ra, dec) on 2026.0, else the spot (ra, dec) itself is measured in every exposure.
+    `measured` in the result says which (see choose_object).
     """
     if detector is not None and not 1 <= detector <= 6:
         raise ValueError("detector must be 1 to 6")
@@ -291,14 +350,10 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
     fetched = spherex.fetch_cutouts([e for e, _ in chosen], ra, dec, CUTOUT_DEG, progress=progress)
     failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None]
 
-    mid_mjd = float(np.mean([e["mjd"] for e, _ in chosen])) if chosen else 0.0
     # The Gaia stars around the position: the object to follow when the request gave no
     # motion, and the stars that fall inside the measuring circle in any case.
     cone, gaia_error = pipeline.gaia_field(ra, dec, 0.1, quick=motion is not None)
-    target = motion
-    if motion is None and cone is not None:
-        nearest = pipeline.nearest_gaia(cone, ra, dec, mid_mjd)
-        target = {"origin": "gaia_nearest", "ref_epoch": astrometry.GAIA_EPOCH, **nearest} if nearest else None
+    target, measured = choose_object(ra, dec, cone, motion)
 
     ranges: dict[int, tuple[float, float]] = {}
     points = []
@@ -335,7 +390,8 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
         del p["wings"]
 
     result = {
-        **base, "target": target, "gaia_error": gaia_error, "failures": failures, "points": points,
+        **base, "target": target, "measured": measured, "gaia_error": gaia_error, "failures": failures,
+        "points": points,
         "detector_ranges_um": {str(d): list(r) for d, r in sorted(ranges.items())},
         "stars_in_circle": stars_in_circle(points, target, ra, dec, cone),
         "wing_ring_px": wing_rings,
