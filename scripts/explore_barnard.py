@@ -12,9 +12,9 @@ import sys
 import time
 import warnings
 
+import astropy.units as u
 import numpy as np
 import requests
-import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.io.votable import parse_single_table

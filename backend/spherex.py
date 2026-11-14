@@ -74,8 +74,9 @@ def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict
         table = parse_single_table(io.BytesIO(raw)).to_table(use_names_over_ids=True)
         for row in table:
             det = int(str(row["energy_bandpassname"])[-1])  # "SPHEREx-D3" -> 3
+            obs_id = str(row["obs_id"])
             exp = {
-                "obs_id": str(row["obs_id"]),
+                "obs_id": obs_id,
                 "detector": det,
                 "mjd": float(row["t_min"]),
                 "exptime": float(row["t_exptime"]),
@@ -84,7 +85,7 @@ def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict
                 "wave_min": float(row["em_min"]) * 1e6,
                 "wave_max": float(row["em_max"]) * 1e6,
             }
-            seen.setdefault((exp["obs_id"], det), exp)  # an exposure in two releases counts once
+            seen.setdefault((obs_id, det), exp)  # an exposure in two releases counts once
     exposures = sorted(seen.values(), key=lambda e: e["mjd"])
     cache_file.write_text(json.dumps(exposures))
     return exposures

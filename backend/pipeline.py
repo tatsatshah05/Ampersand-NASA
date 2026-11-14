@@ -256,7 +256,7 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     if not all_exposures:
         return {"key": key, "frames": [], "message": "SPHEREx has no public images covering this position."}
     epoch_of = assign_epochs(all_exposures)
-    chosen = [(e, ep) for e, ep in zip(all_exposures, epoch_of) if e["detector"] == detector]
+    chosen = [(e, ep) for e, ep in zip(all_exposures, epoch_of, strict=True) if e["detector"] == detector]
 
     grid, n = make_grid(ra, dec, fov)
     # The detector can sit at any angle on the sky, so fetch the diagonal of the field.
@@ -265,7 +265,7 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None]
 
     by_epoch: dict[int, list[dict]] = {}
-    for (exp, path, _), (_, ep) in zip(fetched, chosen):
+    for (_, path, _), (_, ep) in zip(fetched, chosen, strict=True):
         if path is None:
             continue
         item = prepare_cutout(path, grid, n, ra, dec)

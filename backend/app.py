@@ -19,6 +19,6 @@ def frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90,
     try:
         return pipeline.build_frames(ra, dec, fov, detector, mode)
     except NotImplementedError as e:
-        raise HTTPException(501, str(e))
+        raise HTTPException(501, str(e)) from e
     except spherex.ArchiveError as e:
-        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}")
+        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e

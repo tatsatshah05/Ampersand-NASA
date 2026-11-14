@@ -69,7 +69,7 @@ exps = spherex.find_exposures(RA, DEC)
 epoch_of = pipeline.assign_epochs(exps)
 grid, _ = pipeline.make_grid(RA, DEC, FOV)
 by_epoch = {}
-for e, ep in zip(exps, epoch_of):
+for e, ep in zip(exps, epoch_of, strict=True):
     if e["detector"] != DET:
         continue
     item = pipeline.prepare_cutout(spherex._cutout_path(e, RA, DEC, round(FOV * 1.5, 4)), grid, n, RA, DEC)
@@ -120,7 +120,7 @@ for f in frames:
 
     full = im.resize((n * BIG, n * BIG), Image.LANCZOS)
     d = ImageDraw.Draw(full)
-    for src, fits_ in kept:                                 # green rings: field stars, epoch-1 places
+    for _, fits_ in kept:                                   # green rings: field stars, epoch-1 places
         x, y = (fits_[0]["x"] + 0.5) * BIG, (n - 1 - fits_[0]["y"] + 0.5) * BIG
         d.ellipse([x - 9, y - 9, x + 9, y + 9], outline=(0, 220, 90))
     d.text((6, 4), f"epoch {f['epoch']}  {f['date_mean']}  {f['n_exposures']} exposures  D{DET}", fill=(255, 255, 0))
@@ -132,8 +132,8 @@ for f in frames:
     z = crop.resize((side, side), Image.LANCZOS)
     d = ImageDraw.Draw(z)
 
-    def spot(px, py):
-        return (px - (cx - ZOOM_HALF) + 0.5) * ZOOM, (py - (cy - ZOOM_HALF) + 0.5) * ZOOM
+    def spot(px, py, left=cx - ZOOM_HALF, top=cy - ZOOM_HALF):
+        return (px - left + 0.5) * ZOOM, (py - top + 0.5) * ZOOM
     rx, ry = spot(ref["x"], ref["y"])                       # red cross: where the star was in epoch 1
     d.line([rx - 14, ry, rx + 14, ry], fill=(255, 60, 60), width=2)
     d.line([rx, ry - 14, rx, ry + 14], fill=(255, 60, 60), width=2)
@@ -148,10 +148,12 @@ w = max(sum(t.width for t in tiles_full), sum(t.width for t in tiles_zoom)) + 10
 sheet = Image.new("RGB", (w, tiles_full[0].height + tiles_zoom[0].height + 30), (20, 20, 20))
 x = 10
 for t in tiles_full:
-    sheet.paste(t, (x, 10)); x += t.width + 10
+    sheet.paste(t, (x, 10))
+    x += t.width + 10
 x = 10
 for t in tiles_zoom:
-    sheet.paste(t, (x, tiles_full[0].height + 20)); x += t.width + 10
+    sheet.paste(t, (x, tiles_full[0].height + 20))
+    x += t.width + 10
 sheet_path = OUT / f"barnard_D{DET}_sheet.png"
 sheet.save(sheet_path)
 print(f"\ncontact sheet: {sheet_path}")

@@ -1,0 +1,22 @@
+# Lint and typecheck settings for the Python code. See plan.md.
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["backend/cache", "frontend"]
+
+[tool.ruff.lint]
+# E/W: style errors, F: real mistakes (unused names, undefined names),
+# I: import order, B: likely bugs, UP: outdated syntax.
+select = ["E", "W", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["E402"]  # scripts add the project root to sys.path before importing
+
+[tool.mypy]
+python_version = "3.11"
+files = ["backend"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+# astropy, reproject and scipy ship without complete type information.
+ignore_missing_imports = true
