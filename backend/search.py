@@ -88,7 +88,7 @@ from scipy.spatial import cKDTree
 
 from . import astrometry, photometry, pipeline, spherex
 
-VERSION = 3                       # part of the result cache key: raise it when results change
+VERSION = 4                       # part of the result cache key: raise it when results change
 # This module's own cache (results and catalogue answers). "search" holds the answers
 # of version 1, made with the old stacking rule; nothing reads it any more.
 SEARCH_DIR = spherex.CACHE / "search2"
@@ -1797,9 +1797,36 @@ def check_catalogues(cands: list[dict[str, Any]], ra: float, dec: float, fov: fl
         check = _check_catalogues(cand, mjd_of)
         if cand["kind"] == "mover":
             _mover_agreement(cand, check)
+            _unresolved_group(cand, check)
         else:
             _changer_agreement(check)
         cand["catalogue"], cand["label"], cand["category"] = check, check["label"], check["category"]
+
+
+def _unresolved_group(cand: dict[str, Any], check: dict[str, Any]) -> None:
+    """Reject a 'mover' that is two or more catalogued objects closer together than a pixel.
+
+    Their light falls on the same few pixels, so the centre measured is a weighted mean
+    of their places. When one of them changes brightness, or the visits sample their
+    colours differently, that centre moves although nothing does (seen: NSV 1155 and
+    HBC 341 in NGC 1333, 3.4 arcsec apart; one faded by a third and the pair "moved" 1.3
+    arcsec/yr). Counted per catalogue that separates neighbours (Gaia DR3, SIMBAD), so
+    one star listed in several catalogues counts once. Applies only when no catalogue
+    object has the measured motion.
+    """
+    if check.get("agrees"):
+        return
+    close = [m for m in check["matches"] if m["separation_arcsec"] <= MATCH_ARCSEC]
+    n = max(sum(m["catalogue"] == "Gaia DR3" for m in close), sum(m["catalogue"] == "SIMBAD" for m in close))
+    if n < 2:
+        return
+    names = ", ".join(m["name"] for m in close if m["catalogue"] in ("Gaia DR3", "SIMBAD"))
+    cand["reasons"].append(f"{n} catalogued objects lie within one pixel ({MATCH_ARCSEC} arcsec) of its track "
+                           f"({names}) and none has this motion: the centre of an unresolved group moves when one "
+                           "member changes brightness or colour")
+    cand["grade"], cand["passes"] = "rejected", False
+    check["category"] = "mover_unresolved_group"
+    check["summary"] = (check.get("summary") or "") + " Rejected: an unresolved group of catalogued objects."
 
 
 # --------------------------------------------------------------------------- candidates
@@ -2245,6 +2272,11 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
         if lead["label"] == "not checked" and options.get("catalogues", True):
             when = {v["epoch"] - 1: v["mjd_mean"] for v in per[lead["detector"]]["visits"]}
             check_catalogues([lead], ra, dec, fov, when)
+        if lead["grade"] == "rejected":       # the catalogue check can reject a mover (unresolved group)
+            rejected.append({"detector": lead["detector"], "id": lead["id"], "kind": lead["kind"],
+                             "sigma": lead["sigma"], "ra": lead["ra"], "dec": lead["dec"], "reasons": lead["reasons"],
+                             "flags": lead["flags"], "figure": lead.get("figure")})
+            continue
         agreement = None
         if lead["kind"] == "mover":
             # Do the detectors that saw it move agree on the motion? Chi-square of
@@ -2289,6 +2321,7 @@ KIND_WORDS = {
     "known_mover": "known moving object: a catalogue object at this place has the measured motion",
     "mover_motion_not_in_catalogues": "moved; no catalogue object here has this motion (candidate)",
     "mover_no_counterpart": "moved; nothing in the catalogues that answered (candidate)",
+    "mover_unresolved_group": "rejected: several catalogued objects within one pixel; their joint centre moved",
     "known_variable": "known variable star: listed as variable in a catalogue that answered",
     "changer_not_listed_as_variable": "changed brightness; the object here is not listed as variable in the "
                                       "catalogues that answered (candidate)",
