@@ -121,9 +121,16 @@ Endpoints (adjust if something better emerges, and keep this list current):
 - `GET /api/resolve?name=` BUILT. Object name to coordinates at the fixed date 2026.0
   (`ra`, `dec`, `epoch`), with `pmra`, `pmdec` (mas/yr), `parallax` (mas) when known,
   `source` ("Gaia DR3" or "SIMBAD"), `catalogue` (the position and epoch the motion
-  starts from), `j2000`, `moved_since_2000_arcsec` and `notes`. 404 if SIMBAD does not
-  know the name, 502 if SIMBAD is down. Same logic without a server:
+  starts from), `j2000`, `moved_since_2000_arcsec` (null when no motion is known) and
+  `notes`. `name` is SIMBAD's own identifier ("NAME Barnard's star", "M  31");
+  `display_name` is the same without the catalogue prefix and doubled spaces. 404 if
+  SIMBAD does not know the name, 502 if SIMBAD is down. Same logic without a server:
   `backend.astrometry.resolve_name(name)`. Check: `scripts/check_resolve.py`.
+  - The name is cleaned before the lookup (`astrometry.clean_name`): curly quotes to
+    straight ones, every dash and minus sign to a hyphen, accents dropped, Greek letters
+    to SIMBAD's abbreviations (ε to eps), invisible characters and repeated spaces
+    removed. The cache is keyed on the cleaned name, and `query` returns it. A name that
+    still has characters outside plain ASCII is answered 404 without asking SIMBAD.
 - `GET /api/frames?ra=&dec=&fov=&detector=&mode=` BUILT for `mode=normal`, `difference`
   and `sum` (anything else answers 400). Defaults: fov 0.1 degrees, detector 5. Returns
   `size_px`, `pixel_arcsec`, `stretch`, `target`, `failures` and `frames`. Each frame has
@@ -132,6 +139,18 @@ Endpoints (adjust if something better emerges, and keep this list current):
   `saturated_pixels`, `rejected_readings`, `centroid` and `predicted` (each with ra, dec,
   and x, y in PNG pixels from the top-left). In the PNG, north is up and east is left;
   white-with-no-detail pixels are saturated and transparent pixels have no data.
+  - `centroid` is the target, measured, or null. When the view has a `target`
+    (`centroid_is` "target"), a source is fitted starting within 6 arcsec of `predicted`
+    and kept only if it is a detection (fitted S/N 4 or more, width 6 to 36 arcsec) no
+    further from `predicted` than 3 arcsec, or a quarter of its own width if that is more
+    (a saturated star is located from its wings). Otherwise `centroid` is null,
+    `centroid_reason` says why in plain words, and `nearest_source` holds what was found
+    instead when that was another object (the same fields as `centroid`, plus its own
+    `offset_arcsec`). `centroid_offset_arcsec` is centroid minus predicted: `east`,
+    `north`, `total`. With no target at all (`centroid_is` "brightest_near_centre")
+    `centroid` is the brightest source within 14 arcsec of the centre, as before, and
+    the offset is null. `centroid_note` states which of the two applies. The fields
+    inside `centroid` itself are unchanged.
   - Optional `pmra=&pmdec=&parallax=` (mas/yr, mas, exactly as `/api/resolve` returns
     them; `pm_epoch` defaults to 2026.0): the object at (ra, dec) with that motion becomes
     `target`, so `predicted` works for objects Gaia does not list. Without them `target`
@@ -240,8 +259,12 @@ same entry at the same time.
    combined pixel distribution; the top of the scale is the brightest pixel so bright
    stars keep their shape). Per-frame auto-scaling would make brightness changes
    look fake or hide real ones.
-8. Measure the centroid of the source nearest the target in each frame (round Gaussian
-   fitted to valid pixels only, so a saturated star is located from its wings).
+8. Measure the target in each frame: a round Gaussian fitted to valid pixels only (so a
+   saturated star is located from its wings), started at the brightest pixel within 6
+   arcsec of the predicted place. It counts as the target only if it is detected and
+   within 3 arcsec of the prediction (see `centroid` under Endpoints); otherwise there
+   is no centroid, and the reason is given. Only a view with no target at all falls back
+   to the brightest source near the centre.
 9. Write PNGs and return the metadata.
 
 Difference mode subtracts the stacked images of step 6 pixel by pixel, with no flux
@@ -444,6 +467,12 @@ Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
   `WISE J085510.83-071442.5` and `WISEA J085510.74-071442.5`. The backend handles the
   first with `i.id LIKE 'WISE% J0855%-0714%'` (1.6 s, one object) and the second with a
   small alias table. "barnards star" without the apostrophe also needs the alias table.
+- The CfA mirror answers HTTP 400 to any name with a character outside plain ASCII
+  ("Barnard’s Star" with a curly apostrophe, "ε Indi B", "Bételgeuse", a true minus
+  sign). With Strasbourg down that used to come back as 502 "service down". Now the
+  name is cleaned first and all four resolve; "eps Indi B", "alf Ori", "mu Cep" and
+  "mu. Cep" each match one object. A 400 from a mirror is reported as "not found"
+  (404); with every mirror unreachable an uncached name still answers 502.
 - `basic` columns used: `oid`, `main_id`, `ra`, `dec` (degrees, ICRS, epoch J2000),
   `pmra`, `pmdec` (mas/yr), `plx_value` (mas), `otype`, `coo_bibcode`, `pm_bibcode`.
   The Gaia identifier, when there is one: `SELECT id FROM ident WHERE oidref = <oid>
@@ -558,3 +587,25 @@ WISE 0855 in detector 6 (fov 0.1, motion from `/api/resolve`; `scripts/check_mod
 - Without `pmra`/`pmdec`, `/api/frames` at this position picks that Gaia star as
   `target` (it is within 15 arcsec of the centre). The frontend must pass the motion
   from `/api/resolve` for objects Gaia does not list.
+
+The marker is the target or nothing (`centroid`, checked 2026-11-14 on 41 views)
+- Before, `centroid` was whatever was brightest within 14 arcsec of the predicted place.
+  At WISE 0855 in detector 1, with the motion passed, that was the Gaia star of the
+  section above: S/N 41, 59 and 48 at 11.4, 8.6 and 4.4 arcsec from the prediction. Now
+  those three frames have `centroid` null, `centroid_reason` "The nearest source is 4.4
+  arcsec from the predicted position, too far to be the target." and that star in
+  `nearest_source`.
+- WISE 0855 detector 6 with the motion keeps its three markers (S/N 5.0, 18.6, 27.4;
+  0.8, 1.3 and 1.1 arcsec from the prediction). Without the motion the target is the
+  Gaia star, what is measured is the brown dwarf 10.5, 6.8 and 3.3 arcsec from it, and
+  all three frames now say so with a null `centroid`.
+- Every other marker of the 41 views is where it was: Barnard's Star in all six
+  detectors (0.1 to 1.5 arcsec from the prediction), Epsilon Indi B detector 5 (0.5 to
+  0.8), RW Aurigae detectors 1, 3, 5 (0.1 to 1.5) and R Draconis detectors 1, 3, 5 (0.3
+  to 2.9). The `check_barnard.py` shifts are unchanged.
+- Why the limits are what they are: the largest offset of a real target is R Draconis in
+  detector 3 (2.9 arcsec; it is saturated and fitted from its wings, 19 to 30 arcsec
+  wide), the smallest offset of a wrong object is 3.3 arcsec with a width of 10. Hence
+  3 arcsec, or a quarter of the fitted width if that is more. The margin is thin.
+- `astrometry.offset_arcsec` now takes the short way round in right ascension, so two
+  points either side of RA 0h are no longer 360 degrees apart.
