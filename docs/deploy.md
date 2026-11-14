@@ -230,6 +230,18 @@ Similar in capability and usually cheaper for one small machine, but it needs th
 shared machine with 1 GB of memory at 6.70 US dollars a month, volumes at 0.15 dollars
 per GB a month, and no free allowance for new accounts.
 
+Read from the same page a second time on 2026-11-14: that is about 7.45 dollars a month
+for a 1 GB machine with a 5 GB volume, billed by the second, so a few days around the
+judging costs well under two dollars. A new account gets a trial with 1 dollar of
+credit for 7 days and no card; after that a card is required. A monthly bill under 5
+dollars is waived. This is the only host whose full price could be confirmed from its
+own page today, which makes it the safer choice on cost; Render's steps above are still
+the simpler ones to follow.
+
+Not an option: Hugging Face Spaces. Its documentation on 2026-11-14 says Docker Spaces
+need a paid plan (9 dollars a month) and the free hardware sleeps when idle, with a
+disk that is lost on restart.
+
 One thing to check before relying on it: Fly's proxy may cut a request that stays
 silent for a long time, and a first load here sends nothing for about a minute. This
 was not tested. Warming the cache avoids it for the five demo targets, but a judge's
