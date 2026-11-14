@@ -79,12 +79,30 @@ def write_json(path: Path, obj: object, indent: int | None = None) -> None:
 
 
 def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict]:
-    """Every level-2 spectral image whose footprint contains (ra, dec), oldest first."""
+    """Every level-2 spectral image whose footprint contains (ra, dec), oldest first.
+
+    The list is cached for a day, because new exposures keep arriving. If the archive
+    cannot be reached when the list is due for a refresh, the older list is used: it
+    only lacks the newest exposures, and that is better than refusing a view whose
+    images are all on disk already.
+    """
     key = hashlib.sha1(f"{ra:.5f},{dec:.5f}".encode()).hexdigest()[:16]
     cache_file = CACHE / "queries" / f"sia_{key}.json"
-    if cache_file.exists() and time.time() - cache_file.stat().st_mtime < max_age_s:
-        return json.loads(cache_file.read_text())
+    cached = json.loads(cache_file.read_text()) if cache_file.exists() else None
+    if cached is not None and time.time() - cache_file.stat().st_mtime < max_age_s:
+        return cached
+    try:
+        exposures = _query_exposures(ra, dec)
+    except ArchiveError:
+        if cached is not None:
+            return cached
+        raise
+    write_json(cache_file, exposures)
+    return exposures
 
+
+def _query_exposures(ra: float, dec: float) -> list[dict]:
+    """Ask the archive's image search, in every collection, which images cover the point."""
     seen: dict[tuple[str, int], dict] = {}
     for coll in COLLECTIONS:
         raw = http_get(SIA_URL, {"COLLECTION": coll, "POS": f"circle {ra} {dec} 0.01"})
@@ -103,9 +121,7 @@ def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict
                 "wave_max": float(row["em_max"]) * 1e6,
             }
             seen.setdefault((obs_id, det), exp)  # an exposure in two releases counts once
-    exposures = sorted(seen.values(), key=lambda e: e["mjd"])
-    write_json(cache_file, exposures)
-    return exposures
+    return sorted(seen.values(), key=lambda e: e["mjd"])
 
 
 def _cutout_path(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
