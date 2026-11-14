@@ -46,7 +46,7 @@ from astropy.wcs.utils import proj_plane_pixel_area
 
 from . import astrometry, pipeline, spherex
 
-VERSION = 6                      # part of the cache key: raise it when the measurement changes
+VERSION = 7                      # part of the cache key: raise it when the measurement changes (7: stars_in_circle)
 PHOT_DIR = spherex.CACHE / "photometry"
 CUTOUT_DEG = 0.15                # same cutouts as /api/frames at its default field of view
 
@@ -204,6 +204,51 @@ def _choose_wing_ring(points: list[dict]) -> int | None:
     return int(np.argmax(counts)) if max(counts) > 0 else None
 
 
+CIRCLE_ARCSEC = APERTURE_PX * pipeline.NATIVE_ARCSEC   # radius of the measuring circle on the sky
+STARS_IN_CIRCLE_NOTE = (
+    "Gaia DR3 stars (G < 17) whose place falls inside the measuring circle (radius_arcsec) around the object, per "
+    "visit (by_epoch, at the visit's middle date) and over the whole run (stars: nearest and farthest distance, "
+    "visits). Their light is part of every flux measured there, and nothing is subtracted, so a flux with such a "
+    "star in the circle is the sum of both. Sources Gaia does not list, or lists fainter than G = 17, are not "
+    "included; in the infrared some of them are bright. Stars further out can still fall in the wider ring of the "
+    "wing measure.")
+
+
+def stars_in_circle(points: list[dict], target: dict | None, ra: float, dec: float,
+                    cone: list[dict] | None) -> dict:
+    """Catalogue stars inside the measuring circle, per visit and over the whole run.
+
+    The object is where the measurements were made: on the target's path, or at (ra,
+    dec) if nothing was followed. A target that is a Gaia star is left out by its
+    identifier; a target given by its motion has none, so a Gaia star within 1.5 arcsec
+    of it is taken to be the object itself.
+    """
+    out: dict = {"radius_arcsec": round(CIRCLE_ARCSEC, 2), "g_limit": 17.0, "known": cone is not None,
+                 "by_epoch": [], "stars": [], "note": STARS_IN_CIRCLE_NOTE}
+    if cone is None:
+        out["note"] = ("Gaia did not answer, so the stars inside the measuring circle are not known. "
+                       + STARS_IN_CIRCLE_NOTE)
+        return out
+    own_id = target.get("source_id") if target else None
+    same = pipeline.SAME_OBJECT_ARCSEC if target and not own_id else 0.0
+    seen: dict[str, dict] = {}
+    for ep in sorted({p["epoch"] for p in points}):
+        mjd = float(np.mean([p["mjd"] for p in points if p["epoch"] == ep]))
+        o_ra, o_dec = astrometry.position_at(target, mjd) if target else (ra, dec)
+        near = astrometry.stars_near(o_ra, o_dec, cone, mjd, CIRCLE_ARCSEC, same_arcsec=same, exclude_id=own_id)
+        stars = [{k: v for k, v in s.items() if k != "index"} for s in near]
+        out["by_epoch"].append({"epoch": ep, "date": Time(mjd, format="mjd").iso[:10], "stars": stars})
+        for s in stars:
+            entry = seen.setdefault(s["source_id"], {"source_id": s["source_id"], "gmag": s["gmag"],
+                                                     "nearest_arcsec": s["distance_arcsec"],
+                                                     "farthest_arcsec": s["distance_arcsec"], "epochs": []})
+            entry["nearest_arcsec"] = min(entry["nearest_arcsec"], s["distance_arcsec"])
+            entry["farthest_arcsec"] = max(entry["farthest_arcsec"], s["distance_arcsec"])
+            entry["epochs"].append(ep)
+    out["stars"] = sorted(seen.values(), key=lambda s: s["nearest_arcsec"])
+    return out
+
+
 def channel_edges(wave_min: float, wave_max: float) -> np.ndarray:
     """Edges of the 17 equal-ratio wavelength channels of one detector."""
     return np.geomspace(wave_min, wave_max, CHANNELS_PER_DETECTOR + 1)
@@ -247,9 +292,13 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
     failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None]
 
     mid_mjd = float(np.mean([e["mjd"] for e, _ in chosen])) if chosen else 0.0
-    target, gaia_error = pipeline._find_target(ra, dec, 0.1, mid_mjd, motion)
-    if target is not None:
-        target = {"origin": "gaia_nearest", "ref_epoch": astrometry.GAIA_EPOCH, **target}
+    # The Gaia stars around the position: the object to follow when the request gave no
+    # motion, and the stars that fall inside the measuring circle in any case.
+    cone, gaia_error = pipeline.gaia_field(ra, dec, 0.1, quick=motion is not None)
+    target = motion
+    if motion is None and cone is not None:
+        nearest = pipeline.nearest_gaia(cone, ra, dec, mid_mjd)
+        target = {"origin": "gaia_nearest", "ref_epoch": astrometry.GAIA_EPOCH, **nearest} if nearest else None
 
     ranges: dict[int, tuple[float, float]] = {}
     points = []
@@ -288,6 +337,7 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
     result = {
         **base, "target": target, "gaia_error": gaia_error, "failures": failures, "points": points,
         "detector_ranges_um": {str(d): list(r) for d, r in sorted(ranges.items())},
+        "stars_in_circle": stars_in_circle(points, target, ra, dec, cone),
         "wing_ring_px": wing_rings,
         "method": {
             "flux": (f"Sum of the zodi-subtracted image in a circle of radius {APERTURE_PX} native pixels "

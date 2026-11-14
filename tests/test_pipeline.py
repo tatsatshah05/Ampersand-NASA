@@ -399,6 +399,37 @@ def test_detection_without_enough_empty_places_is_unknown():
     assert pipeline.detection_word(found) == "unknown"
 
 
+def test_a_blended_star_and_its_share_of_the_light():
+    """WISE 0855 in visit 3, made up: a star 4.4 arcsec east of the target, a quarter of their light."""
+    grid, n = pipeline.make_grid(150.0, 20.0, 0.1)
+    star_x = 90.0 - 2.2                                      # east is to the left on the grid
+    image = sky_with((90.0, 90.0, 3.0), (star_x, 90.0, 1.0))
+    ra, dec = (float(v) for v in grid.all_pix2world(90.0, 90.0, 0))
+    star_ra, star_dec = (float(v) for v in grid.all_pix2world(star_x, 90.0, 0))
+    stars = [{"source_id": "neighbour", "ra": star_ra, "dec": star_dec, "gmag": 16.3, "ref_epoch": 2026.0},
+             {"source_id": "far", "ra": ra, "dec": dec + 30 / 3600, "gmag": 12.0, "ref_epoch": 2026.0}]
+    stars_xy = np.array([[star_x, 90.0], [90.0, 105.0]])
+    predicted = {"ra": ra, "dec": dec, "x": 90.0, "y": n - 1 - 90.0}
+    blend = pipeline._blend(predicted, stars, stars_xy, image, FWHM, {"status": "measured"}, 61041.0,
+                            {"source_id": None})
+    assert [b["source_id"] for b in blend] == ["neighbour"]  # the other is 30 arcsec away
+    (b,) = blend
+    assert b["distance_arcsec"] == pytest.approx(4.4, abs=0.05) and b["east_arcsec"] == pytest.approx(4.4, abs=0.05)
+    assert b["flux_mjy"] == pytest.approx(pipeline.GRID_PIXEL_MJY, rel=0.15)
+    assert b["light_share"] == pytest.approx(0.25, abs=0.03)
+    # Where the target is saturated the fixed-width fit means little: no figures, only the star.
+    (b,) = pipeline._blend(predicted, stars, stars_xy, image, FWHM, {"status": "saturated"}, 61041.0,
+                           {"source_id": None})
+    assert (b["flux_mjy"], b["light_share"]) == (None, None)
+    # Nor where the two are too close to tell apart (RW Aurigae's companion, 1.6 arcsec).
+    close_x = 90.0 - 0.8
+    close_ra, close_dec = (float(v) for v in grid.all_pix2world(close_x, 90.0, 0))
+    close = [{"source_id": "companion", "ra": close_ra, "dec": close_dec, "gmag": 12.2, "ref_epoch": 2026.0}]
+    (b,) = pipeline._blend(predicted, close, np.array([[close_x, 90.0]]), sky_with((90.0, 90.0, 3.0),
+                           (close_x, 90.0, 1.0)), FWHM, {"status": "measured"}, 61041.0, {"source_id": None})
+    assert b["distance_arcsec"] == pytest.approx(1.6, abs=0.05) and (b["flux_mjy"], b["light_share"]) == (None, None)
+
+
 def test_a_saturated_place_counts_as_detected():
     image = sky_with((90.0, 90.0, 50.0))
     yy, xx = np.mgrid[0:180, 0:180]

@@ -195,6 +195,15 @@ Endpoints (adjust if something better emerges, and keep this list current):
     to 4, what the independent check found for Barnard's Star whichever pixels were used
     (the fit's own figure was 0.03 to 0.11). `error_note` in the response says the same.
     `nearest_source` carries the same three fields.
+  - `blend` (per frame): the Gaia stars (G < 17) within one native pixel (6.15 arcsec) of
+    `predicted` on the frame's date, nearest first, each with `source_id`, `gmag`,
+    `distance_arcsec`, `east_arcsec`, `north_arcsec`, and `flux_mjy` and `light_share`
+    from the same fixed-position fit as `detection_sigma` (rough; null where the target
+    is saturated or the star is under 1.5 arcsec away). Empty when there is none, or no
+    target. `centroid.blended` is true when the list is not empty (null with no target):
+    the marker then measures a blob of both and is pulled toward the star. Nothing is
+    subtracted. `blend_note` in the response says the same. A target that is a Gaia star
+    is left out of its own list by identifier, so a close companion still shows.
   - `centroid.snr` is kept for compatibility, but it is the fitted height over the
     scatter left around the fit, NOT a detection strength: started on empty sky that fit
     returns 5 or more at 3 of 78 places in one WISE 0855 frame and at about 20 of 78 in
@@ -252,6 +261,13 @@ Endpoints (adjust if something better emerges, and keep this list current):
   `detector=` (one detector), and `pmra=&pmdec=&parallax=` as for `/api/frames`: the
   object is followed with that motion, else with that of the Gaia star within 15 arcsec.
   `method` in the response explains the measurement in plain words.
+  - `stars_in_circle`: the Gaia stars (G < 17) whose place falls inside the measuring
+    circle (`radius_arcsec`, 15.4) around the object: `by_epoch` (per visit, at its
+    middle date: `epoch`, `date`, `stars` with `source_id`, `gmag`, `distance_arcsec`,
+    `east_arcsec`, `north_arcsec`) and `stars` (over the whole run: `nearest_arcsec`,
+    `farthest_arcsec`, `epochs`). Their light is in every flux measured there; nothing is
+    subtracted. `known` is false (and the lists empty) when Gaia did not answer; the
+    result is then not cached. Same in `/api/spectrum`.
   - For saturated stars: `wing_mjy`, `wing_err_mjy`, `wing_status`, `wing_ring_px`,
     `wing_trusted`, `relative_wing`. This is a relative brightness from unsaturated
     pixels in a ring around the star, NOT a flux. Chart it only where `wing_trusted` is
@@ -727,6 +743,22 @@ same 60 views)
   0.026, 0.029); detectors 1 to 4: 2.0 (fit's own 0.04 to 0.11). Every offset from Gaia
   in those frames (0.12 to 1.45 arcsec) is within it. Markers, pictures and the
   `check_barnard.py` shifts are unchanged.
+
+Blended neighbours and stars in the measuring circle (`blend`, `stars_in_circle`;
+pipeline.VERSION 10, photometry.VERSION 7; same 60 views)
+- Frames with a `blend`: 42 of the 60 views' frames. WISE 0855 visit 3 (motion passed)
+  in every detector: the G = 16.31 star 4.2 to 4.4 arcsec away. Its share of the fitted
+  light: 0.25 in detector 6 (0.165 mJy; independent check 22 to 25 per cent, 0.15 +/-
+  0.03 mJy) and 0.41 in detector 5 (check: 42 per cent); 0.95 to 1.0 in detectors 1 to 4,
+  where WISE 0855 is not detected. Every RW Aurigae frame: Gaia 156430822114424576
+  (G = 12.18), its companion, 1.5 to 1.7 arcsec away: one blob, too close to share out
+  (a first version gave fitted fluxes from -206 to +1131 mJy there, hence the 90 per
+  cent overlap limit). None at Barnard's Star, Epsilon Indi B or R Draconis.
+- Markers, pictures and the `check_barnard.py` shifts are unchanged.
+- `stars_in_circle` (15.4 arcsec): WISE 0855 with the motion lists the G = 16.31 star at
+  11.35, 8.23 and 4.26 arcsec in visits 1 to 3; RW Aurigae lists its companion at 1.6
+  arcsec in every visit; Barnard's Star, R Draconis and Epsilon Indi B list none (G < 17
+  only). Photometry statuses are unchanged (RW Aurigae 131 ok, 167 saturated, 28 flagged).
 
 Reading cutouts straight from S3 (confirmed 2026-11-14, `scripts/check_s3.py` repeats it)
 - `backend/s3fetch.py` reads only the image rows a cutout needs from the public bucket,

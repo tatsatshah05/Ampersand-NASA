@@ -217,6 +217,31 @@ def test_no_sky_when_the_ring_is_all_defects(block_star):
     assert photometry.measure(path, ra, dec)["status"] == "no_sky"
 
 
+# ------------------------------------------------------- stars inside the circle
+
+def test_stars_inside_the_measuring_circle_are_listed_per_visit():
+    """The circle is 2.5 native pixels, 15.4 arcsec. Nothing is subtracted; the stars are named."""
+    ra, dec = 133.759765, -7.242182
+    step = 1.0 / 3600.0
+    cone = [{"source_id": "inside", "ra": ra, "dec": dec + 10 * step, "gmag": 16.31, "ref_epoch": 2026.0},
+            {"source_id": "outside", "ra": ra, "dec": dec - 20 * step, "gmag": 14.0, "ref_epoch": 2026.0}]
+    points = [{"epoch": 1, "mjd": 60800.0}, {"epoch": 1, "mjd": 60810.0}, {"epoch": 2, "mjd": 61160.0}]
+    listed = photometry.stars_in_circle(points, None, ra, dec, cone)
+    assert listed["radius_arcsec"] == pytest.approx(15.38, abs=0.01) and listed["known"] is True
+    assert [e["epoch"] for e in listed["by_epoch"]] == [1, 2]
+    assert [[s["source_id"] for s in e["stars"]] for e in listed["by_epoch"]] == [["inside"], ["inside"]]
+    (star,) = listed["stars"]
+    assert (star["gmag"], star["epochs"]) == (16.31, [1, 2]) and star["nearest_arcsec"] == pytest.approx(10.0, abs=0.01)
+    # Following a fast mover (20 arcsec a year north) moves the circle: 12.6 arcsec south of
+    # (ra, dec) in visit 1, 6.6 north in visit 2.
+    mover = {"ra": ra, "dec": dec, "pmra": 0.0, "pmdec": 20000.0, "parallax": None, "ref_epoch": 2026.0}
+    followed = photometry.stars_in_circle(points, mover, ra, dec, cone)
+    assert [[s["source_id"] for s in e["stars"]] for e in followed["by_epoch"]] == [["outside"], ["inside"]]
+    # Without an answer from Gaia nothing is claimed either way.
+    unknown = photometry.stars_in_circle(points, None, ra, dec, None)
+    assert unknown["known"] is False and unknown["by_epoch"] == [] and "did not answer" in unknown["note"]
+
+
 # ------------------------------------------------------------- wavelength bins
 
 def test_channels_split_a_detector_into_17_equal_ratio_steps():

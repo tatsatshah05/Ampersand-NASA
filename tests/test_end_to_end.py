@@ -263,7 +263,13 @@ def test_without_gaia_the_frames_still_come_back_but_are_not_cached(barnard: Sim
     assert astrometry.GAIA_TAP in network                                 # it was asked, and did not answer
     assert meta["target"] is None and meta["gaia_error"]
     assert [f["predicted"] for f in meta["frames"]] == [None, None, None]
-    assert [f["centroid"] for f in meta["frames"]] == [f["centroid"] for f in normal.frames]
+    # The same star is measured in the same place. Whether a catalogue star is blended with
+    # it is known only around a target's predicted place, so `blended` is null here.
+    place = ("ra", "dec", "x", "y", "err_arcsec", "saturated_core", "fwhm_arcsec")
+    assert ([{k: f["centroid"][k] for k in place} for f in meta["frames"]]
+            == [{k: f["centroid"][k] for k in place} for f in normal.frames])
+    assert [f["centroid"]["blended"] for f in meta["frames"]] == [None, None, None]
+    assert [f["blend"] for f in meta["frames"]] == [[], [], []]
     assert not (pipeline.FRAMES_DIR / meta["key"] / "frames.json").exists()
 
 

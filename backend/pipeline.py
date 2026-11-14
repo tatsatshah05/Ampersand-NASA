@@ -33,8 +33,8 @@ FRAMES_DIR = spherex.CACHE / "frames"
 # numbers: results made by older code are then never served again. (3 is taken by the
 # flags image of pull request #24; 4 was the new stacking rule; 5 centroid meaning the
 # target or nothing; 6 photometry_saturated_exposures; 7 flags_image; 8 detection_sigma;
-# 9 saturated_core and its position uncertainty.)
-VERSION = 9
+# 9 saturated_core and its position uncertainty; 10 blend.)
+VERSION = 10
 
 # Dropping glitches when exposures are stacked (see Stacker).
 MIN_EXPOSURES_TO_REJECT = 5   # with fewer exposures nothing is dropped
@@ -438,10 +438,10 @@ def forced_flux(image: np.ndarray, x: float, y: float, fwhm_arcsec: float, other
     s = fwhm_arcsec / 2.3548 / GRID_ARCSEC
     others = np.asarray(others, dtype=float).reshape(-1, 2)
     d = np.hypot(others[:, 0] - x, others[:, 1] - y)
-    near = others[(d > SAME_OBJECT_ARCSEC / GRID_ARCSEC) & (d <= NEIGHBOUR_ARCSEC / GRID_ARCSEC)]
+    near = np.flatnonzero((d > SAME_OBJECT_ARCSEC / GRID_ARCSEC) & (d <= NEIGHBOUR_ARCSEC / GRID_ARCSEC))
     px, py = xx[use], yy[use]
     columns = [np.exp(-((px - cx) ** 2 + (py - cy) ** 2) / (2 * s * s)) / (2 * np.pi * s * s)
-               for cx, cy in [(x, y), *near.tolist()]]
+               for cx, cy in [(x, y), *others[near].tolist()]]
     # A neighbour whose light hardly reaches the pixels that have a value cannot be
     # fitted (its column is nearly zero) and changes nothing: leave it out.
     peak = columns[0].max()
@@ -456,6 +456,9 @@ def forced_flux(image: np.ndarray, x: float, y: float, fwhm_arcsec: float, other
         return None
     return {"value_mjy": float(coefficients[0]) * GRID_PIXEL_MJY, "variance_factor": float(covariance[0, 0]),
             "n_neighbours": len(reach) - 1,
+            # Each fitted neighbour's own brightness, by its row in `others`.
+            "neighbour_mjy": {int(near[i - 1]): float(coefficients[k]) * GRID_PIXEL_MJY
+                              for k, i in enumerate(reach) if i > 0},
             "saturated": bool(saturated is not None and saturated[window][within].any())}
 
 
@@ -649,31 +652,65 @@ def nearest_gaia(cone: list[dict], ra: float, dec: float, mjd: float, within_arc
     return best[1] if best else None
 
 
-def _find_target(ra: float, dec: float, fov: float, mid_mjd: float,
-                 motion: dict | None) -> tuple[dict | None, str | None]:
-    """The object whose expected position is drawn in each frame.
-
-    If the request gave a proper motion (as /api/resolve returns it), the target is
-    the object at the centre of the request with that motion. This is the only way an
-    object that Gaia does not list (WISE 0855, for one) gets an expected position.
-    Otherwise it is the Gaia star nearest the centre, if one is within 15 arcsec.
-    """
-    if motion is not None:
-        return motion, None
-    cone, error = gaia_field(ra, dec, fov)
-    return (nearest_gaia(cone, ra, dec, mid_mjd) if cone is not None else None), error
-
-
-def _stars_on_grid(cone: list[dict] | None, mjd: float, grid: WCS, n: int) -> np.ndarray:
-    """Places of the Gaia stars on the date, as (k, 2) grid pixels from the bottom-left;
-    only those near enough to the picture to matter for a measurement inside it."""
+def _stars_on_grid(cone: list[dict] | None, mjd: float, grid: WCS, n: int) -> tuple[np.ndarray, list[dict]]:
+    """Places of the Gaia stars on the date, as (k, 2) grid pixels from the bottom-left,
+    and the stars themselves in the same order; only those near enough to the picture to
+    matter for a measurement inside it."""
     if not cone:
-        return np.zeros((0, 2))
+        return np.zeros((0, 2)), []
     sra, sdec = astrometry.positions_at(cone, mjd)
     sx, sy = grid.all_world2pix(sra, sdec, 0)
     reach = NEIGHBOUR_ARCSEC / GRID_ARCSEC
     near = (sx > -reach) & (sx < n - 1 + reach) & (sy > -reach) & (sy < n - 1 + reach)
-    return np.column_stack([sx[near], sy[near]])
+    return np.column_stack([sx[near], sy[near]]), [cone[i] for i in np.flatnonzero(near)]
+
+
+# A catalogue star closer than one native pixel to the target's predicted place is in the
+# same blob of light: the marker then measures both (WISE 0855 in visit 3).
+BLEND_ARCSEC = NATIVE_ARCSEC
+BLEND_NOTE = (
+    "blend lists the Gaia stars (G < 17) within one native pixel (6.15 arcsec) of the predicted position on the "
+    "frame's date, nearest first: source_id, gmag, distance_arcsec, east_arcsec, north_arcsec. The target and such a "
+    "star are one blob in SPHEREx's pixels, so the marker (centroid.blended) is pulled toward the star and the "
+    "light there is partly the star's. flux_mjy is each one's brightness from the same fixed-position fit as "
+    "detection_sigma, and light_share its part of the light fitted at the target and the blended stars together "
+    "(values below zero count as zero): rough figures, from a fixed star width. Both are null where the target is "
+    "saturated, or where a blended star is too close to tell apart (its image and the target's overlap by more than "
+    "90 per cent: closer than 2.5 to 2.8 arcsec). Nothing is subtracted from the picture or the measurements.")
+
+
+def _blend(predicted: dict, stars: list[dict], stars_xy: np.ndarray, image: np.ndarray, fwhm: float,
+           found: dict | None, mjd: float, target: dict) -> list[dict]:
+    """Gaia stars within BLEND_ARCSEC of the predicted place, with their share of the fitted light.
+
+    A target that is a Gaia star is left out by its identifier, so a companion closer than
+    SAME_OBJECT_ARCSEC still counts; a target given by the request's motion has no
+    identifier, and a Gaia star that close is taken to be the target itself.
+    """
+    own_id = target.get("source_id")
+    near = astrometry.stars_near(predicted["ra"], predicted["dec"], stars, mjd, BLEND_ARCSEC,
+                                 same_arcsec=0.0 if own_id else SAME_OBJECT_ARCSEC, exclude_id=own_id)
+    if not near:
+        return []
+    fit = None
+    # Two star images of this width overlap by more than 90 per cent (correlation of the
+    # two fitted shapes) when they are closer than this; the fit then cannot share out
+    # their light (RW Aurigae's companion, 1.5 arcsec away, came out between -206 and
+    # +1131 mJy). Separable: WISE 0855's neighbour at 4.2 to 4.4 arcsec.
+    separable = 2.0 * fwhm / 2.3548 * np.sqrt(np.log(1 / 0.9))
+    if found is not None and found["status"] == "measured" and all(s["distance_arcsec"] >= separable for s in near):
+        n = image.shape[0]
+        fit = forced_flux(image, predicted["x"], n - 1 - predicted["y"], fwhm, stars_xy)
+    fluxes = (fit or {}).get("neighbour_mjy", {})
+    total = max(fit["value_mjy"], 0.0) + sum(max(fluxes.get(s["index"], 0.0), 0.0) for s in near) if fit else 0.0
+    out = []
+    for s in near:
+        flux = fluxes.get(s["index"])
+        share = max(flux, 0.0) / total if flux is not None and total > 0 else None
+        out.append({**{k: v for k, v in s.items() if k != "index"},
+                    "flux_mjy": round(flux, 4) if flux is not None else None,
+                    "light_share": round(share, 2) if share is not None else None})
+    return out
 
 
 # When the view has a target, `centroid` is that target measured, or nothing. The old
@@ -847,11 +884,12 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
     mjd_mean = float(np.average(mjds, weights=weights))
     waves = [it["wave_at_target"] for it in items if it["wave_at_target"] is not None]
     image = st["image"]
-    stars_xy = _stars_on_grid(cone, mjd_mean, grid, n)
+    stars_xy, stars = _stars_on_grid(cone, mjd_mean, grid, n)
     fwhm = STACK_FWHM_ARCSEC[detector]
 
     predicted = centroid = offset = reason = nearest = None
     found: dict | None = None
+    blend: list[dict] = []
     if target:
         pra, pdec = astrometry.position_at(target, mjd_mean)
         px, py = grid.all_world2pix(pra, pdec, 0)
@@ -865,10 +903,14 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
             return detection(image, x, y, fwhm, np.vstack([stars_xy, here]), noise, st["saturated"])
 
         centroid, offset, reason, nearest = _measure_target(st, grid, n, detector, predicted, found, measure_at)
+        blend = _blend(predicted, stars, stars_xy, image, fwhm, found, mjd_mean, target)
+        if centroid is not None:
+            centroid["blended"] = bool(blend)
     else:
         fit = fit_source(image, (n - 1) / 2.0, (n - 1) / 2.0)
         if fit:
             centroid = _centroid(fit, grid, n, st, detector)
+            centroid["blended"] = None        # blends are looked for around a target's predicted place only
             here = np.array([[fit["x"], fit["y"]]])
             noise = noise_at_empty_places(image, fwhm, np.vstack([stars_xy, here]))
             found = detection(image, fit["x"], fit["y"], fwhm, stars_xy, noise, st["saturated"])
@@ -900,6 +942,7 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
         "detection_sigma": _rounded(found)["sigma"] if found else None,
         "detection": detection_word(found) if found else "unknown",
         "detection_measure": ({**_rounded(found), "at": "predicted" if target else "centroid"} if found else None),
+        "blend": blend,
     }
 
 
@@ -1032,9 +1075,12 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
 
     every = [it for items in by_epoch.values() for it in items]
     mid_mjd = float(np.mean([it["mjd"] for it in every]))
-    # The Gaia stars of the view: the target when the request gave no motion, and the
-    # known neighbours of detection_sigma always. With a motion in the request the view
-    # can do without them, so Gaia is asked only briefly then.
+    # The target: with a proper motion in the request (as /api/resolve returns it), the
+    # object at the centre with that motion, the only way an object Gaia does not list
+    # (WISE 0855) gets a predicted position; otherwise the Gaia star nearest the centre,
+    # if one is within 15 arcsec. The Gaia stars of the view are also the known
+    # neighbours of detection_sigma and blend, so Gaia is asked in any case, briefly
+    # when the request gave a motion.
     cone, gaia_error = gaia_field(ra, dec, fov, quick=motion is not None)
     target = motion
     if motion is None and cone is not None:
@@ -1052,6 +1098,7 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
         "centroid_note": CENTROID_NOTES["target" if target else "brightest_near_centre"],
         "detection_note": DETECTION_NOTE,
         "error_note": ERROR_NOTE,
+        "blend_note": BLEND_NOTE,
         "saturation_note": SATURATION_NOTE,
         "exposures_total_all_detectors": n_all,
         "failures": failures, "frames": [], "credit": CREDIT,
