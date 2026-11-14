@@ -52,7 +52,7 @@ warnings.simplefilter("ignore", FITSFixedWarning)
 BUCKET_URL = "https://nasa-irsa-spherex.s3.amazonaws.com"
 IRSA_DATA_PATH = "/ibe/data/spherex/"   # in an IRSA address, the S3 key is what follows this
 USER_AGENT = "fits-range-reader/1.0"    # generic on purpose: says nothing about the project or its users
-DEFAULT_CONCURRENCY = 16                # 16 requests at once filled a 300 Mbit/s line; more gained little
+DEFAULT_CONCURRENCY = 16                # on a 300 Mbit/s line 16 at once carried 25 MB/s, 32 carried 33 MB/s
 
 BLOCK = 2880                            # FITS files are built from blocks of this many bytes
 CARD = 80                               # and headers from lines of this many
@@ -168,7 +168,9 @@ class S3Reader:
                 with self._session.get(url, headers=headers, timeout=self.timeout, stream=True) as r:
                     status = r.status_code
                     if status == 206:
-                        body = r.content
+                        # In pieces of 1 MB: requests' own r.content takes 10 kB at a time, which
+                        # costs more processor time than everything else in this module together.
+                        body = b"".join(r.iter_content(1 << 20))
                         first, last, total = _content_range(r.headers.get("Content-Range", ""))
                         # S3 cuts a range short only where the file ends.
                         if first == start and len(body) == last - first + 1 and last == min(end, total) - 1:
@@ -402,9 +404,10 @@ def cutout_box(header: fits.Header, ra: float, dec: float, size_deg: float, pad:
     """
     # spherex.fetch_cutout puts the centre in IRSA's URL with 6 decimals and the size with 5.
     ra, dec, size_deg = float(f"{ra:.6f}"), float(f"{dec:.6f}"), float(f"{size_deg:.5f}")
+    kind = (header.get("CTYPE1"), header.get("CTYPE2"), header.get("CUNIT1"), header.get("CUNIT2"))
+    if kind != ("RA---TAN-SIP", "DEC--TAN-SIP", "deg", "deg"):
+        raise S3LayoutError(f"sky coordinates of a kind this reader was not checked on: {kind}")
     wcs = WCS(_wcs_lines(header, ""))
-    if [str(u) for u in wcs.wcs.cunit] != ["deg", "deg"]:
-        raise S3LayoutError(f"sky coordinates in {list(wcs.wcs.cunit)}, expected degrees")
     try:
         x, y = (float(v) for v in wcs.all_world2pix(ra, dec, 0))
     except NoConvergence as e:
@@ -556,6 +559,8 @@ def _wave_table(remote: _RemoteFile, after: int) -> bytes:
 
 def _wavelengths(header: fits.Header, table: bytes, nx: int, ny: int) -> tuple[np.ndarray, np.ndarray]:
     """Wavelength and bandwidth of every pixel in microns, computed the way spherex.fetch_cutout does."""
+    if (header.get("CTYPE1W"), header.get("CTYPE2W")) != ("WAVE-TAB", "WAVE-TAB"):
+        raise S3LayoutError("no wavelength lookup of the kind this reader was checked on (CTYPE1W, CTYPE2W)")
     with fits.open(io.BytesIO(_EMPTY_PRIMARY + table)) as hdul:
         # Alternate WCS "W" is a -TAB lookup into the WCS-WAVE extension: axis 1 is
         # the central wavelength, axis 2 the bandwidth.
@@ -684,7 +689,8 @@ def fetch_cutouts(exposures: list[dict], ra: float, dec: float, size_deg: float,
     results = []
     try:
         # One exposure needs up to five ranges at once, so half as many exposures in hand
-        # as the request cap keeps the requests flowing without a long queue.
+        # as the request cap keeps the requests flowing. More in hand gained 5 per cent
+        # and holds more in memory: an exposure in hand is 3 MB at 0.15 degrees, 8 MB at 0.5.
         with ThreadPoolExecutor(max(1, (shared.max_concurrent + 1) // 2)) as pool:
             for n, res in enumerate(pool.map(one, exposures), 1):
                 results.append(res)

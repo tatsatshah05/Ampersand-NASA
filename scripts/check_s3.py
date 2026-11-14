@@ -163,7 +163,9 @@ def compare(mine: Path, theirs: Path) -> dict:
         ra_b, dec_b = wb.all_pix2world(xx - box_b[0], yy - box_b[2], 0)
         sep = np.hypot((ra_a - ra_b) * np.cos(np.radians(dec_a)), dec_a - dec_b)
         res["sky_offset_px"] = float(sep.max() / proj_plane_pixel_scales(wa).mean())
-        if res["sky_offset_px"] > 0:
+        # Same box: the two headers must give the same number, exactly. Different boxes: the same
+        # pixel is CRPIX + something else in each, and the arithmetic rounds differently (1e-11 pixel).
+        if res["sky_offset_px"] > (0 if res["same_box"] else 1e-9):
             res["differences"].append(f"sky position of a pixel differs by up to {res['sky_offset_px']:.2e} pixel")
 
         # Header lines. With different boxes NAXIS and CRPIX must differ, so only then are they let through.
@@ -220,6 +222,13 @@ def run_comparison(sets: list[str], out: Path, concurrency: int, everything: boo
             print(f"\n{name}, {size} degrees: no IRSA cutouts in {spherex.CACHE / 'cutouts'}; set SPHEREX_CACHE_DIR")
             continue
         chosen = have if everything else choose(have, cached, visit, per_visit=2, clipped_max=6)
+        # s3fetch must name files as the cache does, or wiring it in would miss the cached ones.
+        misnamed = [e for e in have if s3fetch.cutout_path(spherex.CACHE / "cutouts", e, ra, dec, size)
+                    != cached[name_of(e)]]
+        if misnamed:
+            bad += 1
+            print(f"\n{name}, {size} degrees: DIFFERENCE: s3fetch.cutout_path and spherex._cutout_path disagree "
+                  f"for {len(misnamed)} exposures")
         with s3fetch.S3Reader(concurrency) as reader:
             start = time.perf_counter()
             fetched = s3fetch.fetch_cutouts(chosen, ra, dec, size, out / "compare", reader=reader, overwrite=True)
@@ -401,18 +410,21 @@ def run_speed(out: Path, concurrency: int, n_irsa: int, sweep: list[int]) -> int
     # No IRSA cutout of 0.5 degrees is cached, but the 0.3 and 0.15 degree ones lie inside it.
     for inner in (0.3, 0.15):
         compared = pixels = differing = 0
+        sky = 0.0
         for e, p, _ in wide:
             theirs = spherex._cutout_path(e, ra, dec, inner)
             if p and theirs.exists():
                 r = compare(p, theirs)
                 compared += 1
                 pixels += r["pixels"]
-                differing += sum(r.get(a, {}).get("bits", 0) for a in ARRAYS) + (r.get("sky_offset_px", 0) > 0)
+                differing += sum(r.get(a, {}).get("bits", 0) for a in ARRAYS)
+                sky = max(sky, r.get("sky_offset_px", 0.0))
                 for d in r["differences"]:
                     print(f"    DIFFERENCE {e['obs_id']} D{e['detector']} against the {inner} degree cutout: {d}")
                 bad += bool(r["differences"])
         print(f"    against the cached {inner} degree IRSA cutouts of the same exposures: {compared} compared, "
-              f"{pixels} shared pixels in each of six arrays, {differing} differ")
+              f"{pixels} shared pixels in each of six arrays, {differing} differ; sky position of a shared pixel "
+              f"agrees to {sky:.1e} pixel (the boxes differ, so each file reaches it from another CRPIX)")
 
     # 4. The same through IRSA, a handful only.
     if n_irsa:
