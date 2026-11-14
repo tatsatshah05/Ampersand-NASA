@@ -113,6 +113,21 @@ BLEND_ARCSEC = 16.0               # a neighbour this close with BLEND_RATIO of t
 BLEND_RATIO = 0.3
 WIDE_RATIO = 1.35                 # wider than a star by this factor: "wide" (an unresolved pair, or a galaxy)
 MIN_VISIT_SNR = 4.0               # a visit's position is measured only if the source is this clear in it
+EMPTY_SPACING_PX = 6              # empty places are tried on a grid this fine (12 arcsec)
+EMPTY_CLEAR_PX = 10               # ... at least this far (20 arcsec) from every source found
+EMPTY_MIN_PLACES = 30             # fewer empty places than this: no noise estimate (a crowded or tiny picture)
+SEEN_TIMES_NOISE = 5.0            # "seen in a visit": forced measurement this many times the empty-place spread
+# A mover must be at its predicted place in every visit deep enough to show it: a visit
+# where the source would stand at least EXPECT_TIMES_NOISE times the noise, but where
+# less than MISSING_SHARE of its usual brightness is measured, rejects it. A ghost of a
+# bright star (fixed within a visit, elsewhere in the next) fails this; a real mover does not.
+EXPECT_TIMES_NOISE = 8.0
+MISSING_SHARE = 1.0 / 3.0
+# Position error floor for a saturated star, added in quadrature per visit: with its
+# core lost it cannot be placed better than about 1 arcsec in detectors 5 and 6 and 2
+# arcsec in 1 to 4 (docs/verification.md, section 4, Barnard's Star).
+SATURATED_FLOOR_ARCSEC = {1: 2.0, 2: 2.0, 3: 2.0, 4: 2.0, 5: 1.0, 6: 1.0}
+TWO_OUT_SIGMA = 3.0               # a change must stay this clear when its two most helpful exposures are left out
 
 # Positions
 FIT_HALF_PX = 6                   # the Gaussian is fitted in a 13 x 13 pixel (26 arcsec) window
@@ -126,6 +141,10 @@ MIN_REFERENCE_STARS = 8           # fewer than this: no registration and no erro
 CHANGER_SIGMA = 5.0
 MIN_CHANNELS = 6                  # channels two visits must share before they are compared
 MIN_CHANGE = 0.10                 # smallest like-with-like change reported (fraction of the brightness)
+# Smallest change reported from the ring around a saturated star: twice the largest
+# departure the ring showed on Barnard's Star, which does not vary (12 per cent).
+MIN_RING_CHANGE = 0.25
+RING_MIN_SATURATED = 0.10         # a star saturated in this share of its exposures also gets a ring series
 SAME_WAY = 0.75                   # share of the channels two visits have in common that must change the same way
 DUPLICATE_ARCSEC = 12.0           # candidates of one kind closer than this are one object
 SED_FLOOR = 0.3                   # a channel's reference brightness is at least this share of the median one
@@ -370,16 +389,24 @@ def _peaks(flux: np.ndarray, se: np.ndarray) -> list[tuple[int, int, float, floa
 
 
 def _find_sources(st: dict[str, Any]) -> list[dict[str, Any]]:
-    """Sources seen in the stack of all visits, plus any seen in one visit's stack only."""
+    """Sources seen in the stack of all visits, plus any seen in one visit's stack only.
+
+    Keeps the detection maps (smoothed picture minus local background) in `st["det"]`
+    and `st["det_all"]`: every brightness that is called a detection later is a value
+    of these maps, compared with the same value at empty places (`_empty_noise`).
+    """
     bg_all = _background(st["smooth_all"])
+    st["det_all"] = st["smooth_all"] - bg_all
+    st["det"] = {}
     sources: list[dict[str, Any]] = []
-    for x, y, peak, z in sorted(_peaks(st["smooth_all"] - bg_all, st["se_all"]), key=lambda p: -p[2]):
+    for x, y, peak, z in sorted(_peaks(st["det_all"], st["se_all"]), key=lambda p: -p[2]):
         sources.append({"x": float(x), "y": float(y), "peak": peak, "snr": z, "background": float(bg_all[y, x]),
                         "found_in": "all"})
     reach = MERGE_ARCSEC / pipeline.GRID_ARCSEC
     for ep in st["visits"]:
         bg = _background(st["smooth"][ep])
-        found = sorted(_peaks(st["smooth"][ep] - bg, st["se"][ep]), key=lambda p: -p[2])
+        st["det"][ep] = st["smooth"][ep] - bg
+        found = sorted(_peaks(st["det"][ep], st["se"][ep]), key=lambda p: -p[2])
         if not found:
             continue
         if sources:
@@ -392,6 +419,62 @@ def _find_sources(st: dict[str, Any]) -> list[dict[str, Any]]:
                 sources.append({"x": float(x), "y": float(y), "peak": peak, "snr": z,
                                 "background": float(bg[y, x]), "found_in": ep})
     return sources
+
+
+def _sample(image: np.ndarray, x: float, y: float) -> float:
+    """Value of a picture at a point between pixel centres (bilinear); NaN if any neighbour is missing."""
+    n_y, n_x = image.shape
+    x0, y0 = int(math.floor(x)), int(math.floor(y))
+    if not (0 <= x0 < n_x - 1 and 0 <= y0 < n_y - 1):
+        return float("nan")
+    fx, fy = x - x0, y - y0
+    v = image[y0:y0 + 2, x0:x0 + 2]
+    return float(v[0, 0] * (1 - fx) * (1 - fy) + v[0, 1] * fx * (1 - fy) + v[1, 0] * (1 - fx) * fy
+                 + v[1, 1] * fx * fy)
+
+
+def _empty_noise(st: dict[str, Any], sources: list[dict[str, Any]], n: int) -> None:
+    """The noise of every detection map, measured where nothing was found.
+
+    The verification of the project's results showed that a fit's own signal to noise
+    is not a detection strength (on empty sky it reaches 5 at a quarter of places). The
+    honest test is to make the same measurement at many empty places of the same
+    picture and compare. Empty places: a grid every EMPTY_SPACING_PX pixels, at least
+    EMPTY_CLEAR_PX from every source found in any visit and away from the edge. Their
+    spread includes everything the picture does on empty sky: noise, faint stars below
+    the threshold, leftover glitches. Stored in st["empty"][ep] (and ["all"]): the
+    robust spread and the sorted values, so a measurement can be given as "times the
+    noise" and as "how many empty places are as bright".
+    """
+    # Twice the edge margin of the peak finder: a source it skipped at the edge must not
+    # sit under an "empty" place.
+    lo, hi = 2 * EDGE_PX, n - 2 * EDGE_PX
+    grid = np.arange(lo, hi, EMPTY_SPACING_PX, dtype=float)
+    xx, yy = np.meshgrid(grid, grid)
+    places = np.column_stack([xx.ravel(), yy.ravel()])
+    if sources:
+        dist, _ = cKDTree(np.array([[s["x"], s["y"]] for s in sources])).query(places, k=1)
+        places = places[dist >= EMPTY_CLEAR_PX]
+    st["empty_places"] = places
+    st["empty"] = {}
+    for key, image in [("all", st["det_all"])] + [(ep, st["det"][ep]) for ep in st["visits"]]:
+        values = np.array([_sample(image, x, y) for x, y in places])
+        values = np.sort(values[np.isfinite(values)])
+        st["empty"][key] = {"sigma": _robust_sigma(values) if values.size >= EMPTY_MIN_PLACES else float("nan"),
+                            "values": values}
+
+
+def _times_noise(st: dict[str, Any], key: Any, x: float, y: float) -> dict[str, Any]:
+    """Forced measurement at (x, y) in one detection map, against the same at the empty places."""
+    image = st["det_all"] if key == "all" else st["det"][key]
+    value = _sample(image, x, y)
+    empty = st["empty"][key]
+    sigma = empty["sigma"]
+    if not (math.isfinite(value) and math.isfinite(sigma) and sigma > 0):
+        return {"value": None, "times_noise": None, "empty_as_bright": None, "n_empty": int(empty["values"].size)}
+    as_bright = int(empty["values"].size - np.searchsorted(empty["values"], value, side="left"))
+    return {"value": value, "times_noise": value / sigma, "empty_as_bright": as_bright,
+            "n_empty": int(empty["values"].size)}
 
 
 # --------------------------------------------------------------------------- positions
@@ -522,7 +605,9 @@ def _measure_positions(field: dict[str, Any], st: dict[str, Any], sources: list[
             with np.errstate(invalid="ignore", divide="ignore"):
                 snr = (st["smooth"][ep][box] - _local_level(st["smooth"][ep], xi, yi)) / st["se"][ep][box]
             visit_snr = float(np.nanmax(snr)) if np.isfinite(snr).any() else float("nan")
-            entry: dict[str, Any] = {"snr": visit_snr, "n_exposures": int(len(st["index"][ep]))}
+            forced = _times_noise(st, ep, s["x"], s["y"])
+            entry: dict[str, Any] = {"snr": visit_snr, "n_exposures": int(len(st["index"][ep])),
+                                     "times_noise": forced["times_noise"], "empty_as_bright": forced["empty_as_bright"]}
             s["visits"][ep] = entry
             if not visit_snr >= MIN_VISIT_SNR:
                 continue
@@ -566,7 +651,7 @@ def _settle_errors(s: dict[str, Any], visits: list[int]) -> None:
 
 def _is_reference(s: dict[str, Any]) -> bool:
     """A plain, clear, unflagged source: used to register the frame and scale the errors."""
-    return s["found_in"] == "all" and s["snr"] >= 3 * DETECT_SIGMA and not s["flags"]
+    return s["found_in"] == "all" and s["snr"] >= 3 * DETECT_SIGMA and not s["flags"] and "ring_of" not in s
 
 
 def _register(sources: list[dict[str, Any]], visits: list[int]) -> dict[int, dict[str, float]]:
@@ -628,6 +713,19 @@ def _motion(s: dict[str, Any], visits: list[int], mjd_of: dict[int, float], scal
     out["speed_err"] = (float(math.hypot(out["pm_east"] * out["pm_east_err"], out["pm_north"] * out["pm_north_err"])
                               / out["speed"]) if out["speed"] > 0 else None)
     out["direction_deg_east_of_north"] = float(math.degrees(math.atan2(out["pm_east"], out["pm_north"])) % 360.0)
+    # Where the straight line puts the source in every visit (also those without a
+    # position of their own), as offsets from its mean place: what `_mover_presence` checks.
+    at: dict[int, tuple[float, float]] = {}
+    for ep in visits:
+        tv = (mjd_of[ep] - mjd_of[used[0]]) / 365.25
+        place = []
+        for axis, err in (("east", "err_east"), ("north", "err_north")):
+            x = np.array([s["visits"][e][axis] for e in used])
+            w = 1.0 / np.maximum(np.array([s["visits"][e][err] for e in used]), 1e-3) ** 2
+            tm, xm = (w * t).sum() / w.sum(), (w * x).sum() / w.sum()
+            place.append(float(xm + out[f"pm_{axis}"] * (tv - tm)))
+        at[ep] = (place[0], place[1])
+    out["_at"] = at
     first, last = s["visits"][used[0]], s["visits"][used[-1]]
     out["shift_first_to_last"] = {"east": last["east"] - first["east"], "north": last["north"] - first["north"]}
     out["shift_error_arcsec"] = float(scale * math.sqrt(first["err_east"] ** 2 + first["err_north"] ** 2
@@ -635,8 +733,16 @@ def _motion(s: dict[str, Any], visits: list[int], mjd_of: dict[int, float], scal
     return out
 
 
-def _test_movers(sources: list[dict[str, Any]], visits: list[int], mjd_of: dict[int, float]) -> dict[str, Any]:
+def _test_movers(sources: list[dict[str, Any]], visits: list[int], mjd_of: dict[int, float],
+                 detector: int) -> dict[str, Any]:
     """Significance of motion for every source, with errors scaled on the field's own stars."""
+    floor = SATURATED_FLOOR_ARCSEC[detector]
+    for s in sources:
+        if "saturated" in s["flags"]:
+            for ep in visits:
+                v = s["visits"][ep]
+                if "err_east" in v:
+                    v["err_east"], v["err_north"] = math.hypot(v["err_east"], floor), math.hypot(v["err_north"], floor)
     raw = [_static_chi2(s, visits) for s in sources]
     # Scale: the field's plain stars should give chi-squares with the median of the
     # chi-square distribution. If theirs are larger, every error is too small by the
@@ -661,6 +767,45 @@ def _test_movers(sources: list[dict[str, Any]], visits: list[int], mjd_of: dict[
         m.update(chi2_static=chi2, dof=dof, sigma_any_shift=any_shift, sigma_drift=drift, sigma=min(any_shift, drift))
     return {"error_scale": scale, "n_reference_stars": len(ratios), "errors_scaled": scaled,
             "median_raw_chi2_ratio": float(np.median(ratios)) if ratios else None}
+
+
+def _mover_presence(s: dict[str, Any], st: dict[str, Any], visits: list[int],
+                    registration: dict[int, dict[str, float]]) -> None:
+    """Is a moving source at the place its straight line predicts, in every visit?
+
+    A forced measurement at the predicted place in each visit's detection map, against
+    the same measurement at the empty places of that map. Fills motion["presence"]
+    (one row per visit), "n_visits_seen" and "missing_in": the visits deep enough that
+    the source should have stood EXPECT_TIMES_NOISE times the noise, where less than
+    MISSING_SHARE of its usual brightness is found. Something that is fixed on the sky
+    within a visit and elsewhere in the next (a reflection of a bright star inside the
+    telescope) shows up in some visits and is missing from others; a real mover is
+    where the line says in all of them.
+    """
+    m = s["motion"]
+    rows: dict[int, dict[str, Any]] = {}
+    for ep in visits:
+        east, north = m["_at"][ep]
+        # Back from the field-registered frame to the picture's own pixels.
+        east += registration[ep]["east"]
+        north += registration[ep]["north"]
+        rows[ep] = _times_noise(st, ep, s["x"] - east / pipeline.GRID_ARCSEC, s["y"] + north / pipeline.GRID_ARCSEC)
+    seen = [r["value"] for r in rows.values() if r["times_noise"] is not None and r["times_noise"] >= SEEN_TIMES_NOISE]
+    typical = float(np.median(seen)) if seen else None
+    missing = []
+    for ep, r in rows.items():
+        r["expected_times_noise"] = None
+        if typical is None or r["value"] is None:
+            continue
+        r["expected_times_noise"] = typical / st["empty"][ep]["sigma"]
+        if r["expected_times_noise"] >= EXPECT_TIMES_NOISE and r["value"] < MISSING_SHARE * typical:
+            missing.append(ep)
+    m["presence"] = [{"epoch": ep + 1, "times_noise": _round(r["times_noise"], 1),
+                      "expected_times_noise": _round(r["expected_times_noise"], 1),
+                      "empty_places_as_bright": r["empty_as_bright"], "empty_places": r["n_empty"]}
+                     for ep, r in rows.items()]
+    m["n_visits_seen"] = len(seen)
+    m["missing_in"] = [ep + 1 for ep in missing]
 
 
 # --------------------------------------------------------------------------- brightness
@@ -800,7 +945,7 @@ def _visit_position(s: dict[str, Any], ep: int) -> tuple[float, float]:
     return s["ra"], s["dec"]
 
 
-def _photometry(field: dict[str, Any], sources: list[dict[str, Any]], visits: list[int]) -> dict[str, np.ndarray]:
+def _photometry(field: dict[str, Any], sources: list[dict[str, Any]], visits: list[int]) -> dict[str, Any]:
     """Flux of every source in every exposure, at its position in that exposure's visit."""
     n_src, n_exp = len(sources), len(field["paths"])
     flux = np.full((n_src, n_exp), np.nan)
@@ -824,7 +969,67 @@ def _photometry(field: dict[str, Any], sources: list[dict[str, Any]], visits: li
     edges = photometry.channel_edges(lo, hi)
     channel = np.clip(np.searchsorted(edges, np.nan_to_num(wave, nan=lo)) - 1, 0, photometry.CHANNELS_PER_DETECTOR - 1)
     return {"flux": flux, "err": err, "status": status, "wave": wave, "channel": channel, "edges": edges,
-            "glow": glow, "roll": roll}
+            "glow": glow, "roll": roll, "measure": ["aperture"] * n_src,
+            "aperture_saturated": (status == SATURATED).sum(axis=1)}
+
+
+def _add_rings(field: dict[str, Any], sources: list[dict[str, Any]], phot: dict[str, Any],
+               visits: list[int]) -> None:
+    """Give every star saturated in RING_MIN_SATURATED of its exposures a second brightness series: its ring.
+
+    Only in detectors 5 and 6, where the ring is trusted. The ring series is added as a
+    source of its own (same place, `measure` "ring", `ring_of` the source it belongs to),
+    so the brightness test treats it exactly like a flux: channel by channel, and never
+    mixed with the aperture values of the same star, which are a different quantity.
+    """
+    if int(field["meta"][0]["detector"]) not in photometry.WING_TRUSTED_DETECTORS:
+        return
+    n_exp = len(field["paths"])
+    for i in range(len(sources)):
+        if phot["measure"][i] != "aperture" or phot["aperture_saturated"][i] < RING_MIN_SATURATED * n_exp:
+            continue
+        ring = _ring_brightness(field, sources[i], visits)
+        if ring is None:
+            continue
+        twin = {**sources[i], "ring_of": i, "flags": list(sources[i]["flags"])}
+        sources.append(twin)
+        for name, row in zip(("flux", "err", "status"), ring, strict=True):
+            phot[name] = np.vstack([phot[name], row[None, :]])
+        for name in ("wave", "channel", "glow"):
+            phot[name] = np.vstack([phot[name], phot[name][i][None, :]])
+        phot["measure"].append("ring")
+        phot["aperture_saturated"] = np.append(phot["aperture_saturated"], phot["aperture_saturated"][i])
+
+
+def _ring_brightness(field: dict[str, Any], s: dict[str, Any],
+                     visits: list[int]) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
+    """Relative brightness of a saturated star from a ring of unsaturated pixels around it.
+
+    Exactly what /api/lightcurve gives as wing_mjy (`photometry.measure`, one ring per
+    star chosen by how often it is usable, never by its values). It is a few per cent
+    of the star's light, not a flux, and only comparable with itself at the same
+    wavelength: the brightness test compares it channel by channel like a flux. Trusted
+    in detectors 5 and 6 only; on Barnard's Star, which does not vary, two values in one
+    channel agree to about 5 per cent, 12 at worst (docs/verification.md, section 3).
+    """
+    points = []
+    for j, path in enumerate(field["paths"]):
+        ra, dec = _visit_position(s, int(field["epoch"][j]))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            points.append(photometry.measure(path, ra, dec))
+    choice = photometry._choose_wing_ring(points)
+    if choice is None:
+        return None
+    flux = np.full(len(points), np.nan)
+    err = np.full(len(points), np.nan)
+    status = np.full(len(points), SATURATED, dtype=int)
+    for j, p in enumerate(points):
+        wing = p["wings"][choice] if p["wings"] else None
+        if wing is not None and wing["status"] == "ok" and wing["value"] is not None:
+            flux[j], err[j], status[j] = wing["value"], wing["error"], OK
+    s["ring_px_chosen"] = list(photometry.WING_RINGS_PX[choice])
+    return flux, err, status
 
 
 def _mean_angle(degrees: np.ndarray) -> float:
@@ -939,9 +1144,10 @@ def _test_changers(sources: list[dict[str, Any]], phot: dict[str, np.ndarray], b
     pair_scatter: dict[tuple[int, int], list[float]] = {}
     for i, s in enumerate(sources):
         s["changes"] = []
+        s["measure"] = phot["measure"][i]
         s["typical_flux_mjy"] = float(typical[i]) if np.isfinite(typical[i]) else None
         s["n_flux"] = int((phot["status"][i] == OK).sum())
-        s["n_saturated"] = int((phot["status"][i] == SATURATED).sum())
+        s["n_saturated"] = int(phot["aperture_saturated"][i])
         measured = (phot["status"][i] == OK) & np.isfinite(phot["glow"][i])
         if measured.any() and np.median(phot["flux"][i][measured]) > 0:
             s["background_share"] = float(np.median(phot["glow"][i][measured])
@@ -981,7 +1187,60 @@ def _test_changers(sources: list[dict[str, Any]], phot: dict[str, np.ndarray], b
             "common_shift_by_bin": [float(c) for c in common], "common_shift_known": shifts_known,
             "pairs": [{"bins": list(k), "n_reference_stars": len(v),
                        "scatter_of_change_among_reference_stars": _robust_sigma(np.array(v))}
-                      for k, v in sorted(pair_scatter.items())]}
+                      for k, v in sorted(pair_scatter.items())],
+            "_scale": scale, "_common": common, "_inflate": inflate}
+
+
+def _change_without(i: int, drop: list[int], a: int, b: int, phot: dict[str, Any], bins: np.ndarray, n_bins: int,
+                    ctx: dict[str, Any]) -> tuple[float, float] | None:
+    """Change of source i between time bins a and b, and its significance, with some exposures left out."""
+    ok = phot["status"][i] == OK
+    ok[drop] = False
+    total = np.zeros((n_bins, photometry.CHANNELS_PER_DETECTOR))
+    count = np.zeros_like(total)
+    np.add.at(total, (bins[ok], phot["channel"][i][ok]), phot["flux"][i][ok])
+    np.add.at(count, (bins[ok], phot["channel"][i][ok]), 1.0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        relative = np.where(count > 0, total / count, np.nan) / ctx["_scale"][i][None, :] - ctx["_common"][:, None]
+    fit = _visit_effect(relative)
+    diff = _bin_difference(fit, a, b) if fit is not None else None
+    if fit is None or diff is None or not diff[1] > 0:
+        return None
+    err = diff[1] * ctx["_inflate"]
+    return diff[0], _sigma_from_p(float(2.0 * stats.t.sf(abs(diff[0]) / err, fit["d2"])))
+
+
+def _two_out(i: int, best: dict[str, Any], phot: dict[str, Any], bins: np.ndarray, n_bins: int,
+             ctx: dict[str, Any]) -> dict[str, Any]:
+    """Does a change survive leaving out the two exposures that help it most?
+
+    Two glitches of different exposures that overlap survive the stacking rule, and
+    one or two bad readings can make a channel jump. A real change is carried by most
+    of the exposures of both time bins. The two exposures whose removal weakens the
+    change most are found one at a time and left out; the change must keep its sign
+    and stay TWO_OUT_SIGMA clear.
+    """
+    a, b = best["bins"]
+    sign = 1.0 if best["change"] > 0 else -1.0
+    members = [int(j) for j in np.nonzero((phot["status"][i] == OK) & ((bins == a) | (bins == b)))[0]]
+    dropped: list[int] = []
+    after: tuple[float, float] | None = (best["change"], best["sigma"])
+    for _ in range(2):
+        worst, worst_score, worst_result = None, math.inf, None
+        for j in members:
+            if j in dropped:
+                continue
+            res = _change_without(i, dropped + [j], a, b, phot, bins, n_bins, ctx)
+            score = -math.inf if res is None else (res[1] if sign * res[0] > 0 else -res[1])
+            if score < worst_score:
+                worst, worst_score, worst_result = j, score, res
+        if worst is None:
+            break
+        dropped.append(worst)
+        after = worst_result
+    ok = after is not None and sign * after[0] > 0 and after[1] >= TWO_OUT_SIGMA
+    return {"left_out": dropped, "change": _round(after[0], 4) if after else None,
+            "sigma": _round(after[1], 1) if after else None, "survives": bool(ok)}
 
 
 # --------------------------------------------------------------------------- flags
@@ -1486,7 +1745,8 @@ def _visit_rows(s: dict[str, Any], visits: list[int], dates: dict[int, dict[str,
     for ep in visits:
         v = s["visits"][ep]
         rows.append({"epoch": ep + 1, "date_mean": dates[ep]["date_mean"], "n_exposures": v["n_exposures"],
-                     "snr": _round(v.get("snr"), 1), "ra": v.get("ra"), "dec": v.get("dec"),
+                     "snr": _round(v.get("snr"), 1), "times_noise": _round(v.get("times_noise"), 1),
+                     "empty_places_as_bright": v.get("empty_as_bright"), "ra": v.get("ra"), "dec": v.get("dec"),
                      "east_arcsec": _round(v.get("east"), 3), "north_arcsec": _round(v.get("north"), 3),
                      "err_east_arcsec": _round(v.get("err_east"), 3), "err_north_arcsec": _round(v.get("err_north"), 3),
                      "largest_shift_from_one_exposure_arcsec": _round(v.get("one_exposure_shift"), 3),
@@ -1548,6 +1808,25 @@ def _one_roll_only(s: dict[str, Any], visits: list[int], dates: dict[int, dict[s
         return False
     return (all(_angle_between(r, seen[0]) <= OPPOSITE_ROLL_DEG for r in seen)
             and all(_angle_between(r, seen[0]) > OPPOSITE_ROLL_DEG for r in missing))
+
+
+def _mover_reasons(s: dict[str, Any], st: dict[str, Any]) -> list[str]:
+    """Signatures of an artefact in a mover; empty if it has none."""
+    reasons = []
+    m = s["motion"]
+    if m["missing_in"]:
+        rows = {r["epoch"]: r for r in m["presence"]}
+        what = "; ".join(f"visit {ep}: {rows[ep]['times_noise']} times the noise where about "
+                         f"{rows[ep]['expected_times_noise']:.0f} was expected" for ep in m["missing_in"])
+        reasons.append(f"not at the place its motion predicts in a visit deep enough to show it ({what}): "
+                       "something fixed within a visit and elsewhere in the next, as a reflection of a bright "
+                       "star is")
+    if m["n_visits_seen"] < 2 and "saturated" not in s["flags"]:
+        reasons.append("clearly seen (5 times the empty-place noise) at its predicted place in fewer than two visits")
+    if "wide" in s["flags"]:
+        reasons.append("wider than the stars of this field: a ring or blob (reflection, galaxy, unresolved pair), "
+                       "not one moving point")
+    return reasons
 
 
 def _drop_duplicates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1641,22 +1920,35 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
         return result
 
     sources = _find_sources(st)
+    _empty_noise(st, sources, field["n"])
     _measure_positions(field, st, sources)
     _flag_sources(field, st, sources)
     _wing_light(st, sources)
-    registration = _register(sources, visits)
-    mover_summary = _test_movers(sources, visits, mjd_of)
+    for s in sources:
+        s["motion"] = None
+    # A first brightness pass at fixed places says which sources are saturated (the
+    # pictures of detectors 5 and 6 show no blank core even where the photometry rule
+    # calls the core lost), and saturated stars get a wider position error.
     phot = _photometry(field, sources, visits)
+    for i, s in enumerate(sources):
+        if phot["aperture_saturated"][i] > 0.5 * len(field["paths"]) and "saturated" not in s["flags"]:
+            s["flags"].append("saturated")
+        if "saturated" in s["flags"] and "wide" in s["flags"]:
+            s["flags"].remove("wide")              # a saturated star is wide because it is saturated
+    registration = _register(sources, visits)
+    mover_summary = _test_movers(sources, visits, mjd_of, detector)
+    for s in sources:
+        if s["motion"] is not None:
+            _mover_presence(s, st, visits, registration)
+    if any(s["motion"] and s["motion"]["sigma"] >= 3.0 for s in sources):
+        phot = _photometry(field, sources, visits)     # again, following what moved
+    _add_rings(field, sources, phot, visits)
     for label in bin_labels:
         label["roll_deg"] = _round(_mean_angle(phot["roll"][bins == label["bin"]]), 1)
     for ep in visits:
         dates[ep]["roll_deg"] = _round(_mean_angle(phot["roll"][st["index"][ep]]), 1)
     changer_summary = _test_changers(sources, phot, bins, len(bin_labels))
     for s in sources:
-        if s["n_saturated"] > 0.5 * len(field["paths"]) and "saturated" not in s["flags"]:
-            s["flags"].append("saturated")
-        if "saturated" in s["flags"] and "wide" in s["flags"]:
-            s["flags"].remove("wide")              # a saturated star is wide because it is saturated
         if s["glow_share"] is not None and s["glow_share"] > GLOW_SHARE and "halo" not in s["flags"]:
             s["flags"].append("halo")
 
@@ -1665,25 +1957,28 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
         if "halo" in s["flags"]:
             continue
         kinds = []
-        if s["motion"] and s["motion"]["sigma"] >= mover_bar:
+        if s["motion"] and s["motion"]["sigma"] >= mover_bar and "ring_of" not in s:
             kinds.append("mover")
         best = s["best_change"]
-        if best is not None and s["change_sigma"] >= changer_bar and abs(best["change"]) >= MIN_CHANGE:
+        least = MIN_RING_CHANGE if s["measure"] == "ring" else MIN_CHANGE
+        if best is not None and s["change_sigma"] >= changer_bar and abs(best["change"]) >= least:
             kinds.append("changer")
         for kind in kinds:
             sigma = s["motion"]["sigma"] if kind == "mover" else s["change_sigma"]
             cand: dict[str, Any] = {
-                "kind": kind, "passes": bool(sigma >= (MOVER_SIGMA if kind == "mover" else CHANGER_SIGMA)),
-                "source": i, "ra": round(s["ra"], 6), "dec": round(s["dec"], 6), "detector": detector,
+                "kind": kind, "source": i, "ra": round(s["ra"], 6), "dec": round(s["dec"], 6), "detector": detector,
                 "found_in": "all visits" if s["found_in"] == "all" else f"visit {s['found_in'] + 1}",
                 "snr": round(s["snr"], 1), "flags": list(s["flags"]),
+                "times_noise_all_visits": _round(_times_noise(st, "all", s["x"], s["y"])["times_noise"], 1),
                 "typical_flux_mjy": _round(s["typical_flux_mjy"], 4), "glow_share": _round(s["glow_share"], 3),
                 "background_share": _round(s["background_share"], 3),
                 "n_exposures_with_flux": s["n_flux"], "n_exposures_saturated": s["n_saturated"],
                 "visits": _visit_rows(s, visits, dates)}
+            reasons: list[str] = []
             if kind == "mover":
+                motion = {k: v for k, v in s["motion"].items() if not k.startswith("_")}
                 cand["sigma"] = round(s["motion"]["sigma"], 1)
-                cand["motion"] = {k: (round(v, 3) if isinstance(v, float) else v) for k, v in s["motion"].items()}
+                cand["motion"] = {k: (round(v, 3) if isinstance(v, float) else v) for k, v in motion.items()}
                 cand["motion"]["shift_first_to_last"] = {k: round(v, 3) for k, v in
                                                          s["motion"]["shift_first_to_last"].items()}
                 cand["track_arcsec"] = math.hypot(*s["motion"]["shift_first_to_last"].values())
@@ -1692,8 +1987,12 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
                 if len(few) == 2:
                     # Two visits cannot tell a drift from a step out and back.
                     cand["flags"].append("two_visits")
+                reasons += _mover_reasons(s, st)
             else:
                 cand["sigma"] = round(s["change_sigma"], 1)
+                cand["measure"] = s["measure"]
+                if s["measure"] == "ring":
+                    cand["ring_px"] = s.get("ring_px_chosen")
                 cand["change"] = best
                 cand["all_changes"] = s["changes"]
                 cand["channels"] = _channel_table(phot, i, bins, len(bin_labels))
@@ -1704,14 +2003,24 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
                     # Seen only between visits taken with the spacecraft turned over:
                     # a real change, or a neighbour's lopsided glow. Cannot be told apart here.
                     cand["flags"].append("follows_roll")
+                cand["two_out"] = _two_out(i, best, phot, bins, len(bin_labels), changer_summary)
+                if not cand["two_out"]["survives"]:
+                    reasons.append("the change rests on one or two exposures: without the two that carry it most "
+                                   f"it is {cand['two_out']['sigma']} sigma")
             if min(few) < FEW_EXPOSURES:
                 cand["flags"].append("few_exposures")
             if _one_roll_only(s, visits, dates):
                 cand["flags"].append("one_roll_only")
-            # "clean": nothing about the measurement asks for caution. Everything else
-            # is kept, with its reasons, for a person to look at.
-            cand["grade"] = "clean" if not cand["flags"] else "caution"
+            # Three verdicts. "rejected": it has the signature of a known artefact
+            # (`reasons` says which) and is never reported as a candidate. "clean":
+            # nothing about the measurement asks for caution. "caution": kept, with its
+            # flags, for a person to look at.
+            cand["reasons"] = reasons
+            cand["grade"] = "rejected" if reasons else ("clean" if not cand["flags"] else "caution")
+            cand["passes"] = bool(not reasons and sigma >= (MOVER_SIGMA if kind == "mover" else CHANGER_SIGMA))
             candidates.append(cand)
+    for name in ("_scale", "_common", "_inflate"):
+        changer_summary.pop(name)
     candidates.sort(key=lambda c: -c["sigma"])
     candidates = _drop_duplicates(candidates)
     for number, cand in enumerate(candidates, 1):
@@ -1725,10 +2034,16 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
     answered = {name for c in candidates for name in c["catalogue"]["answered"]}
     failed = {name: why for c in candidates for name, why in c["catalogue"]["failed"].items()}
 
-    testable = [s for s in sources if "halo" not in s["flags"]]
+    real = [s for s in sources if "ring_of" not in s]
+    testable = [s for s in real if "halo" not in s["flags"]]
     result.update(
         candidates=candidates, time_bins=bin_labels,
-        n_sources=len(sources), n_sources_on_glow_not_tested=len(sources) - len(testable),
+        n_sources=len(real), n_sources_on_glow_not_tested=len(real) - len(testable),
+        n_ring_series=len(sources) - len(real),
+        empty_places={"n": int(len(st["empty_places"])), "spacing_arcsec": EMPTY_SPACING_PX * pipeline.GRID_ARCSEC,
+                      "clear_of_sources_arcsec": EMPTY_CLEAR_PX * pipeline.GRID_ARCSEC,
+                      "noise_by_visit": {str(k if k == "all" else k + 1): _round(v["sigma"], 6)
+                                         for k, v in st["empty"].items()}},
         n_sources_position_tested=sum(1 for s in testable if s["motion"]),
         n_sources_brightness_tested=sum(1 for s in testable if s["changes"]),
         n_sources_saturated=sum(1 for s in testable if "saturated" in s["flags"]),
@@ -1787,7 +2102,14 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
     for det in detectors:
         per[det] = search_field(ra, dec, fov, det, figures_dir=figures_dir, min_sigma=COMBINE_SIGMA, **options)
     groups: list[list[dict[str, Any]]] = []
-    every = sorted((c for r in per.values() for c in r.get("candidates", [])), key=lambda c: -c["sigma"])
+    # A candidate with the signature of an artefact is not combined with anything: it is
+    # listed under "rejected", with its reasons, and never becomes an object.
+    every = sorted((c for r in per.values() for c in r.get("candidates", []) if c["grade"] != "rejected"),
+                   key=lambda c: -c["sigma"])
+    rejected = [{"detector": c["detector"], "id": c["id"], "kind": c["kind"], "sigma": c["sigma"], "ra": c["ra"],
+                 "dec": c["dec"], "reasons": c["reasons"], "flags": c["flags"], "figure": c.get("figure")}
+                for r in per.values() for c in r.get("candidates", [])
+                if c["grade"] == "rejected" and c["sigma"] >= MOVER_SIGMA]
     for cand in every:
         home = next((g for g in groups if g[0]["kind"] == cand["kind"] and math.hypot(*astrometry.offset_arcsec(
             g[0]["ra"], g[0]["dec"], cand["ra"], cand["dec"])) <= DUPLICATE_ARCSEC), None)
@@ -1870,7 +2192,7 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
     for number, obj in enumerate(objects, 1):
         obj["id"] = f"{number:02d}"
     return {"ra": ra, "dec": dec, "fov": fov, "detectors": list(detectors), "objects": objects,
-            "n_groups_below_threshold": below,
+            "rejected": sorted(rejected, key=lambda c: -c["sigma"]), "n_groups_below_threshold": below,
             "seconds": round(sum(r.get("seconds", 0.0) for r in per.values()), 1),
             "per_detector": {str(d): r for d, r in per.items()}}
 
