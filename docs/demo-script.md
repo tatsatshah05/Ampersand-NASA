@@ -23,11 +23,11 @@ below must be checked on the final page before recording.
 | Frames for every target: normal, difference and sum, all six detectors | **[CONFIRMED]** built and looked at (`docs/results.md`) |
 | Name to position, moved to where the object is now | **[CONFIRMED]** built (`/api/resolve`) |
 | Brightness measurements over time, and brightness against wavelength | **[CONFIRMED]** built (`/api/lightcurve`, `/api/spectrum`); charts made from them are in `docs/results/` |
-| The viewer: play, pause, step, blink first and last, trail, zoom, and menus for detector, field of view and mode | A viewer with these controls existed on 2026-11-14 (read from its source; the session that wrote this did not use it in a browser). **[TO CONFIRM]** they are all on the page you record from, and work. |
+| The viewer: play, pause, step, blink first and last, trail, zoom, and menus for detector, field of view and mode | A viewer with these controls existed on 2026-11-14 (it was loaded and screenshotted for three views, but nobody clicked through it for this script). **[TO CONFIRM]** they are all on the page you record from, and work. |
 | Name search box on the page | **[TO CONFIRM]** Fallback: open each target with the values in the table below, prepared beforehand. |
 | Brightness chart on the page | **[TO CONFIRM]** Fallback: show the chart images in `docs/results/` and say they were made from the same measurements. |
 | Spectrum on click | **[TO CONFIRM]** Fallback: as for the chart. |
-| Measured-versus-Gaia numbers on screen | **[TO CONFIRM]** |
+| Measured-versus-Gaia numbers on screen | Seen on the site's front page for Barnard's Star on 2026-11-14: "measured shift 10.2 north, 2.2 west. Gaia predicts 10.3 north, 0.8 west. They differ by 1.4 arcsec, which is 0.23 of a SPHEREx pixel." **[TO CONFIRM]** it still reads so when you record. |
 | Public address | **[TO CONFIRM]** nothing was deployed when this was written. |
 
 ## Before recording
@@ -139,6 +139,12 @@ the final page takes these (a search box, or values in the page address).
   appear "only after summing". **[CONFIRMED]** it is already visible in the per-visit
   frames of detectors 5 and 6; the summed frame (following the target) shows it more
   clearly. Do not say "only after summing".
+- **Check before recording this shot.** On 2026-11-14 the site's front page, opened
+  on WISE 0855 without the motion values, compared the object with a neighbouring
+  catalogue star and read "They differ by 7.8 arcsec, which is 1.27 of a SPHEREx
+  pixel", as if something were wrong. The measured 7.8 arcsec west is the result; the
+  comparison is with the wrong star. Record this shot only from a view that was given
+  the motion values, and check what the text under the frame says.
 - **Trap to mention if it comes up:** this object has moved 212 arcseconds since 2000.
   **[CONFIRMED]** a search on its catalogue coordinates looks at the wrong spot, and a
   coordinates-only request (without the motion values) makes the marker follow the

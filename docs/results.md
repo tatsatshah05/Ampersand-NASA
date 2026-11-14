@@ -14,9 +14,10 @@ named in the challenge, written down after looking at every frame.
 - **Views:** field of view 0.1 degrees (180 x 180 pixels of 2 arcsec), all six
   detectors, requested with each target's position at 2026.0 and its motion, exactly
   as `/api/resolve` returns them.
-- **Not done:** the two web pages (`/` and `/viewer.html`) were not opened in a
-  browser by this session. What was looked at are the frame images those pages show
-  and the numbers the API returns.
+- **The pages:** what was looked at frame by frame are the images the pages show and
+  the numbers the API returns. The two pages themselves (`/` and `/viewer.html`) were
+  loaded once per target in a headless browser and screenshotted, with no clicking;
+  see "The two pages" below.
 
 Nothing here is simulated or filled in. Where a target shows nothing, it says so.
 
@@ -95,10 +96,20 @@ this session (the backend is not its to change).
    measuring circle is 15 arcsec in radius and the star is 4 to 11 arcsec away, so
    short of 4 microns the "spectrum of WISE 0855" is that star's light. See the
    WISE 0855 section.
-9. **The app page asks for frames without the motion values.** Read from the built
-   page's script at commit `67557b5`, not seen in a browser: its request carries
-   position, field of view, detector and `mode=normal` only. At WISE 0855 that gives
-   the wrong `target` (problem 3). The page was still being changed.
+9. **The front page asks for frames without the motion values, and at WISE 0855 it
+   then reports the detection as a disagreement.** Its request carries position, field
+   of view, detector and `mode=normal` only (commit `67557b5`; the page was still
+   being changed). At WISE 0855, detector 6, it reads: "Gaia DR3 5756956644387831296:
+   moves 0.01 arcsec per year. Since frame 1: measured shift 1.1 north, 7.8 west. Gaia
+   predicts 0.0 north, 0.0 west. They differ by 7.8 arcsec, which is 1.27 of a SPHEREx
+   pixel." The measured shift is right (it is the brown dwarf's); the prediction is
+   for the unrelated star of problem 3. At Epsilon Indi B it reads "No Gaia star near
+   the centre, so there is no predicted motion to compare with", because that object
+   is too faint for the backend's Gaia search and no motion was passed.
+   Image: `results/page_front_other_targets.png`.
+10. **The saturation hint is wrong for R Draconis.** The front page says "star too
+    bright here; try detector 5 or 6". For R Draconis detectors 5 and 6 are saturated
+    too (27 to 81 pixels).
 
 Not a fault, but it matters for the demo: only the 0.1 degree field of view is
 warmed. Any other size downloads for about a minute per detector.
@@ -323,11 +334,33 @@ July 2025, October 2025 to January 2026, April to July 2026.
 Images: `results/r_dra_sheet.jpg`, `results/r_dra_modes_sheet.jpg`,
 `results/r_dra_D4_epoch1.png`, `results/r_dra_brightness.png`.
 
+## The two pages
+
+Loaded in headless Chrome 157 from a container built at commit `67557b5`, reading the
+warmed cache; one screenshot per address, about 12 seconds after loading, nothing
+clicked.
+
+- **Front page (`/`)**, Barnard's Star, detector 5: the frame, a details box (dates,
+  25 exposures, 3.80 to 4.43 microns, saturated pixels 0), play controls, and the
+  line "Since frame 1: measured shift 10.2 north, 2.2 west. Gaia predicts 10.3 north,
+  0.8 west. They differ by 1.4 arcsec, which is 0.23 of a SPHEREx pixel." Those are
+  the numbers in this file. Data credits are on the page.
+  (`results/page_front_barnard_D5.png`)
+- **Front page, the other four targets** (`results/page_front_other_targets.png`):
+  WISE 0855 and Epsilon Indi B as in problem 9; RW Aurigae detector 1 shows the three
+  no-data holes as black squares; R Draconis detector 4 shows "Saturated pixels 191"
+  with the hint of problem 10.
+- **Single-page viewer (`/viewer.html`)**: Barnard's Star detector 5 in normal mode,
+  RW Aurigae detector 6 in difference mode and WISE 0855 detector 6 in sum mode all
+  drew a frame with the marker, the caption for that visit and the mode's
+  explanation line (`results/page_viewer_barnard_D5.png`,
+  `results/page_viewer_rw_aur_difference_wise0855_sum.png`).
+
 ## What was not checked
 
-- The pages in a browser (see the top of this file). The brightness chart and the
-  spectrum were judged from the API's numbers and from charts drawn by
-  `scripts/run_targets.py`, not from the page.
+- Using the pages: buttons, menus, zoom, the spectrum panel, a phone. Only the
+  screenshots above. The brightness chart and the spectrum were judged from the
+  API's numbers and from charts drawn by `scripts/run_targets.py`, not from a page.
 - Of the cached views, the ones looked at are: normal, difference against the first
   visit, and sum (on the sky and following the target), all requested with the motion
   values. Difference against the mean of all visits, and the views requested

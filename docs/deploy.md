@@ -59,6 +59,10 @@ the repo at commit `67557b5`:
   image it names was served.
 - With a volume mounted at `/app/backend/cache` instead and no variable set, a cache
   made earlier was found there and the same request answered in 2 milliseconds.
+- The same image run against the laptop's warmed cache, mounted read-only
+  (`-v "$PWD/backend/cache":/data:ro -e SPHEREX_CACHE_DIR=/data`), served every view
+  that was asked for from that cache; so a cache warmed elsewhere can be copied onto
+  the server's disk instead of warming it there.
 - Earlier the same day, on an image without the frontend build (backend at `89acb9d`):
   `/api/resolve`, `/api/frames` in normal and difference mode, `/api/lightcurve` and
   `/api/spectrum` all answered 200 for Barnard's Star and an unknown mode answered 400;
@@ -67,9 +71,9 @@ the repo at commit `67557b5`:
 
 Not tested:
 
-- **The web app in a browser.** Only HTTP responses were checked here: that the page,
-  its script and its stylesheet are served. Whether the app renders and works when
-  served from the container has not been looked at by this session.
+- **Using the pages.** Both pages were loaded from the container in headless Chrome
+  and screenshotted for the five targets, and both drew their frames (see
+  `docs/results.md`, "The two pages"). Nobody clicked anything, and no phone was tried.
 - **Any hosting service.** The Render and Fly.io steps below come from their
   documentation (read 2026-11-14).
 - **An x86 build.** Hosts build for x86-64. The Python and Node dependencies all
