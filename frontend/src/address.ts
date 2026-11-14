@@ -26,6 +26,10 @@ const MODES: readonly Mode[] = ['normal', 'difference', 'sum']
 const REFERENCES: readonly Reference[] = ['first', 'mean']
 const TRACKS: readonly Track[] = ['sky', 'target']
 
+/** Practice mode: how bright the made-up object is. */
+export type Level = 'easy' | 'medium' | 'hard'
+export const LEVELS: readonly Level[] = ['easy', 'medium', 'hard']
+
 export interface Selection {
   ra: number // degrees, 0 up to 360
   dec: number // degrees, -90 to 90
@@ -40,6 +44,9 @@ export interface Selection {
   mode: Mode
   reference: Reference
   track: Track
+  /** Practice mode (`train=<seed>`): the round's seed, or null for the ordinary view. */
+  train: number | null
+  level: Level
 }
 
 // Barnard's Star where it is in 2026 (see CLAUDE.md), shown when the address gives no position.
@@ -55,6 +62,8 @@ export const DEFAULT_SELECTION: Selection = {
   mode: 'normal',
   reference: 'first',
   track: 'sky',
+  train: null,
+  level: 'easy',
 }
 
 const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i
@@ -185,11 +194,24 @@ export function readAddress(search: string): { selection: Selection; notes: stri
     notes.push(`The address asks to line the exposures up on ${quote(trackRaw)}. The choices are sky and target, so the sky is used.`)
   }
 
+  // Practice mode: a whole-number seed makes the address a practice round.
+  const trainRaw = p.get('train')
+  const train = numberFrom(trainRaw)
+  if (train !== null && Number.isInteger(train) && train >= 0 && train <= 2147483647) {
+    s.train = train
+    const levelRaw = p.get('level')
+    const level = oneOf(levelRaw, LEVELS)
+    if (level) s.level = level
+    else if (levelRaw !== null) notes.push(`The address asks for a level called ${quote(levelRaw)}. The levels are easy, medium and hard, so easy is used.`)
+  } else if (trainRaw !== null) {
+    notes.push(`The address asks for a practice round with train=${quote(trainRaw)}, which is not a whole number from 0 up, so the ordinary view is shown.`)
+  }
+
   return { selection: s, notes }
 }
 
 // The parameters this module owns. Anything else in the address is left as it is.
-const OWN_KEYS = ['ra', 'dec', 'fov', 'det', 'detector', 'mode', 'pmra', 'pmdec', 'parallax', 'reference', 'track', 'name']
+const OWN_KEYS = ['ra', 'dec', 'fov', 'det', 'detector', 'mode', 'pmra', 'pmdec', 'parallax', 'reference', 'track', 'name', 'train', 'level']
 
 /** The query string ("?ra=...") for a selection, keeping other parameters of `current`. */
 export function addressOf(s: Selection, current = ''): string {
@@ -210,6 +232,10 @@ export function addressOf(s: Selection, current = ''): string {
   if (s.mode === 'difference') p.set('reference', s.reference)
   if (s.mode === 'sum') p.set('track', s.track)
   if (s.name) p.set('name', s.name)
+  if (s.train !== null) {
+    p.set('train', String(s.train))
+    p.set('level', s.level)
+  }
   for (const [key, value] of others) p.append(key, value)
   return `?${p}`
 }
