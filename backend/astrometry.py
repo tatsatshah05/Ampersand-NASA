@@ -176,7 +176,12 @@ def path_of(src: dict, mjds, parallax: bool = True) -> tuple[np.ndarray, np.ndar
 
 def offset_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> tuple[float, float]:
     """Small-angle offset of point 2 from point 1: (east, north) in arcseconds."""
-    east = (ra2 - ra1) * np.cos(np.radians(0.5 * (dec1 + dec2))) * 3600.0
+    d_ra = ra2 - ra1
+    if d_ra > 180.0:            # the short way round: the two points are either side of RA 0h
+        d_ra -= 360.0
+    elif d_ra < -180.0:
+        d_ra += 360.0
+    east = d_ra * np.cos(np.radians(0.5 * (dec1 + dec2))) * 3600.0
     north = (dec2 - dec1) * 3600.0
     return float(east), float(north)
 
