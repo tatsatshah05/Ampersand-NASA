@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import astrometry, photometry, pipeline, spherex, stars, training
+from . import astrometry, jobs, photometry, pipeline, spherex, stars, training
 
 log = logging.getLogger("backend.app")
 app = FastAPI(title="SPHEREx sky-change viewer")
@@ -109,6 +109,17 @@ def spectrum(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-9
     return _answer(lambda: photometry.spectrum(ra, dec, epoch, detector, pmra=pmra, pmdec=pmdec, parallax=parallax,
                                                pm_epoch=pm_epoch),
                    "measuring the spectrum", "The SPHEREx archive (IRSA)")
+
+
+@app.get("/api/search")
+def blind_search(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+                 fov: float = Query(0.1, gt=0.02, le=0.5),
+                 detectors: str = Query("123456", max_length=12, description="which detectors, e.g. 123456 or 56")):
+    """Everything in a field that moved or changed brightness between visits, checked against the
+    catalogues. No target is given. The search runs in the background: `status` is "queued",
+    "running", "done" (with `result`) or "failed" (with `error`); ask again every few seconds."""
+    return _answer(lambda: jobs.search_status(ra, dec, fov, jobs.parse_detectors(detectors)),
+                   "starting the search", "The SPHEREx archive (IRSA)")
 
 
 @app.get("/api/training")
