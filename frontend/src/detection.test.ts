@@ -113,7 +113,7 @@ describe('measuredSentence and circleStarsSentence', () => {
   const circle = {
     radius_arcsec: 15.38,
     known: true,
-    stars: [{ source_id: '1', gmag: 16.31, nearest_arcsec: 4.26, farthest_arcsec: 11.35, epochs: [1, 2, 3] }],
+    stars: [{ source_id: '1', gmag: 16.31, nearest_arcsec: 4.26, farthest_arcsec: 11.36, epochs: [1, 2, 3] }],
   }
   it('names the stars in the circle and says their light is included', () => {
     const text = circleStarsSentence(circle)
