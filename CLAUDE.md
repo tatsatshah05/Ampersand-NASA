@@ -442,3 +442,11 @@ WISE 0855 in detector 6 (fov 0.1, motion from `/api/resolve`; `scripts/check_mod
 - Difference against epoch 1 shows a white spot at the epoch 3 position; the dark half
   of the pair is lost in the noise of the 3-exposure reference. Other detectors were
   not examined here.
+- A Gaia star (DR3 5756956644387831296, G = 16.3, nearly static) lies 11.4, 8.1 and 4.4
+  arcsec from WISE 0855's catalogue place in epochs 1, 2 and 3. The measured source is
+  not that star: its offset from the star goes (+9.9, -3.6), (+5.9, -3.4), (+2.2, -2.5)
+  arcsec, a 7.7 arcsec westward move, as predicted. But by epoch 3 the two are closer
+  than one native pixel and the star's share of the light was not separated out.
+- Without `pmra`/`pmdec`, `/api/frames` at this position picks that Gaia star as
+  `target` (it is within 15 arcsec of the centre). The frontend must pass the motion
+  from `/api/resolve` for objects Gaia does not list.
