@@ -25,11 +25,19 @@ def resolve(name: str = Query(..., min_length=1, max_length=80)):
 @app.get("/api/frames")
 def frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
            fov: float = Query(0.1, gt=0.02, le=0.5), detector: int = Query(5, ge=1, le=6),
-           mode: str = Query("normal")):
-    """One stacked frame per epoch. Plain `def`, so FastAPI runs it in a worker thread."""
+           mode: str = Query("normal"),
+           pmra: float | None = Query(None, description="mas/yr, including cos(dec); from /api/resolve"),
+           pmdec: float | None = Query(None, description="mas/yr"),
+           parallax: float | None = Query(None, ge=0, description="mas"),
+           pm_epoch: float = Query(astrometry.RESOLVE_EPOCH, ge=1990, le=2040,
+                                   description="Julian year at which the object is at (ra, dec)"),
+           reference: str = Query("first", description="difference mode: 'first' or 'mean'"),
+           track: str = Query("sky", description="sum mode: 'sky' or 'target'")):
+    """Frames for the player. Plain `def`, so FastAPI runs it in a worker thread."""
     try:
-        return pipeline.build_frames(ra, dec, fov, detector, mode)
-    except NotImplementedError as e:
-        raise HTTPException(501, str(e)) from e
+        return pipeline.build_frames(ra, dec, fov, detector, mode, pmra=pmra, pmdec=pmdec, parallax=parallax,
+                                     pm_epoch=pm_epoch, reference=reference, track=track)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
     except spherex.ArchiveError as e:
         raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e

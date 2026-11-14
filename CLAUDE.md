@@ -112,15 +112,33 @@ Endpoints (adjust if something better emerges, and keep this list current):
   starts from), `j2000`, `moved_since_2000_arcsec` and `notes`. 404 if SIMBAD does not
   know the name, 502 if SIMBAD is down. Same logic without a server:
   `backend.astrometry.resolve_name(name)`. Check: `scripts/check_resolve.py`.
-- `GET /api/frames?ra=&dec=&fov=&detector=&mode=` BUILT for `mode=normal` (other modes
-  answer 501). Defaults: fov 0.1 degrees, detector 5. Returns `size_px`, `pixel_arcsec`,
-  `stretch`, `target` (the Gaia star nearest the centre, or null), `failures` and
-  `frames`. Each frame has `epoch`, `date_start`, `date_end`, `date_mean`, `mjd_mean`,
-  `image` (PNG path under `/frames/`), `n_exposures`, `wavelength_um` [min, max],
-  `flagged_fraction`, `saturated_pixels`, `rejected_readings`, `centroid` and
-  `predicted` (each with ra, dec, and x, y in PNG pixels from the top-left). In the PNG,
-  north is up and east is left; white-with-no-detail pixels are saturated and
-  transparent pixels have no data. `mode` will be `normal`, `difference` or `sum`.
+- `GET /api/frames?ra=&dec=&fov=&detector=&mode=` BUILT for `mode=normal`, `difference`
+  and `sum` (anything else answers 400). Defaults: fov 0.1 degrees, detector 5. Returns
+  `size_px`, `pixel_arcsec`, `stretch`, `target`, `failures` and `frames`. Each frame has
+  `epoch`, `date_start`, `date_end`, `date_mean`, `mjd_mean`, `image` (PNG path under
+  `/frames/`), `n_exposures`, `wavelength_um` [min, max], `flagged_fraction`,
+  `saturated_pixels`, `rejected_readings`, `centroid` and `predicted` (each with ra, dec,
+  and x, y in PNG pixels from the top-left). In the PNG, north is up and east is left;
+  white-with-no-detail pixels are saturated and transparent pixels have no data.
+  - Optional `pmra=&pmdec=&parallax=` (mas/yr, mas, exactly as `/api/resolve` returns
+    them; `pm_epoch` defaults to 2026.0): the object at (ra, dec) with that motion becomes
+    `target`, so `predicted` works for objects Gaia does not list. Without them `target`
+    is the Gaia star within 15 arcsec of the centre, or null. `target.origin` says which
+    ("request" or "gaia_nearest").
+  - `mode=difference`: each epoch minus a reference. `reference=first` (default)
+    subtracts the first epoch and returns one frame per later epoch, each with
+    `reference_epoch`; the first epoch's own details are in `reference_frame`.
+    `reference=mean` subtracts the stack of all epochs and returns one frame per epoch
+    (`reference_epoch` null). `stretch.kind` is "asinh-symmetric": mid-grey (128) is no
+    change, white brighter, black fainter, one scale for all frames; transparent means
+    the pixel is missing from the epoch or the reference. `centroid` and `predicted` are
+    still those of the epoch's ordinary image. One epoch only: `frames` is empty and
+    `message` says why.
+  - `mode=sum`: one frame from every exposure of every epoch (`epoch` null,
+    `epochs_combined` lists them). `registration` is "sky" by default. `track=target`
+    shifts each exposure by the target's motion first (`registration` "target_motion",
+    and a `note` saying stars are smeared and coordinates hold for the target only);
+    it answers 400 if no motion is known.
 - `GET /api/lightcurve?ra=&dec=` returns brightness against time, grouped by wavelength bin.
 - `GET /api/spectrum?ra=&dec=&epoch=` returns brightness against wavelength.
 
@@ -151,6 +169,11 @@ The frontend reads `?ra=&dec=&fov=` from the page URL so a view can be linked an
 8. Measure the centroid of the source nearest the target in each frame (round Gaussian
    fitted to valid pixels only, so a saturated star is located from its wings).
 9. Write PNGs and return the metadata.
+
+Difference mode subtracts the stacked images of steps 6 pixel by pixel, with no flux
+matching. Field stars do not cancel exactly: each epoch samples a star at a different
+set of wavelengths and sub-pixel positions, which leaves a faint speckle (about a tenth
+of the star) at each one. Sum mode is step 6 applied to all epochs at once.
 
 ## Build order
 
@@ -297,3 +320,11 @@ Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
   Straight-line proper motion gives Dec +4.768204, 0.06 arcsec south, which is a
   different cache key. `astrometry.propagate` does it the rigorous way.
 - Gaia by identifier: `... FROM gaiadr3.gaia_source WHERE source_id = <id>`, 1.5 to 2.5 s.
+
+Difference and sum modes (Barnard's Star, detector 5, fov 0.1; `scripts/check_modes.py`)
+- Difference against epoch 1: two frames, the star a white patch (north) against a black
+  one (south) spanning the full grey range, 0.00 to 1.00; everything else in the frame
+  stays between 0.34 and 0.67, the faint speckles left by field stars.
+- Sum of all 62 exposures, sky-registered: the star is stretched north-south (fitted
+  FWHM 13.5 arcsec). Following the star's motion: FWHM 11.0 arcsec, the same as in a
+  single epoch, and the field stars become short north-south streaks.

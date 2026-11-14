@@ -226,6 +226,30 @@ def stretch_limits(images: list[np.ndarray]) -> dict:
     return {"vmin": float(median - 2.0 * sigma), "vmax": float(pix.max()), "soft": float(3.0 * sigma)}
 
 
+def difference_limits(diffs: list[np.ndarray]) -> dict | None:
+    """One zero-centred asinh stretch for every difference frame of a view."""
+    pix = np.concatenate([d[np.isfinite(d)] for d in diffs])
+    if pix.size == 0:
+        return None
+    _, _, sigma = sigma_clipped_stats(pix, sigma=3.0, maxiters=5)
+    peak = float(np.abs(pix).max())
+    if peak <= 0 or sigma <= 0:
+        return None
+    # Symmetric about zero, so mid-grey always means "no change". The ends are the
+    # largest change in any frame, so the bright and dark halves of a pair keep their shape.
+    return {"vmin": -peak, "vmax": peak, "soft": float(3.0 * sigma)}
+
+
+def to_difference_png(diff: np.ndarray, lim: dict, path: Path) -> None:
+    """8-bit greyscale PNG of a difference: mid-grey is no change, white brighter than
+    the reference, black fainter. Pixels missing from either image are transparent."""
+    scaled = 0.5 + 0.5 * np.arcsinh(diff / lim["soft"]) / np.arcsinh(lim["vmax"] / lim["soft"])
+    grey = np.clip(np.nan_to_num(scaled, nan=0.5), 0, 1)
+    alpha = np.where(np.isfinite(diff), 255, 0).astype("uint8")
+    rgba = np.dstack([np.round(grey * 255).astype("uint8")] * 3 + [alpha])
+    Image.fromarray(rgba[::-1], "RGBA").save(path)
+
+
 def to_png(st: dict, lim: dict, path: Path) -> None:
     """8-bit greyscale PNG. Saturated pixels are white; pixels with no data are transparent."""
     im = st["image"]
@@ -238,15 +262,116 @@ def to_png(st: dict, lim: dict, path: Path) -> None:
     Image.fromarray(rgba[::-1], "RGBA").save(path)
 
 
+MODES = ("normal", "difference", "sum")
+REFERENCES = ("first", "mean")
+TRACKS = ("sky", "target")
+CREDIT = "NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive (IRSA); ESA Gaia DR3"
+
+
+def _find_target(ra: float, dec: float, fov: float, mid_mjd: float,
+                 motion: dict | None) -> tuple[dict | None, str | None]:
+    """The object whose expected position is drawn in each frame.
+
+    If the request gave a proper motion (as /api/resolve returns it), the target is
+    the object at the centre of the request with that motion. This is the only way an
+    object that Gaia does not list (WISE 0855, for one) gets an expected position.
+    Otherwise it is the Gaia star nearest the centre, if one is within 15 arcsec.
+    """
+    if motion is not None:
+        return motion, None
+    try:
+        nearby = astrometry.gaia_cone(ra, dec, fov * 0.75 + 0.06)
+    except spherex.ArchiveError as e:
+        return None, str(e)
+    best = None
+    for src in nearby:
+        sra, sdec = astrometry.position_at(src, mid_mjd)
+        sep = float(np.hypot(*astrometry.offset_arcsec(ra, dec, sra, sdec)))
+        if sep < 15.0 and (best is None or sep < best[0]):
+            best = (sep, src)
+    return (best[1] if best else None), None
+
+
+def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | None) -> dict:
+    """Everything reported about one stacked image except where its picture is."""
+    mjds = np.array([it["mjd"] for it in items])
+    weights = np.array([it["weight"] for it in items])
+    mjd_mean = float(np.average(mjds, weights=weights))
+    waves = [it["wave_at_target"] for it in items if it["wave_at_target"] is not None]
+
+    predicted = None
+    x0 = y0 = (n - 1) / 2.0
+    if target:
+        pra, pdec = astrometry.position_at(target, mjd_mean)
+        px, py = grid.all_world2pix(pra, pdec, 0)
+        x0, y0 = float(px), float(py)
+        predicted = {"ra": pra, "dec": pdec, "x": x0, "y": n - 1 - y0}
+    fit = fit_source(st["image"], x0, y0)
+    centroid = None
+    if fit:
+        cra, cdec = grid.all_pix2world(fit["x"], fit["y"], 0)
+        centroid = {"ra": float(cra), "dec": float(cdec),
+                    "x": fit["x"], "y": n - 1 - fit["y"],  # y counted from the top of the PNG
+                    "err_arcsec": fit["err_px"] * GRID_ARCSEC if fit["err_px"] is not None else None,
+                    "snr": fit["snr"], "fwhm_arcsec": fit["sigma_px"] * 2.3548 * GRID_ARCSEC}
+    return {
+        "date_start": Time(mjds.min(), format="mjd").iso[:10],
+        "date_end": Time(mjds.max(), format="mjd").iso[:10],
+        "mjd_mean": mjd_mean,
+        "date_mean": Time(mjd_mean, format="mjd").iso[:10],
+        "n_exposures": len(items),
+        "wavelength_um": [min(waves), max(waves)] if waves else None,
+        "flagged_fraction": float(np.mean([it["masked_fraction"] for it in items])),
+        "saturated_pixels": int(st["saturated"].sum()),
+        "rejected_readings": st["rejected_readings"],
+        "centroid": centroid,
+        "predicted": predicted,
+    }
+
+
 def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
-                 mode: str = "normal", progress=None) -> dict:
-    """Frames for the player: one stacked image per epoch for one detector."""
-    if mode != "normal":
-        raise NotImplementedError(f"mode '{mode}' is not built yet (build step 4)")
+                 mode: str = "normal", progress=None, *,
+                 pmra: float | None = None, pmdec: float | None = None, parallax: float | None = None,
+                 pm_epoch: float = astrometry.RESOLVE_EPOCH,
+                 reference: str = "first", track: str = "sky") -> dict:
+    """Frames for the player, for one detector.
+
+    mode "normal": one stacked image per epoch.
+    mode "difference": each epoch minus a reference, so whatever stays put cancels.
+        reference "first" subtracts the first epoch (one frame fewer than there are
+        epochs); "mean" subtracts the stack of all epochs (one frame per epoch).
+    mode "sum": every exposure of every epoch in one deeper image. track "sky" lines
+        the exposures up on the sky; track "target" shifts each one by the target's
+        known motion first, so a fast mover adds up in one place and the stars smear.
+
+    pmra, pmdec (mas/yr, pmra including cos dec) and parallax (mas) describe an object
+    that is at (ra, dec) at the Julian year pm_epoch, which is what /api/resolve returns.
+    """
+    if mode not in MODES:
+        raise ValueError(f"mode must be one of {', '.join(MODES)}")
     if not 1 <= detector <= 6:
         raise ValueError("detector must be 1 to 6")
+    if reference not in REFERENCES:
+        raise ValueError(f"reference must be one of {', '.join(REFERENCES)}")
+    if track not in TRACKS:
+        raise ValueError(f"track must be one of {', '.join(TRACKS)}")
+    if (pmra is None) != (pmdec is None):
+        raise ValueError("give both pmra and pmdec, or neither")
+    motion = None
+    if pmra is not None and pmdec is not None:
+        motion = {"source_id": None, "ra": ra, "dec": dec, "pmra": float(pmra), "pmdec": float(pmdec),
+                  "parallax": float(parallax) if parallax is not None else None, "gmag": None,
+                  "ref_epoch": float(pm_epoch), "origin": "request"}
 
-    key = hashlib.sha1(f"{ra:.5f},{dec:.5f},{fov:.4f},{detector},{mode}".encode()).hexdigest()[:16]
+    # The first five parts are the whole key for a plain request, as they always were.
+    key_text = f"{ra:.5f},{dec:.5f},{fov:.4f},{detector},{mode}"
+    if motion:
+        key_text += f",pm{motion['pmra']:.3f},{motion['pmdec']:.3f},{motion['parallax'] or 0:.3f},{pm_epoch:.3f}"
+    if mode == "difference" and reference != "first":
+        key_text += f",reference-{reference}"
+    if mode == "sum" and track != "sky":
+        key_text += f",track-{track}"
+    key = hashlib.sha1(key_text.encode()).hexdigest()[:16]
     out_dir = FRAMES_DIR / key
     meta_file = out_dir / "frames.json"
     if meta_file.exists():
@@ -265,84 +390,115 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None]
 
     by_epoch: dict[int, list[dict]] = {}
+    paths: dict[int, list[Path]] = {}
     for (_, path, _), (_, ep) in zip(fetched, chosen, strict=True):
         if path is None:
             continue
         item = prepare_cutout(path, grid, n, ra, dec)
         if item is not None:
             by_epoch.setdefault(ep, []).append(item)
-
-    stacks = {ep: stack(items) for ep, items in sorted(by_epoch.items())}
-    if not stacks:
+            paths.setdefault(ep, []).append(path)
+    by_epoch = dict(sorted(by_epoch.items()))
+    if not by_epoch:
         return {"key": key, "frames": [], "failures": failures,
                 "message": f"No usable detector {detector} exposures at this position."}
-    limits = stretch_limits([s["image"] for s in stacks.values()])
 
-    # The Gaia star nearest the centre, if there is one, is the target: it gives the
-    # expected position in each frame to compare the measured one against.
-    mid_mjd = float(np.mean([it["mjd"] for items in by_epoch.values() for it in items]))
-    target, gaia_error = None, None
-    try:
-        nearby = astrometry.gaia_cone(ra, dec, fov * 0.75 + 0.06)
-        best = None
-        for src in nearby:
-            sra, sdec = astrometry.position_at(src, mid_mjd)
-            sep = float(np.hypot(*astrometry.offset_arcsec(ra, dec, sra, sdec)))
-            if sep < 15.0 and (best is None or sep < best[0]):
-                best = (sep, src)
-        target = best[1] if best else None
-    except spherex.ArchiveError as e:
-        gaia_error = str(e)
+    every = [it for items in by_epoch.values() for it in items]
+    mid_mjd = float(np.mean([it["mjd"] for it in every]))
+    target, gaia_error = _find_target(ra, dec, fov, mid_mjd, motion)
+    if target is not None:
+        target = {"origin": "gaia_nearest", "ref_epoch": astrometry.GAIA_EPOCH, **target}
 
-    out_dir.mkdir(parents=True, exist_ok=True)
-    frames = []
-    for ep, st in stacks.items():
-        items = by_epoch[ep]
-        mjds = np.array([it["mjd"] for it in items])
-        weights = np.array([it["weight"] for it in items])
-        mjd_mean = float(np.average(mjds, weights=weights))
-        waves = [it["wave_at_target"] for it in items if it["wave_at_target"] is not None]
-        name = f"epoch{ep + 1}.png"
-        to_png(st, limits, out_dir / name)
-
-        predicted = None
-        x0 = y0 = (n - 1) / 2.0
-        if target:
-            pra, pdec = astrometry.position_at(target, mjd_mean)
-            px, py = grid.all_world2pix(pra, pdec, 0)
-            x0, y0 = float(px), float(py)
-            predicted = {"ra": pra, "dec": pdec, "x": x0, "y": n - 1 - y0}
-        fit = fit_source(st["image"], x0, y0)
-        centroid = None
-        if fit:
-            cra, cdec = grid.all_pix2world(fit["x"], fit["y"], 0)
-            centroid = {"ra": float(cra), "dec": float(cdec),
-                        "x": fit["x"], "y": n - 1 - fit["y"],  # y counted from the top of the PNG
-                        "err_arcsec": fit["err_px"] * GRID_ARCSEC if fit["err_px"] is not None else None,
-                        "snr": fit["snr"], "fwhm_arcsec": fit["sigma_px"] * 2.3548 * GRID_ARCSEC}
-        frames.append({
-            "epoch": ep + 1,
-            "date_start": Time(mjds.min(), format="mjd").iso[:10],
-            "date_end": Time(mjds.max(), format="mjd").iso[:10],
-            "mjd_mean": mjd_mean,
-            "date_mean": Time(mjd_mean, format="mjd").iso[:10],
-            "image": f"/frames/{key}/{name}",
-            "n_exposures": len(items),
-            "wavelength_um": [min(waves), max(waves)] if waves else None,
-            "flagged_fraction": float(np.mean([it["masked_fraction"] for it in items])),
-            "saturated_pixels": int(st["saturated"].sum()),
-            "rejected_readings": st["rejected_readings"],
-            "centroid": centroid,
-            "predicted": predicted,
-        })
-
-    meta = {
+    meta: dict = {
         "key": key, "ra": ra, "dec": dec, "fov": fov, "detector": detector, "mode": mode,
-        "size_px": n, "pixel_arcsec": GRID_ARCSEC, "stretch": {"kind": "asinh", **limits, "unit": "MJy/sr"},
+        "size_px": n, "pixel_arcsec": GRID_ARCSEC,
         "target": target, "gaia_error": gaia_error,
         "exposures_total_all_detectors": len(all_exposures),
-        "failures": failures, "frames": frames,
-        "credit": "NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive (IRSA); ESA Gaia DR3",
+        "failures": failures, "frames": [], "credit": CREDIT,
     }
+    out_dir.mkdir(parents=True, exist_ok=True)
+    frames: list[dict] = meta["frames"]
+
+    if mode == "sum":
+        note = None
+        if track == "target":
+            if target is None or target.get("pmra") is None or target.get("pmdec") is None:
+                raise ValueError("track=target needs a proper motion: pass pmra and pmdec (see /api/resolve), "
+                                 "or centre the request on a Gaia star")
+            # Shift each exposure by how far the target is, on its date, from where it
+            # is on the mean date. The target then adds up at one place; the sky does not.
+            ref_mjd = float(np.average([it["mjd"] for it in every], weights=[it["weight"] for it in every]))
+            ref_ra, ref_dec = astrometry.position_at(target, ref_mjd)
+            every = []
+            for ep in by_epoch:
+                for path, first_pass in zip(paths[ep], by_epoch[ep], strict=True):
+                    t_ra, t_dec = astrometry.position_at(target, first_pass["mjd"])
+                    shifted, _ = make_grid(ra + (t_ra - ref_ra), dec + (t_dec - ref_dec), fov)
+                    item = prepare_cutout(path, shifted, n, ra, dec)
+                    if item is not None:
+                        every.append(item)
+            note = ("Exposures were shifted by the target's known proper motion and parallax before "
+                    "adding, so the target is sharp and every other object is smeared along its track. "
+                    "Sky coordinates in this frame are right for the target only, on the mean date.")
+        st = stack(every)
+        limits = stretch_limits([st["image"]])
+        name = "sum.png" if track == "sky" else "sum_target.png"
+        to_png(st, limits, out_dir / name)
+        frames.append({"epoch": None, "epochs_combined": [ep + 1 for ep in by_epoch],
+                       **_describe(every, st, grid, n, target), "image": f"/frames/{key}/{name}"})
+        meta["stretch"] = {"kind": "asinh", **limits, "unit": "MJy/sr"}
+        meta["combine"] = "weighted mean of every exposure of every epoch (units stay MJy/sr)"
+        meta["registration"] = "sky" if track == "sky" else "target_motion"
+        if note:
+            meta["note"] = note
+        meta_file.write_text(json.dumps(meta, indent=1))
+        return meta
+
+    stacks = {ep: stack(items) for ep, items in by_epoch.items()}
+    if mode == "normal":
+        limits = stretch_limits([s["image"] for s in stacks.values()])
+        for ep, st in stacks.items():
+            name = f"epoch{ep + 1}.png"
+            to_png(st, limits, out_dir / name)
+            frames.append({"epoch": ep + 1, **_describe(by_epoch[ep], st, grid, n, target),
+                           "image": f"/frames/{key}/{name}"})
+        meta["stretch"] = {"kind": "asinh", **limits, "unit": "MJy/sr"}
+        meta_file.write_text(json.dumps(meta, indent=1))
+        return meta
+
+    # mode == "difference"
+    first = next(iter(stacks))
+    meta["reference"] = reference
+    meta["stretch"] = None
+    if len(stacks) < 2:
+        meta["message"] = "Only one epoch has been observed here, so there is nothing to subtract yet."
+        return meta   # not cached: a second epoch will arrive
+    if reference == "first":
+        ref_image, ref_epoch = stacks[first]["image"], first + 1
+        shown = [ep for ep in stacks if ep != first]
+        meta["reference_description"] = f"epoch {first + 1} ({len(by_epoch[first])} exposures)"
+    else:
+        ref_image, ref_epoch = stack(every)["image"], None
+        shown = list(stacks)
+        meta["reference_description"] = f"all {len(stacks)} epochs stacked together ({len(every)} exposures)"
+    diffs = {ep: stacks[ep]["image"] - ref_image for ep in shown}
+    diff_limits = difference_limits(list(diffs.values()))
+    if diff_limits is None:
+        meta["message"] = "The epochs do not overlap on valid pixels, so no difference could be made."
+        return meta
+    for ep in shown:
+        name = f"diff{ep + 1}.png"
+        to_difference_png(diffs[ep], diff_limits, out_dir / name)
+        frames.append({"epoch": ep + 1, "reference_epoch": ref_epoch,
+                       **_describe(by_epoch[ep], stacks[ep], grid, n, target),
+                       "image": f"/frames/{key}/{name}",
+                       "difference_valid_fraction": float(np.isfinite(diffs[ep]).mean())})
+    meta["stretch"] = {"kind": "asinh-symmetric", **diff_limits, "unit": "MJy/sr"}
+    meta["note"] = ("Mid-grey is no change, white is brighter than the reference, black is fainter; "
+                    "transparent pixels are missing from this epoch or the reference (saturated or no data). "
+                    "centroid and predicted are measured on this epoch's ordinary image, not the difference.")
+    if reference == "first":
+        ref_desc = _describe(by_epoch[first], stacks[first], grid, n, target)
+        meta["reference_frame"] = {"epoch": first + 1, **ref_desc}
     meta_file.write_text(json.dumps(meta, indent=1))
     return meta
