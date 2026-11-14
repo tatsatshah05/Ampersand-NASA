@@ -12,6 +12,11 @@ declare module 'aladin-lite' {
     showSimbadPointerControl?: boolean
     showFullscreenControl?: boolean
     showShareControl?: boolean
+    showZoomControl?: boolean
+    showSettingsControl?: boolean
+    showFrame?: boolean
+    showProjectionControl?: boolean
+    showCooLocation?: boolean
     showContextMenu?: boolean
   }
 

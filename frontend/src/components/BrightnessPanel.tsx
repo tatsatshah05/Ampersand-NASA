@@ -409,7 +409,7 @@ function Panel({ request, onClose }: Props) {
                     {chart.xTicks.map((t) => (
                       <g key={t.text}>
                         <line x1={t.x} x2={t.x} y1={M.t + PH} y2={M.t + PH + 4} className="spectrum-axis" />
-                        <text x={t.x} y={H - 8} textAnchor="middle">
+                        <text x={t.x} y={H - 8} textAnchor={t.x > W - 16 ? 'end' : 'middle'}>
                           {t.text}
                         </text>
                       </g>
