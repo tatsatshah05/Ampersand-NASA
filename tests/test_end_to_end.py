@@ -139,7 +139,13 @@ def test_the_star_is_where_gaia_says(normal: SimpleNamespace, barnard: SimpleNam
         star = f["centroid"]
         assert star["snr"] > 15                               # measured: 43, 49, 41
         assert NATIVE_PIXEL < star["fwhm_arcsec"] < 16        # measured: 10.0, 10.6, 12.0 (the PSF itself is 7.4)
-        assert star["err_arcsec"] < 0.5                       # measured: 0.05
+        # Its core is saturated and bloomed in every exposure, and those pixels are in the fit.
+        # The fit's own error is far too small for such a star (docs/verification.md,
+        # section 4), so the error given is the 1 arcsec found for detectors 5 and 6.
+        assert star["saturated_core"] is True
+        assert star["err_arcsec_fit"] < 0.5                   # measured: 0.05
+        assert star["err_arcsec"] == 1.0
+        assert f["detection"] == "clear" and f["detection_sigma"] > 1000
 
 
 def test_the_star_moves_north_as_gaia_predicts(normal: SimpleNamespace, barnard: SimpleNamespace):

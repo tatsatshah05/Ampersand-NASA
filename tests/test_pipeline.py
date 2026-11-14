@@ -167,6 +167,18 @@ def test_cleaning_reports_what_it_did(cleaned):
     assert (item["mjd"], item["wave_at_target"]) == (61000.0, 4.0)
 
 
+def test_cleaning_remembers_where_values_come_from_saturated_pixels(cleaned):
+    """Kept in the picture, but marked: a position fitted to them is not to be trusted.
+    Pixels left out of the picture are not marked: they are not in any fit."""
+    item, at = cleaned
+    for case in ("bright star core", "bloom next to star"):
+        assert item["lost"][at(*FLAG_CASES[case][0])], case
+    for case in ("overflow only", "source only", "cosmic ray", "hot", "saturated, no value"):
+        assert not item["lost"][at(*FLAG_CASES[case][0])], case
+    assert item["saturated"][at(20, 30)]                  # the last one is marked as saturated instead
+    assert pipeline.stack([item])["lost"][at(40, 20)]
+
+
 def test_cutout_with_nothing_usable_is_dropped(write_cutout):
     path, _ = write_cutout(np.ones((60, 60)), flags=np.full((60, 60), pipeline._mask("MISSING_DATA")))
     grid, n = pipeline.make_grid(150.0, 20.0, 0.05)
@@ -286,6 +298,28 @@ def test_fit_stays_with_the_source_near_the_expected_place():
     fit = pipeline.fit_source(image, 40.0, 40.0)
     assert fit is not None
     assert (fit["x"], fit["y"]) == pytest.approx((40.4, 39.7), abs=0.05)
+
+
+@pytest.mark.parametrize(("detector", "error"), [(5, 1.0), (6, 1.0), (2, 2.0)])
+def test_a_saturated_core_gets_the_uncertainty_found_for_such_stars(detector: int, error: float):
+    image = made_up_star(41.3, 38.6)
+    fit = pipeline.fit_source(image, 40.0, 40.0)
+    assert fit is not None
+    grid, n = pipeline.make_grid(150.0, 20.0, 81 * pipeline.GRID_ARCSEC / 3600)
+    clean = {"image": image, "saturated": np.zeros(image.shape, bool), "lost": np.zeros(image.shape, bool)}
+    plain = pipeline._centroid(fit, grid, n, clean, detector)
+    assert plain["saturated_core"] is False and plain["err_arcsec"] == plain["err_arcsec_fit"] < 0.05
+
+    bloomed = {**clean, "lost": np.zeros(image.shape, bool)}
+    bloomed["lost"][39, 42] = True                             # one bloomed pixel in the core
+    marked = pipeline._centroid(fit, grid, n, bloomed, detector)
+    assert marked["saturated_core"] is True
+    assert marked["err_arcsec"] == error and marked["err_arcsec_fit"] == plain["err_arcsec_fit"]
+    assert (marked["x"], marked["y"]) == (plain["x"], plain["y"])   # only the uncertainty changes
+
+    far = {**clean, "lost": np.zeros(image.shape, bool)}
+    far["lost"][39, 60] = True                                 # another star's core, 19 pixels away
+    assert pipeline._centroid(fit, grid, n, far, detector)["saturated_core"] is False
 
 
 def test_fit_gives_nothing_rather_than_a_guess():

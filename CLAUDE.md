@@ -186,6 +186,15 @@ Endpoints (adjust if something better emerges, and keep this list current):
     `star_fwhm_arcsec`, `status` and `at` ("predicted", or "centroid" when there is no
     target). `detection_note` in the response says the same. Without a target it is
     measured where the centroid was found, which favours it a little.
+  - `centroid.err_arcsec` is the position uncertainty and `centroid.err_arcsec_fit` the
+    fit's own. They are equal unless `centroid.saturated_core` is true: a pixel within one
+    star width of the fitted centre is saturated or bloom-flagged (the photometry rule)
+    in at least one exposure, or has no value because the detector overflowed. Those
+    pixels stay in the picture and in the fit (so the star is drawn), and the fit follows
+    them: `err_arcsec` is then 1 arcsec in detectors 5 and 6 and 2 arcsec in detectors 1
+    to 4, what the independent check found for Barnard's Star whichever pixels were used
+    (the fit's own figure was 0.03 to 0.11). `error_note` in the response says the same.
+    `nearest_source` carries the same three fields.
   - `centroid.snr` is kept for compatibility, but it is the fitted height over the
     scatter left around the fit, NOT a detection strength: started on empty sky that fit
     returns 5 or more at 3 of 78 places in one WISE 0855 frame and at about 20 of 78 in
@@ -699,6 +708,25 @@ five targets, six detectors, with and without the motion, fov 0.1)
   separated, and adds its light. The fixed star width does not fit a saturated star or
   the smeared stars of a target-following sum; there `detection_sigma` is only a
   yes-or-no, and saturated places count as detected.
+
+Saturated stars: position uncertainty (`centroid.saturated_core`, pipeline.VERSION 9,
+same 60 views)
+- Barnard's Star sits 1.45 arcsec east of Gaia in visit 1 of detector 5 because its
+  saturated and bloom-flagged core pixels still hold numbers and stay in the fit (on
+  purpose: they draw the star). The independent check found that blanking them is no
+  better (unsaturated light alone: up to 1.85 arcsec off in detector 2), so they stay,
+  and the uncertainty says what is known instead.
+- Flagged: every frame of Barnard's Star and R Draconis in all six detectors; RW
+  Aurigae in 15 of its 18 frames (not detector 5 visit 3, where 0 of 19 exposures are
+  saturated, nor detector 1 visit 2 and detector 6 visit 2). Not flagged: any frame of Epsilon
+  Indi B or WISE 0855. A first version also counted flagged pixels that are masked out
+  of the picture (single dead or persistent pixels marked OVERFLOW and SUR_ERROR) and
+  wrongly flagged Epsilon Indi B detectors 5 and 6; only pixels that keep their value
+  count now.
+- Barnard's Star detector 5: `err_arcsec` 1.0 in all three visits (fit's own 0.037,
+  0.026, 0.029); detectors 1 to 4: 2.0 (fit's own 0.04 to 0.11). Every offset from Gaia
+  in those frames (0.12 to 1.45 arcsec) is within it. Markers, pictures and the
+  `check_barnard.py` shifts are unchanged.
 
 Reading cutouts straight from S3 (confirmed 2026-11-14, `scripts/check_s3.py` repeats it)
 - `backend/s3fetch.py` reads only the image rows a cutout needs from the public bucket,
