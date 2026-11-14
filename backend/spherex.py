@@ -27,7 +27,10 @@ SIA_URL = "https://irsa.ipac.caltech.edu/SIA"
 # Level-2 spectral image collections. DR1 holds the first year; QR3 the newest weeks.
 COLLECTIONS = ["spherex_dr1", "spherex_qr3"]
 MAX_CONCURRENT = 6
-CACHE = Path(__file__).resolve().parent / "cache"
+# Everything downloaded or built is kept here. SPHEREX_CACHE_DIR moves it: to a
+# persistent disk when deployed, or to one shared folder when several checkouts of the
+# code run on the same machine.
+CACHE = Path(os.environ.get("SPHEREX_CACHE_DIR") or Path(__file__).resolve().parent / "cache")
 (CACHE / "cutouts").mkdir(parents=True, exist_ok=True)
 (CACHE / "queries").mkdir(parents=True, exist_ok=True)
 
