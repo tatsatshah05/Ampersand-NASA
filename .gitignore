@@ -7,3 +7,6 @@ node_modules/
 dist/
 .DS_Store
 .env
+
+# Private checkouts used by AI agent sessions
+.claude/
