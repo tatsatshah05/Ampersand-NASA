@@ -33,7 +33,7 @@ chart, the spectrum, deployment.
 
 ## Who owns what
 
-Issues are in https://github.com/surani28/Ampersand-NASA/issues. Each issue says what
+Issues are in https://github.com/tatsatshah05/Ampersand-NASA/issues. Each issue says what
 to build and how to tell it is done.
 
 | Person | Area | Issues |
