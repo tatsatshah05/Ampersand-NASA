@@ -444,7 +444,10 @@ Cutouts
   (table: 1 row, columns X, Y, VALUES).
 - IMAGE header: `DETECTOR` (int 1-6), `OBSID`, `EXPIDN`, `DATE-OBS`/`MJD-OBS` (start),
   `DATE-AVG`/`MJD-AVG` (midpoint, used as the exposure time), `DATE-END`/`MJD-END`,
-  `XPOSURE` (113.58 s), `TIMESYS` UTC, `PSF_FWHM` (about 7.4 arcsec). `DATE` is the
+  `XPOSURE` (113.58 s), `TIMESYS` UTC, `PSF_FWHM` (one value per detector, the same in
+  every exposure: 7.53, 7.46, 7.45, 8.67, 8.63 and 9.04 arcsec for detectors 1 to 6, read
+  from the 364 Barnard's Star cutouts; the star image is not 7.4 arcsec wide everywhere,
+  and in a stacked frame it is wider still, 9.0 to 10.3 arcsec). `DATE` is the
   processing date, not the observation.
 - Sky WCS is `RA---TAN-SIP` (3rd order), ICRS, 6.15 arcsec per pixel; astropy's
   `WCS(header)` handles it and the star lands within half a pixel of the cutout centre.
@@ -622,9 +625,18 @@ Photometry checks (`scripts/check_photometry.py`, `scripts/check_flux_scale.py`)
 - RW Aurigae (326 exposures with a wavelength, 3 epochs): 131 fluxes, 167 saturated, 28
   flagged. Fluxes exist mostly in D1 (42), D2 (19), D5 (29), D6 (30); D3 and D4 are
   nearly all saturated. The spectrum rises from about 0.1-0.25 Jy at 0.75 microns to
-  1-3 Jy at 4-5 microns. Between 2025-09 and 2026-09 it brightened about 2.5 times at
-  0.75-0.84 microns and faded to about half at 3.9-5 microns (48 bins have 2+ fluxes;
-  brightest/faintest within a bin: median 1.41, largest 2.86).
+  1-3 Jy at 4-5 microns. 48 bins have 2+ fluxes; brightest/faintest within a bin: median
+  1.41, largest 2.86.
+- RW Aurigae's change, as checked independently (`docs/verification.md`, section 2): at
+  0.75 to 0.84 microns it was 2.0 to 2.6 times brighter in September 2026 than on 2
+  September 2025 (four same-wavelength pairs of single exposures), but those 2025
+  exposures fell in a dip that lasted a few days; AAVSO's figure from one September to
+  the next is 1.7 times (I band, centred near 0.8 microns). At 3.9 to 5 microns it was
+  about half as bright (0.45 to 0.53, measured and from the ring). Comparison stars in
+  the same exposures stayed constant to a few per cent. There is no outside check of the
+  infrared fading. Do not say "brightened 2.5 times in a year" without the dip. RW
+  Aurigae is a pair 1.5 arcsec apart that SPHEREx measures as one (`stars_in_circle`
+  names the companion).
 - R Draconis (496 exposures with a wavelength, 3 epochs of 2 to 3 months): saturated in
   every exposure of every detector; there is no flux at all. Flagged pixels reach 5 to
   8 native pixels from the star.
@@ -635,10 +647,15 @@ Photometry checks (`scripts/check_photometry.py`, `scripts/check_flux_scale.py`)
   1.14-1.25 and 1.88; D3 1.19-1.32 and 1.69. Hence `wing_trusted` only in D5 and D6.
   Why detectors 1 to 3 misbehave is not known.
 - With trusted wing values only, brightest/faintest within a bin: Barnard's Star median
-  1.07 (largest 1.37), RW Aurigae 1.72 (2.52), R Draconis 1.87 (3.17). R Draconis fades
-  through June 2025, is lower and rising from November 2025 to January 2026, and is
-  lowest in May to June 2026. That fits its 245-day period but has not been compared
-  with ground-based (AAVSO) data.
+  1.07 (largest 1.37), RW Aurigae 1.72 (2.52), R Draconis 1.87 (3.17).
+- R Draconis, checked independently against AAVSO (`docs/verification.md`, section 3):
+  the outer-light (ring) measure follows the 246-day cycle that AAVSO observers record,
+  with the infrared trailing the visible by 20 to 40 days (correlation +0.93 to +0.99
+  with that delay); brightest in May and June 2025, lower and rising from November 2025
+  to January 2026, faintest in May and June 2026. The same measure on Barnard's Star,
+  which does not vary, stays flat to 5 per cent (12 at worst). It is a relative
+  brightness, never a flux, and only three visits were sampled; "fading through
+  mid-2025" is not shown (changes within the first visit are the size of the scatter).
 - RW Aurigae has exposures with both a flux and a wing value. For same-bin pairs from
   different epochs in D5 and D6 (21 pairs, flux changing by 0.54 to 0.83) the wing
   changed by the same factor to within 4 per cent typically (one pair was off by a
@@ -656,6 +673,17 @@ Photometry checks (`scripts/check_photometry.py`, `scripts/check_flux_scale.py`)
   Barnard's Star 354 against 350 of 354; WISE 0855 0 against 0. The same after the 3
   arcsec rule for what the light curve follows (pipeline.VERSION 11, photometry.VERSION
   8), now that the frames count on the light curve's own choice (`measured`).
+
+Ghost rings of very bright stars (known limit, no filter)
+- Rings near very bright stars (seen at Epsilon Indi B, whose primary is G = 4.3:
+  `docs/results.md`, problem 4, detector 6 visits 1 and 3 and detector 5 visit 4) sit at
+  one sky position within a visit and at another in the next visit, so in the player and
+  in difference mode they look like changes on the sky. They are optical ghosts, not
+  changes.
+- The archive does not flag them: its ghost bits (GHOST, GHOST_FPA, GHOST_EXT, 22 to 24)
+  are set on no pixel of the roughly 2,500 cached cutouts of the five targets
+  (checked 2026-11-14). The backend has no filter for them and draws them as they are.
+  Say so when one shows; do not present a ring that moves between visits as a discovery.
 
 Unflagged negative pixels (found 2026-11-14)
 - Every target has pixels whose raw IMAGE value is more than 10 sigma below zero and
