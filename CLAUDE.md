@@ -107,12 +107,14 @@ answers about one request in three with an immediate 502.
   against measured position) and a frame details panel. `npm run dev` serves it on
   port 5173 and passes `/api` and `/frames` to the backend on port 8000. `npm run build`
   writes `frontend/dist`, which the backend serves at `/` when it exists.
+- The React app now has all of it: search by name or coordinates, the player, a
+  zoomable image with motion markers, the selectors, the Gaia overlay and field stars
+  (`/api/stars`), frame details, the flags layer (`flags_image`), the spectrum panel, the
+  brightness-over-time panel, and an Aladin Lite sky-context panel that is loaded only
+  when asked for (its servers in Strasbourg were down on 2026-11-14).
 - `frontend/public/viewer.html`: the earlier single-file viewer (plain HTML +
-  JavaScript, no build step, started by Anu for issue #8), kept at `/viewer.html` until
-  the app has its features: zoom, pan, a marker on each measured position, a trail, a
-  first/last blink, detector, field-of-view and mode selectors, the motion parameters,
-  and the spectrum on click. Search box, brightness chart and the Aladin Lite context
-  panel are not built in either. Both show only what the API returns: no sample or
+  JavaScript, no build step, started by Anu for issue #8), kept at `/viewer.html`. It
+  has nothing the app lacks any more. Both show only what the API returns: no sample or
   simulated data.
 - `scripts/`: one-off exploration and the cache warm-up script for the five targets.
 
@@ -135,7 +137,9 @@ Endpoints (adjust if something better emerges, and keep this list current):
   and `sum` (anything else answers 400). Defaults: fov 0.1 degrees, detector 5. Returns
   `size_px`, `pixel_arcsec`, `stretch`, `target`, `failures` and `frames`. Each frame has
   `epoch`, `date_start`, `date_end`, `date_mean`, `mjd_mean`, `image` (PNG path under
-  `/frames/`), `n_exposures`, `wavelength_um` [min, max], `flagged_fraction`,
+  `/frames/`), `flags_image` (normal and sum modes: overlay PNG, blue = no data,
+  red = saturated, transparent elsewhere), `n_exposures`, `wavelength_um` [min, max]
+  or null, `flagged_fraction`,
   `saturated_pixels`, `rejected_readings`, `centroid` and `predicted` (each with ra, dec,
   and x, y in PNG pixels from the top-left). In the PNG, north is up and east is left;
   white-with-no-detail pixels are saturated and transparent pixels have no data.
@@ -625,3 +629,20 @@ The marker is the target or nothing (`centroid`, checked 2026-11-14 on 41 views)
   3 arcsec, or a quarter of the fitted width if that is more. The margin is thin.
 - `astrometry.offset_arcsec` now takes the short way round in right ascension, so two
   points either side of RA 0h are no longer 360 degrees apart.
+
+Reading cutouts straight from S3 (confirmed 2026-11-14, `scripts/check_s3.py` repeats it)
+- `backend/s3fetch.py` reads only the image rows a cutout needs from the public bucket,
+  `https://nasa-irsa-spherex.s3.amazonaws.com/<key>` (the key is the IRSA URL after
+  `/ibe/data/spherex/`), with plain HTTPS `Range` requests and no account. One range per
+  request: a request naming two ranges is answered with the whole 65 MB file.
+- The file it writes is byte for byte the slim cutout made from IRSA's cutout service:
+  144 sampled exposures (34 clipped by a detector edge) and, in a full run, all 364 for
+  Barnard's Star, with 0 differing pixels, header lines or bytes.
+- Speed from this machine: one detector at 0.15 degrees (62 cutouts) in 7.9 s, all six
+  detectors (364) in 42 s, one detector at 0.5 degrees in 21 s, no retries. Through IRSA
+  the same 364 took 247 s. A view that is not cached now answers in about 15 s (was 52 s).
+- `spherex.fetch_cutout` tries S3 first and falls back to IRSA for that cutout on any
+  failure. `SPHEREX_USE_S3=0` turns S3 off. The tests run with it off.
+- FLAGS is tile-compressed in the full files (one tile per image row), so its size
+  differs from file to file and every later extension starts at a different byte: the
+  headers are read, never assumed.

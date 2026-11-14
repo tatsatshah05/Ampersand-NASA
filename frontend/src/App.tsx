@@ -1,10 +1,14 @@
 // The page: which patch of sky to show and how (kept in the page address), the frames
 // for it, and the player around them. Issues #5 (player), #7 (selectors) and #8 (motion
-// markers). The Gaia overlay (#10), frame details (#12) and spectrum (#11) are
-// components of their own that only need the frames and the frame on screen.
+// markers). The Gaia overlay and field stars (#10), frame details, flags and sky context
+// (#12), spectrum (#11) and brightness chart (#9) are components of their own that only
+// need the frames and the frame on screen.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { addressOf, DEFAULT_SELECTION, readAddress, toFramesQuery, withTarget, writeAddress, type Selection } from './address'
 import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
+import { BrightnessPanel } from './components/BrightnessPanel'
+import { ContextView } from './components/ContextView'
+import { FieldStars } from './components/FieldStars'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
@@ -18,6 +22,7 @@ import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
 import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
 import { targetMotion, type SpectrumRequest } from './spectrum'
+import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
 import { useFrames } from './useFrames'
 import { usePlayer } from './usePlayer'
 import { failuresSentence, frameLabel, frameTick, modeSentence, motionSentence, saturationSentence } from './wording'
@@ -40,6 +45,15 @@ export default function App() {
   const [zoomed, setZoomed] = useState<{ sky: string; box: ZoomBox } | null>(null)
   // Issue #11: what the spectrum panel is showing, or null when it is closed.
   const [spectrum, setSpectrum] = useState<SpectrumRequest | null>(null)
+  // Issue #9: whose brightness over time is shown, or null when that panel is closed.
+  const [brightness, setBrightness] = useState<SpectrumRequest | null>(null)
+  // Issue #12: colour the pixels with no data and the saturated ones.
+  const [showFlags, setShowFlags] = useState(false)
+  // Issue #12: the same patch of sky in other surveys. Off until asked for: it loads a
+  // large sky-atlas library and depends on servers in Strasbourg that are not always up.
+  const [showContext, setShowContext] = useState(false)
+  // Issue #10: the Gaia stars of the view, placed on every visit's frame, and the view they belong to.
+  const [stars, setStars] = useState<{ view: string; data: StarsResponse } | { view: string; error: string } | null>(null)
 
   const url = framesUrl(toFramesQuery(selection))
   const load = useFrames(url, attempt)
@@ -63,7 +77,10 @@ export default function App() {
     // An open spectrum belongs to the target it was asked for: its place and its motion.
     const sameTarget =
       next.ra === was.ra && next.dec === was.dec && next.pmra === was.pmra && next.pmdec === was.pmdec && next.parallax === was.parallax
-    if (!sameTarget) setSpectrum(null)
+    if (!sameTarget) {
+      setSpectrum(null)
+      setBrightness(null)
+    }
     setSelection(next)
     setNotes([])
     writeAddress(next, how)
@@ -93,6 +110,7 @@ export default function App() {
     const onPop = () => {
       const read = readAddress(window.location.search)
       setSpectrum(null)
+      setBrightness(null)
       setSelection(read.selection)
       setNotes(read.notes)
     }
@@ -123,6 +141,31 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [severalFrames, togglePlay, step])
+
+  // ---- field stars (issue #10) ---------------------------------------------------------------
+
+  // Asked for only once the frames have arrived: /api/stars needs the same exposures, and
+  // asking for both at once would fetch a view that is not cached twice over.
+  const { ra, dec, fov, det, pmra, pmdec, parallax } = selection
+  const starsView = `${ra},${dec},${fov},${det},${pmra},${pmdec},${parallax}`
+  const framesReady = data !== null
+  useEffect(() => {
+    if (!framesReady) return
+    const ctrl = new AbortController()
+    const motion = pmra !== null && pmdec !== null ? { pmra, pmdec, parallax } : undefined
+    fetchStars({ ra, dec, fov, detector: det, motion }, ctrl.signal)
+      .then((found) => setStars({ view: starsView, data: found }))
+      .catch((e: unknown) => {
+        if (!ctrl.signal.aborted) setStars({ view: starsView, error: e instanceof Error ? e.message : String(e) })
+      })
+    return () => ctrl.abort()
+  }, [framesReady, starsView, ra, dec, fov, det, pmra, pmdec, parallax])
+  const starsData = stars && stars.view === starsView && 'data' in stars ? stars.data : null
+  const starsError = stars && stars.view === starsView && 'error' in stars ? stars.error : null
+  // The stars are placed on each visit's frame. Find the visit on screen among them: a
+  // difference view leaves the first visit out, and a sum has no single visit at all.
+  const starsFrame = starsData && frame && frame.epoch !== null ? starsData.frames.findIndex((f) => f.epoch === frame.epoch) : -1
+  const hasFlags = data !== null && data.frames.every((f) => f.flags_image)
 
   // ---- what is drawn over the picture ------------------------------------------------------
 
@@ -161,11 +204,12 @@ export default function App() {
   const motionKnown = givenMotion !== null || (data?.target?.pmra != null && data.target.pmdec != null)
   const saturation = data && saturationSentence(data)
   const failures = data && failuresSentence(data)
-  const toggle = (on: boolean, set: (on: boolean) => void, text: string, title: string) => (
+  const toggle = (on: boolean, set: (on: boolean) => void, text: string, title: string, disabled = false) => (
     <button
       type="button"
       className="toggle"
       aria-pressed={on}
+      disabled={disabled}
       title={title}
       onClick={(e) => {
         set(!on)
@@ -261,6 +305,10 @@ export default function App() {
             >
               {(scale) => (
                 <>
+                  {showFlags && frame.flags_image && <img className="flags" src={frame.flags_image} alt="" />}
+                  {showGaia && starsData && starsFrame >= 0 && (
+                    <FieldStars data={starsData} current={starsFrame} sizePx={load.data.size_px} pixelArcsec={load.data.pixel_arcsec} />
+                  )}
                   {showMotion && (
                     <MotionLayer
                       sizePx={grid.sizePx}
@@ -328,6 +376,15 @@ export default function App() {
                 'Mark where the target should be according to its catalogued motion',
               )}
               {toggle(showPixels, setShowPixels, 'Show pixels', 'Hard-edged pixels instead of smooth scaling, with their edges drawn when zoomed in')}
+              {toggle(
+                showFlags && hasFlags,
+                setShowFlags,
+                'Flags',
+                hasFlags
+                  ? 'Colour the pixels with no data and the ones too bright to measure'
+                  : 'A difference view has no flags layer: it is already blank wherever either visit has no data',
+                !hasFlags,
+              )}
               <button
                 type="button"
                 onClick={() =>
@@ -336,7 +393,25 @@ export default function App() {
               >
                 Spectrum of the target
               </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setBrightness({ kind: 'target', ra: load.data.ra, dec: load.data.dec, motion: targetMotion(load.data.target) })
+                }
+              >
+                Brightness over time
+              </button>
             </div>
+
+            {showFlags && hasFlags && (
+              <p className="readout">
+                <span className="key nodata">■</span> no data · <span className="key saturated">■</span> saturated: no
+                value in any exposure of this frame
+                {frame.saturated_pixels === 0 && ' (none here)'}
+                {(frame.photometry_saturated_exposures ?? 0) > 0 &&
+                  `. For measuring brightness the star's core is saturated in ${frame.photometry_saturated_exposures} of this frame's ${frame.n_exposures} exposures, even where the image looks fine.`}
+              </p>
+            )}
 
             {showPixels && (
               <p className="hint">
@@ -363,10 +438,29 @@ export default function App() {
                   this frame; the arrow is one year of that motion.
                 </p>
               ))}
+            {showGaia && starsData && starsFrame >= 0 && <p className="readout">{fieldStarsSummary(starsData, load.data.pixel_arcsec)}</p>}
+            {showGaia && starsData && starsFrame < 0 && (
+              <p className="hint">The other Gaia stars are drawn on single visits only, so not on a sum of all visits.</p>
+            )}
+            {showGaia && starsError && <p className="hint">The other Gaia stars could not be loaded: {starsError}.</p>}
           </section>
 
-          <FrameDetails frame={load.data.frames[player.current]} detector={load.data.detector} />
+          <div className="side">
+            <FrameDetails frame={load.data.frames[player.current]} detector={load.data.detector} />
+            {showContext ? (
+              <ContextView ra={selection.ra} dec={selection.dec} fov={selection.fov} />
+            ) : (
+              <section className="panel" aria-label="Sky context">
+                <h2>Sky context</h2>
+                <p className="hint">The same patch of sky in other surveys (WISE, 2MASS, optical), from the Aladin sky atlas.</p>
+                <button type="button" onClick={() => setShowContext(true)}>
+                  Show other surveys
+                </button>
+              </section>
+            )}
+          </div>
           {spectrum && <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />}
+          {brightness && <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} />}
         </>
       )}
 

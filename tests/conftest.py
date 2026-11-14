@@ -63,6 +63,10 @@ def pytest_configure(config: pytest.Config) -> None:
         cache = Path(tempfile.mkdtemp(prefix="spherex-cache-"))
     config.stash[_CACHE_DIR] = cache
     os.environ["SPHEREX_CACHE_DIR"] = str(cache)
+    # Cutouts normally come from the public S3 bucket first. The tests never touch the
+    # network, so that route is switched off here; the fallback test turns it on with a
+    # stand-in for the bucket.
+    os.environ["SPHEREX_USE_S3"] = "0"
 
 
 @pytest.fixture(scope="session")

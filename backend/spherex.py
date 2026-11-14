@@ -21,12 +21,15 @@ from astropy.io import fits
 from astropy.io.votable import parse_single_table
 from astropy.wcs import WCS, FITSFixedWarning
 
+from . import s3fetch
+
 warnings.simplefilter("ignore", FITSFixedWarning)
 
 SIA_URL = "https://irsa.ipac.caltech.edu/SIA"
 # Level-2 spectral image collections. DR1 holds the first year; QR3 the newest weeks.
 COLLECTIONS = ["spherex_dr1", "spherex_qr3"]
-MAX_CONCURRENT = 6
+MAX_CONCURRENT = 6       # requests to IRSA at once
+S3_IN_HAND = 8           # cutouts being read from S3 at once (each is up to five requests)
 # Everything downloaded or built is kept here. SPHEREX_CACHE_DIR moves it: to a
 # persistent disk when deployed, or to one shared folder when several checkouts of the
 # code run on the same machine.
@@ -129,16 +132,34 @@ def _cutout_path(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
     return CACHE / "cutouts" / tag / f"{exp['obs_id']}_D{exp['detector']}.fits"
 
 
-def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
-    """Download one cutout (if not cached) and store a slimmed copy.
+def use_s3() -> bool:
+    """Read cutouts from the public S3 bucket first? SPHEREX_USE_S3=0 turns it off."""
+    return os.environ.get("SPHEREX_USE_S3", "1") != "0"
 
-    IRSA's cutout is about 4 MB, nearly all of it the EPSF table. The cached copy
-    keeps IMAGE, FLAGS, VARIANCE and ZODI, and replaces the WCS-WAVE lookup table
-    with two per-pixel images, WAVE and BANDWIDTH (microns). About 260 kB at 0.15 deg.
+
+def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
+    """Get one cutout (if not cached) and store a slimmed copy.
+
+    Two routes give the same file, byte for byte (`scripts/check_s3.py` proves it):
+    - the public S3 copy of the archive, reading only the image rows needed
+      (`backend/s3fetch.py`): about 0.13 s per cutout with 16 requests in flight;
+    - IRSA's cutout service: about 4 MB per cutout, nearly all of it the EPSF table,
+      about 0.7 s each at six in parallel, and one request in three refused.
+    S3 is tried first and IRSA is the fallback, so a cutout is only reported as failed
+    when both routes failed.
+
+    The cached copy keeps IMAGE, FLAGS, VARIANCE and ZODI, and replaces the WCS-WAVE
+    lookup table with two per-pixel images, WAVE and BANDWIDTH (microns). About 260 kB
+    at 0.15 deg.
     """
     path = _cutout_path(exp, ra, dec, size_deg)
     if path.exists():
         return path
+    if use_s3():
+        try:
+            return s3fetch.fetch_cutout(exp, ra, dec, size_deg, path)
+        except Exception:  # noqa: BLE001 - whatever went wrong there, IRSA still has the cutout
+            pass
     raw = http_get(f"{exp['url']}?center={ra:.6f},{dec:.6f}&size={size_deg:.5f}")
     with fits.open(io.BytesIO(raw)) as hdul:
         header = hdul["IMAGE"].header
@@ -164,7 +185,11 @@ def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
 
 def fetch_cutouts(exposures: list[dict], ra: float, dec: float, size_deg: float,
                   progress=None) -> list[tuple[dict, Path | None, str | None]]:
-    """Fetch many cutouts, at most MAX_CONCURRENT at a time.
+    """Fetch many cutouts, a few at a time.
+
+    S3 reads share one connection pool with its own cap on requests in flight; IRSA
+    requests are still limited to MAX_CONCURRENT by `http_get`, whatever the number
+    of cutouts in hand here.
 
     Returns (exposure, path, error) for each. A cutout that could not be fetched
     has path None and a reason; it is reported, never replaced with anything.
@@ -176,7 +201,7 @@ def fetch_cutouts(exposures: list[dict], ra: float, dec: float, size_deg: float,
             return exp, None, f"{type(e).__name__}: {e}"
 
     results = []
-    with ThreadPoolExecutor(MAX_CONCURRENT) as pool:
+    with ThreadPoolExecutor(S3_IN_HAND if use_s3() else MAX_CONCURRENT) as pool:
         for n, res in enumerate(pool.map(one, exposures), 1):
             results.append(res)
             if progress:

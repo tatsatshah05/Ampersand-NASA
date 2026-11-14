@@ -194,6 +194,44 @@ def test_cutouts_are_filed_by_centre_size_exposure_and_detector():
     assert spherex._cutout_path({**exposure, "detector": 6}, 269.446267, 4.768222, 0.15).name.endswith("_D6.fits")
 
 
+def test_s3_is_tried_first_and_irsa_is_the_fallback(monkeypatch: pytest.MonkeyPatch, tmp_path):
+    """A cutout comes from S3 when S3 answers, and from IRSA when it does not."""
+    exposure = {"obs_id": "2099W01_1A_0001_1", "detector": 5, "url": "https://irsa.example/a.fits"}
+    routes: list[str] = []
+
+    def s3_answers(exp, ra, dec, size_deg, path, **_):
+        routes.append("s3")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"from s3")
+        return path
+
+    def s3_is_down(exp, ra, dec, size_deg, path, **_):
+        routes.append("s3 failed")
+        raise spherex.s3fetch.S3Error("the bucket did not answer")
+
+    def irsa(url: str, params: dict | None = None, **_: object) -> bytes:
+        routes.append("irsa")
+        raise spherex.ArchiveError("stop here: the test only needs to see IRSA being asked")
+
+    monkeypatch.setenv("SPHEREX_USE_S3", "1")
+    monkeypatch.setattr(spherex, "http_get", irsa)
+    monkeypatch.setattr(spherex.s3fetch, "fetch_cutout", s3_answers)
+    assert spherex.fetch_cutout(exposure, 40.0, 20.0, 0.15).read_bytes() == b"from s3"
+    assert routes == ["s3"]
+
+    routes.clear()
+    monkeypatch.setattr(spherex.s3fetch, "fetch_cutout", s3_is_down)
+    with pytest.raises(spherex.ArchiveError):
+        spherex.fetch_cutout({**exposure, "detector": 6}, 40.0, 20.0, 0.15)
+    assert routes == ["s3 failed", "irsa"]
+
+    routes.clear()
+    monkeypatch.setenv("SPHEREX_USE_S3", "0")
+    with pytest.raises(spherex.ArchiveError):
+        spherex.fetch_cutout({**exposure, "detector": 4}, 40.0, 20.0, 0.15)
+    assert routes == ["irsa"]
+
+
 def test_a_cutout_that_cannot_be_fetched_is_reported_not_raised(network: list[str]):
     exposures = [{"obs_id": "2099W01_1A_0001_1", "detector": 5, "url": "https://irsa.example/a.fits"},
                  {"obs_id": "2099W01_1A_0001_2", "detector": 5, "url": "https://irsa.example/b.fits"}]
