@@ -265,12 +265,17 @@ def test_a_motion_given_in_the_request_makes_the_request_the_target(client: Test
                                                                     normal: SimpleNamespace, gaia_down: None,
                                                                     network: list[str]):
     """How an object Gaia does not list (WISE 0855) gets an expected position: the page passes on
-    pmra, pmdec and parallax from /api/resolve, for an object that is at (ra, dec) in 2026.0."""
+    pmra, pmdec and parallax from /api/resolve, for an object that is at (ra, dec) in 2026.0.
+
+    Gaia is down here. The target and its predicted positions do not need it. Gaia is still
+    asked (briefly), because its stars are the known neighbours of detection_sigma, and its
+    silence is reported so that the answer is not cached."""
     response = client.get("/api/frames", params={"ra": barnard.ra, "dec": barnard.dec, **barnard.motion})
     assert response.status_code == 200, response.text
     answer = response.json()
-    assert answer["target"]["origin"] == "request" and answer["gaia_error"] is None
-    assert astrometry.GAIA_TAP not in network                             # Gaia is not needed, so not asked
+    assert answer["target"]["origin"] == "request" and answer["gaia_error"]
+    assert astrometry.GAIA_TAP in network
+    assert not (pipeline.FRAMES_DIR / answer["key"] / "frames.json").exists()
     for frame, by_gaia in zip(answer["frames"], normal.frames, strict=True):
         # Same star, started from 2026.0 instead of Gaia's 2016.0. The two predictions differ by the
         # radial velocity that only astrometry.propagate applies. Measured: 0.063 arcsec. Leaving

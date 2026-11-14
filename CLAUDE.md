@@ -149,17 +149,43 @@ Endpoints (adjust if something better emerges, and keep this list current):
     uncorrectable pixels. Those pixels usually still hold a value, so a frame can look
     fine, report 0 `saturated_pixels`, and have every exposure unusable for brightness.
   - `centroid` is the target, measured, or null. When the view has a `target`
-    (`centroid_is` "target"), a source is fitted starting within 6 arcsec of `predicted`
-    and kept only if it is a detection (fitted S/N 4 or more, width 6 to 36 arcsec) no
-    further from `predicted` than 3 arcsec, or a quarter of its own width if that is more
-    (a saturated star is located from its wings). Otherwise `centroid` is null,
-    `centroid_reason` says why in plain words, and `nearest_source` holds what was found
-    instead when that was another object (the same fields as `centroid`, plus its own
-    `offset_arcsec`). `centroid_offset_arcsec` is centroid minus predicted: `east`,
-    `north`, `total`. With no target at all (`centroid_is` "brightest_near_centre")
-    `centroid` is the brightest source within 14 arcsec of the centre, as before, and
-    the offset is null. `centroid_note` states which of the two applies. The fields
-    inside `centroid` itself are unchanged.
+    (`centroid_is` "target"), it is there only if the target is detected at `predicted`
+    (`detection_sigma` 3 or more, or `detection` "saturated", see below) and a source
+    shaped like a star (width 6 to 36 arcsec), fitted starting within 6 arcsec of
+    `predicted`, lies no further from it than 3 arcsec, or a quarter of its own width if
+    that is more (a saturated star is located from its wings). Otherwise `centroid` is
+    null, `centroid_reason` says why in plain words, and `nearest_source` holds what was
+    found instead when that was another object (the same fields as `centroid`, plus its
+    own `offset_arcsec`, `detection_sigma` and `detection`; the last two are null when
+    it was not measured on its own). `centroid_offset_arcsec` is centroid minus
+    predicted: `east`, `north`, `total`. With no target at all (`centroid_is`
+    "brightest_near_centre") `centroid` is the brightest source within 14 arcsec of the
+    centre, as before, and the offset is null. `centroid_note` states which of the two
+    applies.
+  - `detection_sigma` (per frame): how strongly the target is detected, in multiples of
+    the noise, measured the same way at the target and at the frame's empty places. The
+    brightness of a star image of fixed width centred exactly on `predicted` is fitted
+    together with a constant sky and with every Gaia star within 25 arcsec held at its
+    catalogue place (so a neighbour's light is not taken for the target's); the same fit
+    is made on a 12 arcsec grid of empty places (at least 18 arcsec from any Gaia star and
+    from the target); `detection_sigma` is the target's value minus their median, over
+    their scatter (1.4826 x median absolute deviation, after setting aside places more
+    than 3 times that out, which hold sources no catalogue here lists), scaled up when a
+    close neighbour shares the light. `detection`: "clear" (5 or more), "marginal" (3 to
+    5), "none" (below 3), "saturated" (the detector overflowed at the place: certainly
+    detected, no number), "unknown" (too few empty places or pixels to say, which can
+    happen in fields of view under about 0.05 degrees; the decision then falls back to the
+    fit's own S/N of 4).
+    `detection_measure` has the parts: `flux_mjy` (the fitted brightness, a rough flux),
+    `noise_mjy`, `blank_median_mjy`, `n_blank_places`, `n_blank_set_aside`,
+    `n_blank_as_strong` (empty places that reach the same value), `n_neighbours_fitted`,
+    `star_fwhm_arcsec`, `status` and `at` ("predicted", or "centroid" when there is no
+    target). `detection_note` in the response says the same. Without a target it is
+    measured where the centroid was found, which favours it a little.
+  - `centroid.snr` is kept for compatibility, but it is the fitted height over the
+    scatter left around the fit, NOT a detection strength: started on empty sky that fit
+    returns 5 or more at 3 of 78 places in one WISE 0855 frame and at about 20 of 78 in
+    two others (`docs/verification.md`). Show `detection_sigma` instead.
   - Optional `pmra=&pmdec=&parallax=` (mas/yr, mas, exactly as `/api/resolve` returns
     them; `pm_epoch` defaults to 2026.0): the object at (ra, dec) with that motion becomes
     `target`, so `predicted` works for objects Gaia does not list. Without them `target`
@@ -268,12 +294,16 @@ same entry at the same time.
    combined pixel distribution; the top of the scale is the brightest pixel so bright
    stars keep their shape). Per-frame auto-scaling would make brightness changes
    look fake or hide real ones.
-8. Measure the target in each frame: a round Gaussian fitted to valid pixels only (so a
-   saturated star is located from its wings), started at the brightest pixel within 6
-   arcsec of the predicted place. It counts as the target only if it is detected and
-   within 3 arcsec of the prediction (see `centroid` under Endpoints); otherwise there
-   is no centroid, and the reason is given. Only a view with no target at all falls back
-   to the brightest source near the centre.
+8. Measure the target in each frame. First how strongly it is detected at the predicted
+   place (`detection_sigma`: a fixed-position fit with the known Gaia neighbours,
+   compared with the same fit at the frame's empty places). Then where it is: a round
+   Gaussian fitted to valid pixels only (so a saturated star is located from its wings),
+   started at the brightest pixel within 6 arcsec of the predicted place. It counts as
+   the target only if it is detected (3 times the noise or more) and within 3 arcsec of
+   the prediction (see `centroid` under Endpoints); otherwise there is no centroid, and
+   the reason is given. Only a view with no target at all falls back to the brightest
+   source near the centre. Gaia is asked for the view's stars even when the request gives
+   a motion (3 short tries then): they are the known neighbours.
 9. Write PNGs and return the metadata.
 
 Difference mode subtracts the stacked images of step 6 pixel by pixel, with no flux
@@ -427,8 +457,9 @@ Stacking and glitches (`pipeline.Stacker`, `scripts/check_stack.py`, 2026-11-14)
 - The rule alone removes the dark spots it was first written for: with
   `impossible_pixels` switched off, Barnard's Star detector 5 visit 3 has a darkest
   pixel of -3.9 sigma with nothing dropped and -0.8 with the rule. WISE 0855 detector 6
-  visit 3: -11.4 against -3.6; the target's brightness, S/N (5.0, 18.6, 27.4) and
-  position are the same as under the old rule.
+  visit 3: -11.4 against -3.6; the target's brightness, the fit's own S/N (5.0, 18.6,
+  27.4; not a detection strength, see `detection_sigma`) and position are the same as
+  under the old rule.
 - Barnard's Star detector 5 against the old rule: the same shifts (`check_barnard.py`),
   and 38 to 139 of the 32400 pixels of each frame differ, none by more than 2 grey levels.
 - Known cost: something that two exposures show at overlapping places counts as seen
@@ -585,21 +616,36 @@ Unflagged negative pixels (found 2026-11-14)
   before stacking and photometry treats them as empty. Barnard's Star numbers did not
   change.
 
-WISE 0855 in detector 6 (fov 0.1, motion from `/api/resolve`; `scripts/check_modes.py`)
-- 45 exposures in three epochs (3, 21 and 21). A faint source sits at the predicted
-  place in every epoch: measured minus predicted (-0.7, +0.5), (-1.2, +0.5) and
-  (-0.6, +0.9) arcsec east, north; fitted S/N 5, 19 and 27. Epoch 2 to 3 it moved
-  (-3.7, +0.9) arcsec against a predicted (-4.4, +0.5).
-- Sum of all 45: S/N 24, FWHM 11.7 arcsec sky-registered; S/N 32, FWHM 10.9 arcsec
-  following the motion.
-- Difference against epoch 1 shows a white spot at the epoch 3 position; the dark half
-  of the pair is lost in the noise of the 3-exposure reference. Other detectors were
-  not examined here.
-- A Gaia star (DR3 5756956644387831296, G = 16.3, nearly static) lies 11.4, 8.1 and 4.4
-  arcsec from WISE 0855's catalogue place in epochs 1, 2 and 3. The measured source is
-  not that star: its offset from the star goes (+9.9, -3.6), (+5.9, -3.4), (+2.2, -2.5)
-  arcsec, a 7.7 arcsec westward move, as predicted. But by epoch 3 the two are closer
-  than one native pixel and the star's share of the light was not separated out.
+WISE 0855 (fov 0.1, motion from `/api/resolve`; checked independently in
+`docs/verification.md`, section 1, on single exposures with separate code)
+- What is established: SPHEREx detects WISE 0855 in detectors 5 and 6 only (3.8 to 5.0
+  microns), at about 0.5 mJy at 4.4 to 5 microns, and nothing certain below 3.8 microns
+  (16 bins from 0.75 to 3.8 microns each within 0.02 mJy of zero). With the neighbouring
+  star's light removed it is within 0.4 arcsec of the prediction in every visit and moves
+  8.4 +/- 0.4 arcsec west in a year (0.986 years from visit 1 to 3) against 8.0 predicted.
+  The place it left is empty a year later.
+- A Gaia star (DR3 5756956644387831296, G = 16.3, nearly static, about a third as
+  bright as WISE 0855 at 4.6 microns) lies 11.4, 8.1 and 4.3 arcsec from WISE 0855 in
+  visits 1, 2 and 3. In visit 3 the two are one blob in 6-arcsec pixels and the star
+  supplies about a quarter of the detector 6 light (22 to 25 per cent; 42 per cent in
+  detector 5).
+- Detector 6, visit 1 has only 3 exposures (all at 4.86 to 5.0 microns) and the source is
+  marginal there (3.7 times the noise in the independent check). Detector 5 has 8
+  exposures in that visit and shows it at 13.
+- `detection_sigma` of the frames (motion passed): detector 6 visits 1 to 3: 3.4
+  ("marginal"), 14.6, 11.2; detector 5: 10.9, 12.5, 8.8; detectors 1 to 4: -1.3 to 2.9,
+  all "none". The independent check gave 3.7, 17.5, 14.2 and 12.9, 17.3, 12.5. The
+  frames' fitted brightness in detector 6 is 0.29, 0.48, 0.48 mJy (check: 0.28, 0.47,
+  0.46). Without the star fitted as a neighbour, detectors 1 to 4 showed up to 60 times
+  the noise at the predicted place, all of it the star.
+- Sum of all 45 detector 6 exposures: `detection_sigma` 15.3 lined up on the sky, 18.9
+  following the motion (detector 5 following it: 18.2).
+- The markers sit 0.8 to 1.3 arcsec from the prediction, pulled toward the star (the
+  fit takes in its light); the position with the star removed is within 0.4 arcsec. The
+  older figures "S/N 5, 19 and 27" and "within 1.3 arcsec" were the fit's own S/N (not
+  a detection strength) and, in visit 3, partly the star: do not quote them.
+- Difference against epoch 1 (detector 6) shows a white spot at the epoch 3 position;
+  the dark half of the pair is lost in the noise of the 3-exposure reference.
 - Without `pmra`/`pmdec`, `/api/frames` at this position picks that Gaia star as
   `target` (it is within 15 arcsec of the centre). The frontend must pass the motion
   from `/api/resolve` for objects Gaia does not list.
@@ -607,14 +653,12 @@ WISE 0855 in detector 6 (fov 0.1, motion from `/api/resolve`; `scripts/check_mod
 The marker is the target or nothing (`centroid`, checked 2026-11-14 on 41 views)
 - Before, `centroid` was whatever was brightest within 14 arcsec of the predicted place.
   At WISE 0855 in detector 1, with the motion passed, that was the Gaia star of the
-  section above: S/N 41, 59 and 48 at 11.4, 8.6 and 4.4 arcsec from the prediction. Now
-  those three frames have `centroid` null, `centroid_reason` "The nearest source is 4.4
-  arcsec from the predicted position, too far to be the target." and that star in
-  `nearest_source`.
-- WISE 0855 detector 6 with the motion keeps its three markers (S/N 5.0, 18.6, 27.4;
-  0.8, 1.3 and 1.1 arcsec from the prediction). Without the motion the target is the
-  Gaia star, what is measured is the brown dwarf 10.5, 6.8 and 3.3 arcsec from it, and
-  all three frames now say so with a null `centroid`.
+  section above (fit S/N 41, 59 and 48) at 11.4, 8.6 and 4.4 arcsec from the prediction.
+  Now those three frames have `centroid` null, and that star in `nearest_source`.
+- WISE 0855 detector 6 with the motion keeps its three markers (0.8, 1.3 and 1.1 arcsec
+  from the prediction; `detection_sigma` 3.4 "marginal", 14.6, 11.2). Without the motion
+  the target is the Gaia star, what is measured is the brown dwarf 10.5, 6.8 and 3.3
+  arcsec from it, and all three frames now say so with a null `centroid`.
 - Every other marker of the 41 views is where it was: Barnard's Star in all six
   detectors (0.1 to 1.5 arcsec from the prediction), Epsilon Indi B detector 5 (0.5 to
   0.8), RW Aurigae detectors 1, 3, 5 (0.1 to 1.5) and R Draconis detectors 1, 3, 5 (0.3
@@ -625,6 +669,32 @@ The marker is the target or nothing (`centroid`, checked 2026-11-14 on 41 views)
   3 arcsec, or a quarter of the fitted width if that is more. The margin is thin.
 - `astrometry.offset_arcsec` now takes the short way round in right ascension, so two
   points either side of RA 0h are no longer 360 degrees apart.
+
+Detection strength (`detection_sigma`, pipeline.VERSION 7, checked 2026-11-14 on 60 views:
+five targets, six detectors, with and without the motion, fov 0.1)
+- Why: the fit's own `snr` is not a detection strength (it is 5 or more at many empty
+  places), yet it decided whether a marker was drawn. Now `detection_sigma` decides.
+- Every marker of the 60 views is where it was under version 6 (same frames, same
+  centroid or none); the pictures are byte for byte the same; the `check_barnard.py`
+  shifts are unchanged. 115 frames are "clear", 54 "saturated", 1 "marginal" (WISE 0855
+  detector 6, visit 1) and 13 "none" (WISE 0855 detectors 1 to 4 with the motion, and
+  the Gaia star at WISE 0855's place in detector 6, visit 1, when the motion is left out).
+- A first version used a plain circle of 6 arcsec radius minus a local sky. It gave the
+  right answer in detectors 5 and 6 of WISE 0855 but 3.7 to 60 times the noise in
+  detectors 1 to 4, all of it the G = 16.3 star 4 to 11 arcsec away. Fitting known Gaia
+  neighbours at their catalogue places brought those to -1.3 to 2.9.
+- Width of a star in a stacked frame, measured on isolated field stars (Barnard's Star
+  and WISE 0855 fields, three visits each): 9.0 arcsec in detectors 1 to 3, 9.9 in 4,
+  10.0 in 5, 10.3 in 6, spread 0.1 to 0.7 within a frame. These fixed widths are used.
+- Empty places per frame at fov 0.1: 355 to 650 kept, 5 to 245 set aside as holding a
+  source no catalogue here lists (most at R Draconis, 166 to 245; why was not examined).
+  In WISE 0855 detector 2 visit 2, 61 of 656 empty places reach the 2.9 of
+  the target position: `n_blank_as_strong` says how unusual a value is in that frame.
+- Limits: only Gaia stars brighter than G = 17 are known neighbours. An object Gaia does
+  not list (WISE 0855 itself, seen from the Gaia star's place without the motion) is not
+  separated, and adds its light. The fixed star width does not fit a saturated star or
+  the smeared stars of a target-following sum; there `detection_sigma` is only a
+  yes-or-no, and saturated places count as detected.
 
 Reading cutouts straight from S3 (confirmed 2026-11-14, `scripts/check_s3.py` repeats it)
 - `backend/s3fetch.py` reads only the image rows a cutout needs from the public bucket,

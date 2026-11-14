@@ -294,6 +294,86 @@ def test_fit_gives_nothing_rather_than_a_guess():
     assert pipeline.fit_source(made_up_star(5.0, 5.0), 5.0, 5.0) is None        # too close to the edge
 
 
+# ------------------------------------------------------------ detection_sigma
+
+FWHM = 10.0                                        # arcsec, as in a detector 5 stack
+SIGMA_PX = FWHM / 2.3548 / pipeline.GRID_ARCSEC    # 2.1 grid pixels
+
+
+def sky_with(*sources: tuple[float, float, float], noise: float = 0.01, seed: int = 11) -> np.ndarray:
+    """A made-up 180 x 180 stack: white noise and round Gaussians (x, y, total in MJy/sr x grid pixel)."""
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:180, 0:180]
+    image = rng.normal(0.0, noise, (180, 180))
+    for x, y, total in sources:
+        image += total * np.exp(-((xx - x) ** 2 + (yy - y) ** 2) / (2 * SIGMA_PX ** 2)) / (2 * np.pi * SIGMA_PX ** 2)
+    return image
+
+
+def test_detection_sigma_of_a_made_up_star_and_of_nothing():
+    image = sky_with((90.3, 89.6, 1.5))
+    known = np.array([[90.3, 89.6]])                         # the target, kept off the empty places
+    noise = pipeline.noise_at_empty_places(image, FWHM, known)
+    assert noise is not None and noise["n_places"] > 400      # a 12 arcsec grid over the picture
+    # For white noise the scatter of a fitted flux can be worked out: noise x sqrt(4 pi s^2),
+    # a little more because the sky level is fitted too. Measured: 1.21 times that.
+    ideal = 0.01 * np.sqrt(4 * np.pi * SIGMA_PX ** 2) * pipeline.GRID_PIXEL_MJY
+    assert 1.0 < noise["scatter_mjy"] / ideal < 1.5
+    star = pipeline.detection(image, 90.3, 89.6, FWHM, np.zeros((0, 2)), noise)
+    assert star["status"] == "measured"
+    assert star["flux_mjy"] == pytest.approx(1.5 * pipeline.GRID_PIXEL_MJY, rel=0.1)
+    assert 12 < star["sigma"] < 30                            # 1.5 / (1.21 x 0.075): about 16
+    assert star["n_blank_as_strong"] == 0 and pipeline.detection_word(star) == "clear"
+    nothing = pipeline.detection(image, 40.0, 130.0, FWHM, known, noise)
+    assert abs(nothing["sigma"]) < 3 and pipeline.detection_word(nothing) == "none"
+
+
+def test_a_known_neighbour_is_not_counted_as_the_target():
+    """WISE 0855 in detectors 1 to 4: nothing at the predicted place, a star 4.4 arcsec away."""
+    star = (92.2, 90.0, 3.0)                                   # 2.2 grid pixels = 4.4 arcsec east... of x = 90
+    image = sky_with(star)
+    neighbour = np.array([[star[0], star[1]]])
+    noise = pipeline.noise_at_empty_places(image, FWHM, np.vstack([neighbour, [[90.0, 90.0]]]))
+    fitted_with = pipeline.detection(image, 90.0, 90.0, FWHM, neighbour, noise)
+    assert fitted_with["n_neighbours_fitted"] == 1 and abs(fitted_with["sigma"]) < 3
+    # Left out, the star's light is taken for a detection.
+    alone = pipeline.detection(image, 90.0, 90.0, FWHM, np.zeros((0, 2)), noise)
+    assert alone["sigma"] > 10
+    # Sharing the light with a close neighbour makes the target's value less certain.
+    assert fitted_with["noise_mjy"] > 1.2 * noise["scatter_mjy"]
+
+
+def test_sources_no_catalogue_lists_are_set_aside_from_the_empty_places():
+    rng = np.random.default_rng(5)
+    hidden = [(float(x), float(y), 2.0) for x, y in rng.uniform(20, 160, (25, 2))]
+    plain = pipeline.noise_at_empty_places(sky_with(), FWHM, np.zeros((0, 2)))
+    crowded = pipeline.noise_at_empty_places(sky_with(*hidden), FWHM, np.zeros((0, 2)))
+    assert plain is not None and crowded is not None
+    assert crowded["n_set_aside"] > plain["n_set_aside"] + 15
+    # Places near (not on) a hidden source still catch some of its light, so the scatter
+    # grows a little (measured: 1.25 times); without setting the sources aside it would
+    # be several times larger (measured: 3.1 times).
+    assert crowded["scatter_mjy"] < 1.5 * plain["scatter_mjy"]
+    assert np.std(crowded["values"]) > 2.5 * plain["scatter_mjy"]
+
+
+def test_detection_without_enough_empty_places_is_unknown():
+    image = sky_with((20.0, 20.0, 1.5))[:40, :40]             # a picture 80 arcsec across: 16 places at most
+    assert pipeline.noise_at_empty_places(image, FWHM, np.array([[20.0, 20.0]])) is None
+    found = pipeline.detection(image, 20.0, 20.0, FWHM, np.zeros((0, 2)), None)
+    assert found["status"] == "no_noise_estimate" and found["sigma"] is None
+    assert pipeline.detection_word(found) == "unknown"
+
+
+def test_a_saturated_place_counts_as_detected():
+    image = sky_with((90.0, 90.0, 50.0))
+    yy, xx = np.mgrid[0:180, 0:180]
+    core = np.hypot(xx - 90.0, yy - 90.0) < 6                # far more than half the fitted pixels
+    image[core] = np.nan
+    found = pipeline.detection(image, 90.0, 90.0, FWHM, np.zeros((0, 2)), None, saturated=core)
+    assert found["status"] == "saturated" and pipeline.detection_word(found) == "saturated"
+
+
 # --------------------------------------------------------------------- stretch
 
 def test_one_stretch_covers_every_epoch():
