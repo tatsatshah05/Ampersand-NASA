@@ -42,7 +42,7 @@ SPHEREX_HORIZONS_ID = "-163182"      # JPL Horizons' identifier for the SPHEREx 
 OBSERVER = "SPHEREx spacecraft (JPL Horizons -163182)"
 CREDIT = "NASA/JPL Solar System Dynamics (Small-Body Identification API and Horizons)"
 
-VERSION = 1                          # part of the cache key: raise it when the answer changes
+VERSION = 2                         # part of the cache key: raise it when the answer changes
 CACHE_DIR = spherex.CACHE / "smallbodies"
 PICTURES_DIR = pipeline.FRAMES_DIR / "smallbodies"   # served at /frames/smallbodies/...
 
@@ -169,6 +169,8 @@ def identify(mjd: float, ra: float, dec: float, half_width: float) -> list[dict]
 # --- naming -----------------------------------------------------------------------------------------------------
 
 _COMET = re.compile(r"^(?:\d+[PCDI](?:-[A-Z]+)?|[PCDXAI])/")
+_COMET_ID = re.compile(r"^(\d+[PCDI](?:-[A-Z]+)?(?=/)|[PCDXAI]/\d{4} [A-Z]+\d*)")
+_PROVISIONAL = re.compile(r"^\(?(\d{4} [A-Z]{1,2}\d*)\)?$")
 
 
 def kind_of(name: str) -> str:
@@ -193,13 +195,17 @@ def split_name(name: str) -> tuple[str, str | None]:
 
 def horizons_command(name: str) -> str:
     """The COMMAND Horizons needs to pick exactly this body."""
+    name = name.strip()
     if kind_of(name) == "comet":
-        m = re.match(r"^((?:\d+[PCDI](?:-[A-Z]+)?|[PCDXAI])/(?:\d{4} \w+)?)", name.strip())
-        return f"DES={m.group(1).rstrip('/') if m and m.group(1).endswith('/') else (m.group(1) if m else name)};CAP"
-    m = re.match(r"^(\d+) ", name.strip().lstrip("("))
+        m = _COMET_ID.match(name)
+        return f"DES={m.group(1) if m else name};CAP"      # CAP: the apparition nearest in time
+    m = _PROVISIONAL.match(name)
+    if m:                                  # an unnumbered asteroid: "2024 YR4"
+        return f"DES={m.group(1)};"
+    m = re.match(r"^(\d+) ", name)         # a numbered one: "433 Eros (A898 PA)", "32455 (2000 SW60)"
     if m:
         return f"{m.group(1)};"
-    return f"DES={name.strip().strip('()')};"
+    return f"DES={name.strip('()')};"
 
 
 def ephemeris(name: str, mjds: list[float]) -> list[dict]:
@@ -227,8 +233,9 @@ def ephemeris(name: str, mjds: list[float]) -> list[dict]:
         if len(rows) != len(chunk):
             raise JplError(f"Horizons gave {len(rows)} positions for {len(chunk)} times for {name}")
         i_ra, i_dec = header.index("R.A._(ICRF)"), header.index("DEC_(ICRF)")
-        i_rate, i_rate_dec, i_mag = header.index("dRA*cosD"), header.index("d(DEC)/dt"), header.index("APmag") \
-            if "APmag" in header else (header.index("Tmag") if "Tmag" in header else -1)
+        i_rate, i_rate_dec = header.index("dRA*cosD"), header.index("d(DEC)/dt")
+        # APmag for an asteroid; for a comet the total magnitude, T-mag.
+        i_mag = next((header.index(h) for h in ("APmag", "T-mag") if h in header), -1)
         for row in rows:
             f = [x.strip() for x in row.split(",")]
             try:
@@ -315,7 +322,10 @@ def find_crossings(exposures: list[dict], ra: float, dec: float, fov: float,
                     if -0.5 <= float(px) < n - 0.5 and -0.5 <= float(py) < n - 0.5:
                         shown, designation = split_name(cand["name"])
                         crossings.append({"name": shown, "designation": designation, "sb_name": cand["name"],
-                                          "kind": kind_of(cand["name"]), "exposure": i, **pos})
+                                          "kind": kind_of(cand["name"]), "exposure": i, **pos,
+                                          # a comet's T-mag in Horizons often disagrees with sb_ident's total magnitude
+                                          "vmag": cand["vmag"] if kind_of(cand["name"]) == "comet"
+                                          or pos["vmag"] is None else pos["vmag"]})
             if progress:
                 progress(done, len(bursts))
     if bursts and len(problems) >= len(bursts) and not crossings:
@@ -326,14 +336,39 @@ def find_crossings(exposures: list[dict], ra: float, dec: float, fov: float,
 
 # --- measuring what SPHEREx recorded ----------------------------------------------------------------------------
 
+LOCAL_RING_ARCSEC = 60.0             # radius of the ring of nearby places that shows the real scatter
+LOCAL_RING_POINTS = 8
+
+
 def _measure(path: Path, ra: float, dec: float) -> dict:
-    """Light at a predicted position in one exposure, against the noise around it (photometry.measure)."""
+    """Light at a predicted position in one exposure, against the noise around it.
+
+    `sigma` is the measured flux over its statistical error (photometry.measure: the exposure's own variance
+    and the scatter of the sky ring). `local_sigma` is the same flux over the scatter of the same measurement
+    at LOCAL_RING_POINTS places on a ring LOCAL_RING_ARCSEC away, which includes whatever else is round about.
+    """
     point = photometry.measure(path, ra, dec)
-    flux, err = point.get("flux_mjy"), point.get("flux_err_mjy")
+    flux, err = point.get("flux_mjy"), point.get("flux_err_stat_mjy")
     out = {"status": point["status"], "flux_mjy": flux, "flux_err_mjy": err, "sigma": None,
+           "local_noise_mjy": None, "local_sigma": None,
            "wavelength_um": point.get("wavelength_um"), "flags": point.get("flags", [])}
-    if point["status"] == "ok" and flux is not None and err:
-        out["sigma"] = round(float(flux) / float(err), 2)
+    if point["status"] != "ok" or flux is None or not err:
+        return out
+    out["sigma"] = round(float(flux) / float(err), 2)
+    ring = []
+    for k in range(LOCAL_RING_POINTS):
+        angle = 2.0 * np.pi * k / LOCAL_RING_POINTS
+        d_dec = LOCAL_RING_ARCSEC / 3600.0 * np.sin(angle)
+        d_ra = LOCAL_RING_ARCSEC / 3600.0 * np.cos(angle) / max(np.cos(np.radians(dec)), 0.05)
+        other = photometry.measure(path, ra + d_ra, dec + d_dec)
+        if other["status"] == "ok" and other.get("flux_mjy") is not None:
+            ring.append(float(other["flux_mjy"]))
+    if len(ring) >= 5:
+        # median absolute deviation: one star on the ring does not count
+        noise = 1.4826 * float(np.median(np.abs(np.asarray(ring) - np.median(ring))))
+        if noise > 0:
+            out["local_noise_mjy"] = round(noise, 4)
+            out["local_sigma"] = round(float(flux) / noise, 2)
     return out
 
 
@@ -344,10 +379,12 @@ def verdict(m: dict) -> tuple[str, str]:
         reasons = {"off_image": "the predicted place is too near the edge of this exposure's image to measure",
                    "no_sky": "there are too few clean pixels around the place to measure the background",
                    "no_data": "this exposure has no usable data at the place",
-                   "saturated": "the pixels there are saturated"}
+                   "saturated": "the pixels there are saturated",
+                   "flagged": "a pixel at the place is flagged as bad in this exposure"}
         return "unmeasurable", f"Not measured: {reasons.get(m['status'], 'the place could not be measured')}."
     if sigma >= SEEN_SIGMA:
-        return "seen", f"A source is seen here at {sigma:.1f} sigma."
+        return "seen", f"A source is seen here at {sigma:.0f} sigma." if sigma >= 10 else \
+            f"A source is seen here at {sigma:.1f} sigma."
     if sigma >= POSSIBLE_SIGMA:
         return "possible", f"A faint source may be here ({sigma:.1f} sigma), not strong enough to be sure."
     return "not_seen", (f"Nothing is seen here ({sigma:.1f} sigma): the body is too faint for this exposure, "
