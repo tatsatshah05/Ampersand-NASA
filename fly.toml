@@ -1,0 +1,42 @@
+# Fly.io settings for the SPHEREx sky-change viewer. Steps and prices: docs/deploy.md.
+#
+#   fly auth login
+#   fly launch --copy-config --no-deploy     (answer no to databases; pick another app name if this one is taken)
+#   fly deploy
+#   fly scale count 1                        (the disk belongs to one machine)
+#   fly ssh console -C "python scripts/warm_cache.py"
+#
+# One machine, always on, with a disk for everything fetched from NASA's archive.
+
+app = "ampersand-spherex"
+primary_region = "sea"          # Seattle: near the archive's servers and near Edmonton
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SPHEREX_CACHE_DIR = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "off"    # a sleeping machine would make the judges wait for it to start
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/openapi.json"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+
+[mounts]
+  source = "spherex_cache"
+  destination = "/data"
+  initial_size = "5gb"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"
