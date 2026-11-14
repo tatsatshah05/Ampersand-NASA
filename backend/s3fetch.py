@@ -104,8 +104,10 @@ class S3Reader:
     `max_concurrent` is the cap. Every read goes through a pool of that many threads,
     so sharing one reader between several callers keeps the cap for all of them together.
     A request that fails is tried again, `tries` times in all, waiting 0.4 s, 0.8 s, ...
-    (plus or minus half) in between. `bucket_url` is there so that tests can point the
-    reader at a stand-in for the bucket.
+    (plus or minus half) in between. Once a request has failed every time, all requests
+    fail at once for `cooloff_s` seconds, so a caller with IRSA to fall back on is not
+    kept waiting by a bucket that is down. `bucket_url` is there so that tests can
+    point the reader at a stand-in for the bucket.
     """
 
     def __init__(self, max_concurrent: int = DEFAULT_CONCURRENCY, timeout: tuple[float, float] = (5.0, 10.0),
@@ -428,7 +430,8 @@ def _wcs_lines(header: fits.Header, system: str) -> fits.Header:
     astropy builds a WCS from the text of the whole header, more than once. With 276
     lines, most of them nothing to do with coordinates, that takes 13 ms of processor
     time per WCS. The lines of the one system give the same numbers to the last bit
-    (the cutouts still come out byte for byte IRSA's) in 2 to 4 ms.
+    (the cutouts still come out byte for byte IRSA's) in 2 to 4 ms. The lines are
+    shared with `header`, not copied: the result is for reading only.
     """
     out = fits.Header()
     for card in header.cards:
