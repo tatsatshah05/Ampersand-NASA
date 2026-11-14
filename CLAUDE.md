@@ -121,9 +121,16 @@ Endpoints (adjust if something better emerges, and keep this list current):
 - `GET /api/resolve?name=` BUILT. Object name to coordinates at the fixed date 2026.0
   (`ra`, `dec`, `epoch`), with `pmra`, `pmdec` (mas/yr), `parallax` (mas) when known,
   `source` ("Gaia DR3" or "SIMBAD"), `catalogue` (the position and epoch the motion
-  starts from), `j2000`, `moved_since_2000_arcsec` and `notes`. 404 if SIMBAD does not
-  know the name, 502 if SIMBAD is down. Same logic without a server:
+  starts from), `j2000`, `moved_since_2000_arcsec` (null when no motion is known) and
+  `notes`. `name` is SIMBAD's own identifier ("NAME Barnard's star", "M  31");
+  `display_name` is the same without the catalogue prefix and doubled spaces. 404 if
+  SIMBAD does not know the name, 502 if SIMBAD is down. Same logic without a server:
   `backend.astrometry.resolve_name(name)`. Check: `scripts/check_resolve.py`.
+  - The name is cleaned before the lookup (`astrometry.clean_name`): curly quotes to
+    straight ones, every dash and minus sign to a hyphen, accents dropped, Greek letters
+    to SIMBAD's abbreviations (ε to eps), invisible characters and repeated spaces
+    removed. The cache is keyed on the cleaned name, and `query` returns it. A name that
+    still has characters outside plain ASCII is answered 404 without asking SIMBAD.
 - `GET /api/frames?ra=&dec=&fov=&detector=&mode=` BUILT for `mode=normal`, `difference`
   and `sum` (anything else answers 400). Defaults: fov 0.1 degrees, detector 5. Returns
   `size_px`, `pixel_arcsec`, `stretch`, `target`, `failures` and `frames`. Each frame has
@@ -460,6 +467,12 @@ Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
   `WISE J085510.83-071442.5` and `WISEA J085510.74-071442.5`. The backend handles the
   first with `i.id LIKE 'WISE% J0855%-0714%'` (1.6 s, one object) and the second with a
   small alias table. "barnards star" without the apostrophe also needs the alias table.
+- The CfA mirror answers HTTP 400 to any name with a character outside plain ASCII
+  ("Barnard’s Star" with a curly apostrophe, "ε Indi B", "Bételgeuse", a true minus
+  sign). With Strasbourg down that used to come back as 502 "service down". Now the
+  name is cleaned first and all four resolve; "eps Indi B", "alf Ori", "mu Cep" and
+  "mu. Cep" each match one object. A 400 from a mirror is reported as "not found"
+  (404); with every mirror unreachable an uncached name still answers 502.
 - `basic` columns used: `oid`, `main_id`, `ra`, `dec` (degrees, ICRS, epoch J2000),
   `pmra`, `pmdec` (mas/yr), `plx_value` (mas), `otype`, `coo_bibcode`, `pm_bibcode`.
   The Gaia identifier, when there is one: `SELECT id FROM ident WHERE oidref = <oid>
