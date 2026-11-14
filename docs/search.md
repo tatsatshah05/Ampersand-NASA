@@ -50,7 +50,7 @@ look at), or **clean**.
 
 The search was given only each field's centre (where the cached cutouts are) and a 0.1 degree
 (6 arcmin) field, and run in all six detectors. It was never told what the target was or how it
-moves. Command (18 to 41 s per field for all six detectors, from cached cutouts):
+moves. Command (19 to 47 s per field for all six detectors, from cached cutouts):
 
 ```
 export SPHEREX_CACHE_DIR=<the shared cache>
@@ -341,6 +341,74 @@ listed as variable" but none is claimable: one is below 5 sigma in every detecto
 and in detector 5 its change follows the spacecraft's turn; two are seen in one detector only
 (5.2 sigma each), with the neighbouring detector showing a blend or a blob. Two "movers" were
 rejected as not point-like (24 and 26 arcsec wide).
+
+### Serpens South (RA 277.51, Dec -2.05), six detectors
+
+Nine objects passed. The one that matters:
+
+**b. Embedded young star at RA 277.50547, Dec -2.06198 (SIMBAD: MSX6C G028.6477+03.8174, a young
+stellar object; AllWISE: WISEA J183001.30-020343.2): brightened about 5 times, not listed as
+variable.** Candidate, and the strongest change found today.
+
+- Between 31 Aug - 3 Oct 2025 and 27 - 31 Mar 2026 it brightened, and it stayed bright through
+  4 - 12 May and 28 Aug - 4 Oct 2026. Same wavelength channels compared in each detector:
+  - 4.4 to 5.0 microns: 150 to 290 mJy in 2025, 760 to 1250 mJy in all three 2026 visits (4.5
+    times; 9.4 sigma; 8.8 sigma with the two most helpful exposures left out).
+  - 3.8 to 4.4 microns: 80 to 140 mJy, then 450 to 800 mJy (6.3 times; 7.5 sigma; 7.1).
+  - 2.4 to 3.85 microns: 5 to 70 mJy in Sep 2025, about 5 times brighter in Mar 2026 and about 9
+    times by Sep 2026 (6.8 sigma; 6.4).
+  - 1.6 to 2.4 microns: 5.4 times (7.0 sigma), but flagged as sitting on a glow; 1.1 to 1.65
+    microns: too faint to say.
+- Its spectrum dips at 3.0 to 3.1, 4.24 to 4.28 and 4.65 to 4.68 microns, where ices absorb.
+  Other stars in this field show the 4.24 and 4.65 micron dips too, so these may be ice in the
+  dark cloud in front of all of them, or a feature of SPHEREx's calibration in those channels
+  (not checked on a field without a cloud). They are not used as evidence here.
+- Tried to kill it:
+  - Calibration of the first visit: the other stars within 4 arcmin changed by -5 to +5 per cent
+    between the same visits, and the field-wide visit-to-visit shift is 1 per cent or less. The
+    two neighbours that rose 1.2 to 1.5 times (35 and 48 arcsec away) sit on its glow, which grew
+    with it.
+  - A reflection of a bright star: it would move between visits; this stays at one place through
+    three bright visits taken with the spacecraft both ways round.
+  - Saturation: 2 to 5 of about 40 to 60 exposures per detector are saturated; saturation removes
+    light, it cannot create a brightening.
+  - Spacecraft orientation: the September 2025 and September 2026 visits were taken the same way
+    round, and the brightening holds between them in every detector.
+  - One or two bad exposures: survives leaving out the two most helpful ones, in every detector.
+  - Only one detector: no, three at 5 sigma or more and a fourth at 7 sigma (on a glow).
+  - Catalogues: all five answered. None lists it as variable (AllWISE's variability flag is
+    "nnnn", i.e. no information; Gaia DR3 has nothing within 6 arcsec; nothing in AAVSO VSX).
+    SIMBAD lists it as a young stellar object.
+  - Two web searches on its catalogue names (IRAS 18274-0205, MSX6C G028.6477+03.8174) found no
+    report of its variability. That is not a literature search. The outburst candidate known in
+    Serpens South, IRAS 18270-0153, is a different object.
+- **What limits the claim:**
+  - SPHEREx's 15-arcsec measuring circle holds a compact group: CatWISE2020 lists four sources
+    within 4 arcsec and SIMBAD lists IRAS 18274-0205, 6.9 arcsec away, as a multiple object.
+    SPHEREx measures their sum, so which member brightened cannot be told.
+  - In 2010, AllWISE measured W2 = 5.92 at 4.6 microns, roughly 0.7 Jy with the standard WISE
+    zero point (typed from memory, not checked here). That is between SPHEREx's 2025 and 2026
+    levels, so this is probably a star that swings widely over the years, not necessarily a
+    first outburst.
+  - Large swings are known in embedded young stars, so the change is remarkable in size but
+    not of an unknown kind.
+- What would confirm it: an infrared image from 2026 at higher resolution than SPHEREx (to see
+  which member changed), and the next SPHEREx visits.
+
+![Serpens South young star, detector 6](search/fresh_serpsouth_iras18274_D6.png)
+![Same, detector 5](search/fresh_serpsouth_iras18274_D5.png)
+![Same, detector 4](search/fresh_serpsouth_iras18274_D4.png)
+
+The other eight objects in Serpens South:
+- Three are listed as variable only by AllWISE's flag (changes of 8 to 29 per cent).
+- One embedded young star 2 arcmin to the north (RA 277.50529, Dec -2.03018) fell to about 0.6
+  in the two spring 2026 visits and rose to 1.3 to 1.5 times its 2025 level by September 2026
+  (5.0 to 5.2 sigma in detectors 5 and 6). It also shows the carbon monoxide ice band, but its low
+  state falls exactly in the visits taken the other way round, it blends with a neighbour in
+  detector 3, and it is not claimed.
+- Four "not listed" changes are seen in one detector only (5.2 to 5.6 sigma, one flagged as
+  appearing only with the spacecraft one way round) or are below 5 sigma in every detector. None
+  is claimed.
 
 ## What the search cannot find, and why
 
