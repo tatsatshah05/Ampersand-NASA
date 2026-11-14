@@ -13,7 +13,7 @@ work itself.
 
 ## Run the backend
 
-Needs Python 3.11 or newer.
+Needs Python 3.11 or newer. The newest code is on the `Dev` branch: `git checkout Dev`.
 
 ```
 python -m venv .venv
@@ -29,8 +29,9 @@ That is Barnard's Star, the fastest-moving star in the sky. You should get three
 frames, one per SPHEREx visit. Each frame's `image` is a PNG path on the same server,
 for example `http://localhost:8000/frames/<key>/epoch1.png`.
 
-The first request for a new position downloads about 60 image cutouts from NASA's
-archive and takes around a minute. After that it is served from `backend/cache/`
+The very first start of the server can take 20 seconds or so. The first request for a
+new position downloads about 60 image cutouts from NASA's archive and takes around a
+minute. After that it is served from `backend/cache/`
 instantly.
 
 ## Check the pipeline

@@ -74,13 +74,16 @@ A feature is done when it works on these, on real SPHEREx data.
 ## How you work is up to you
 
 Use any library, framework, tool, editor or AI assistant you like. Structure your part
-of the code however you think best. Work on a branch or straight on `main`, with or
-without pull requests. Nobody needs permission for any of that.
+of the code however you think best. Nobody needs permission for any of that.
+
+The newest code is on the `Dev` branch (capital D), so start from there:
+`git checkout Dev`. Whether you push to `Dev` directly or through your own branch and
+a pull request is up to you. `main` gets `Dev` merged in when things work.
 
 ## The only rules: lint and typecheck
 
-Code pushed to `main` must pass the checks below. Run them before you push. That is
-the whole rulebook.
+Code pushed to `Dev` or `main` must pass the checks below. Run them before you push.
+That is the whole rulebook.
 
 ### Python (`backend/`, `scripts/`)
 
