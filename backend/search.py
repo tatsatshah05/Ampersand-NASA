@@ -2009,6 +2009,11 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
                                    f"it is {cand['two_out']['sigma']} sigma")
             if min(few) < FEW_EXPOSURES:
                 cand["flags"].append("few_exposures")
+            calibrated = mover_summary["errors_scaled"] if kind == "mover" else changer_summary["errors_scaled"]
+            if not calibrated:
+                # Too few plain stars in this picture to check that the errors are right
+                # (their scatter is what scales every error): the sigma is not trustworthy.
+                cand["flags"].append("uncalibrated")
             if _one_roll_only(s, visits, dates):
                 cand["flags"].append("one_roll_only")
             # Three verdicts. "rejected": it has the signature of a known artefact
@@ -2304,7 +2309,8 @@ def _chart(cand: dict[str, Any], bin_labels: list[dict[str, Any]], size: int) ->
         draw.text((left + 4 + 62 * (b % 5), 4 + 12 * (b // 5)), name, fill=colour)
     draw.text((2, upper - 4), f"{top:.3g}", fill=(200, 200, 200))
     draw.text((2, lower - 8), f"{bottom:.3g}", fill=(200, 200, 200))
-    draw.text((2, (upper + lower) // 2), "mJy", fill=(200, 200, 200))
+    unit = "ring" if cand.get("measure") == "ring" else "mJy"   # a ring value is relative, not a flux
+    draw.text((2, (upper + lower) // 2), unit, fill=(200, 200, 200))
     draw.text((left, lower + 6), f"{rows[0]['wavelength_um'][0]:.2f}", fill=(200, 200, 200))
     draw.text((right - 28, lower + 6), f"{rows[-1]['wavelength_um'][1]:.2f}", fill=(200, 200, 200))
     draw.text(((left + right) // 2 - 60, lower + 6), "wavelength, microns", fill=(200, 200, 200))
