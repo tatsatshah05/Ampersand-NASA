@@ -56,7 +56,10 @@ export default function App() {
   /** Show a selection: keep it, put it in the address, and let the frames reload. */
   const show = useCallback((next: Selection, how: 'push' | 'replace') => {
     const was = latest.current
-    if (next.ra !== was.ra || next.dec !== was.dec) setSpectrum(null) // a spectrum of somewhere else
+    // An open spectrum belongs to the target it was asked for: its place and its motion.
+    const sameTarget =
+      next.ra === was.ra && next.dec === was.dec && next.pmra === was.pmra && next.pmdec === was.pmdec && next.parallax === was.parallax
+    if (!sameTarget) setSpectrum(null)
     setSelection(next)
     setNotes([])
     writeAddress(next, how)
@@ -339,15 +342,17 @@ export default function App() {
                 note={load.data.mode === 'difference' ? "The positions were measured in each visit's own image, not in the difference." : undefined}
               />
             )}
-            {showGaia && gaiaFrames.length > 1 && (
-              <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={load.data.target} gaiaError={load.data.gaia_error} />
-            )}
-            {showGaia && gaiaFrames.length === 1 && load.data.target && (
-              <p className="readout">
-                <span className="key gaia">+</span> marks where the target's catalogued motion puts it on the middle date of
-                this frame; the arrow is one year of that motion.
-              </p>
-            )}
+            {/* The Gaia readout compares frames with the first one. With a single frame and a
+                known motion there is nothing to compare, so one line says what the marks are. */}
+            {showGaia &&
+              (gaiaFrames.length > 1 || load.data.target?.pmra == null || load.data.target.pmdec == null ? (
+                <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={load.data.target} gaiaError={load.data.gaia_error} />
+              ) : (
+                <p className="readout">
+                  <span className="key gaia">+</span> marks where the target's catalogued motion puts it on the middle date
+                  of this frame; the arrow is one year of that motion.
+                </p>
+              ))}
           </section>
 
           <FrameDetails frame={load.data.frames[player.current]} detector={load.data.detector} />
