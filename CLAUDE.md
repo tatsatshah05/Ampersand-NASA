@@ -625,3 +625,20 @@ The marker is the target or nothing (`centroid`, checked 2026-11-14 on 41 views)
   3 arcsec, or a quarter of the fitted width if that is more. The margin is thin.
 - `astrometry.offset_arcsec` now takes the short way round in right ascension, so two
   points either side of RA 0h are no longer 360 degrees apart.
+
+Reading cutouts straight from S3 (confirmed 2026-11-14, `scripts/check_s3.py` repeats it)
+- `backend/s3fetch.py` reads only the image rows a cutout needs from the public bucket,
+  `https://nasa-irsa-spherex.s3.amazonaws.com/<key>` (the key is the IRSA URL after
+  `/ibe/data/spherex/`), with plain HTTPS `Range` requests and no account. One range per
+  request: a request naming two ranges is answered with the whole 65 MB file.
+- The file it writes is byte for byte the slim cutout made from IRSA's cutout service:
+  144 sampled exposures (34 clipped by a detector edge) and, in a full run, all 364 for
+  Barnard's Star, with 0 differing pixels, header lines or bytes.
+- Speed from this machine: one detector at 0.15 degrees (62 cutouts) in 7.9 s, all six
+  detectors (364) in 42 s, one detector at 0.5 degrees in 21 s, no retries. Through IRSA
+  the same 364 took 247 s. A view that is not cached now answers in about 15 s (was 52 s).
+- `spherex.fetch_cutout` tries S3 first and falls back to IRSA for that cutout on any
+  failure. `SPHEREX_USE_S3=0` turns S3 off. The tests run with it off.
+- FLAGS is tile-compressed in the full files (one tile per image row), so its size
+  differs from file to file and every later extension starts at a different byte: the
+  headers are read, never assumed.

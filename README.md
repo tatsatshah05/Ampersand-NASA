@@ -31,8 +31,9 @@ frames, one per SPHEREx visit. Each frame's `image` is a PNG path on the same se
 for example `http://localhost:8000/frames/<key>/epoch1.png`.
 
 The very first start of the server can take 20 seconds or so. The first request for a
-new position downloads about 60 image cutouts from NASA's archive and takes around a
-minute. After that it is served from `backend/cache/`
+new position reads about 60 image cutouts and takes about 15 seconds. They come straight
+from NASA's public copy of the archive on Amazon S3, with the archive's own cutout
+service (about a minute, less reliable) as the automatic fallback. After that it is served from `backend/cache/`
 instantly.
 
 ## Open the viewer

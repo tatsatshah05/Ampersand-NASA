@@ -29,7 +29,7 @@ What the host must provide:
 | `SPHEREX_CACHE_DIR` set to a folder on that disk | This tells the backend where to keep its cache. Without it the cache goes to `/app/backend/cache` inside the container and is lost on redeploy (unless the disk is mounted exactly there, which also works). |
 | No short request timeout (allow 5 minutes) | The first request for a new sky position downloads about 60 cutouts and takes about a minute, longer when the archive is having a bad spell. |
 | An always-on instance, exactly one | A host that puts the service to sleep adds a start-up wait, and the disk can only be attached to one instance. |
-| Outbound HTTPS | To `irsa.ipac.caltech.edu` (images), `gea.esac.esa.int` (Gaia) and `simbad.harvard.edu` / `simbad.cds.unistra.fr` (name lookup). |
+| Outbound HTTPS | To `nasa-irsa-spherex.s3.amazonaws.com` (images, read directly from NASA's public bucket), `irsa.ipac.caltech.edu` (which images exist, and images as a fallback), `gea.esac.esa.int` (Gaia) and `simbad.harvard.edu` / `simbad.cds.unistra.fr` (name lookup). |
 | 1 GB of memory or more | Measured: the warm-up process peaked at 390 to 420 MB while building every demo view, on top of the server's own 115 to 150 MB. On 512 MB, warm one target at a time (see "Warm the cache"). |
 
 There is no database, no login, no secret. The only setting is `SPHEREX_CACHE_DIR`.
