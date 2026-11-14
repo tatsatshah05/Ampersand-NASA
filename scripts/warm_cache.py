@@ -53,6 +53,9 @@ TARGETS: list[dict] = [
     # so the page and this script ask for exactly the same view.
     {"slug": "serpens_south", "name": "Serpens South young star (found by the search)",
      "position": {"ra": 277.50547, "dec": -2.06198}},
+    # Two novae that erupted in June 2025, after SPHEREx began (docs/novae.md). Positions from AAVSO VSX.
+    {"slug": "v462_lup", "name": "Nova V462 Lupi", "position": {"ra": 227.01362, "dec": -40.14308}},
+    {"slug": "v572_vel", "name": "Nova V572 Velorum", "position": {"ra": 156.30783, "dec": -53.522}},
 ]
 DETECTORS = [1, 2, 3, 4, 5, 6]
 # (label, mode, options). A mode or option the backend does not have is skipped.

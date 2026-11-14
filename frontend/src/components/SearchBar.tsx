@@ -68,17 +68,45 @@ const PRESETS: readonly Preset[] = [
   { name: 'R Draconis', about: 'A star whose brightness rises and falls over about eight months' },
 ]
 
-// Not a challenge target: the strongest candidate of this project's own blind search
-// (docs/search.md). A fixed position, the one scripts/warm_cache.py prepares.
-const OWN_FIND = {
-  name: 'Young star in Serpens South',
-  about:
-    'Flagged by our blind search: about five times brighter in 2026 than in 2025. Not listed as variable in the ' +
-    'catalogues we asked. A candidate, not a discovery.',
-  ra: 277.50547,
-  dec: -2.06198,
-  det: 6,
-} as const
+// Not challenge targets: objects this project looked at with its own tools (docs/search.md,
+// docs/novae.md). Fixed positions, the ones scripts/warm_cache.py prepares.
+interface OwnLook {
+  name: string
+  about: string
+  ra: number
+  dec: number
+  det: number
+}
+
+const OWN_LOOKS: readonly OwnLook[] = [
+  {
+    name: 'Young star in Serpens South',
+    about:
+      'Flagged by our blind search: about five times brighter in 2026 than in 2025. Not listed as variable in the ' +
+      'catalogues we asked. A candidate, not a discovery.',
+    ra: 277.50547,
+    dec: -2.06198,
+    det: 6,
+  },
+  {
+    name: 'Nova V462 Lupi',
+    about:
+      'A star that erupted in June 2025, after SPHEREx began. Open "Spectrum of the target" to see its glowing gas ' +
+      'and the warm glow at long wavelengths, and "Brightness over time" to see it fade. Position from AAVSO.',
+    ra: 227.01362,
+    dec: -40.14308,
+    det: 6,
+  },
+  {
+    name: 'Nova V572 Velorum',
+    about:
+      'A star that erupted in June 2025 during one of SPHEREx\'s visits: faint before, too bright to measure after. ' +
+      'Position from AAVSO.',
+    ra: 156.30783,
+    dec: -53.522,
+    det: 2,
+  },
+]
 
 /** The backend's limit on the length of a name. */
 const MAX_NAME_LENGTH = 80
@@ -353,20 +381,23 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
 
       <div className="searchbar-presets" role="group" aria-labelledby={findId}>
         <span id={findId} className="searchbar-presets-label">
-          Or look at what our own search flagged (a candidate):
+          Or look at what we turned this tool on ourselves:
         </span>
-        <button
-          className="searchbar-preset"
-          type="button"
-          title={OWN_FIND.about}
-          onClick={() => {
-            setText(OWN_FIND.name)
-            setStatus({ kind: 'idle' })
-            onSelect({ ra: OWN_FIND.ra, dec: OWN_FIND.dec, name: OWN_FIND.name, det: OWN_FIND.det })
-          }}
-        >
-          {OWN_FIND.name}
-        </button>
+        {OWN_LOOKS.map((look) => (
+          <button
+            key={look.name}
+            className="searchbar-preset"
+            type="button"
+            title={look.about}
+            onClick={() => {
+              setText(look.name)
+              setStatus({ kind: 'idle' })
+              onSelect({ ra: look.ra, dec: look.dec, name: look.name, det: look.det })
+            }}
+          >
+            {look.name}
+          </button>
+        ))}
       </div>
     </form>
   )
