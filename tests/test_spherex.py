@@ -160,6 +160,24 @@ def test_exposure_list_is_asked_for_again_after_a_day(archive: list[dict], tmp_p
     assert len(archive) == 4
 
 
+def test_an_expired_exposure_list_is_still_used_when_the_archive_is_down(
+        archive: list[dict], monkeypatch: pytest.MonkeyPatch, tmp_path):
+    """A day-old list only lacks the newest exposures; refusing the view would be worse."""
+    first = spherex.find_exposures(269.446267, 4.768222)
+    (cached,) = (tmp_path / "queries").glob("sia_*.json")
+    two_days_ago = time.time() - 2 * 86400
+    os.utime(cached, (two_days_ago, two_days_ago))
+
+    def archive_is_down(url: str, params: dict | None = None, **_: object) -> bytes:
+        raise spherex.ArchiveError("HTTP 502 from the archive")
+
+    monkeypatch.setattr(spherex, "http_get", archive_is_down)
+    assert spherex.find_exposures(269.446267, 4.768222) == first
+    # With nothing cached for a position, the failure is still reported.
+    with pytest.raises(spherex.ArchiveError):
+        spherex.find_exposures(10.0, 10.0)
+
+
 # ------------------------------------------------------- where cutouts are filed
 
 def test_cutouts_are_filed_by_centre_size_exposure_and_detector():

@@ -82,6 +82,19 @@ Builds the Barnard's Star frames, compares the star's measured shift with the Ga
 catalogue, checks that the other stars stay still, and writes a picture to look at in
 `scripts/out/`.
 
+## Run the tests
+
+```
+pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+pytest
+```
+
+About 150 tests in about 5 seconds. They need no network and never touch
+`backend/cache`: they use nine real Barnard's Star images kept in `tests/data/` and
+block every outgoing request. GitHub runs them, with the lint and typecheck below, on
+every push and pull request to `Dev` and `main`. "1 xfailed" is a known bug, not a new
+failure.
+
 ## Before you push
 
 ```

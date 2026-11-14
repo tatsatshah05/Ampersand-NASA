@@ -5,6 +5,7 @@
 // plus, when they apply: pmra, pmdec, parallax (the object's known motion, as
 // /api/resolve returns it), reference (difference mode), track (sum mode) and name.
 import type { FramesQuery, Mode, Reference, Track } from './api'
+import type { SearchTarget } from './components/SearchBar'
 
 /** The six SPHEREx detectors and the wavelengths each one sees, in micrometres. */
 export const DETECTORS = [
@@ -39,18 +40,6 @@ export interface Selection {
   mode: Mode
   reference: Reference
   track: Track
-}
-
-/** What the search box hands to App's applyTarget(). */
-export interface SearchTarget {
-  ra: number
-  dec: number
-  name?: string
-  pmra?: number | null
-  pmdec?: number | null
-  parallax?: number | null
-  /** A detector worth starting with for this object, if the search knows one. */
-  det?: number
 }
 
 // Barnard's Star where it is in 2026 (see CLAUDE.md), shown when the address gives no position.
@@ -252,10 +241,12 @@ export function toFramesQuery(s: Selection): FramesQuery {
 
 /**
  * The selection after choosing a new target: its position, name and motion replace the
- * old ones; the field of view and mode stay; the detector stays unless the search
- * suggests one. Returns null when the position cannot be used.
+ * old ones (a target that comes without a motion has none: nothing is carried over);
+ * the field of view and mode stay. The detector is the one the target suggests (WISE
+ * 0855 only shows in detector 6), otherwise `usualDetector`, the one the visitor last
+ * chose for themselves. Returns null when the position cannot be used.
  */
-export function withTarget(s: Selection, target: SearchTarget): Selection | null {
+export function withTarget(s: Selection, target: SearchTarget, usualDetector = s.det): Selection | null {
   if (!Number.isFinite(target.ra) || !validDec(target.dec)) return null
   // A right ascension outside 0 to 360 is brought round into it; one inside is kept
   // digit for digit, because the backend's cache is keyed on the number it is sent.
@@ -269,7 +260,7 @@ export function withTarget(s: Selection, target: SearchTarget): Selection | null
     pmra: moving ? (target.pmra ?? null) : null,
     pmdec: moving ? (target.pmdec ?? null) : null,
     parallax: moving && validParallax(target.parallax ?? null) ? (target.parallax ?? null) : null,
-    det: validDetector(target.det ?? null) ? (target.det ?? s.det) : s.det,
+    det: validDetector(target.det ?? null) ? (target.det ?? usualDetector) : usualDetector,
     // Following the target only makes sense for the target it was chosen for.
     track: moving ? s.track : 'sky',
   }

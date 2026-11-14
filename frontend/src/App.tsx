@@ -3,12 +3,13 @@
 // markers). The Gaia overlay (#10), frame details (#12) and spectrum (#11) are
 // components of their own that only need the frames and the frame on screen.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { addressOf, DEFAULT_SELECTION, readAddress, toFramesQuery, withTarget, writeAddress, type SearchTarget, type Selection } from './address'
+import { addressOf, DEFAULT_SELECTION, readAddress, toFramesQuery, withTarget, writeAddress, type Selection } from './address'
 import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
 import { PlayerControls } from './components/PlayerControls'
+import { SearchBar, type SearchTarget } from './components/SearchBar'
 import { Selectors } from './components/Selectors'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
@@ -52,6 +53,9 @@ export default function App() {
   useEffect(() => {
     latest.current = selection
   })
+  // The detector the visitor picked (or the address asked for). A target can suggest
+  // another one; the next target that suggests none goes back to this.
+  const usualDetector = useRef(fromAddress.selection.det)
 
   /** Show a selection: keep it, put it in the address, and let the frames reload. */
   const show = useCallback((next: Selection, how: 'push' | 'replace') => {
@@ -66,15 +70,16 @@ export default function App() {
   }, [])
 
   /**
-   * Show a new target. This is the one function the search box needs: give it a
-   * position and, when the search knows them, the object's name, its motion (pmra,
-   * pmdec, parallax, as /api/resolve returns them) and a detector worth starting with.
-   * The field of view and the mode stay as they are. The address gets a new history
-   * entry, so the browser's Back button returns to the previous target.
+   * Show a new target: what the search box calls with what it found (issue #6). It takes
+   * a position and, when the search knows them, the object's name, its motion (pmra,
+   * pmdec, parallax, as /api/resolve returns them) and a detector to switch to. A
+   * target without a motion clears the one before it. The field of view and the mode
+   * stay as they are. The address gets the new position, motion and detector as a new
+   * history entry, so the link can be shared and Back returns to the previous target.
    */
   const applyTarget = useCallback(
     (target: SearchTarget) => {
-      const next = withTarget(latest.current, target)
+      const next = withTarget(latest.current, target, usualDetector.current)
       if (next) show(next, 'push')
       else setNotes(['That position could not be used: a declination has to be between -90 and 90 degrees.'])
     },
@@ -180,14 +185,10 @@ export default function App() {
           that moved or changed stands out.
         </p>
 
-        {/* ==== THE SEARCH BOX GOES HERE ====================================================
-            frontend/src/components/SearchBar.tsx (built separately) belongs inside this div.
-            Hand it applyTarget, which takes a SearchTarget (ra, dec and, when known, name,
-            pmra, pmdec, parallax, det; see address.ts):
-                <SearchBar onSelect={applyTarget} />
-            The div takes no room while it is empty.
-            ================================================================================== */}
-        <div className="search-slot"></div>
+        {/* Issue #6: a name or coordinates, and the five test targets. What it finds goes to applyTarget. */}
+        <div className="search-slot">
+          <SearchBar onSelect={applyTarget} />
+        </div>
 
         <p className="where">
           {selection.name && <strong>{selection.name}: </strong>}
@@ -202,7 +203,14 @@ export default function App() {
           </p>
         ))}
 
-        <Selectors selection={selection} motionKnown={motionKnown} onChange={(change) => show({ ...selection, ...change }, 'replace')} />
+        <Selectors
+          selection={selection}
+          motionKnown={motionKnown}
+          onChange={(change) => {
+            if (change.det !== undefined) usualDetector.current = change.det
+            show({ ...selection, ...change }, 'replace')
+          }}
+        />
         {data && <p className="mode-note">{modeSentence(data)}</p>}
         {saturation && <p className="notice">{saturation}</p>}
         {failures && (

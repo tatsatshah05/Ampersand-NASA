@@ -76,7 +76,11 @@ export function modeSentence(data: FramesReady): string {
   return 'Normal: one frame for each visit SPHEREx has made to this patch of sky. Play them to see what moved or changed.'
 }
 
-/** A note for frames with saturated pixels, pointing to the detectors that cope best; null when there are none. */
+/**
+ * A note for frames with saturated pixels; null when there are none. It points to the
+ * long-wavelength detectors without promising anything: Barnard's Star is clean in
+ * detectors 5 and 6, but R Draconis saturates in every detector.
+ */
 export function saturationSentence(data: FramesReady): string | null {
   const n = data.frames.length
   const k = data.frames.filter((f) => f.saturated_pixels > 0).length
@@ -84,9 +88,9 @@ export function saturationSentence(data: FramesReady): string | null {
   const which = n === 1 ? 'This frame has' : k === n ? `All ${n} frames have` : `${k} of the ${n} frames ${k === 1 ? 'has' : 'have'}`
   const advice =
     data.detector <= 4
-      ? 'Try detector 5 or 6, which bright stars overload least.'
-      : `Detector ${data.detector === 5 ? 6 : 5} may show it better, but some stars are too bright for every detector.`
-  return `${which} saturated pixels: something here is too bright for detector ${data.detector} and shows as a flat white patch. ${advice}`
+      ? 'The long-wavelength detectors, 5 and 6, are often better, but not always.'
+      : `This is one of the two long-wavelength detectors, which are often better than the rest, but not always. Detector ${data.detector === 5 ? 6 : 5} may be no cleaner.`
+  return `${which} saturated pixels: a bright core is overexposed in detector ${data.detector} and shows as a flat white patch. ${advice}`
 }
 
 /** A note for frames built without some exposures; null when every download worked. */
