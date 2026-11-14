@@ -48,6 +48,11 @@ TARGETS: list[dict] = [
      "also": ["WISE 0855", "WISE J085510.83-071442.5"]},
     {"slug": "rw_aur", "name": "RW Aurigae", "query": "RW Aurigae", "also": ["RW Aur"]},
     {"slug": "r_dra", "name": "R Draconis", "query": "R Draconis", "also": ["R Dra"]},
+    # Not one of the challenge's five: the strongest candidate of our own blind search
+    # (docs/search.md), opened by a link on the page. A fixed position, not a name lookup,
+    # so the page and this script ask for exactly the same view.
+    {"slug": "serpens_south", "name": "Serpens South young star (found by the search)",
+     "position": {"ra": 277.50547, "dec": -2.06198}},
 ]
 DETECTORS = [1, 2, 3, 4, 5, 6]
 # (label, mode, options). A mode or option the backend does not have is skipped.
@@ -70,6 +75,8 @@ def resolve(target: dict) -> dict:
     Returns resolve_name's whole answer: "ra" and "dec" (degrees, ICRS, moved to a fixed
     recent date with the proper motion), plus the motion and where it came from.
     """
+    if "position" in target:
+        return {**target["position"], "source": "fixed position", "epoch": "any date"}
     fn = getattr(astrometry, "resolve_name", None)
     if fn is None:
         raise RuntimeError("backend.astrometry.resolve_name does not exist")

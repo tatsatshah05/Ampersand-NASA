@@ -68,6 +68,18 @@ const PRESETS: readonly Preset[] = [
   { name: 'R Draconis', about: 'A star whose brightness rises and falls over about eight months' },
 ]
 
+// Not a challenge target: the strongest candidate of this project's own blind search
+// (docs/search.md). A fixed position, the one scripts/warm_cache.py prepares.
+const OWN_FIND = {
+  name: 'Young star in Serpens South',
+  about:
+    'Flagged by our blind search: about five times brighter in 2026 than in 2025. Not listed as variable in the ' +
+    'catalogues we asked. A candidate, not a discovery.',
+  ra: 277.50547,
+  dec: -2.06198,
+  det: 6,
+} as const
+
 /** The backend's limit on the length of a name. */
 const MAX_NAME_LENGTH = 80
 
@@ -258,6 +270,7 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
   const hintId = `${id}-hint`
   const errorId = `${id}-error`
   const presetsId = `${id}-presets`
+  const findId = `${id}-find`
 
   return (
     <form
@@ -336,6 +349,24 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
             {preset.name}
           </button>
         ))}
+      </div>
+
+      <div className="searchbar-presets" role="group" aria-labelledby={findId}>
+        <span id={findId} className="searchbar-presets-label">
+          Or look at what our own search flagged (a candidate):
+        </span>
+        <button
+          className="searchbar-preset"
+          type="button"
+          title={OWN_FIND.about}
+          onClick={() => {
+            setText(OWN_FIND.name)
+            setStatus({ kind: 'idle' })
+            onSelect({ ra: OWN_FIND.ra, dec: OWN_FIND.dec, name: OWN_FIND.name, det: OWN_FIND.det })
+          }}
+        >
+          {OWN_FIND.name}
+        </button>
       </div>
     </form>
   )
