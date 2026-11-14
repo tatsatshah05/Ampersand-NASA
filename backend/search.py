@@ -116,6 +116,8 @@ MIN_VISIT_SNR = 4.0               # a visit's position is measured only if the s
 EMPTY_SPACING_PX = 6              # empty places are tried on a grid this fine (12 arcsec)
 EMPTY_CLEAR_PX = 10               # ... at least this far (20 arcsec) from every source found
 EMPTY_MIN_PLACES = 30             # fewer empty places than this: no noise estimate (a crowded or tiny picture)
+EMPTY_CLEAR_SATURATED_PX = 30     # ... and this far (60 arcsec) from every saturated pixel
+EMPTY_MAX_GLOW = 5.0              # ... and not on a glow brighter than this many times the picture's scatter
 SEEN_TIMES_NOISE = 5.0            # "seen in a visit": forced measurement this many times the empty-place spread
 # A mover must be at its predicted place in every visit deep enough to show it: a visit
 # where the source would stand at least EXPECT_TIMES_NOISE times the noise, but where
@@ -396,6 +398,7 @@ def _find_sources(st: dict[str, Any]) -> list[dict[str, Any]]:
     of these maps, compared with the same value at empty places (`_empty_noise`).
     """
     bg_all = _background(st["smooth_all"])
+    st["bg_all"] = bg_all
     st["det_all"] = st["smooth_all"] - bg_all
     st["det"] = {}
     sources: list[dict[str, Any]] = []
@@ -433,7 +436,7 @@ def _sample(image: np.ndarray, x: float, y: float) -> float:
                  + v[1, 1] * fx * fy)
 
 
-def _empty_noise(st: dict[str, Any], sources: list[dict[str, Any]], n: int) -> None:
+def _empty_noise(st: dict[str, Any], sources: list[dict[str, Any]], n: int, saturated: np.ndarray) -> None:
     """The noise of every detection map, measured where nothing was found.
 
     The verification of the project's results showed that a fit's own signal to noise
@@ -442,7 +445,10 @@ def _empty_noise(st: dict[str, Any], sources: list[dict[str, Any]], n: int) -> N
     picture and compare. Empty places: a grid every EMPTY_SPACING_PX pixels, at least
     EMPTY_CLEAR_PX from every source found in any visit and away from the edge. Their
     spread includes everything the picture does on empty sky: noise, faint stars below
-    the threshold, leftover glitches. Stored in st["empty"][ep] (and ["all"]): the
+    the threshold, leftover glitches. Not empty: within EMPTY_CLEAR_SATURATED_PX of a
+    saturated pixel, or where the local background stands EMPTY_MAX_GLOW times the
+    picture's scatter above zero (the glow of a very bright star, whose own core the
+    peak finder cannot list). Stored in st["empty"][ep] (and ["all"]): the
     robust spread and the sorted values, so a measurement can be given as "times the
     noise" and as "how many empty places are as bright".
     """
@@ -453,8 +459,23 @@ def _empty_noise(st: dict[str, Any], sources: list[dict[str, Any]], n: int) -> N
     xx, yy = np.meshgrid(grid, grid)
     places = np.column_stack([xx.ravel(), yy.ravel()])
     if sources:
-        dist, _ = cKDTree(np.array([[s["x"], s["y"]] for s in sources])).query(places, k=1)
-        places = places[dist >= EMPTY_CLEAR_PX]
+        # Brighter sources have wider wings: the clearance grows by EMPTY_CLEAR_PX for
+        # every factor of ten in brightness above 50 times the picture's scatter.
+        scatter = _robust_sigma(st["det_all"])
+        xy = np.array([[s["x"], s["y"]] for s in sources])
+        peaks = np.array([s["peak"] for s in sources], dtype=float)
+        reach = EMPTY_CLEAR_PX * (1.0 + np.log10(np.maximum(peaks
+                                                            / (50.0 * scatter), 1.0)))
+        keep = np.ones(len(places), dtype=bool)
+        for k, near in enumerate(cKDTree(xy).query_ball_point(places, float(np.max(reach)))):
+            keep[k] = all(math.hypot(*(places[k] - xy[j])) >= reach[j] for j in near)
+        places = places[keep]
+    sat_y, sat_x = np.nonzero(saturated)
+    if sat_x.size:
+        dist, _ = cKDTree(np.column_stack([sat_x, sat_y]).astype(float)).query(places, k=1)
+        places = places[dist >= EMPTY_CLEAR_SATURATED_PX]
+    glow = np.abs(np.array([_sample(st["bg_all"], x, y) for x, y in places]))
+    places = places[np.nan_to_num(glow, nan=np.inf) <= EMPTY_MAX_GLOW * _robust_sigma(st["det_all"])]
     st["empty_places"] = places
     st["empty"] = {}
     for key, image in [("all", st["det_all"])] + [(ep, st["det"][ep]) for ep in st["visits"]]:
@@ -1920,7 +1941,11 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
         return result
 
     sources = _find_sources(st)
-    _empty_noise(st, sources, field["n"])
+    # Saturated as the pictures show it: no value left in a visit's picture, and overflowed there.
+    saturated_anywhere = np.zeros((field["n"], field["n"]), dtype=bool)
+    for ep, count in field["saturated"].items():
+        saturated_anywhere |= ~np.isfinite(st["stack"][ep]) & (count > 0)
+    _empty_noise(st, sources, field["n"], saturated_anywhere)
     _measure_positions(field, st, sources)
     _flag_sources(field, st, sources)
     _wing_light(st, sources)
