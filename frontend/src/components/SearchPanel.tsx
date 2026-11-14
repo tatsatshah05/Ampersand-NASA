@@ -16,7 +16,9 @@ import {
   headline,
   isCandidate,
   kindLabel,
+  limitsSentences,
   messagesOf,
+  oneDetectorSentence,
   noData,
   progressSentence,
   rejectedHeadline,
@@ -187,7 +189,11 @@ function Done({ result, onLook }: { result: SearchResult; onLook: (ra: number, d
 
       <details className="search-limits">
         <summary>What this search cannot find</summary>
-        <p>{result.limits}</p>
+        <ul>
+          {limitsSentences(result.limits).map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
       </details>
     </>
   )
@@ -195,6 +201,7 @@ function Done({ result, onLook }: { result: SearchResult; onLook: (ra: number, d
 
 function Card({ object: o, number, onLook }: { object: SearchObject; number: number; onLook: (ra: number, dec: number) => void }) {
   const candidate = candidateSentence(o)
+  const single = oneDetectorSentence(o)
   const detail = o.evidence.kind === 'changer' ? changeDetail(o.evidence) : null
   return (
     <li className={`search-card ${isCandidate(o) ? 'candidate' : ''}`}>
@@ -218,6 +225,7 @@ function Card({ object: o, number, onLook }: { object: SearchObject; number: num
       </p>
       <p className="hint">{answeredSentence(o.catalogue_status)}</p>
       {candidate && <p className="search-candidate">{candidate}</p>}
+      {single && <p className="search-candidate">{single}</p>}
       <p>
         <strong>{o.verdict === 'clean' ? 'Verdict: clean.' : 'Verdict: caution.'}</strong> {verdictSentence(o)}
       </p>
@@ -247,7 +255,7 @@ function Card({ object: o, number, onLook }: { object: SearchObject; number: num
 
 /** A numbered ring on the picture for each object the search found. Drawn in picture pixels. */
 export function SearchMarkers({ objects, grid, scale }: { objects: SearchObject[]; grid: Grid; scale: number }) {
-  const r = 11 / scale // screen pixels to picture pixels: marks keep their size at every zoom
+  const r = 20 / scale // screen pixels to picture pixels: marks keep their size at every zoom
   return (
     <svg className="overlay search-markers" viewBox={`0 0 ${grid.sizePx} ${grid.sizePx}`} role="img" aria-label="Objects found by the search">
       {objects.map((o, i) => {
@@ -257,7 +265,7 @@ export function SearchMarkers({ objects, grid, scale }: { objects: SearchObject[
           <g key={o.id}>
             <title>{`${i + 1}: ${headline(o)}`}</title>
             <circle cx={p.x} cy={p.y} r={r} className="search-ring" vectorEffect="non-scaling-stroke" />
-            <text x={p.x + r * 1.15} y={p.y - r * 1.15} fontSize={13 / scale} className="search-number">
+            <text x={p.x + r * 0.85} y={p.y - r * 0.85} fontSize={14 / scale} className="search-number" vectorEffect="non-scaling-stroke">
               {i + 1}
             </text>
           </g>

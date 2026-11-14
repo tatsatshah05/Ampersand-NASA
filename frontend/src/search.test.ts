@@ -190,7 +190,29 @@ describe('flags and verdicts', () => {
     expect(S.flagSentence('saturated')).toContain('1 to 2 arcseconds')
   })
   it('a clean object says nothing asks for caution', () => {
-    expect(S.verdictSentence(first(wise))).toBe('Passed every artefact test, with nothing asking for caution.')
+    expect(S.verdictSentence(first(wise))).toBe('Passed every artefact test the search has, and none of its caution flags was raised.')
+  })
+})
+
+describe('single-detector candidates', () => {
+  it('warns when only one detector reached 5 times the noise', () => {
+    const o = result(serpsouth).objects.find((x) => x.id === '07')!
+    expect(o.detectors_at_5_sigma).toEqual([2])
+    expect(S.oneDetectorSentence(o)).toContain('Only one detector reached 5 times the noise on its own.')
+  })
+  it('says nothing for a candidate that several detectors agree on, or for a known object', () => {
+    expect(S.oneDetectorSentence(first(serpsouth))).toBeNull()
+    expect(S.oneDetectorSentence(first(rwaur))).toBeNull()
+  })
+})
+
+describe('limits', () => {
+  it('splits the backend\'s limits into sentences, in plain words, without the pointer to a file', () => {
+    const lines = S.limitsSentences(result(rwaur).limits)
+    expect(lines.length).toBeGreaterThanOrEqual(6)
+    expect(lines[0]).toMatch(/^Finds only what stands 5 times above the noise/)
+    expect(lines.join(' ')).not.toMatch(/sigma|docs\/search/)
+    expect(lines.join(' ')).toContain('at least 10 per cent')
   })
 })
 

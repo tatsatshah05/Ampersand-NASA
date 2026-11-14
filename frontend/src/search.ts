@@ -374,7 +374,7 @@ export function flagSentence(flag: string): string {
 
 export function verdictSentence(o: SearchObject): string {
   return o.verdict === 'clean'
-    ? 'Passed every artefact test, with nothing asking for caution.'
+    ? 'Passed every artefact test the search has, and none of its caution flags was raised.'
     : 'Passed the artefact tests, but it has flags a person should look at before believing it.'
 }
 
@@ -412,4 +412,23 @@ export function catalogueFailureSentence(s: SearchSummary): string | null {
 
 export function rejectedHeadline(r: RejectedObject): string {
   return `${r.kind === 'mover' ? 'Looked like a mover' : 'Looked like a brightness change'} in detector ${r.detector}, ${num(r.sigma)} times the noise, at RA ${r.ra.toFixed(5)}°, Dec ${r.dec.toFixed(5)}°.`
+}
+
+/**
+ * For a candidate that no more than one detector put at 5 times the noise: the search's own
+ * caution about single-detector changes (docs/search.md, "What the search cannot find").
+ */
+export function oneDetectorSentence(o: SearchObject): string | null {
+  if (!isCandidate(o) || o.detectors_at_5_sigma.length >= 2) return null
+  return 'Only one detector reached 5 times the noise on its own. In nebulous or crowded patches a change seen in one detector cannot be told from an artefact by this search, so treat it as unconfirmed.'
+}
+
+/** The backend's limits as sentences, with its statistics word replaced by the page's plain one. */
+export function limitsSentences(limits: string): string[] {
+  return limits
+    .replace(/\b5 sigma\b/g, '5 times the noise')
+    .replace(/\s*See docs\/search\.md\.\s*$/, '')
+    .split(/(?<=\.)\s+(?=[A-Z])/)
+    .map((t) => t.trim())
+    .filter(Boolean)
 }
