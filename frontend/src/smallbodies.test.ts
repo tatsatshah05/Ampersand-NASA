@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bodyVerdict, groupByBody, whenInWords, type SmallBodyCrossing } from './smallbodies'
+import { bodyVerdict, groupByBody, plainSummary, whenInWords, type SmallBodyCrossing } from './smallbodies'
 
 // Two crossings as /api/smallbodies returned them for a patch around asteroid 4 Vesta, 2026-07-16
 // (detector 5), and one of 4959 Niinoama in the same patch in 2025. Only the fields the helpers
@@ -59,5 +59,18 @@ describe('bodyVerdict', () => {
   it('says plainly when nothing is seen, and when nothing could be measured', () => {
     expect(bodyVerdict([crossing({ verdict: 'not_seen' })])).toBe('Nothing is seen at the predicted place in the 1 exposure.')
     expect(bodyVerdict([crossing({ verdict: 'unmeasurable' })])).toBe('Not measured in the 1 exposure.')
+  })
+})
+
+
+describe('plainSummary', () => {
+  it('says the number in words instead of "sigma"', () => {
+    expect(plainSummary('A source is seen here at 5.2 sigma.')).toBe('A source is seen here at 5.2 times its measuring error.')
+    expect(plainSummary('A faint source may be here (4.2 sigma), not strong enough to be sure.')).toBe(
+      'A faint source may be here (4.2 times its measuring error), not strong enough to be sure.',
+    )
+    expect(plainSummary('Not measured: a pixel at the place is flagged as bad in this exposure.')).toBe(
+      'Not measured: a pixel at the place is flagged as bad in this exposure.',
+    )
   })
 })

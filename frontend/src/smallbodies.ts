@@ -77,6 +77,14 @@ export function groupByBody(bodies: SmallBodyCrossing[]): SmallBodyCrossing[][] 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 /** "16 July 2026, 22:04 UTC" from the backend's ISO time. */
+/**
+ * The backend's sentence about one exposure, without the word "sigma": its number is the
+ * measured brightness divided by the error of that measurement, which the page says in words.
+ */
+export function plainSummary(summary: string | null): string {
+  return (summary ?? '').replace(/(\d+(?:\.\d+)?) sigma/g, '$1 times its measuring error')
+}
+
 export function whenInWords(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso)
   if (!m) return iso

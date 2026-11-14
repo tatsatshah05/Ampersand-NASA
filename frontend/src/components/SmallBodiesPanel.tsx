@@ -4,7 +4,7 @@
 // answers slowly. Positions are predictions; the sentence under each picture is what the
 // exposure itself shows there.
 import { useEffect, useRef, useState } from 'react'
-import { bodyVerdict, fetchSmallBodies, groupByBody, whenInWords, type SmallBodiesQuery, type SmallBodiesResponse, type SmallBodyCrossing } from '../smallbodies'
+import { bodyVerdict, fetchSmallBodies, groupByBody, whenInWords, type SmallBodiesQuery, type SmallBodiesResponse, type SmallBodyCrossing, plainSummary } from '../smallbodies'
 import './SpectrumPanel.css'
 import './SmallBodiesPanel.css'
 
@@ -143,7 +143,7 @@ function Exposure({ crossing: c }: { crossing: SmallBodyCrossing }) {
         <br />
         Predicted magnitude {c.vmag == null ? 'unknown' : c.vmag.toFixed(1)}
         <br />
-        <span className={`smallbody-verdict ${c.verdict ?? ''}`}>{c.summary}</span>
+        <span className={`smallbody-verdict ${c.verdict ?? ''}`}>{plainSummary(c.summary)}</span>
       </figcaption>
     </figure>
   )
