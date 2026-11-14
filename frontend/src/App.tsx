@@ -17,12 +17,14 @@ import { SearchBar, type SearchTarget } from './components/SearchBar'
 import { Selectors } from './components/Selectors'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
+import { TrainingView } from './components/TrainingView'
 import { LoadingCard, StatusCard } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
 import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
 import { targetMotion, type SpectrumRequest } from './spectrum'
 import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
+import { newSeed, trainingAddress } from './training'
 import { useFrames } from './useFrames'
 import { usePlayer } from './usePlayer'
 import { failuresSentence, frameLabel, frameTick, modeSentence, motionSentence, saturationSentence } from './wording'
@@ -32,7 +34,12 @@ import './App.css'
 /** The circle /api/spectrum adds up: 2.5 SPHEREx pixels in radius (backend/photometry.py). */
 const SPECTRUM_APERTURE_ARCSEC = 2.5 * NATIVE_PIXEL_ARCSEC
 
+// Practice mode (?train=<seed>) is a separate screen: none of the viewer below is mounted for it.
 export default function App() {
+  return readAddress(window.location.search).selection.train !== null ? <TrainingView /> : <Viewer />
+}
+
+function Viewer() {
   // What the address asks for, and what in it could not be used.
   const [fromAddress] = useState(() => readAddress(window.location.search))
   const [selection, setSelection] = useState(fromAddress.selection)
@@ -240,6 +247,11 @@ export default function App() {
           {selection.dec >= 0 ? '+' : '-'}
           {Math.abs(selection.dec).toFixed(5)}°
           {givenMotion !== null && `, followed with its known motion of ${givenMotion.toFixed(2)} arcseconds a year`}
+        </p>
+        <p>
+          <button type="button" onClick={() => window.location.assign(trainingAddress(selection, newSeed()))}>
+            Practise: find a planted object
+          </button>
         </p>
         {notes.map((note) => (
           <p key={note} className="notice" role="status">
