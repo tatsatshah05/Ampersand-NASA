@@ -343,8 +343,11 @@ Images: `results/r_dra_sheet.jpg`, `results/r_dra_modes_sheet.jpg`,
   Building all 364 views from cached cutouts took 14.8 minutes on a laptop.
 - `python scripts/warm_cache.py --check` then loaded all 364 with the network blocked
   inside the script: every one in under 0.01 seconds, 16 seconds in all.
-- That check calls the backend's functions directly. It was not repeated through the
-  web server with the network cable out.
+- That check calls the backend's functions directly. Separately, every view was
+  requested once through a local web server (network connected): 325 API requests
+  (name lookups, frames in every mode with and without motion values, brightness
+  chart, spectrum) and the 618 frame images they name. All answered correctly; the
+  slowest took 0.02 seconds. It was not repeated with the network cable out.
 
 ## Files
 
