@@ -13,8 +13,8 @@ or changed brightness stands out.
 
 - **Backend:** a Python (FastAPI) service that fetches SPHEREx images from NASA's
   archive, stacks them into one frame per visit, and measures how far the target moved.
-- **Frontend:** a single page (Vite + React + TypeScript) that plays the frames and
-  draws the overlays and charts.
+- **Frontend:** a single page that plays the frames and draws the overlays and charts.
+  Today it is one plain file, `frontend/index.html`, with no build step.
 
 Judges are NASA experts. They will test the five targets named in the challenge and
 will likely compare us with WiseView, the existing tool that does this for WISE data.
@@ -28,8 +28,10 @@ Working today, on real data:
 - The star's measured shift matches the Gaia catalogue to within a quarter of a
   SPHEREx pixel, and the other stars in the field stay still.
 
-Not built yet: the frontend, name search, difference and sum modes, the brightness
-chart, the spectrum, deployment.
+- `frontend/index.html` plays those frames with zoom, markers, a trail and blink (#8).
+
+Not built yet: the search box, the brightness chart, the spectrum, the overlays,
+deployment. Name search, difference and sum modes are in progress.
 
 ## Who owns what
 
@@ -102,6 +104,9 @@ mypy
 
 ### TypeScript (`frontend/`)
 
+The page is plain HTML and JavaScript today, so there is nothing to run here yet. If
+anyone adds TypeScript or a build step, these apply from then on:
+
 ```
 npm run lint
 npm run typecheck
@@ -111,7 +116,7 @@ npm run typecheck
   template creates. No errors.
 - `npm run typecheck` runs `tsc --noEmit`. Keep `"strict": true` in `tsconfig.json`.
   No errors.
-- Whoever scaffolds the frontend (#5) adds these two scripts to `package.json`.
+- Whoever adds the build step adds these two scripts to `package.json`.
 
 ### If a check is wrong for your case
 
