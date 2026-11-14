@@ -31,8 +31,9 @@ EPOCH_GAP_DAYS = 30.0    # a gap longer than this between exposures starts a new
 FRAMES_DIR = spherex.CACHE / "frames"
 # Part of every cache key. Raise it whenever a change here alters the pictures or the
 # numbers: results made by older code are then never served again. (3 is taken by the
-# flags image of pull request #24, so the new stacking rule went straight to 4.)
-VERSION = 4
+# flags image of pull request #24; 4 was the new stacking rule; 5 is centroid meaning
+# the target or nothing.)
+VERSION = 5
 
 # Dropping glitches when exposures are stacked (see Stacker).
 MIN_EXPOSURES_TO_REJECT = 5   # with fewer exposures nothing is dropped
@@ -394,6 +395,64 @@ def _find_target(ra: float, dec: float, fov: float, mid_mjd: float,
     return (best[1] if best else None), None
 
 
+# When the view has a target, `centroid` is that target measured, or nothing. The old
+# way (fit whatever is brightest within 14 arcsec) put the marker on a neighbouring star
+# wherever the target itself was invisible: WISE 0855 in detectors 1 to 4.
+TARGET_SEARCH_PX = 3              # start from the brightest pixel this close to the predicted place (6 arcsec)
+TARGET_MAX_OFFSET_ARCSEC = 3.0    # a source further off than this (or a quarter of its own width) is another object
+TARGET_MIN_SNR = 4.0              # fitted height over the scatter around the fit
+# A star is about 10 arcsec wide here, and up to 30 when it is saturated and fitted from
+# its wings (R Draconis). Narrower is a leftover glitch; at 37.7 the fit has run into
+# its own limit, which means a slope rather than a source.
+TARGET_FWHM_ARCSEC = (6.0, 36.0)
+CENTROID_NOTES = {
+    "target": ("centroid is the target, measured: a source fitted within "
+               f"{TARGET_MAX_OFFSET_ARCSEC:.0f} arcsec of the predicted position (or a quarter of its own width, for "
+               f"a saturated star located from its wings) with signal to noise of at least {TARGET_MIN_SNR:.0f}. "
+               "Otherwise it is null and centroid_reason says why; nearest_source then holds what was found "
+               "instead, if anything. centroid_offset_arcsec is centroid minus predicted (east, north, total)."),
+    "brightest_near_centre": ("No target is known for this view (no motion in the request and no Gaia star within "
+                              "15 arcsec of the centre), so centroid is simply the brightest source within 14 arcsec "
+                              "of the centre of the picture."),
+}
+
+
+def _centroid(fit: dict, grid: WCS, n: int) -> dict:
+    """A fitted source as the response gives it."""
+    cra, cdec = grid.all_pix2world(fit["x"], fit["y"], 0)
+    return {"ra": float(cra), "dec": float(cdec),
+            "x": fit["x"], "y": n - 1 - fit["y"],  # y counted from the top of the PNG
+            "err_arcsec": fit["err_px"] * GRID_ARCSEC if fit["err_px"] is not None else None,
+            "snr": fit["snr"], "fwhm_arcsec": fit["sigma_px"] * 2.3548 * GRID_ARCSEC}
+
+
+def _measure_target(image: np.ndarray, grid: WCS, n: int, predicted: dict
+                    ) -> tuple[dict | None, dict | None, str | None, dict | None]:
+    """The target's measured place and its offset from the predicted one, or why there is
+    none: (centroid, offset, reason, nearest other source)."""
+    x0, y0 = predicted["x"], n - 1 - predicted["y"]
+    # A saturated core leaves no value near the centre, so the second try looks wider
+    # and finds the star from its wings; the checks below still apply to what it finds.
+    fit = fit_source(image, x0, y0, search=TARGET_SEARCH_PX) or fit_source(image, x0, y0)
+    if fit is None:
+        return None, None, ("The predicted position is off the picture, too near its edge, or has no data "
+                            "around it."), None
+    found = _centroid(fit, grid, n)
+    east, north = astrometry.offset_arcsec(predicted["ra"], predicted["dec"], found["ra"], found["dec"])
+    offset = {"east": east, "north": north, "total": float(np.hypot(east, north))}
+    narrowest, widest = TARGET_FWHM_ARCSEC
+    if fit["snr"] is None or fit["snr"] < TARGET_MIN_SNR:
+        return None, None, (f"Nothing is detected at the predicted position (signal to noise "
+                            f"{fit['snr'] or 0:.1f}; {TARGET_MIN_SNR:.0f} is needed)."), None
+    if not narrowest <= found["fwhm_arcsec"] <= widest:
+        return None, None, (f"What is at the predicted position is not shaped like a star (width "
+                            f"{found['fwhm_arcsec']:.0f} arcsec)."), None
+    if offset["total"] > max(TARGET_MAX_OFFSET_ARCSEC, 0.25 * found["fwhm_arcsec"]):
+        return None, None, (f"The nearest source is {offset['total']:.1f} arcsec from the predicted position, "
+                            "too far to be the target."), {**found, "offset_arcsec": offset}
+    return found, offset, None, None
+
+
 def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | None) -> dict:
     """Everything reported about one stacked image except where its picture is."""
     mjds = np.array([it["mjd"] for it in items])
@@ -401,21 +460,18 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
     mjd_mean = float(np.average(mjds, weights=weights))
     waves = [it["wave_at_target"] for it in items if it["wave_at_target"] is not None]
 
-    predicted = None
-    x0 = y0 = (n - 1) / 2.0
+    predicted = centroid = offset = reason = nearest = None
     if target:
         pra, pdec = astrometry.position_at(target, mjd_mean)
         px, py = grid.all_world2pix(pra, pdec, 0)
-        x0, y0 = float(px), float(py)
-        predicted = {"ra": pra, "dec": pdec, "x": x0, "y": n - 1 - y0}
-    fit = fit_source(st["image"], x0, y0)
-    centroid = None
-    if fit:
-        cra, cdec = grid.all_pix2world(fit["x"], fit["y"], 0)
-        centroid = {"ra": float(cra), "dec": float(cdec),
-                    "x": fit["x"], "y": n - 1 - fit["y"],  # y counted from the top of the PNG
-                    "err_arcsec": fit["err_px"] * GRID_ARCSEC if fit["err_px"] is not None else None,
-                    "snr": fit["snr"], "fwhm_arcsec": fit["sigma_px"] * 2.3548 * GRID_ARCSEC}
+        predicted = {"ra": pra, "dec": pdec, "x": float(px), "y": n - 1 - float(py)}
+        centroid, offset, reason, nearest = _measure_target(st["image"], grid, n, predicted)
+    else:
+        fit = fit_source(st["image"], (n - 1) / 2.0, (n - 1) / 2.0)
+        if fit:
+            centroid = _centroid(fit, grid, n)
+        else:
+            reason = "No source near the centre of the picture is bright enough to measure."
     return {
         "date_start": Time(mjds.min(), format="mjd").iso[:10],
         "date_end": Time(mjds.max(), format="mjd").iso[:10],
@@ -427,6 +483,9 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
         "saturated_pixels": int(st["saturated"].sum()),
         "rejected_readings": st["rejected_readings"],
         "centroid": centroid,
+        "centroid_offset_arcsec": offset,
+        "centroid_reason": reason,
+        "nearest_source": nearest,
         "predicted": predicted,
     }
 
@@ -568,6 +627,8 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
         "key": key, "ra": ra, "dec": dec, "fov": fov, "detector": detector, "mode": mode,
         "size_px": n, "pixel_arcsec": GRID_ARCSEC,
         "target": target, "gaia_error": gaia_error,
+        "centroid_is": "target" if target else "brightest_near_centre",
+        "centroid_note": CENTROID_NOTES["target" if target else "brightest_near_centre"],
         "exposures_total_all_detectors": n_all,
         "failures": failures, "frames": [], "credit": CREDIT,
     }

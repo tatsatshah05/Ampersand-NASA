@@ -48,9 +48,8 @@ def test_offset_agrees_with_astropy(dec: float):
     assert offset == pytest.approx((-3.0, 4.0), abs=1e-3)   # worst measured: 0.0003 arcsec at declination 85
 
 
-@pytest.mark.xfail(reason="offset_arcsec does not wrap right ascension at 0/360: points 0.7 arcsec apart come out "
-                          "1.3 million arcsec apart, so _find_target misses a star just across RA 0h")
 def test_offset_across_ra_zero():
+    """Two points 0.7 arcsec apart on either side of RA 0h (once reported as 1.3 million arcsec apart)."""
     east, north = astrometry.offset_arcsec(359.9999, 10.0, 0.0001, 10.0)
     assert (east, north) == pytest.approx((0.0002 * 3600 * np.cos(np.radians(10.0)), 0.0), abs=1e-3)
 

@@ -123,7 +123,9 @@ def _target_index(meta: dict, cone: list[dict], ras: np.ndarray, decs: np.ndarra
     idx = np.array(chosen)
     worst = np.zeros(idx.size)
     for k, p in enumerate(predicted):
-        east = (ras[k, idx] - p["ra"]) * np.cos(np.radians(p["dec"])) * 3600.0
+        d_ra = ras[k, idx] - p["ra"]
+        d_ra = np.where(d_ra > 180.0, d_ra - 360.0, np.where(d_ra < -180.0, d_ra + 360.0, d_ra))   # across RA 0h
+        east = d_ra * np.cos(np.radians(p["dec"])) * 3600.0
         north = (decs[k, idx] - p["dec"]) * 3600.0
         worst = np.maximum(worst, np.hypot(east, north))
     best = int(np.argmin(worst))
