@@ -22,7 +22,7 @@ export function FrameDetails({ frame, detector }: { frame: Frame; detector: numb
         <dt>Saturated pixels</dt>
         <dd>
           {frame.saturated_pixels}
-          {frame.saturated_pixels > 0 && detector <= 4 && ' (star too bright here; try detector 5 or 6)'}
+          {frame.saturated_pixels > 0 && ' (a bright core is overexposed here; detectors 5 and 6 are often, not always, better)'}
         </dd>
         <dt>Glitchy readings dropped</dt>
         <dd>{frame.rejected_readings}</dd>

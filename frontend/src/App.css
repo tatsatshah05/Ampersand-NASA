@@ -37,10 +37,14 @@ main > header {
   min-width: 0;
 }
 
-/* The frame details. The spectrum panel is a .panel too and spans both columns. */
-main > .panel:not(.spectrum) {
+/* Under the player: the frame details and the sky context view. The spectrum and
+   brightness panels are .panels too; they span both columns (see their own files). */
+.side {
   grid-column: 2;
   grid-row: 3;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
 }
 
 @media (max-width: 820px) {
@@ -51,7 +55,7 @@ main > .panel:not(.spectrum) {
 
   .viewer,
   .now,
-  main > .panel:not(.spectrum) {
+  .side {
     grid-column: 1;
     grid-row: auto;
   }
@@ -595,3 +599,47 @@ footer a {
 footer p {
   margin: 0 0 6px;
 }
+
+/* ---- flags layer, field stars and sky context (issues #12 and #10) ---------------------- */
+
+/* Blue where there is no data, red where saturated; see-through so the image shows. */
+.stage-zoom img.flags {
+  opacity: 0.75;
+  image-rendering: pixelated; /* keep each flagged pixel's edges sharp */
+}
+
+/* The layers let the pointer through, except the field-star circles, which show their
+   Gaia details on hover. A press on one still reaches the stage, so it can be dragged. */
+.field-star {
+  fill: transparent;
+  stroke: var(--gaia);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+  pointer-events: all;
+}
+
+.field-star:hover {
+  stroke-opacity: 1;
+  stroke-width: 2;
+}
+
+.key.nodata {
+  color: rgb(70 130 255);
+}
+
+.key.saturated {
+  color: rgb(255 60 60);
+}
+
+.aladin {
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 8px 0;
+}
+
+.context-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+

@@ -33,7 +33,7 @@ FRAMES_DIR = spherex.CACHE / "frames"
 # numbers: results made by older code are then never served again. (3 is taken by the
 # flags image of pull request #24; 4 was the new stacking rule; 5 centroid meaning the
 # target or nothing; 6 photometry_saturated_exposures.)
-VERSION = 6
+VERSION = 7
 
 # Dropping glitches when exposures are stacked (see Stacker).
 MIN_EXPOSURES_TO_REJECT = 5   # with fewer exposures nothing is dropped
@@ -545,6 +545,16 @@ def _save(meta_file: Path, meta: dict) -> None:
         spherex.write_json(meta_file, meta, indent=1)
 
 
+def flags_png(st: dict, path: Path) -> None:
+    """Overlay PNG for the flags toggle: blue where there is no data, red where saturated, clear elsewhere."""
+    saturated = st["saturated"]
+    missing = ~np.isfinite(st["image"]) & ~saturated
+    rgba = np.zeros(saturated.shape + (4,), dtype="uint8")
+    rgba[missing] = (70, 130, 255, 255)
+    rgba[saturated] = (255, 60, 60, 255)
+    Image.fromarray(rgba[::-1], "RGBA").save(path)
+
+
 def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
                  mode: str = "normal", progress=None, *,
                  pmra: float | None = None, pmdec: float | None = None, parallax: float | None = None,
@@ -697,8 +707,11 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
         limits = stretch_limits([st["image"]])
         name = "sum.png" if track == "sky" else "sum_target.png"
         to_png(st, limits, out_dir / name)
+        flags_name = name.replace(".png", "_flags.png")
+        flags_png(st, out_dir / flags_name)
         frames.append({"epoch": None, "epochs_combined": [ep + 1 for ep in by_epoch],
-                       **_describe(every, st, grid, n, target), "image": f"/frames/{key}/{name}"})
+                       **_describe(every, st, grid, n, target), "image": f"/frames/{key}/{name}",
+                       "flags_image": f"/frames/{key}/{flags_name}"})
         meta["stretch"] = {"kind": "asinh", **limits, "unit": "MJy/sr"}
         meta["combine"] = "weighted mean of every exposure of every epoch (units stay MJy/sr)"
         meta["registration"] = "sky" if track == "sky" else "target_motion"
@@ -712,8 +725,10 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
         for ep, st in stacks.items():
             name = f"epoch{ep + 1}.png"
             to_png(st, limits, out_dir / name)
+            flags_name = f"epoch{ep + 1}_flags.png"
+            flags_png(st, out_dir / flags_name)
             frames.append({"epoch": ep + 1, **_describe(by_epoch[ep], st, grid, n, target),
-                           "image": f"/frames/{key}/{name}"})
+                           "image": f"/frames/{key}/{name}", "flags_image": f"/frames/{key}/{flags_name}"})
         meta["stretch"] = {"kind": "asinh", **limits, "unit": "MJy/sr"}
         _save(meta_file, meta)
         return meta
