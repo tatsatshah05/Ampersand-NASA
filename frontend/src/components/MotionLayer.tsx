@@ -27,11 +27,13 @@ interface Props {
   path: Point[]
   /** The measured position in the frame on screen, or null when none could be measured. */
   here: Point | null
+  /** The target is only marginally detected here: its ring is dashed. */
+  hereMarginal?: boolean
   /** Put an arrowhead on the end of the path. Off when the shift is too small to be real. */
   arrow: boolean
 }
 
-export function MotionLayer({ sizePx, scale, start, path, here, arrow }: Props) {
+export function MotionLayer({ sizePx, scale, start, path, here, hereMarginal, arrow }: Props) {
   const gap = CROSS_GAP_SCREEN_PX / scale
   const arm = CROSS_ARM_SCREEN_PX / scale
 
@@ -75,7 +77,7 @@ export function MotionLayer({ sizePx, scale, start, path, here, arrow }: Props) 
       )}
       {here && (
         <circle
-          className="mark-line mark-measured mark-ring"
+          className={`mark-line mark-measured mark-ring${hereMarginal ? ' mark-marginal' : ''}`}
           cx={here.x}
           cy={here.y}
           r={Math.max(RING_PICTURE_PX, RING_MIN_SCREEN_PX / scale)}
@@ -96,7 +98,20 @@ export function MotionLayer({ sizePx, scale, start, path, here, arrow }: Props) 
  * What the marks mean, each beside a small drawing of itself, so colour is not the only
  * cue. `note` is one more line, without a drawing.
  */
-export function MotionLegend({ start, path, arrow, note }: { start: boolean; path: boolean; arrow: boolean; note?: string }) {
+export function MotionLegend({
+  start,
+  path,
+  arrow,
+  note,
+  marginal,
+}: {
+  start: boolean
+  path: boolean
+  arrow: boolean
+  note?: string
+  /** Some frame has only a marginal detection, so explain the dashed ring. */
+  marginal?: boolean
+}) {
   return (
     <ul className="legend">
       {start && (
@@ -113,6 +128,14 @@ export function MotionLegend({ start, path, arrow, note }: { start: boolean; pat
         </svg>
         where it was measured in this frame
       </li>
+      {marginal && (
+        <li>
+          <svg viewBox="0 0 22 22" aria-hidden="true">
+            <circle className="mark-line mark-measured mark-marginal" cx="11" cy="11" r="7" />
+          </svg>
+          a dashed ring: only a marginal detection in that frame, so treat the position with care
+        </li>
+      )}
       {path && (
         <li>
           <svg viewBox="0 0 34 22" aria-hidden="true">

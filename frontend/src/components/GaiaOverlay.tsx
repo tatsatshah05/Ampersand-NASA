@@ -64,7 +64,7 @@ export function GaiaOverlay({ frames, current, sizePx, pixelArcsec, target }: Ov
           cx={c(cur.centroid.x)}
           cy={c(cur.centroid.y)}
           r={4}
-          className="measured-stroke"
+          className={cur.detection === 'marginal' ? 'measured-stroke mark-marginal' : 'measured-stroke'}
           fill="none"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"

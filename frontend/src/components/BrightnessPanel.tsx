@@ -25,6 +25,7 @@ import {
   type Measure,
 } from '../lightcurve'
 import type { SpectrumRequest } from '../spectrum'
+import { circleStarsSentence, measuredSentence } from '../detection'
 import './SpectrumPanel.css'
 import './BrightnessPanel.css'
 
@@ -198,6 +199,9 @@ function layout(data: LightcurveResponse, m: Measure, hiddenDetectors: ReadonlyS
 
 function describeTarget(request: SpectrumRequest, data: LightcurveResponse) {
   const place = `RA ${request.ra.toFixed(5)}°, Dec ${request.dec.toFixed(5)}°`
+  // The backend says what it measured; the guesses below are for an older response without that.
+  const measured = measuredSentence(data.measured)
+  if (measured) return `${measured} (${place})`
   const t = data.target
   if (t?.origin === 'request') return `The target of this view (${place} in 2026), followed with its known motion.`
   if (t?.source_id) return `Gaia DR3 ${t.source_id}, the catalogued star at ${place}, followed with its Gaia motion.`
@@ -328,6 +332,9 @@ function Panel({ request, onClose }: Props) {
         </button>
       </div>
       <p className="spectrum-what">{data ? describeTarget(request, data) : `RA ${request.ra.toFixed(5)}°, Dec ${request.dec.toFixed(5)}°`}</p>
+      {data && circleStarsSentence(data.stars_in_circle) && (
+        <p className="spectrum-what stars-in-circle">{circleStarsSentence(data.stars_in_circle)}</p>
+      )}
       {load.state === 'loading' && (
         <p className="spectrum-what">
           Measuring the target in every exposure of all six detectors… a few seconds if it has been viewed before,

@@ -2,7 +2,7 @@
 // in every SPHEREx exposure, grouped into wavelength bins. Field names are the backend's
 // (backend/photometry.py). Only points in the same bin can be compared over time: another
 // bin is another colour of light.
-import type { Motion, SpectrumRequest } from './spectrum'
+import type { Measured, Motion, SpectrumRequest, StarsInCircle } from './spectrum'
 
 export interface LightcurvePoint {
   obs_id: string
@@ -40,6 +40,8 @@ export interface LightcurveResponse {
   ra: number
   dec: number
   target?: { origin?: string; source_id?: string | null } | null
+  measured?: Measured
+  stars_in_circle?: StarsInCircle
   gaia_error?: string | null
   failures?: unknown[]
   message?: string

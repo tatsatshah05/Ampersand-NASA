@@ -643,3 +643,22 @@ footer p {
   gap: 6px;
 }
 
+
+/* A marginal detection is a dashed ring, a clear one a solid ring. */
+.mark-line.mark-marginal,
+.mark-marginal {
+  stroke-dasharray: 3 3;
+  stroke-linecap: butt;
+}
+
+.detection-readout {
+  margin: 0.25rem 0;
+}
+
+.detection-readout p {
+  margin: 0.15rem 0;
+}
+
+.detection-readout .detection {
+  font-weight: 600;
+}
