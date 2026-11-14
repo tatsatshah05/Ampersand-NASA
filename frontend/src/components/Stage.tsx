@@ -142,6 +142,8 @@ export function Stage({ grid, images, current, alt, box, onBoxChange, onReset, s
     }
   }
 
+  // However a press ends (lifted, cancelled, or its capture lost) it is forgotten here.
+  // Only a lift that never turned into a drag is a click.
   function onPointerEnd(e: PointerEvent<HTMLDivElement>) {
     if (!pointers.current.delete(e.pointerId)) return
     const p = press.current
@@ -205,6 +207,7 @@ export function Stage({ grid, images, current, alt, box, onBoxChange, onReset, s
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
+        onLostPointerCapture={onPointerEnd}
         onKeyDown={onKeyDown}
       >
         <div
