@@ -1,9 +1,18 @@
-# SPHEREx sky-change viewer: the backend and the page it serves, in one container.
+# SPHEREx sky-change viewer: the backend and the frontend it serves, in one container.
 # Build and run steps are in docs/deploy.md.
 #
 # The container needs a persistent disk mounted at /app/backend/cache. Without one it
 # still works, but everything downloaded from the archive is lost on restart.
 
+# ---- Stage 1: build the React frontend (frontend/, Vite) -----------------------------
+FROM node:22-slim AS frontend
+WORKDIR /src/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# ---- Stage 2: the Python service ------------------------------------------------------
 FROM python:3.13-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -15,9 +24,9 @@ RUN pip install -r backend/requirements.txt
 
 COPY backend/ backend/
 COPY scripts/ scripts/
-# The page is a plain file, frontend/index.html, with no build step. backend/app.py
-# serves the frontend/ folder at "/" when that file exists.
-COPY frontend/ frontend/
+# backend/app.py serves frontend/dist at "/" when it exists: the React app, and the
+# earlier single-file viewer at /viewer.html.
+COPY --from=frontend /src/frontend/dist frontend/dist
 
 # Most hosts pass the port to listen on in $PORT; 8000 otherwise.
 # One worker on purpose: one process keeps the downloads to the archive at six at a time.

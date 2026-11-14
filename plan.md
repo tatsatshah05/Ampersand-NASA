@@ -13,8 +13,9 @@ or changed brightness stands out.
 
 - **Backend:** a Python (FastAPI) service that fetches SPHEREx images from NASA's
   archive, stacks them into one frame per visit, and measures how far the target moved.
-- **Frontend:** a single page that plays the frames and draws the overlays and charts.
-  Today it is one plain file, `frontend/index.html`, with no build step.
+- **Frontend:** a React app (Vite + TypeScript) in `frontend/` that plays the frames
+  and draws the overlays and charts. The earlier single-file viewer is kept at
+  `frontend/public/viewer.html` (served at `/viewer.html`) until the app has its features.
 
 Judges are NASA experts. They will test the five targets named in the challenge and
 will likely compare us with WiseView, the existing tool that does this for WISE data.
@@ -28,7 +29,11 @@ Working today, on real data:
 - The star's measured shift matches the Gaia catalogue to within a quarter of a
   SPHEREx pixel, and the other stars in the field stay still.
 
-- `frontend/index.html` plays those frames with zoom, markers, a trail and blink (#8).
+- The React app plays those frames with the Gaia overlay and a frame details panel
+  (#10, #12, merged from PR #19).
+- `frontend/public/viewer.html` plays them with zoom, markers, a trail and blink (#8),
+  the difference and sum views, and the spectrum of the target (#11). These still have
+  to be brought into the React app.
 
 Not built yet: the search box, the brightness chart, the spectrum, the overlays,
 deployment. Name search, difference and sum modes are in progress.
@@ -104,19 +109,19 @@ mypy
 
 ### TypeScript (`frontend/`)
 
-The page is plain HTML and JavaScript today, so there is nothing to run here yet. If
-anyone adds TypeScript or a build step, these apply from then on:
+Run these in `frontend/`, after `npm install`:
 
 ```
 npm run lint
 npm run typecheck
 ```
 
-- `npm run lint` runs ESLint with the configuration that the Vite React + TypeScript
-  template creates. No errors.
-- `npm run typecheck` runs `tsc --noEmit`. Keep `"strict": true` in `tsconfig.json`.
+- `npm run lint` runs oxlint, the linter that the current Vite React + TypeScript
+  template sets up. No errors.
+- `npm run typecheck` runs `tsc -b`. Keep `"strict": true` in `tsconfig.app.json`.
   No errors.
-- Whoever adds the build step adds these two scripts to `package.json`.
+- `frontend/public/viewer.html` is plain HTML and JavaScript and is not covered by
+  either check.
 
 ### If a check is wrong for your case
 

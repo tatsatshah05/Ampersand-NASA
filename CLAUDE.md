@@ -102,12 +102,18 @@ answers about one request in three with an immediate 502.
   Does all data access and image processing. Disk cache under `backend/cache/`:
   `cutouts/`, `queries/`, `frames/` (keyed by ra, dec, fov, detector, mode and options)
   and `photometry/` (keyed by ra, dec, detector, motion and code version).
-- `frontend/index.html`: one plain HTML + JavaScript file, no build step (started by
-  Anu for issue #8; the Vite + React plan was dropped). The backend serves it at `/`.
-  It plays the frames with zoom, pan, a marker on each measured position, a trail and
-  a first/last blink, and has detector, field-of-view and mode selectors. Search box,
-  charts, Gaia overlay and the Aladin Lite context panel are not built. It shows only
-  what the API returns: no sample or simulated data.
+- `frontend/`: the React app (Vite + TypeScript, Swara's PR #19). Tatsat chose it as
+  the frontend on 2026-11-14. It has a basic player, the Gaia overlay (predicted
+  against measured position) and a frame details panel. `npm run dev` serves it on
+  port 5173 and passes `/api` and `/frames` to the backend on port 8000. `npm run build`
+  writes `frontend/dist`, which the backend serves at `/` when it exists.
+- `frontend/public/viewer.html`: the earlier single-file viewer (plain HTML +
+  JavaScript, no build step, started by Anu for issue #8), kept at `/viewer.html` until
+  the app has its features: zoom, pan, a marker on each measured position, a trail, a
+  first/last blink, detector, field-of-view and mode selectors, the motion parameters,
+  and the spectrum on click. Search box, brightness chart and the Aladin Lite context
+  panel are not built in either. Both show only what the API returns: no sample or
+  simulated data.
 - `scripts/`: one-off exploration and the cache warm-up script for the five targets.
 
 Endpoints (adjust if something better emerges, and keep this list current):

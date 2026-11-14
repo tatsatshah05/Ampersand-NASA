@@ -9,5 +9,7 @@
 **/__pycache__
 **/*.pyc
 backend/cache
+**/node_modules
+frontend/dist
 scripts/out
 docs

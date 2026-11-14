@@ -127,6 +127,14 @@ footer {
   color: var(--muted);
 }
 
+footer a {
+  color: var(--text);
+}
+
+footer p {
+  margin: 0 0 6px;
+}
+
 @media (max-width: 800px) {
   main {
     grid-template-columns: 1fr;

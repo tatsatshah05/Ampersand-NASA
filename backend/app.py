@@ -82,7 +82,10 @@ def spectrum(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-9
         raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
 
 
-# The page itself, at "/". Registered last so every /api and /frames route wins.
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
-if (FRONTEND_DIR / "index.html").exists():
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+# The frontend, at "/". Registered last so every /api and /frames route wins.
+# frontend/ is a React app that has to be built first (cd frontend && npm install &&
+# npm run build). The build output, frontend/dist, holds the app and the earlier
+# single-file viewer (viewer.html). Without a build only the API is served.
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+if (FRONTEND_DIST / "index.html").exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")

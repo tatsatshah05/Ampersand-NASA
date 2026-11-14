@@ -25,6 +25,12 @@ function queryFromUrl(): FramesQuery {
   }
 }
 
+// The earlier single-file viewer (public/viewer.html) has features this app does not
+// have yet. It names the detector `det`.
+function viewerHref(q: FramesQuery) {
+  return `viewer.html?${new URLSearchParams({ ra: String(q.ra), dec: String(q.dec), fov: String(q.fov), det: String(q.detector) })}`
+}
+
 type Load =
   | { state: 'loading' }
   | { state: 'error'; message: string }
@@ -144,6 +150,10 @@ export default function App() {
       )}
 
       <footer>
+        <p>
+          <a href={viewerHref(query)}>Open this view in the detailed viewer</a>: zoom, blink, difference and sum views,
+          and the spectrum of the target.
+        </p>
         Images: NASA/JPL-Caltech SPHEREx, served by NASA/IPAC Infrared Science Archive (IRSA). Star positions and
         motions: ESA Gaia DR3.
       </footer>
