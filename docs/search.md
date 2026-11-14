@@ -263,16 +263,23 @@ Chosen where this method has the best odds of finding something no catalogue lis
   "visits" a year long, which smears any motion. This method needs separate visits.
 
 All at 0.2 degrees. Cutouts not already in the shared cache were read from the S3 copy into the
-search's own folder (`backend/cache/search2/cutouts`), never into the shared `cutouts/`. About 2
-seconds per cutout on this machine today (the S3 module quotes 0.13 s under better conditions);
-about 3 minutes per field and detector set of some 360 to 480 exposures, plus 30 s per detector to
-search.
+search's own folder (`backend/cache/search2/cutouts`, 1.1 GB for the four fields), never into
+the shared `cutouts/`. Time per field, all six detectors: 3 to 3.5 minutes the first time, of
+which 106 to 136 s was reading 300 to 480 cutouts from S3 (about 0.3 s each on this machine
+today) and 67 to 82 s the search itself.
+
+In all: 24 searches, 3308 sources found, 872 set aside on the glow of brighter stars, 2358 tested
+for motion and 2396 for brightness. 28 objects passed: 17 listed variables, 2 candidates that
+survive every test (below), 1 probable but unclaimable change, and 8 "not listed" changes seen
+in one detector only or below 5 sigma in every detector, which could be neither confirmed nor
+killed. Rejected at 5 sigma or more: 8 "movers" (7 not point-like, 1 an unresolved pair).
 
 ### NGC 1333 (RA 52.265, Dec +31.31), six detectors
 
-Ten objects passed. Eight are stars the catalogues already list as variable (category a, below),
-one is a candidate of category b, and one "mover" was then rejected by a rule added after looking
-at it.
+Nine objects pass with the final code: seven listed variables (category a, below), one candidate
+of category b, and one weak "not listed" change. In the first run a tenth was reported, a "mover"
+that is a false alarm (an unresolved pair, below); the rule that now rejects it was written after
+seeing it.
 
 **b. HH 17 (Gaia DR3 121394192607752192), RA 52.33509, Dec +31.30940: changed, not listed as
 variable.** Candidate.
@@ -418,6 +425,40 @@ flag), changing in five detectors (11.8 sigma combined). Three "movers" at 5.0 t
 rejected as faint diffuse blobs (17 to 23 arcsec wide against 9 to 10); by eye they are blobs
 with nothing moving. Nothing else reached the bar in 962 sources.
 
+## False alarms, all fields together
+
+| Fields | Searches | Sources tested (motion / brightness) | Objects reported | Real and already listed | Candidates surviving every test | Unresolved (cannot confirm or kill) | False alarms found by eye |
+|---|---|---|---|---|---|---|---|
+| Five challenge fields, 0.1 deg | 30 | 683 / 663 | 5 | 5 | 0 | 0 | 0 |
+| Wider fields and detector-3 fields (cache) | 6 | 895 / 887 | 5 (2 are targets found again) | 5 | 0 | 0 | 0 |
+| Four fresh fields, six detectors | 24 | 2358 / 2396 | 28 | 17 | 2 | 9 (one probably real) | 1 in the first run (the NSV 1155 pair), now rejected by rule |
+
+- In fields with ordinary stars the search has not produced a false alarm: every object it
+  reported in the first 36 searches is a known moving star or a listed variable.
+- In young star clusters it produces many more objects, most of them listed variables. Nine
+  "not listed" changes there (single detector, below 5 sigma per detector, or tied to the
+  spacecraft's orientation) could be young stars varying, as young stars do, or artefacts of
+  nebulous, crowded pictures; nothing available here tells them apart. Count them as possible
+  false alarms: the false-alarm rate for this kind of field is then between 0 and 9 in 28.
+- One false alarm was reported as "clean": NSV 1155 and HBC 341, two young stars 3.4 arcsec
+  apart, "moved" because one faded. A rule now rejects such cases, but it was written after
+  this case was seen, so it has been tested only on the case that prompted it.
+- 9 different sources reached 5 sigma and were rejected by rule, all as "movers". The 6 looked
+  at by eye were all artefacts or blends (a reflection, two blends, three nebulous blobs); none
+  was a real mover.
+
+**Survivors of the whole hunt**, i.e. objects not listed as variable that change the same way
+between the same two visits in at least two detectors, at least one at 5 sigma, with all five
+catalogues answering: two, both candidates.
+1. The embedded young star in Serpens South at RA 277.50547, Dec -2.06198, about 5 times brighter
+   at 2.4 to 5 microns in 2026 than in September 2025. Confidence that the brightening is real:
+   high. Which member of the compact group changed: unknown.
+2. HH 17 in NGC 1333 at RA 52.33509, Dec +31.30940, 10 to 18 per cent fainter in February 2026
+   at 1.1 to 5 microns, and still fainter at 3.8 to 5 microns in August 2026. Confidence: moderate
+   (nebulous surroundings, modest change).
+
+No mover without a catalogue counterpart survived anywhere.
+
 ## What the search cannot find, and why
 
 - **Too faint.** A source must stand 5 times above the empty-place noise in the picture of one
@@ -443,8 +484,13 @@ with nothing moving. Nothing else reached the bar in 962 sources.
   per cent for the ring around a saturated star, which is only measured in detectors 5 and 6).
   Changes faster than a visit (days) are averaged within it.
 - **In the wrong place.** Sources on the glow of a much brighter star are not tested (352 of
-  1950). Movers that are not point-like in their own visits are rejected, so a mover blended with
-  a star in every visit would be lost. Frame edges are flagged.
+  1950 in the cached fields, 872 of 3308 in the young clusters). Movers that are not point-like
+  in their own visits are rejected, and so are movers with two catalogued objects within one
+  pixel of their track: a real mover blended with a star in every visit, or passing close to a
+  catalogued pair, would be lost. Frame edges are flagged.
+- **In nebulous, crowded young clusters** single-detector changes of 15 to 30 per cent cannot be
+  told apart from artefacts by this method; only changes seen the same way in two or more
+  detectors should be quoted there.
 - **Where the stars are too few.** The errors are checked against the other stars in the
   picture; with fewer than 8 plain stars (the R Draconis field) that check is impossible and
   candidates are flagged `uncalibrated`.
@@ -457,16 +503,25 @@ What we are comfortable saying:
 > pictures for anything that moves or changes brightness between visits, without being told what
 > is there. Given only the field centres, it found Barnard's Star, the brown dwarfs WISE 0855 and
 > Epsilon Indi B moving at their catalogued speeds, and RW Aurigae changing: brighter in the far
-> red and about half as bright at 4 to 5 microns. It also caught the variable stars R Draconis,
-> V371 Serpentis and two young stars in NGC 1333 and Serpens changing between visits.
+> red and about half as bright at 4 to 5 microns.
 >
 > It tries hard to fool itself first. Every detection is compared with the same measurement at
 > hundreds of empty places in the same picture, and every candidate is tested against the
 > artefacts we found in SPHEREx data: reflections of bright stars, overlapping glitches,
-> saturated stars, blends. In 36 searches testing about 1600 sources it reported 8 different
-> objects, all real and all already known, and it threw out 3 convincing-looking "movers" that
-> turned out to be a reflection, a blend and a patch of nebula. In the fields we searched, it found nothing that
-> is missing from the catalogues.
+> saturated stars, blends. In ordinary star fields it reported only real, known objects, and it
+> threw out convincing-looking "movers" that turned out to be a reflection, blends and patches of
+> nebula.
+>
+> Then we pointed it at four young star clusters. Most of what it flagged there are young stars
+> already listed as variable. Two are not listed as variable in Gaia, AAVSO's variable star index
+> or AllWISE, and passed every test we have. The strongest is a young star buried in the Serpens
+> South cloud that became about five times brighter at 2.4 to 5 microns between September 2025 and
+> March 2026 and stayed bright through September 2026. It is a candidate: SPHEREx's pixels cannot
+> tell which star of a tight group changed, and we have not searched the literature for it.
+
+Say "not listed as variable in Gaia DR3, AAVSO VSX or AllWISE", never "new". If asked about the
+cluster results in general: in crowded, nebulous fields some single-detector changes could not be
+confirmed or ruled out, so we only quote changes seen the same way in at least two detectors.
 
 Do not say: "discovered", "new object", "new variable", or quote the search's own sigma as
 "signal to noise" of a detection. Do say "candidate" for anything unexplained, with what would
@@ -499,9 +554,10 @@ small picture per candidate; `summary.json` lists every object of every field. A
 fails is recorded and the rest carry on. Results are cached in `backend/cache/search2/`
 (catalogue answers and finished searches); a repeat takes seconds.
 
-Time: from cached cutouts, 3 to 9 seconds per detector for a 0.1-degree field and about 30 for
-0.3 degrees. Downloading costs more: IRSA about 0.7 s per cutout, the S3 route about 0.13 s, and
-a 0.1-degree field has 40 to 100 exposures per detector.
+Time, all six detectors, from cutouts on disk: 19 to 47 s for a 0.1-degree field, 67 to 82 s for
+0.2 degrees (one detector at 0.3 degrees: 30 s). Getting the cutouts first: about 0.3 s each
+from S3 on this machine today (IRSA's service about 0.7 s), and a field has 40 to 100 exposures
+per detector, so a fresh 0.2-degree field took 3 to 3.5 minutes in all.
 
 ## Pictures
 
