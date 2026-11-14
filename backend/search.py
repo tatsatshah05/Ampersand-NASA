@@ -3,9 +3,13 @@
 `search_field(ra, dec, fov, detector)` is given a field centre only, never a target. It
 returns candidates of two kinds, each with its evidence and a catalogue check:
 
-- movers: sources whose position differs between visits by more than its own error;
+- movers: sources whose position drifts between visits by more than its own error;
 - changers: sources whose brightness differs between visits by more than the scatter
   of the individual exposures allows, including sources seen in some visits only.
+
+`search_detectors(ra, dec, fov, detectors)` runs it in several detectors and puts the
+results side by side, one entry per object. Results and the measured limits are in
+docs/search.md; `scripts/search_fields.py` runs a list of fields unattended.
 
 Method, in the order the code runs
 1. Every exposure of the detector is cleaned and resampled exactly as for /api/frames
@@ -15,28 +19,34 @@ Method, in the order the code runs
    scatter of the picture (noise plus unresolved faint stars) and their own standard
    error, which comes from the scatter between exposures. One glitch in one exposure
    raises that scatter as much as it raises the mean, so it cannot make a source.
-3. Position: a round Gaussian is fitted to each source in each visit's stack. Its
-   error is a jackknife over the exposures of that visit (how far the centre moves
-   when any one exposure is left out), so glitches, few exposures and a wavelength mix
-   that differs from visit to visit all widen the error instead of faking a motion.
-   The shift common to the field's stars is removed (the frame is registered on its
-   own stars). A mover is a source whose positions are inconsistent with standing
-   still at 5 sigma, after the errors are scaled so that the field's stars as a whole
-   behave like the non-movers they are.
-4. Brightness: aperture photometry on the native pixels of every exposure, the same
-   recipe as /api/lightcurve. Each exposure sees a source at one wavelength, so two
-   visits are compared channel by channel (SPHEREx's 17 channels per detector): the
-   difference in each channel seen in both visits, as a fraction of the source's
-   brightness in that channel. A paired t-test over the channels says whether the
-   mean difference is further from zero than the channel-to-channel scatter allows.
-   The brightness shift common to the field's stars is removed first, and the
-   t values are scaled so the field's stars as a whole behave like constant stars.
-5. Each candidate gets flags (saturated, blended, near the edge, a visit with few
-   exposures) and a catalogue check: Gaia DR3 (with its variability flag and class),
-   SIMBAD, AAVSO VSX, and CatWISE2020 / AllWISE. Catalogue positions are moved to the
-   date of each visit before matching.
+3. Position: a round Gaussian of the field's own star width is fitted to each source
+   in each visit's stack, on a tilted background. Its error is a jackknife over the
+   exposures of that visit (how far the centre moves when any one exposure is left
+   out), steadied across the source's visits, so glitches and few exposures widen the
+   error instead of faking a motion. The shift common to the field's stars is removed
+   (the frame is registered on its own stars). A mover is a source whose positions
+   are inconsistent with standing still AND show a net drift, both at 5 sigma, after
+   the errors are scaled so that the field's stars as a whole behave like non-movers.
+4. Brightness: aperture photometry on the native pixels of every exposure, after
+   /api/lightcurve but with the sky taken just outside the measuring circle. Each
+   exposure sees a source at one wavelength, so visits are compared channel by channel
+   (SPHEREx's 17 channels per detector): a two-way layout (level of each channel, plus
+   an effect of each visit) and the F test for "no visit has an effect". With two
+   visits that is a paired t-test over the channels they share. The brightness shift
+   common to the field's stars is removed first, and the test is scaled so the field's
+   stars as a whole behave like constant stars. A changer needs 5 sigma, a change of
+   at least 10 per cent, and three quarters of the shared channels changing one way.
+5. Sources on the glow of a much brighter star are not tested: the brighter star's own
+   wing, measured from the picture, must put less than a tenth of the source's flux
+   under the measuring circle. A star image is lopsided and the spacecraft turns over
+   between visits six months apart, so that light changes without anything changing.
+6. Each candidate gets flags (saturated, blended, wide, edge, few_exposures,
+   two_visits, follows_roll, one_roll_only), a grade ("clean" when it has none), and a
+   catalogue check: Gaia DR3 (with its variability flag and class), SIMBAD, AAVSO VSX,
+   and CatWISE2020 / AllWISE through IRSA. Catalogue positions are moved to the date
+   of each visit before matching.
 
-Limits (measured numbers are in docs/search.md)
+Limits
 - Nothing is found that is not a peak in a stack: a source must be visible in the sum
   of one visit. Objects that cross the field within a visit (asteroids) are averaged
   away or rejected as glitches, by design.
@@ -44,10 +54,10 @@ Limits (measured numbers are in docs/search.md)
   its positions is reported as a source that appeared or vanished.
 - Saturated stars have no flux, so they are never tested for brightness changes, and
   their position comes from the unsaturated wings.
-- Sources on the glow of a much brighter star are not tested at all.
 - The significance is statistical. It does not know about blends: two stars closer
   than the 7 arcsec star image act as one source whose centre and brightness follow
-  whichever of the two changes.
+  whichever of the two changes. It does not know about reflections of bright stars
+  inside the telescope either; the flags catch the cases seen so far, not all cases.
 """
 from __future__ import annotations
 
@@ -1399,6 +1409,19 @@ def _changer_agreement(check: dict[str, Any]) -> None:
                             f"variable within the {APERTURE_ARCSEC:.0f} arcsec measuring circle." + tail)
 
 
+def check_catalogues(cands: list[dict[str, Any]], ra: float, dec: float, fov: float,
+                     mjd_of: dict[int, float]) -> None:
+    """Catalogue check of candidates of one field: fills `catalogue`, `label` and `category` of each."""
+    _catalogue_objects(cands, ra, dec, fov)
+    for cand in cands:
+        check = _check_catalogues(cand, mjd_of)
+        if cand["kind"] == "mover":
+            _mover_agreement(cand, check)
+        else:
+            _changer_agreement(check)
+        cand["catalogue"], cand["label"], cand["category"] = check, check["label"], check["category"]
+
+
 # --------------------------------------------------------------------------- candidates
 
 def _round(value: Any, digits: int) -> float | None:
@@ -1554,7 +1577,10 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
                   "date_end": Time(field["mjd"][st["index"][ep]].max(), format="mjd").iso[:10],
                   "n_exposures": int(len(st["index"][ep]))} for ep in visits}
     result["visits"] = [dates[ep] for ep in visits]
-    if len(visits) < 2:
+    bins, bin_labels = _time_bins(field, visits, bin_days)
+    if len(bin_labels) < 2:
+        # One visit can still be searched for brightness changes if `bin_days` cuts
+        # it into pieces (near the ecliptic poles SPHEREx never leaves for 30 days).
         result["message"] = "Only one visit so far: nothing can be compared yet."
         return result
 
@@ -1565,7 +1591,6 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
     registration = _register(sources, visits)
     mover_summary = _test_movers(sources, visits, mjd_of)
     phot = _photometry(field, sources, visits)
-    bins, bin_labels = _time_bins(field, visits, bin_days)
     for label in bin_labels:
         label["roll_deg"] = _round(_mean_angle(phot["roll"][bins == label["bin"]]), 1)
     for ep in visits:
@@ -1633,25 +1658,16 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
             candidates.append(cand)
     candidates.sort(key=lambda c: -c["sigma"])
     candidates = _drop_duplicates(candidates)
-    if catalogues:
-        _catalogue_objects(candidates, ra, dec, fov)
-    else:
-        for cand in candidates:
-            cand["_objects"], cand["_answered"], cand["_failed"] = [], [], {}
-    answered: set[str] = set()
-    failed: dict[str, str] = {}
     for number, cand in enumerate(candidates, 1):
         cand["id"] = f"D{detector}-{number:02d}"
-        check = _check_catalogues(cand, mjd_of)
-        if cand["kind"] == "mover":
-            _mover_agreement(cand, check)
-        else:
-            _changer_agreement(check)
-        cand["catalogue"] = check
-        cand["label"] = check["label"] if catalogues else "not checked"
-        cand["category"] = check["category"] if catalogues else "not checked"
-        answered.update(check["answered"])
-        failed.update(check["failed"])
+        cand["label"] = cand["category"] = "not checked"
+        cand["catalogue"] = {"answered": [], "failed": {}, "matches": [], "summary": None}
+    if catalogues:
+        # Only what reached 5 sigma here is looked up now; `search_detectors` looks up
+        # the weaker ones that several detectors together carry over the bar.
+        check_catalogues([c for c in candidates if c["passes"]], ra, dec, fov, mjd_of)
+    answered = {name for c in candidates for name in c["catalogue"]["answered"]}
+    failed = {name: why for c in candidates for name, why in c["catalogue"]["failed"].items()}
 
     testable = [s for s in sources if "halo" not in s["flags"]]
     result.update(
@@ -1670,7 +1686,7 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
         sources=[_source_row(s, visits) for s in sources])
     if figures_dir is not None:
         for cand in candidates:
-            cand["figure"] = _figure(cand, field, st, figures_dir).name
+            cand["figure"] = _figure(cand, field, st, bin_labels, figures_dir).name
     result["seconds"] = round(time.time() - started, 1)
     if use_cache and catalogues and not field["failures"] and not failed:
         spherex.write_json(cache_file, result)       # cached only when complete, like the other endpoints
@@ -1763,6 +1779,9 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
         if not (alone or (combined >= MOVER_SIGMA and len(strong) >= 2)):
             below += 1
             continue
+        if lead["label"] == "not checked" and options.get("catalogues", True):
+            when = {v["epoch"] - 1: v["mjd_mean"] for v in per[lead["detector"]]["visits"]}
+            check_catalogues([lead], ra, dec, fov, when)
         agreement = None
         if lead["kind"] == "mover":
             # Do the detectors that saw it move agree on the motion? Chi-square of
@@ -1802,12 +1821,14 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
 
 # --------------------------------------------------------------------------- pictures
 
-def _figure(cand: dict[str, Any], field: dict[str, Any], st: dict[str, Any], out_dir: Path) -> Path:
+def _figure(cand: dict[str, Any], field: dict[str, Any], st: dict[str, Any], bin_labels: list[dict[str, Any]],
+            out_dir: Path) -> Path:
     """One row of small pictures for a candidate: each visit, then last visit minus first.
 
     North is up, east is left. The cross marks the measured position in that visit and
     the circle the candidate's mean position. In the difference panel white means
-    brighter in the last visit. All visit panels share one brightness scale.
+    brighter in the last visit. All visit panels share one brightness scale. A changer
+    also gets a chart of its brightness in each colour channel, one line per time bin.
     """
     half, big = 20, 6                                # 80 arcsec across, each grid pixel drawn 6 x 6
     grid, n = field["grid"], field["n"]
@@ -1845,6 +1866,8 @@ def _figure(cand: dict[str, Any], field: dict[str, Any], st: dict[str, Any], out
         panels.append(_panel(scaled, diff, big))
         ImageDraw.Draw(panels[-1]).text((4, 3), f"visit {visits[-1] + 1} minus visit {visits[0] + 1}",
                                         fill=(255, 255, 0))
+    if cand["kind"] == "changer":
+        panels.append(_chart(cand, bin_labels, (2 * half + 1) * big))
     width = sum(p.width for p in panels) + 6 * (len(panels) + 1)
     height = (panels[0].height if panels else 60) + 34
     sheet = Image.new("RGB", (max(width, 300), height), (18, 18, 18))
@@ -1865,6 +1888,49 @@ def _figure(cand: dict[str, Any], field: dict[str, Any], st: dict[str, Any], out
     path = out_dir / f"{cand['id']}_{cand['kind']}.png"
     sheet.save(path)
     return path
+
+
+_BIN_COLOURS = ((90, 170, 255), (255, 160, 60), (110, 220, 110), (240, 110, 220), (240, 230, 90), (150, 240, 240))
+
+
+def _chart(cand: dict[str, Any], bin_labels: list[dict[str, Any]], size: int) -> Image.Image:
+    """Brightness in each colour channel, one line per time bin: the like-with-like comparison drawn.
+
+    Left to right is short to long wavelength within the detector. Where two lines
+    stand apart in channel after channel, the source changed; where they cross and
+    recross, it did not.
+    """
+    image = Image.new("RGB", (int(size * 1.5), size), (28, 28, 28))
+    draw = ImageDraw.Draw(image)
+    rows = cand["channels"]
+    known = [f for r in rows for f in r["flux_mjy"] if f is not None]
+    if not known:
+        return image
+    top, bottom = max(max(known), 0.0) * 1.08, min(min(known), 0.0)
+    left, right, upper, lower = 46, image.width - 8, 30, size - 22
+    draw.rectangle([left, upper, right, lower], outline=(120, 120, 120))
+
+    def spot(channel: int, flux: float) -> tuple[float, float]:
+        return (left + (channel + 0.5) / len(rows) * (right - left),
+                lower - (flux - bottom) / max(top - bottom, 1e-12) * (lower - upper))
+
+    for b, label in enumerate(bin_labels):
+        colour = _BIN_COLOURS[b % len(_BIN_COLOURS)]
+        points = [spot(r["channel"], r["flux_mjy"][b]) for r in rows if r["flux_mjy"][b] is not None]
+        if len(points) > 1:
+            draw.line(points, fill=colour, width=1)
+        for x, y in points:
+            draw.ellipse([x - 3, y - 3, x + 3, y + 3], fill=colour)
+        name = f"visit {label['epoch']}" + (f".{label['part']}" if sum(
+            other["epoch"] == label["epoch"] for other in bin_labels) > 1 else "")
+        draw.text((left + 4 + 62 * (b % 5), 4 + 12 * (b // 5)), name, fill=colour)
+    draw.text((2, upper - 4), f"{top:.3g}", fill=(200, 200, 200))
+    draw.text((2, lower - 8), f"{bottom:.3g}", fill=(200, 200, 200))
+    draw.text((2, (upper + lower) // 2), "mJy", fill=(200, 200, 200))
+    draw.text((left, lower + 6), f"{rows[0]['wavelength_um'][0]:.2f}", fill=(200, 200, 200))
+    draw.text((right - 28, lower + 6), f"{rows[-1]['wavelength_um'][1]:.2f}", fill=(200, 200, 200))
+    draw.text(((left + right) // 2 - 60, lower + 6), "wavelength, microns", fill=(200, 200, 200))
+    return image
 
 
 def _panel(scaled: np.ndarray, data: np.ndarray, big: int) -> Image.Image:
