@@ -151,6 +151,29 @@ Endpoints (adjust if something better emerges, and keep this list current):
     shifts each exposure by the target's motion first (`registration` "target_motion",
     and a `note` saying stars are smeared and coordinates hold for the target only);
     it answers 400 if no motion is known.
+- `GET /api/stars?ra=&dec=&fov=&detector=` BUILT. Gaia DR3 stars in the frames of a view,
+  for the catalogue overlay. Takes every parameter `/api/frames` takes (`mode`,
+  `reference`, `track`, `pmra`, `pmdec`, `parallax`, `pm_epoch`) plus `limit`, and describes
+  exactly the frames that request returns: `frames` (each with `epoch`, `mjd_mean`,
+  `date_mean`, in the same order), `size_px`, `pixel_arcsec` and `stars`, brightest first.
+  A star has `source_id`, `gmag`, `pmra`, `pmdec`, `parallax` (mas/yr and mas; null when
+  Gaia has no motion for it), `is_target` and `positions`: one `{ra, dec, x, y}` per
+  frame, for that frame's mean date with the star's own proper motion and parallax
+  applied, x and y in PNG pixels exactly as for `centroid`. `target_source_id` names the
+  star that is the view's target, if one is (by identifier, or, when the target came
+  from the request's motion, the star that stays within 1.5 arcsec of `predicted`).
+  - Keeping it small: only stars brighter than G = 17 that are inside the picture on at
+    least one frame's date; at most `limit` of them (default 300, largest 2000), brightest
+    first, except that stars faster than 100 mas/yr are always kept. `n_in_field`,
+    `n_returned` and `truncated` say what was cut. Numbers are rounded (0.001 pixel,
+    1e-7 degree). About 0.3 kB per star with three frames.
+  - It has no cache of its own. It is worked out in milliseconds from two things that
+    are on disk once `/api/frames` has run for the view: the frames metadata and the Gaia
+    search around the centre. It calls `build_frames` with the same parameters, so it
+    never fetches a cutout that `/api/frames` would not. If the Gaia search is not on
+    disk (the view was only ever requested with a motion) it is made once, with 3 tries;
+    if Gaia does not answer, `gaia_error` is set and `stars` is empty.
+  - Check: `scripts/check_stars.py [name] [detector] [fov]`.
 - `GET /api/lightcurve?ra=&dec=` BUILT. Brightness of the object at (ra, dec) in every
   exposure of all six detectors, grouped into `bins` (SPHEREx's 102 wavelength channels,
   17 per detector). Each bin has `wavelength_um` [min, max], `detector`, counts, and
@@ -196,11 +219,23 @@ same entry at the same time.
 5. Reproject every cutout onto one shared north-up grid centred on the request,
    oversampled to about 2 arcsec per pixel.
 6. Group by epoch (a gap of more than 30 days starts a new one; computed over all
-   detectors so epoch numbers agree between detectors) and detector. Drop single
-   readings far from the per-pixel median (the flags miss some glitches), then take a
-   weighted mean with ONE weight per exposure, the inverse of its median variance.
-   Per-pixel inverse-variance weights would down-weight the exposures in which a source
-   is brightest, because VARIANCE includes source photon noise.
+   detectors so epoch numbers agree between detectors) and detector. Take a weighted
+   mean with ONE weight per exposure, the inverse of its median variance. Per-pixel
+   inverse-variance weights would down-weight the exposures in which a source is
+   brightest, because VARIANCE includes source photon noise.
+   - Glitches (the flags miss some): with 5 or more exposures, at each pixel the highest
+     of at least three readings is dropped if it is far above the SECOND highest, and
+     the lowest if it is far below the second lowest. Far means 6 times that exposure's
+     noise plus the brightest value within 4 grid pixels in the second-highest image.
+     It is dropped only as part of a small patch: the connected patch in which that
+     exposure is the extreme by half that margin must be 85 grid pixels or less (what a
+     2 x 2 block of native pixels spreads over), and then the whole patch goes.
+   - Never go back to "drop what disagrees with the median". Each exposure is at its
+     own wavelength, so a source with a steep spectrum is bright in a minority of them
+     and such a rule throws its light away (see "Stacking and glitches").
+   - `pipeline.Stacker` takes the exposures one at a time and keeps only running sums
+     and the two highest and two lowest readings per pixel, so memory does not grow
+     with the number of exposures. Builds run one at a time (a lock in `build_frames`).
 7. Apply ONE brightness stretch per detector across all epochs (asinh, limits from the
    combined pixel distribution; the top of the scale is the brightest pixel so bright
    stars keep their shape). Per-frame auto-scaling would make brightness changes
@@ -337,6 +372,62 @@ Step 1 result (detector 5, fov 0.1 degrees, 2 arcsec grid)
   from older code are never served again. Deleting `backend/cache/frames/` then only
   frees disk space. A process that was already running keeps the old code and the old
   keys: restart the server and re-run the warm-up script after a version change.
+
+Stacking and glitches (`pipeline.Stacker`, `scripts/check_stack.py`, 2026-11-14)
+- The first rule dropped every reading more than 6 sigma (plus local brightness) from
+  the per-pixel median. It threw away real light. Epsilon Indi B in detector 1 is 17
+  times brighter at 1.08 microns than at 0.85 (6.65 against 0.39 MJy/sr in visit 2), so
+  the median sat near the faint end and the bright readings were dropped. Brightness at
+  the target (3 x 3 grid pixels minus the frame median, MJy/sr), old rule / present rule
+  / nothing dropped: detector 1 visit 2, 0.235 / 1.222 / 1.222; visit 3, 0.813 / 1.879 /
+  1.879; all visits following the target, 0.51 (from `docs/results.md`) / 1.527 / 1.527;
+  detector 2 visit 3 (7 exposures), 4.84 / 7.707 / 7.707. The old rule also took 0.6 per
+  cent off the core of Barnard's Star in visit 3 of detector 5.
+- Real glitches are small: in Barnard's Star detector 5, WISE 0855 detector 6 and
+  Epsilon Indi B detector 2 (visits 1 to 3) every patch that qualified was under 40 grid
+  pixels. Large
+  patches are whole exposures with a different background. Epsilon Indi B, detector 1,
+  visit 3: `2026W16_2A_0434_1`, `2026W16_2A_0434_2` and `2026W18_2A_0819_1` differ from
+  the other 17 by -1.0 to +0.9 MJy/sr over a third to two thirds of the frame (stray
+  light from Epsilon Indi A 6.7 arcmin away; no flag marks it). Dropping pieces of them
+  left visible steps, which is why a patch must be small to be dropped. They stay in the
+  mean with their low weight and add a smooth gradient.
+- The rule alone removes the dark spots it was first written for: with
+  `impossible_pixels` switched off, Barnard's Star detector 5 visit 3 has a darkest
+  pixel of -3.9 sigma with nothing dropped and -0.8 with the rule. WISE 0855 detector 6
+  visit 3: -11.4 against -3.6; the target's brightness, S/N (5.0, 18.6, 27.4) and
+  position are the same as under the old rule.
+- Barnard's Star detector 5 against the old rule: the same shifts (`check_barnard.py`),
+  and 38 to 139 of the 32400 pixels of each frame differ, none by more than 2 grey levels.
+- Known cost: something that two exposures show at overlapping places counts as seen
+  twice and stays. WISE 0855 detector 6 visit 3 has two such places, at PNG pixels
+  (102, 8) and (76, 168): a compact blob of 7 to 18 MJy/sr in one exposure and another
+  8 arcsec away in an exposure 8 to 13 days later (not a moving object, cause unknown).
+  The parts that overlap stay and the cores are dropped, leaving two small ring-shaped
+  marks that the old rule removed completely.
+- A source seen in only one exposure of a visit is still dropped, as before. Visits
+  with fewer than 5 exposures still get no glitch removal at all.
+- Memory, largest cached view (Epsilon Indi B, detector 5, fov 0.3, 86 exposures, 540 x
+  540 grid), peak of a fresh process, old / new: normal 835 / 290 MB, sum 1154 / 261 MB,
+  difference against the mean 1735 / 321 MB. Importing the backend alone is 123 MB.
+  Barnard's Star fov 0.2 sum: 556 / 196 MB. The streaming stack gives the same image as
+  the same rule applied to all exposures held at once, to 4e-16 MJy/sr. A 0.5 degree
+  field (900 x 900) needs about 50 MB per stack being built, whatever the exposure count.
+
+Gaia field stars (`/api/stars`, `scripts/check_stars.py`, 2026-11-14)
+- Stars brighter than G = 17 inside the picture: Barnard's Star 64 at fov 0.1 and 280 at
+  fov 0.2; WISE 0855 15 at fov 0.1; Epsilon Indi B 103 at fov 0.3. The answer is 20 kB for
+  64 stars and three frames, 96 kB for 280, and a repeat request takes 2 to 5 ms.
+- The listed places agree with the pictures: for isolated stars fitted in each frame, the
+  median distance from the catalogue place is 0.15 to 0.37 arcsec (Barnard's Star 8 to 9
+  stars per frame at fov 0.1 and 42 to 46 at fov 0.2; Epsilon Indi B 36 to 46 at fov 0.3;
+  WISE 0855 detector 6, 4 to 5 stars, 0.16 to 0.53).
+- Epsilon Indi B itself (G = 18.0) is fainter than the G = 17 search limit, so it is not
+  in the list; it is drawn from `target` and `predicted` when the motion is passed.
+  Epsilon Indi A (G = 4.3, 4.7 arcsec/yr) is listed when the field is wide enough.
+- Gaia's synchronous TAP returned all 4288 stars (G < 17) within 0.435 degrees of
+  Barnard's Star, the search a 0.5 degree field makes, in 3.9 s with QUERY_STATUS OK: no
+  2000-row cut.
 
 Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
 - SIMBAD TAP: `GET <mirror>/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=json&

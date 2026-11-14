@@ -1,0 +1,76 @@
+# The checks plan.md asks everyone to run before pushing (lint and typecheck), plus the
+# tests, on every push and pull request to Dev and main.
+name: Checks
+
+on:
+  push:
+    branches: [Dev, main]
+  pull_request:
+    branches: [Dev, main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (ruff, mypy, pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"   # the version the Dockerfile deploys
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Install
+        run: python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Typecheck
+        run: mypy
+      - name: Tests   # offline: they use the real cutouts in tests/data and never call the archive
+        run: pytest
+
+  # The frontend job below runs only once frontend/ holds an npm project (the Vite +
+  # React + TypeScript app). A job's `if` cannot look at files, so this job looks first.
+  find-frontend:
+    name: Is there a frontend app to check?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      found: ${{ steps.look.outputs.found }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: look
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  frontend:
+    name: Frontend (lint, typecheck, build)
+    needs: find-frontend
+    if: needs.find-frontend.outputs.found == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build

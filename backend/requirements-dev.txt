@@ -1,3 +1,5 @@
 ruff
 mypy
 types-requests
+pytest
+httpx2  # FastAPI's test client (tests/conftest.py) needs it; plain httpx still works but warns

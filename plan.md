@@ -20,23 +20,35 @@ or changed brightness stands out.
 Judges are NASA experts. They will test the five targets named in the challenge and
 will likely compare us with WiseView, the existing tool that does this for WISE data.
 
-## Where we are (Saturday 14 November)
+## Where we are (Saturday 14 November, mid-afternoon)
 
 Working today, on real data:
 
-- `GET /api/frames` returns three stacked frames for Barnard's Star, one per SPHEREx
-  visit (August 2025, March 2026, August 2026).
-- The star's measured shift matches the Gaia catalogue to within a quarter of a
-  SPHEREx pixel, and the other stars in the field stay still.
+- **Frames.** `GET /api/frames` returns one stacked frame per SPHEREx visit for any
+  position and detector, in three views: normal, difference (what changed since the
+  first visit) and sum (every visit added into one deeper image). For Barnard's Star
+  the measured shift matches the Gaia catalogue to within a quarter of a SPHEREx pixel,
+  and the other stars in the field stay still.
+- **Name lookup.** `GET /api/resolve?name=` turns a name into today's position and the
+  object's motion. All five test targets resolve.
+- **Brightness.** `GET /api/lightcurve` and `/api/spectrum` return one measurement per
+  exposure, with saturated measurements marked and given no number.
+- **The React app** (at `/`) plays the frames with the Gaia overlay, a frame details
+  panel and a spectrum panel (#10, #11, #12 part 1).
+- **The detailed viewer** (`/viewer.html`) has zoom, markers, a trail, blink, the
+  difference and sum views, and the spectrum of any spot you click (#8). These are being
+  brought into the React app now.
 
-- The React app plays those frames with the Gaia overlay and a frame details panel
-  (#10, #12, merged from PR #19).
-- `frontend/public/viewer.html` plays them with zoom, markers, a trail and blink (#8),
-  the difference and sum views, and the spectrum of the target (#11). These still have
-  to be brought into the React app.
+In progress: the React player, selectors and search box (#5, #6, #7); running all five
+targets and writing down the results (#13); the cache warm-up script (#14); deployment
+files (#15); demo text (#16); automated tests.
 
-Not built yet: the search box, the brightness chart, the spectrum, the overlays,
-deployment. Name search, difference and sum modes are in progress.
+Not started: the brightness chart (#9), the flags toggle and context view (#12 part 2),
+choosing a host and deploying, recording the demo.
+
+Known limits so far: R Draconis is too bright for SPHEREx and saturates in every
+exposure, so it has only a relative brightness, not a flux. WISE 0855 is visible only in
+detector 6 and sits next to an ordinary star of similar brightness.
 
 ## Who owns what
 
@@ -47,8 +59,9 @@ to build and how to tell it is done.
 |---|---|---|
 | Tatsat | Backend, scrum, final submission | #1, #2, #3, #4, #17 |
 | Anu | Frontend player, search, selectors | #5, #6, #7, #8 |
-| Swara | Charts, Gaia overlay, spectrum, details panel | #9, #10, #11, #12 |
+| Swara | Charts, Gaia overlay, spectrum, details panel | #9, #10, #11, #12, #21 |
 | Yatri | Testing the five targets, cache warm-up, deploy, demo | #13, #14, #15, #16 |
+| Tatsat | Stretch: search mode (find what moved or changed, and say which are known) | #22 |
 | Unassigned | Stretch goals | #18 |
 
 If you are blocked or finish early, say so in the team chat and pick up the next open
