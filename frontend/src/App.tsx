@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { fetchFrames, type FramesQuery, type FramesResponse } from './api'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
+import { SearchBar, type SearchTarget } from './components/SearchBar'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { targetMotion, type SpectrumRequest } from './spectrum'
 import './App.css'
@@ -38,8 +39,23 @@ type Load =
   | { state: 'error'; message: string }
   | { state: 'ready'; data: FramesResponse }
 
+// Temporary wiring for the search box (issue #6), to be replaced by the rebuilt App.
+// A name search also gives the object's motion; /api/frames needs it to follow objects
+// Gaia does not list (WISE 0855), and fetchFrames in api.ts does not pass it on.
+type Shown = FramesQuery & Pick<SearchTarget, 'pmra' | 'pmdec' | 'parallax'>
+
+async function loadFrames(q: Shown, signal: AbortSignal): Promise<FramesResponse> {
+  if (q.pmra == null || q.pmdec == null) return fetchFrames(q, signal)
+  const motion: Record<string, string> = { pmra: String(q.pmra), pmdec: String(q.pmdec) }
+  if (q.parallax != null) motion.parallax = String(q.parallax)
+  const position = { ra: String(q.ra), dec: String(q.dec), fov: String(q.fov), detector: String(q.detector) }
+  const r = await fetch(`/api/frames?${new URLSearchParams({ ...position, mode: 'normal', ...motion })}`, { signal })
+  if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return (await r.json()) as FramesResponse
+}
+
 export default function App() {
-  const [query] = useState(queryFromUrl)
+  const [query, setQuery] = useState<Shown>(queryFromUrl)
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const [current, setCurrent] = useState(0)
   const [playing, setPlaying] = useState(true)
@@ -49,8 +65,11 @@ export default function App() {
 
   useEffect(() => {
     const ctrl = new AbortController()
-    fetchFrames(query, ctrl.signal)
-      .then((data) => setLoad({ state: 'ready', data }))
+    loadFrames(query, ctrl.signal)
+      .then((data) => {
+        setCurrent(0) // the new target may have fewer frames than the one on screen
+        setLoad({ state: 'ready', data })
+      })
       .catch((e: unknown) => {
         if (!ctrl.signal.aborted) setLoad({ state: 'error', message: e instanceof Error ? e.message : String(e) })
       })
@@ -67,6 +86,14 @@ export default function App() {
   return (
     <main>
       <h1>SPHEREx sky-change viewer</h1>
+      <SearchBar
+        onSelect={(t) => {
+          setLoad({ state: 'loading' })
+          const motion = { pmra: t.pmra, pmdec: t.pmdec, parallax: t.parallax }
+          // The detector a target asks for (WISE 0855: 6), else the one the page opened with.
+          setQuery((q) => ({ ...q, ra: t.ra, dec: t.dec, detector: t.det ?? queryFromUrl().detector, ...motion }))
+        }}
+      />
       <p className="where">
         RA {query.ra.toFixed(5)}°, Dec {query.dec.toFixed(5)}°, field {query.fov}°, detector D{query.detector}
       </p>

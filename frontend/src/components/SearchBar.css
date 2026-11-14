@@ -1,0 +1,159 @@
+/* The search box (issue #6). Colours are the page's own variables from index.css, with
+   today's values as fallbacks so the box still reads if a variable is renamed.
+   Every class starts with "searchbar" so nothing here touches the rest of the page. */
+
+.searchbar {
+  --sb-text: var(--text, #e7e9ee);
+  --sb-muted: var(--muted, #9aa1ad);
+  --sb-page: var(--bg, #0d0f14);
+  --sb-field: var(--panel, #171a22);
+  --sb-error: var(--error, #ff7b7b);
+  /* Outline of the box and the target buttons: 3.7 to 1 against the page, so the
+     controls can be made out without relying on their fill. */
+  --sb-edge: #666d7b;
+  /* Keyboard focus ring: the light blue Chrome itself draws on a dark page, so it
+     matches the page's other controls and stands apart from the light Search button. */
+  --sb-focus: #99c8ff;
+
+  grid-column: 1 / -1; /* the full width of the page grid in App.css */
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 8px 0 12px;
+}
+
+.searchbar-label {
+  font-weight: 600;
+}
+
+.searchbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.searchbar-input {
+  flex: 1 1 10rem;
+  min-width: 0;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 1.0625rem; /* 17px: large enough that phones do not zoom in on focus */
+  color: var(--sb-text);
+  background: var(--sb-field);
+  border: 1px solid var(--sb-edge);
+  border-radius: 8px;
+  /* Without this, Safari draws a search field as a rounded pill and ignores the above. */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.searchbar-input::placeholder {
+  color: var(--sb-muted);
+  opacity: 1;
+}
+
+.searchbar-submit {
+  flex: 0 0 auto;
+  padding: 10px 20px;
+  font-weight: 600;
+  color: var(--sb-page);
+  background: var(--sb-text);
+  border: 1px solid var(--sb-text);
+  border-radius: 8px;
+}
+
+.searchbar-submit:hover {
+  background: #fff;
+  border-color: #fff;
+}
+
+/* Keyboard focus: a ring with a gap, so it shows around the dark box and the light button alike. */
+.searchbar-input:focus-visible,
+.searchbar-submit:focus-visible,
+.searchbar-preset:focus-visible {
+  outline: 2px solid var(--sb-focus);
+  outline-offset: 2px;
+}
+
+/* One line under the box: the hint, then "looking up", then what was found or what went
+   wrong. A line is kept free so the page below does not jump when the text changes. */
+.searchbar-feedback {
+  min-height: 1.5em;
+}
+
+.searchbar-feedback p {
+  margin: 0;
+}
+
+.searchbar-hint {
+  color: var(--sb-muted);
+}
+
+.searchbar-error {
+  color: var(--sb-error);
+}
+
+.searchbar-fix {
+  color: var(--sb-text);
+}
+
+/* Text a person can type as it stands. */
+.searchbar-example {
+  padding: 1px 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: var(--sb-text);
+  background: rgb(255 255 255 / 0.08);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.searchbar-status[data-busy]::before {
+  content: '';
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 0.5em;
+  vertical-align: -0.08em;
+  border: 2px solid var(--sb-edge);
+  border-top-color: var(--sb-text);
+  border-radius: 50%;
+  animation: searchbar-spin 0.8s linear infinite;
+}
+
+@keyframes searchbar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .searchbar-status[data-busy]::before {
+    animation: none;
+  }
+}
+
+.searchbar-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.searchbar-presets-label {
+  margin-right: 2px;
+  color: var(--sb-muted);
+}
+
+.searchbar-preset {
+  padding: 5px 12px;
+  font-size: 0.95rem;
+  background: transparent;
+  border: 1px solid var(--sb-edge);
+  border-radius: 999px;
+}
+
+.searchbar-preset:hover {
+  background: var(--sb-field);
+  border-color: var(--sb-text);
+}
