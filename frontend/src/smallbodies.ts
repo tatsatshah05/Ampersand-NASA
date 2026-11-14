@@ -3,7 +3,7 @@
 // backend's (backend/smallbodies.py). Every position here is a prediction; `verdict` is
 // what the exposure itself shows at that place.
 
-export type Verdict = 'seen' | 'possible' | 'not_seen' | 'unmeasurable'
+export type Verdict = 'seen' | 'possible' | 'not_seen' | 'unmeasurable' | 'fixed_source'
 
 export interface SmallBodyCrossing {
   id: string
@@ -87,10 +87,12 @@ export function whenInWords(iso: string): string {
 export function bodyVerdict(group: SmallBodyCrossing[]): string {
   const seen = group.filter((c) => c.verdict === 'seen').length
   const possible = group.filter((c) => c.verdict === 'possible').length
+  const fixed = group.filter((c) => c.verdict === 'fixed_source').length
   const n = group.length
   const exposures = n === 1 ? 'the 1 exposure' : `${n} exposures`
   if (seen > 0) return `A source is seen at the predicted place in ${seen} of ${exposures} it was predicted in.`
   if (possible > 0) return `A faint source may be at the predicted place in ${possible} of ${exposures}; nothing secure.`
+  if (fixed > 0) return `The source at the predicted place is also there on other days, so it is a star or galaxy, not this body.`
   if (group.every((c) => c.verdict === 'unmeasurable')) return `Not measured in ${exposures}.`
   return `Nothing is seen at the predicted place in ${exposures}.`
 }

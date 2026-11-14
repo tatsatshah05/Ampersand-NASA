@@ -42,7 +42,7 @@ SPHEREX_HORIZONS_ID = "-163182"      # JPL Horizons' identifier for the SPHEREx 
 OBSERVER = "SPHEREx spacecraft (JPL Horizons -163182)"
 CREDIT = "NASA/JPL Solar System Dynamics (Small-Body Identification API and Horizons)"
 
-VERSION = 2                         # part of the cache key: raise it when the answer changes
+VERSION = 3                         # part of the cache key: raise it when the answer changes
 CACHE_DIR = spherex.CACHE / "smallbodies"
 PICTURES_DIR = pipeline.FRAMES_DIR / "smallbodies"   # served at /frames/smallbodies/...
 
@@ -420,6 +420,36 @@ def picture(path: Path, ra: float, dec: float, out_file: Path) -> None:
     pipeline.to_png({"image": item["data"], "saturated": item["saturated"]}, lim, out_file)
 
 
+OTHER_EXPOSURES = 12                 # exposures of other days measured at the same place
+OTHER_MIN_DAYS = 1.0                 # "other days": a body is long gone from a 0.1 degree field after this
+MIN_OTHERS = 3                       # fewer measurements than this cannot say a source is fixed
+
+
+def _elsewhere(exposures: list[dict], index: int, view_ra: float, view_dec: float, cutout_deg: float,
+               ra: float, dec: float) -> dict:
+    """Measure the same sky place in up to OTHER_EXPOSURES exposures taken on other days."""
+    here = exposures[index]["mjd"]
+    far = [e for e in exposures if abs(e["mjd"] - here) > OTHER_MIN_DAYS]
+    step = max(len(far) // OTHER_EXPOSURES, 1)
+    fluxes: list[float] = []
+    sigmas: list[float] = []
+    for e in far[::step][:OTHER_EXPOSURES]:
+        try:
+            m = photometry.measure(spherex.fetch_cutout(e, view_ra, view_dec, cutout_deg), ra, dec)
+        except Exception:  # noqa: BLE001 - an exposure that cannot be had or measured is left out
+            continue
+        if m["status"] == "ok" and m.get("flux_mjy") is not None and m.get("flux_err_stat_mjy"):
+            fluxes.append(float(m["flux_mjy"]))
+            sigmas.append(float(m["flux_mjy"]) / float(m["flux_err_stat_mjy"]))
+    return {"n_measured": len(fluxes), "n_with_source": sum(s >= POSSIBLE_SIGMA for s in sigmas),
+            "median_flux_mjy": round(float(np.median(fluxes)), 4) if fluxes else None}
+
+
+def fixed_source(flux: float | None, others: dict) -> bool:
+    """Is what was measured here a fixed source: one that most exposures of other days show at this place too?"""
+    return bool(flux and others["n_measured"] >= MIN_OTHERS and others["n_with_source"] * 2 > others["n_measured"])
+
+
 def describe(exposures: list[dict], crossings: list[dict], ra: float, dec: float, fov: float, detector: int,
              key: str) -> list[dict]:
     """Add to each crossing what the view needs: exposure, visit, place in the frame, measurement, picture."""
@@ -458,6 +488,15 @@ def describe(exposures: list[dict], crossings: list[dict], ra: float, dec: float
         m = _measure(path, c["ra"], c["dec"])
         item["measurement"] = m
         item["verdict"], item["summary"] = verdict(m)
+        if item["verdict"] in ("seen", "possible"):
+            # A moving body is only at this place in this exposure. A source that is here in the others too is not it.
+            others = _elsewhere(exposures, c["exposure"], ra, dec, cutout_deg, c["ra"], c["dec"])
+            item["elsewhere"] = others
+            if fixed_source(m["flux_mjy"], others):
+                item["verdict"] = "fixed_source"
+                item["summary"] = (f"A source is here ({m['sigma']:.0f} sigma), but it is also here in "
+                                   f"{others['n_with_source']} of {others['n_measured']} exposures of other days, "
+                                   "so it is a fixed source (a star or galaxy), not this body.")
         item["nearby_gaia_star"] = _near_star(cone, c["ra"], c["dec"], mid)
         star = item["nearby_gaia_star"]
         if star and item["verdict"] in ("seen", "possible"):

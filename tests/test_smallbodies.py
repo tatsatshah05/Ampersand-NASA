@@ -110,7 +110,6 @@ def test_each_crossing_is_measured_in_its_own_exposure_and_pictured(vesta: Simpl
     crossings, _ = smallbodies.find_crossings(vesta.exposures, vesta.ra, vesta.dec, vesta.fov)
     exposure_list = [e for e in vesta.exposures]
     bodies = smallbodies.describe(exposure_list, crossings, vesta.ra, vesta.dec, vesta.fov, vesta.detector, "test")
-    assert not [u for u in network if "irsa" in u and "cutout" in u]
     assert [b["name"] for b in bodies] == ["4 Vesta", "4 Vesta"]
     for b in bodies:
         assert b["kind"] == "asteroid" and b["exposure"]["detector"] == 5
@@ -136,6 +135,18 @@ def test_nothing_is_seen_where_the_body_was_not(vesta: SimpleNamespace):
     assert m["status"] == "ok" and abs(m["sigma"]) < smallbodies.POSSIBLE_SIGMA
     kind, sentence = smallbodies.verdict(m)
     assert kind == "not_seen" and sentence.startswith("Nothing is seen here")
+
+
+def test_a_source_that_is_there_on_other_days_is_a_fixed_source_not_the_body():
+    """Real case, 2026-11-14: asteroid 66654 was predicted in a WISE 0855 field exposure with a 27 sigma source at
+    the place; 29 exposures of other days measured there gave a median of 28 sigma. A star, not the asteroid."""
+    star = {"n_measured": 29, "n_with_source": 29, "median_flux_mjy": 4.6}
+    assert smallbodies.fixed_source(4.66, star)
+    # Vesta's place in the exposures of other days (real, from the test cutouts): nothing there
+    moving = {"n_measured": 4, "n_with_source": 0, "median_flux_mjy": 0.05}
+    assert not smallbodies.fixed_source(1442.9, moving)
+    assert not smallbodies.fixed_source(1442.9, {"n_measured": 1, "n_with_source": 1, "median_flux_mjy": 3.0})
+    assert not smallbodies.fixed_source(None, star)
 
 
 def test_the_verdict_words():

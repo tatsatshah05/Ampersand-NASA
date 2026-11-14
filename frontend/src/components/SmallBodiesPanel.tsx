@@ -22,6 +22,8 @@ export function SmallBodiesPanel({ query, onClose }: Props) {
 }
 
 function Panel({ query, onClose }: Props) {
+  // App builds `query` anew on every render: depend on its numbers, or every render would ask again.
+  const { ra, dec, fov, detector } = query
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const section = useRef<HTMLElement>(null)
 
@@ -34,7 +36,7 @@ function Panel({ query, onClose }: Props) {
     // Started on the next tick, so the discarded first mount of React's development mode
     // never sends a request.
     const timer = window.setTimeout(() => {
-      fetchSmallBodies(query, ctrl.signal)
+      fetchSmallBodies({ ra, dec, fov, detector }, ctrl.signal)
         .then((data) => setLoad({ state: 'done', data }))
         .catch((e: unknown) => {
           if (!ctrl.signal.aborted) setLoad({ state: 'error', message: e instanceof Error ? e.message : String(e) })
@@ -44,7 +46,7 @@ function Panel({ query, onClose }: Props) {
       window.clearTimeout(timer)
       ctrl.abort()
     }
-  }, [query])
+  }, [ra, dec, fov, detector])
 
   const data = load.state === 'done' ? load.data : null
   const groups = data ? groupByBody(data.bodies) : []
