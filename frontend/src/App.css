@@ -51,6 +51,25 @@ h1 {
   image-rendering: pixelated; /* keep each flagged pixel's edges sharp */
 }
 
+/* Overlays let the pointer through, except the field-star circles, which show their
+   Gaia details on hover. */
+.stage .overlay {
+  pointer-events: none;
+}
+
+.field-star {
+  fill: transparent;
+  stroke: var(--gaia);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+  pointer-events: all;
+}
+
+.field-star:hover {
+  stroke-opacity: 1;
+  stroke-width: 2;
+}
+
 .compass {
   position: absolute;
   top: 6px;

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { fetchFrames, type FramesQuery, type FramesResponse } from './api'
 import { ContextView } from './components/ContextView'
+import { FieldStars } from './components/FieldStars'
+import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import { BrightnessPanel } from './components/BrightnessPanel'
@@ -76,6 +78,24 @@ export default function App() {
   const [showFlags, setShowFlags] = useState(false)
   // Issue #9: whose brightness over time is shown, or null when that panel is closed.
   const [brightness, setBrightness] = useState<SpectrumRequest | null>(null)
+  // Issue #10: the Gaia stars of the view, placed on every frame (null until they arrive).
+  const [stars, setStars] = useState<{ forQuery: Shown; data: StarsResponse } | { forQuery: Shown; error: string } | null>(null)
+
+  // Ask for the field stars of the same view as the frames, with the same motion, so the
+  // positions belong to exactly those frames. The backend builds the frames first if needed.
+  useEffect(() => {
+    const ctrl = new AbortController()
+    const pmra = query.pmra ?? query.motion?.pmra
+    const pmdec = query.pmdec ?? query.motion?.pmdec
+    const parallax = query.parallax ?? query.motion?.parallax
+    const motion = pmra != null && pmdec != null ? { pmra, pmdec, parallax } : undefined
+    fetchStars({ ra: query.ra, dec: query.dec, fov: query.fov, detector: query.detector, motion }, ctrl.signal)
+      .then((data) => setStars({ forQuery: query, data }))
+      .catch((e: unknown) => {
+        if (!ctrl.signal.aborted) setStars({ forQuery: query, error: e instanceof Error ? e.message : String(e) })
+      })
+    return () => ctrl.abort()
+  }, [query])
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -92,6 +112,10 @@ export default function App() {
 
   const n = load.state === 'ready' ? load.data.frames.length : 0
   const hasFlags = load.state === 'ready' && load.data.frames.every((f) => f.flags_image)
+  // Field stars only when they belong to the view on screen and match its frame count.
+  const starsData =
+    stars && stars.forQuery === query && 'data' in stars && stars.data.frames.length === n ? stars.data : null
+  const starsError = stars && stars.forQuery === query && 'error' in stars ? stars.error : null
   useEffect(() => {
     if (!playing || n < 2) return
     const t = window.setInterval(() => setCurrent((i) => (i + 1) % n), 700)
@@ -130,6 +154,9 @@ export default function App() {
               <img src={load.data.frames[current].image} alt={`SPHEREx frame ${current + 1} of ${n}`} />
               {showFlags && load.data.frames[current].flags_image && (
                 <img className="flags" src={load.data.frames[current].flags_image} alt="" />
+              )}
+              {showGaia && starsData && (
+                <FieldStars data={starsData} current={current} sizePx={load.data.size_px} pixelArcsec={load.data.pixel_arcsec} />
               )}
               {showGaia && (
                 <GaiaOverlay
@@ -233,6 +260,8 @@ export default function App() {
                 gaiaError={load.data.gaia_error}
               />
             )}
+            {showGaia && starsData && <p className="readout">{fieldStarsSummary(starsData, load.data.pixel_arcsec)}</p>}
+            {showGaia && starsError && <p className="hint">Field stars could not be loaded: {starsError}.</p>}
           </div>
 
           <div className="side">
