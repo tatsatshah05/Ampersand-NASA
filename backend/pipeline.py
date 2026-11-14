@@ -345,6 +345,18 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
     }
 
 
+def _save(meta_file: Path, meta: dict) -> None:
+    """Cache a finished result, but only a complete one.
+
+    If some exposures could not be downloaded, or Gaia did not answer (so no target
+    and no predicted positions), the result is still returned, with `failures` or
+    `gaia_error` saying so, and the next request tries again instead of being served
+    the degraded version for ever.
+    """
+    if not meta.get("failures") and meta.get("gaia_error") is None:
+        spherex.write_json(meta_file, meta, indent=1)
+
+
 def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
                  mode: str = "normal", progress=None, *,
                  pmra: float | None = None, pmdec: float | None = None, parallax: float | None = None,
@@ -466,7 +478,7 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
         meta["registration"] = "sky" if track == "sky" else "target_motion"
         if note:
             meta["note"] = note
-        meta_file.write_text(json.dumps(meta, indent=1))
+        _save(meta_file, meta)
         return meta
 
     stacks = {ep: stack(items) for ep, items in by_epoch.items()}
@@ -478,7 +490,7 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
             frames.append({"epoch": ep + 1, **_describe(by_epoch[ep], st, grid, n, target),
                            "image": f"/frames/{key}/{name}"})
         meta["stretch"] = {"kind": "asinh", **limits, "unit": "MJy/sr"}
-        meta_file.write_text(json.dumps(meta, indent=1))
+        _save(meta_file, meta)
         return meta
 
     # mode == "difference"
@@ -515,5 +527,5 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     if reference == "first":
         ref_desc = _describe(by_epoch[first], stacks[first], grid, n, target)
         meta["reference_frame"] = {"epoch": first + 1, **ref_desc}
-    meta_file.write_text(json.dumps(meta, indent=1))
+    _save(meta_file, meta)
     return meta

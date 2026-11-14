@@ -1,4 +1,6 @@
 """FastAPI service.  Run:  .venv/bin/uvicorn backend.app:app --reload"""
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -28,7 +30,7 @@ def frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90,
            mode: str = Query("normal"),
            pmra: float | None = Query(None, description="mas/yr, including cos(dec); from /api/resolve"),
            pmdec: float | None = Query(None, description="mas/yr"),
-           parallax: float | None = Query(None, ge=0, description="mas"),
+           parallax: float | None = Query(None, description="mas; zero or negative counts as unknown"),
            pm_epoch: float = Query(astrometry.RESOLVE_EPOCH, ge=1990, le=2040,
                                    description="Julian year at which the object is at (ra, dec)"),
            reference: str = Query("first", description="difference mode: 'first' or 'mean'"),
@@ -45,7 +47,7 @@ def frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90,
 
 _PMRA = Query(None, description="mas/yr, including cos(dec); from /api/resolve")
 _PMDEC = Query(None, description="mas/yr")
-_PARALLAX = Query(None, ge=0, description="mas")
+_PARALLAX = Query(None, description="mas; zero or negative counts as unknown")
 _PM_EPOCH = Query(astrometry.RESOLVE_EPOCH, ge=1990, le=2040,
                   description="Julian year at which the object is at (ra, dec)")
 
@@ -78,3 +80,9 @@ def spectrum(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-9
         raise HTTPException(400, str(e)) from e
     except spherex.ArchiveError as e:
         raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+
+
+# The page itself, at "/". Registered last so every /api and /frames route wins.
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+if (FRONTEND_DIR / "index.html").exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

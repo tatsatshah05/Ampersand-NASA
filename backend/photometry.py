@@ -46,7 +46,7 @@ from astropy.wcs.utils import proj_plane_pixel_area
 
 from . import astrometry, pipeline, spherex
 
-VERSION = 5                      # part of the cache key: raise it when the measurement changes
+VERSION = 6                      # part of the cache key: raise it when the measurement changes
 PHOT_DIR = spherex.CACHE / "photometry"
 CUTOUT_DEG = 0.15                # same cutouts as /api/frames at its default field of view
 
@@ -152,8 +152,11 @@ def measure(path: Path, ra: float, dec: float) -> dict:
     edge = SKY_PX[1] + 1
     if not (edge <= x < nx - edge and edge <= y < ny - edge):
         return point           # near the edge of the detector: no room for the sky ring
-    point["wavelength_um"] = float(wave[yi, xi])
-    point["bandwidth_um"] = float(band[yi, xi])
+    wavelength, bandwidth = float(wave[yi, xi]), float(band[yi, xi])
+    if not (np.isfinite(wavelength) and np.isfinite(bandwidth)):
+        point["status"] = "no_data"   # no wavelength for this pixel: the reading cannot be placed
+        return point
+    point["wavelength_um"], point["bandwidth_um"] = wavelength, bandwidth
 
     data = image - zodi
     data[pipeline.impossible_pixels(image, variance)] = np.nan   # unflagged negative glitches: treated as empty
@@ -273,7 +276,8 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
         wing_rings[str(det)] = list(WING_RINGS_PX[choice]) if choice is not None else None
         for p in of_det:
             wing = p["wings"][choice] if choice is not None and p["wings"] else None
-            p.update(wing_status=wing["status"] if wing else ("off_image" if not p["wings"] else "none"),
+            # No rings were measured when the core measurement stopped early; say why.
+            p.update(wing_status=wing["status"] if wing else (p["status"] if not p["wings"] else "none"),
                      wing_mjy=wing["value"] if wing else None, wing_err_mjy=wing["error"] if wing else None,
                      wing_ring_px=wing["ring_px"] if wing else None,
                      wing_clean_fraction=wing["clean_fraction"] if wing else None,
@@ -317,9 +321,10 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
             "wing_trusted_detectors": list(WING_TRUSTED_DETECTORS),
         },
     }
-    if not failures:
-        PHOT_DIR.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(json.dumps(result))
+    # Cache only a complete result: with a failed download or no answer from Gaia (the
+    # object would have been measured as if it did not move) the next request retries.
+    if not failures and gaia_error is None:
+        spherex.write_json(cache_file, result)
     return result
 
 

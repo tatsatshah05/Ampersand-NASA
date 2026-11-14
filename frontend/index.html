@@ -10,6 +10,9 @@
 
   The page reads its options from its own address:
       ?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal
+  For an object whose motion is known, add what /api/resolve returns
+  (&pmra=..&pmdec=..&parallax=..); the backend then follows that object instead of
+  picking the nearest catalogue star.
   and finds the backend at the address the page itself was served from. When the page
   is opened as a file, or served from somewhere else during development, it uses
   http://localhost:8000, or whatever ?api=... says.
@@ -67,6 +70,8 @@ const FOVS = [0.05, 0.1, 0.2, 0.5];       // presets in degrees; the API needs m
 // 4.5 arcminutes away and outside a 0.1 degree frame.
 const DEFAULT = {ra: 269.446267, dec: 4.768222, det: 5, fov: 0.1, mode: 'normal'};
 const Q = {...DEFAULT};                   // the selected options
+// Known motion of the object, as /api/resolve returns it. Passed through to the API.
+const MOTION = {};
 
 const params = new URLSearchParams(location.search);
 // Where the backend is. Same address as the page, unless the page is a local file.
@@ -85,10 +90,17 @@ function readURL(){
   Q.det = Math.round(numberIn(params.get('det'), 1, 6, DEFAULT.det));
   Q.fov = numberIn(params.get('fov'), 0.02, 0.5, DEFAULT.fov, true);
   Q.mode = MODES.some(m => m[0] === params.get('mode')) ? params.get('mode') : DEFAULT.mode;
+  const pmra = numberIn(params.get('pmra'), -1e5, 1e5, null);
+  const pmdec = numberIn(params.get('pmdec'), -1e5, 1e5, null);
+  if (pmra !== null && pmdec !== null){              // the API wants both or neither
+    MOTION.pmra = pmra; MOTION.pmdec = pmdec;
+    const plx = numberIn(params.get('parallax'), -1e4, 1e4, null);
+    if (plx !== null) MOTION.parallax = plx;
+  }
 }
 function writeURL(){
   // Keep the address in sync so a reload or a shared link restores the same view.
-  const p = new URLSearchParams({ra: Q.ra, dec: Q.dec, det: Q.det, fov: Q.fov, mode: Q.mode});
+  const p = new URLSearchParams({ra: Q.ra, dec: Q.dec, det: Q.det, fov: Q.fov, mode: Q.mode, ...MOTION});
   if (params.get('api')) p.set('api', params.get('api'));
   try { history.replaceState(null, '', '?' + p); } catch (e) { /* not allowed for local files */ }
 }
@@ -108,28 +120,39 @@ function buildControls(){
 
 // ---- frames (reloaded whenever an option changes) -------------------------
 // D.scale is arcseconds per image pixel, as reported by the API.
-let D = {w: 1, h: 1, scale: 2, frames: []}, imgs = [], N = 0, loading = false, loadId = 0;
+let D = {w: 1, h: 1, scale: 2, frames: [], start: null}, imgs = [], N = 0, loading = false, loadId = 0;
 const notes = {mode: '', sat: ''};
 function showNotes(){ $('note').textContent = [notes.mode, notes.sat].filter(Boolean).join('  '); }
 
-function normalizeFrame(f){
-  // The only place that knows the API's field names.
+// normalizeFrame and frameLabel are the only places that know the API's field names.
+function spot(c){
   // The API counts pixels from the top-left with whole numbers at pixel centres; the
   // canvas puts pixel centres at +0.5. `centroid` is null when nothing could be measured.
-  const c = f.centroid;
-  return {src: API + f.image,
-          label: `Visit ${f.epoch}: ${f.date_start} to ${f.date_end}, ${f.n_exposures} exposures`,
-          cx: c ? c.x + 0.5 : null, cy: c ? c.y + 0.5 : null,
-          sat: f.saturated_pixels || 0};
+  return c ? {cx: c.x + 0.5, cy: c.y + 0.5} : {cx: null, cy: null};
+}
+function frameLabel(f, body){
+  const when = `${f.date_start} to ${f.date_end}, ${f.n_exposures} exposures`;
+  if (body.mode === 'sum') return `All ${f.epochs_combined.length} visits added together: ${when}`;
+  if (body.mode === 'difference'){
+    const ref = f.reference_epoch ? `visit ${f.reference_epoch}` : 'the average of all visits';
+    return `Visit ${f.epoch} minus ${ref}: ${when}`;
+  }
+  return `Visit ${f.epoch}: ${when}`;
+}
+function normalizeFrame(f, body){
+  return {src: API + f.image, label: frameLabel(f, body), ...spot(f.centroid), sat: f.saturated_pixels || 0};
 }
 const measured = () => D.frames.filter(f => f.cx !== null);   // frames with a measured position
+// Where the object started. In a difference view the first visit is the one subtracted
+// and is not among the frames, so the API reports its position separately.
+const startSpot = () => (D.start && D.start.cx !== null) ? D.start : measured()[0];
 
 async function loadFrames(){
   const my = ++loadId;                                  // ignore replies that arrive out of order
   loading = true; notes.sat = ''; showNotes();
   $('info').textContent = 'Loading frames… a new position or detector can take about a minute.';
   const url = API + '/api/frames?' + new URLSearchParams(
-    {ra: Q.ra, dec: Q.dec, detector: Q.det, fov: Q.fov, mode: Q.mode});
+    {ra: Q.ra, dec: Q.dec, detector: Q.det, fov: Q.fov, mode: Q.mode, ...MOTION});
   try {
     const r = await fetch(url).catch(() => { throw new Error('the server could not be reached.'); });
     if (my !== loadId) return;
@@ -142,12 +165,16 @@ async function loadFrames(){
     const body = await r.json();
     if (!body.frames || !body.frames.length)
       throw new Error(body.message || 'SPHEREx has no frames for this position and detector.');
-    const fr = body.frames.map(normalizeFrame);
+    const fr = body.frames.map(f => normalizeFrame(f, body));
     const im = fr.map(f => { const i = new Image(); i.src = f.src; return i; });
     await Promise.all(im.map(i => i.decode()));         // wait until every image is ready
     if (my !== loadId) return;
     imgs = im; N = fr.length;
-    D = {w: im[0].naturalWidth, h: im[0].naturalHeight, scale: body.pixel_arcsec || 2, frames: fr};
+    D = {w: im[0].naturalWidth, h: im[0].naturalHeight, scale: body.pixel_arcsec || 2, frames: fr,
+         start: body.reference_frame ? spot(body.reference_frame.centroid) : null};
+    notes.mode = body.mode === 'difference'
+      ? 'Difference view: grey = no change, white = brighter than before, black = fainter.'
+      : body.mode === 'sum' ? 'Sum view: one deeper image from every visit. Nothing moves in it.' : notes.mode;
     const k = fr.filter(f => f.sat > 0).length;         // detectors 1-4 overload on bright stars
     notes.sat = k ? `Saturated pixels in ${k} of ${N} frames (bright star). Try detector 5 or 6.` : '';
     showNotes(); S.frame = 0; S.tick = 0; loading = false; resetView(); draw();
@@ -175,7 +202,7 @@ function resetView(){
   // wide, so this keeps a few neighbouring stars in view as a still reference while a
   // shift of a few pixels still spans tens of screen pixels.
   // With no measured position, show the whole frame.
-  const first = measured()[0];
+  const first = startSpot();
   S.zoom = first ? Math.max(fitZoom(), cv.height / 80) : fitZoom();
   const [x, y] = first ? [first.cx, first.cy] : [D.w / 2, D.h / 2];
   S.panX = cv.width  / 2 - x * S.zoom;
@@ -208,7 +235,8 @@ function drawCrosshair(x, y){
 
 function drawTrail(){
   // Every measured position at once, joined by a line, with an arrow head at the end.
-  const pts = measured().map(f => toScreen(f.cx, f.cy));
+  const from = D.start && D.start.cx !== null ? [D.start] : [];
+  const pts = [...from, ...measured()].map(f => toScreen(f.cx, f.cy));
   if (pts.length < 2) return;
   ctx.strokeStyle = '#fa0'; ctx.fillStyle = '#fa0'; ctx.lineWidth = 2;
   ctx.beginPath();
@@ -247,7 +275,7 @@ function drawCompass(){
 
 function draw(){
   if (!N || loading) return;                           // nothing to show while (re)loading
-  const i = currentIndex(), f = D.frames[i], f0 = measured()[0];
+  const i = currentIndex(), f = D.frames[i], f0 = startSpot();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, cv.width, cv.height);
   // Smooth scaling by default; 'show pixels' switches to hard-edged pixels.
@@ -264,7 +292,8 @@ function draw(){
   // Readout: shift since the first measured position (north = up = -y, east = left = -x).
   const lab = (S.blink ? (i ? 'LAST: ' : 'FIRST: ') : '') + f.label;
   let moved = 'no position could be measured in this frame';
-  if (f.cx !== null && f0){
+  if (N === 1 && !D.start) moved = f.cx !== null ? 'the ring marks the measured position' : moved;
+  else if (f.cx !== null && f0){
     const dx = f.cx - f0.cx, dy = f.cy - f0.cy, arc = Math.hypot(dx, dy) * D.scale;
     const ns = dy < 0 ? 'N' : 'S', ew = dx < 0 ? 'E' : 'W';
     moved = f === f0 ? 'starting position' : `moved ${arc.toFixed(1)}″ from start: ` +

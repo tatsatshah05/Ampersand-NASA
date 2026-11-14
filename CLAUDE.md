@@ -102,8 +102,12 @@ answers about one request in three with an immediate 502.
   Does all data access and image processing. Disk cache under `backend/cache/`:
   `cutouts/`, `queries/`, `frames/` (keyed by ra, dec, fov, detector, mode and options)
   and `photometry/` (keyed by ra, dec, detector, motion and code version).
-- `frontend/`: Vite + React + TypeScript. Plays the frames, draws overlays and charts.
-  Aladin Lite v3 for a context panel with Gaia and WISE layers.
+- `frontend/index.html`: one plain HTML + JavaScript file, no build step (started by
+  Anu for issue #8; the Vite + React plan was dropped). The backend serves it at `/`.
+  It plays the frames with zoom, pan, a marker on each measured position, a trail and
+  a first/last blink, and has detector, field-of-view and mode selectors. Search box,
+  charts, Gaia overlay and the Aladin Lite context panel are not built. It shows only
+  what the API returns: no sample or simulated data.
 - `scripts/`: one-off exploration and the cache warm-up script for the five targets.
 
 Endpoints (adjust if something better emerges, and keep this list current):
@@ -162,7 +166,14 @@ Endpoints (adjust if something better emerges, and keep this list current):
   wavelength, for one epoch (`epoch=1`, 2, ...) or all (omit it). `epochs` lists the
   epochs with their dates; a wrong epoch answers 400. Same optional parameters.
 
-The frontend reads `?ra=&dec=&fov=` from the page URL so a view can be linked and embedded.
+The page reads `?ra=&dec=&fov=&det=&mode=` from its address so a view can be linked, and
+passes `pmra`, `pmdec`, `parallax` through to `/api/frames` when they are in the address.
+
+Results are cached only when complete. If any cutout failed to download, or Gaia did not
+answer, the response still comes back (with `failures` or `gaia_error` set) but is not
+written to the cache, so the next request tries again. All cache files are written to a
+temporary name and renamed, because the server and the warm-up script can build the
+same entry at the same time.
 
 ## Processing steps for /api/frames
 

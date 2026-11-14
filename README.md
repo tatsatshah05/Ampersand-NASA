@@ -36,13 +36,19 @@ instantly.
 
 ## Open the viewer
 
-With the backend running on port 8000, open `frontend/index.html` in a browser (double
-click it, or drag it into a browser window). It shows Barnard's Star by default, with
-play/pause, blink, a trail of the measured positions, zoom and pan.
+With the backend running, open http://localhost:8000/. It shows Barnard's Star by
+default, with play/pause, blink, a trail of the measured positions, zoom and pan, and
+three views: normal, difference (what changed since the first visit) and sum (every
+visit added into one deeper image).
 
 Options go in the address, so a view can be shared:
-`?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal`. If the backend is somewhere
-else, add `&api=http://that-address`.
+`?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal`. For an object whose motion is
+known, add the `pmra`, `pmdec` and `parallax` that `/api/resolve?name=...` returns, so
+the backend follows that object. Example, the cold brown dwarf WISE 0855 in detector 6:
+`?ra=133.759765&dec=-7.242182&det=6&pmra=-8123.7&pmdec=673.2&parallax=439`
+
+The page file can also be opened straight from disk (`frontend/index.html`); it then
+looks for the backend at `http://localhost:8000`, or at `&api=http://that-address`.
 
 The page is one plain file with no build step. It shows only what the backend returns.
 

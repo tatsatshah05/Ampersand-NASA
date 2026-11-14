@@ -13,7 +13,7 @@ from astropy.coordinates import Distance, SkyCoord, get_body_barycentric
 from astropy.io.votable import parse_single_table
 from astropy.time import Time
 
-from .spherex import CACHE, ArchiveError, http_get
+from .spherex import CACHE, ArchiveError, http_get, write_json
 
 GAIA_TAP = "https://gea.esac.esa.int/tap-server/tap/sync"
 GAIA_EPOCH = 2016.0  # reference epoch of Gaia DR3 positions (Julian year)
@@ -55,7 +55,7 @@ def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0) -
         "ORDER BY phot_g_mean_mag")
     raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query})
     sources = _gaia_rows(raw)
-    cache_file.write_text(json.dumps(sources))
+    write_json(cache_file, sources)
     return sources
 
 
@@ -247,5 +247,5 @@ def resolve_name(name: str) -> dict:
         "credit": "SIMBAD (CDS, Strasbourg); ESA Gaia DR3",
     }
     if complete:
-        cache_file.write_text(json.dumps(result))
+        write_json(cache_file, result)
     return result

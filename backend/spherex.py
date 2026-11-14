@@ -62,6 +62,19 @@ def http_get(url: str, params: dict | None = None, tries: int = 10, timeout: flo
     raise ArchiveError(f"{err} from {url}")
 
 
+def write_json(path: Path, obj: object, indent: int | None = None) -> None:
+    """Write a cache file so that no reader ever sees half of it.
+
+    The server and the warm-up script can build the same entry at the same moment; a
+    plain write would let one of them read a truncated file. Writing to a private
+    temporary name and renaming is atomic.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    tmp.write_text(json.dumps(obj, indent=indent))
+    tmp.replace(path)
+
+
 def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict]:
     """Every level-2 spectral image whose footprint contains (ra, dec), oldest first."""
     key = hashlib.sha1(f"{ra:.5f},{dec:.5f}".encode()).hexdigest()[:16]
@@ -88,7 +101,7 @@ def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict
             }
             seen.setdefault((obs_id, det), exp)  # an exposure in two releases counts once
     exposures = sorted(seen.values(), key=lambda e: e["mjd"])
-    cache_file.write_text(json.dumps(exposures))
+    write_json(cache_file, exposures)
     return exposures
 
 
