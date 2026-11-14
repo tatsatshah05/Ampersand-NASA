@@ -182,8 +182,10 @@ export default function App() {
 
         {/* ==== THE SEARCH BOX GOES HERE ====================================================
             frontend/src/components/SearchBar.tsx (built separately) belongs inside this div.
-            Hand it applyTarget, which takes a SearchTarget (see address.ts), for example:
-                <SearchBar onTarget={applyTarget} />
+            Hand it applyTarget, which takes a SearchTarget (ra, dec and, when known, name,
+            pmra, pmdec, parallax, det; see address.ts):
+                <SearchBar onSelect={applyTarget} />
+            The div takes no room while it is empty.
             ================================================================================== */}
         <div className="search-slot"></div>
 
@@ -349,8 +351,8 @@ export default function App() {
                 <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={load.data.target} gaiaError={load.data.gaia_error} />
               ) : (
                 <p className="readout">
-                  <span className="key gaia">+</span> marks where the target's catalogued motion puts it on the middle date
-                  of this frame; the arrow is one year of that motion.
+                  <span className="key gaia">+</span> marks where the target's known motion puts it on the middle date of
+                  this frame; the arrow is one year of that motion.
                 </p>
               ))}
           </section>
