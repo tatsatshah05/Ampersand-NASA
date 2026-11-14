@@ -1,0 +1,4 @@
+# Copies of real cache files (see tests/conftest.py). Git must hand them back byte for
+# byte on every platform: no line-ending conversion, and no text diffs of FITS files.
+* -text
+*.fits binary
