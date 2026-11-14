@@ -29,6 +29,7 @@ def main() -> None:
     total = {"runs": 0, "sources": 0, "glow": 0, "position": 0, "brightness": 0, "seconds": 0.0}
     speed: list[tuple[float, float, float]] = []      # (flux, speed error, median position error)
     change: list[tuple[float, float]] = []            # (flux, smallest change error over the pairs)
+    faint: dict[str, list[float]] = {}                # detector -> brightness of every tested source
     print(f"{'field':<14s} det visits(exposures)        found glow moved? changed? refs  5-sigma candidates")
     for path in files:
         field = json.loads(path.read_text())
@@ -48,8 +49,11 @@ def main() -> None:
                   f"{r['n_sources_brightness_tested']:8d} {r['position_errors']['n_reference_stars']:4d}  "
                   + ("; ".join(passed) or "-"))
             for s in r["sources"]:
-                if "halo" in s["flags"] or s["typical_flux_mjy"] is None or s["typical_flux_mjy"] <= 0:
+                if ("halo" in s["flags"] or s["typical_flux_mjy"] is None or s["typical_flux_mjy"] <= 0
+                        or s.get("measure") == "ring"):
                     continue
+                if "saturated" not in s["flags"]:
+                    faint.setdefault(det, []).append(s["typical_flux_mjy"])
                 errs = [e for e in s["position_err_arcsec"] if e is not None]
                 if s["speed_err"] is not None and errs and not s["flags"]:
                     speed.append((s["typical_flux_mjy"], s["speed_err"], float(np.median(errs))))
@@ -67,6 +71,12 @@ def main() -> None:
         print(f"   {f['name']:<14s} {o['id']} {o['kind']:<7s} {o['grade']:<7s} best {o['sigma_best']:5.1f} "
               f"in D{o['best_detector']} combined {o['sigma_combined']:5.1f}  5-sigma in D{alone}  "
               f"{o['category']}  {o['flags'] or ''}")
+
+    print("\nFaintest sources found and tested (aperture brightness, mJy), by detector:")
+    for det in sorted(faint):
+        values = np.sort(np.array(faint[det]))
+        print(f"   D{det}: {values.size} sources; faintest {values[0]:.3f}, 5th percentile "
+              f"{np.percentile(values, 5):.3f}, median {np.median(values):.2f}")
 
     print("\nSmallest motion a clean source could have shown at 5 sigma, by brightness:")
     table(speed, lambda rows: f"position error per visit {np.median([r[2] for r in rows]):.2f} arcsec, speed error "

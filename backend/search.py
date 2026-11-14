@@ -1,50 +1,51 @@
-"""Blind search of one SPHEREx field for sources that move or change brightness between visits.
+"""Blind search of a SPHEREx field for sources that move or change brightness between visits.
 
-`search_field(ra, dec, fov, detector)` is given a field centre only, never a target. It
-returns candidates of two kinds, each with its evidence and a catalogue check:
+Entry point: `search(ra, dec, fov, detectors)`. It is given a field only, never a
+target, and returns plain JSON-ready data: the objects that passed, each with its
+evidence and what the catalogues say; the candidates rejected as artefacts, with the
+reasons; counts and limits. `scripts/search_fields.py` runs a list of fields
+unattended. Results, the recovery test and the false-alarm rate are in docs/search.md.
 
-- movers: sources whose position drifts between visits by more than its own error;
-- changers: sources whose brightness differs between visits by more than the scatter
-  of the individual exposures allows, including sources seen in some visits only.
-
-`search_detectors(ra, dec, fov, detectors)` runs it in several detectors and puts the
-results side by side, one entry per object. Results and the measured limits are in
-docs/search.md; `scripts/search_fields.py` runs a list of fields unattended.
+Underneath: `search_field(ra, dec, fov, detector)` searches one detector;
+`search_detectors` runs several and combines what they found into objects.
 
 Method, in the order the code runs
 1. Every exposure of the detector is cleaned and resampled exactly as for /api/frames
-   (`pipeline.prepare_cutout`), with the same visit ("epoch") numbering.
+   (`pipeline.prepare_cutout`), with the same visit ("epoch") numbering, and glitches
+   are dropped by the same rule as `pipeline.Stacker` (only a reading that stands
+   alone; never one that merely disagrees with the median).
 2. Sources are found without any catalogue: peaks of the smoothed stack of all visits,
    and of each visit on its own, that stand 5 times above both the pixel-to-pixel
-   scatter of the picture (noise plus unresolved faint stars) and their own standard
-   error, which comes from the scatter between exposures. One glitch in one exposure
-   raises that scatter as much as it raises the mean, so it cannot make a source.
-3. Position: a round Gaussian of the field's own star width is fitted to each source
+   scatter of the picture and their own standard error, which comes from the scatter
+   between exposures. One glitch in one exposure raises that scatter as much as it
+   raises the mean, so it cannot make a source.
+3. Empty places: the same measurement is made on a grid of places with nothing on them
+   (away from every source, saturated star and glow). Their spread is the noise every
+   detection is quoted against ("times the noise", "empty places as bright"). The
+   fitting code's own signal to noise is not used as a detection strength.
+4. Position: a round Gaussian of the field's own star width is fitted to each source
    in each visit's stack, on a tilted background. Its error is a jackknife over the
-   exposures of that visit (how far the centre moves when any one exposure is left
-   out), steadied across the source's visits, so glitches and few exposures widen the
-   error instead of faking a motion. The shift common to the field's stars is removed
-   (the frame is registered on its own stars). A mover is a source whose positions
-   are inconsistent with standing still AND show a net drift, both at 5 sigma, after
-   the errors are scaled so that the field's stars as a whole behave like non-movers.
-4. Brightness: aperture photometry on the native pixels of every exposure, after
-   /api/lightcurve but with the sky taken just outside the measuring circle. Each
-   exposure sees a source at one wavelength, so visits are compared channel by channel
-   (SPHEREx's 17 channels per detector): a two-way layout (level of each channel, plus
-   an effect of each visit) and the F test for "no visit has an effect". With two
-   visits that is a paired t-test over the channels they share. The brightness shift
-   common to the field's stars is removed first, and the test is scaled so the field's
-   stars as a whole behave like constant stars. A changer needs 5 sigma, a change of
-   at least 10 per cent, and three quarters of the shared channels changing one way.
-5. Sources on the glow of a much brighter star are not tested: the brighter star's own
-   wing, measured from the picture, must put less than a tenth of the source's flux
-   under the measuring circle. A star image is lopsided and the spacecraft turns over
-   between visits six months apart, so that light changes without anything changing.
-6. Each candidate gets flags (saturated, blended, wide, edge, few_exposures,
-   two_visits, follows_roll, one_roll_only), a grade ("clean" when it has none), and a
-   catalogue check: Gaia DR3 (with its variability flag and class), SIMBAD, AAVSO VSX,
-   and CatWISE2020 / AllWISE through IRSA. Catalogue positions are moved to the date
-   of each visit before matching.
+   exposures of that visit, steadied across the source's visits; a saturated star gets
+   a floor of 1 arcsec (detectors 5, 6) or 2 (1 to 4). The shift common to the field's
+   stars is removed. A mover's positions must be inconsistent with standing still AND
+   show a net drift, both at 5 sigma, after the errors are scaled so that the field's
+   stars as a whole behave like non-movers. It must then be at the place its straight
+   line predicts in every visit deep enough to show it, and point-like in each visit.
+5. Brightness: aperture photometry on the native pixels of every exposure, after
+   /api/lightcurve but with the sky taken just outside the measuring circle; for a star
+   saturated in a tenth of its exposures, in detectors 5 and 6, also the ring of
+   unsaturated pixels around it, as a separate series. Each exposure sees a source at
+   one wavelength, so visits are compared channel by channel (17 channels per
+   detector): a two-way layout and its F test. The shift common to the field's stars
+   is removed and the test is scaled on them. A changer needs 5 sigma, a change of 10
+   per cent (25 for a ring), three quarters of at least 6 shared channels moving one
+   way, and must survive leaving out the two exposures that help it most.
+6. Sources on the glow of a much brighter star are not tested.
+7. Each candidate gets flags (saturated, blended, wide, edge, few_exposures,
+   two_visits, follows_roll, one_roll_only, uncalibrated) and a verdict: "rejected"
+   (an artefact's signature; `reasons` says which), "caution" or "clean". What passes
+   is looked up in Gaia DR3 (with its variability flag and class), SIMBAD, AAVSO VSX,
+   CatWISE2020 and AllWISE, with catalogue positions moved to the date of each visit.
 
 Limits
 - Nothing is found that is not a peak in a stack: a source must be visible in the sum
@@ -52,12 +53,12 @@ Limits
   away or rejected as glitches, by design.
 - A source that moves more than MERGE_ARCSEC between visits is not followed: each of
   its positions is reported as a source that appeared or vanished.
-- Saturated stars have no flux, so they are never tested for brightness changes, and
-  their position comes from the unsaturated wings.
-- The significance is statistical. It does not know about blends: two stars closer
-  than the 7 arcsec star image act as one source whose centre and brightness follow
-  whichever of the two changes. It does not know about reflections of bright stars
-  inside the telescope either; the flags catch the cases seen so far, not all cases.
+- Saturated stars have no flux: their brightness is the ring measure, detectors 5 and
+  6 only, and their position is good to 1 to 2 arcsec.
+- The significance is statistical. Two stars closer than the star image act as one
+  source whose centre and brightness follow whichever of the two changes; reflections
+  of bright stars are caught by the tests above in the cases seen so far, not in every
+  conceivable case. Everything that passes must still be looked at.
 """
 from __future__ import annotations
 
@@ -639,6 +640,11 @@ def _measure_positions(field: dict[str, Any], st: dict[str, Any], sources: list[
             east, north = astrometry.offset_arcsec(s["ra"], s["dec"], float(fra), float(fdec))
             entry.update(east=east, north=north, ra=float(fra), dec=float(fdec), misfit=fit["misfit"],
                          amplitude=fit["amplitude"])
+            # Its own width in this visit: a moving source is smeared in the picture of all
+            # visits together, but sharp in each visit; a reflection is wide in every visit.
+            free = _gauss_fit(st["stack"][ep], fit["x"], fit["y"], None)
+            if free is not None:
+                entry["width_px"] = free["sigma_px"]
             jk = _jackknife(fit, cube, weights, st["index"][ep])
             if jk is not None:
                 # One number for both directions: a star image is round, and two
@@ -1771,7 +1777,9 @@ def _visit_rows(s: dict[str, Any], visits: list[int], dates: dict[int, dict[str,
                      "east_arcsec": _round(v.get("east"), 3), "north_arcsec": _round(v.get("north"), 3),
                      "err_east_arcsec": _round(v.get("err_east"), 3), "err_north_arcsec": _round(v.get("err_north"), 3),
                      "largest_shift_from_one_exposure_arcsec": _round(v.get("one_exposure_shift"), 3),
-                     "peak_mjy_sr": _round(v.get("amplitude"), 4), "misfit": _round(v.get("misfit"), 3)})
+                     "peak_mjy_sr": _round(v.get("amplitude"), 4), "misfit": _round(v.get("misfit"), 3),
+                     "fwhm_arcsec": _round(v["width_px"] * 2.3548 * pipeline.GRID_ARCSEC, 1)
+                     if "width_px" in v else None})
     return rows
 
 
@@ -1844,9 +1852,12 @@ def _mover_reasons(s: dict[str, Any], st: dict[str, Any]) -> list[str]:
                        "star is")
     if m["n_visits_seen"] < 2 and "saturated" not in s["flags"]:
         reasons.append("clearly seen (5 times the empty-place noise) at its predicted place in fewer than two visits")
-    if "wide" in s["flags"]:
-        reasons.append("wider than the stars of this field: a ring or blob (reflection, galaxy, unresolved pair), "
-                       "not one moving point")
+    widths = [v["width_px"] for v in s["visits"].values() if "width_px" in v]
+    if "saturated" not in s["flags"] and widths and float(np.median(widths)) > WIDE_RATIO * st["star_width_px"]:
+        own = float(np.median(widths)) * 2.3548 * pipeline.GRID_ARCSEC
+        star = st["star_width_px"] * 2.3548 * pipeline.GRID_ARCSEC
+        reasons.append(f"wider than the stars of this field in its own visits ({own:.0f} arcsec across against "
+                       f"{star:.0f}): a ring or blob (reflection, galaxy, unresolved pair), not one moving point")
     return reasons
 
 
@@ -1874,6 +1885,7 @@ def _source_row(s: dict[str, Any], visits: list[int]) -> dict[str, Any]:
     motion = s["motion"] or {}
     return {"ra": round(s["ra"], 6), "dec": round(s["dec"], 6), "snr": round(s["snr"], 1),
             "found_in": "all" if s["found_in"] == "all" else s["found_in"] + 1, "flags": s["flags"],
+            "measure": s.get("measure", "aperture"),
             "typical_flux_mjy": _round(s["typical_flux_mjy"], 4), "n_flux": s["n_flux"],
             "n_saturated": s["n_saturated"], "glow_share": _round(s["glow_share"], 3),
             "background_share": _round(s["background_share"], 3),
@@ -2217,7 +2229,8 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
             # otherwise the reasons are those of the most significant detection.
             "grade": "clean" if any(c["grade"] == "clean" for c in group) else "caution",
             "flags": [] if any(c["grade"] == "clean" for c in group) else lead["flags"],
-            "by_detector": measured, "catalogue": lead["catalogue"]})
+            "by_detector": measured, "catalogue": lead["catalogue"],
+            "lead": {"detector": lead["detector"], "id": lead["id"]}})
     objects.sort(key=lambda o: (o["grade"] != "clean", -o["sigma_combined"]))
     for number, obj in enumerate(objects, 1):
         obj["id"] = f"{number:02d}"
@@ -2225,6 +2238,100 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
             "rejected": sorted(rejected, key=lambda c: -c["sigma"]), "n_groups_below_threshold": below,
             "seconds": round(sum(r.get("seconds", 0.0) for r in per.values()), 1),
             "per_detector": {str(d): r for d, r in per.items()}}
+
+
+# --------------------------------------------------------------------------- the public entry point
+
+KIND_WORDS = {
+    "known_mover": "known moving object: a catalogue object at this place has the measured motion",
+    "mover_motion_not_in_catalogues": "moved; no catalogue object here has this motion (candidate)",
+    "mover_no_counterpart": "moved; nothing in the catalogues that answered (candidate)",
+    "known_variable": "known variable star: listed as variable in a catalogue that answered",
+    "changer_not_listed_as_variable": "changed brightness; the object here is not listed as variable in the "
+                                      "catalogues that answered (candidate)",
+    "changer_no_counterpart": "changed brightness; nothing in the catalogues that answered (candidate)",
+    "not checked": "catalogues not consulted",
+}
+LIMITS = (
+    "Finds only what stands 5 times above the noise of empty places in the picture of one visit or of all "
+    "visits together, in at least one detector. A mover must move between visits (not within one: asteroids "
+    "are averaged away), by less than 8 arcsec from one visit to the next (about 16 arcsec/yr for visits six "
+    "months apart), and by more than about 1.2 to 3 arcsec/yr for 5 sigma, depending on brightness. "
+    "Saturated stars are placed only to 1 to 2 arcsec. A brightness change must be at least 10 per cent (25 "
+    "per cent for a saturated star's ring), seen at the same wavelength in at least 6 channels. Sources on the "
+    "glow of a much brighter star are not tested. See docs/search.md.")
+
+
+def _evidence(cand: dict[str, Any]) -> dict[str, Any]:
+    """What one detector measured for a candidate, without the bulky per-channel tables."""
+    keep = ("detector", "id", "kind", "sigma", "grade", "flags", "reasons", "found_in", "times_noise_all_visits",
+            "typical_flux_mjy", "visits", "figure")
+    out = {k: cand[k] for k in keep if k in cand}
+    if cand["kind"] == "mover":
+        out["motion"] = cand["motion"]
+    else:
+        out.update(measure=cand.get("measure"), change=cand.get("change"), two_out=cand.get("two_out"),
+                   channels=cand.get("channels"))
+    return out
+
+
+def search(ra: float, dec: float, fov: float = 0.1, detectors: tuple[int, ...] = (1, 2, 3, 4, 5, 6), *,
+           offline: bool = False, catalogues: bool = True, figures_dir: Path | None = None,
+           detail: bool = False) -> dict[str, Any]:
+    """Search a field for sources that move or change, blind: no target is given.
+
+    ra, dec: field centre in degrees (ICRS); fov: side of the square field in degrees
+    (0.02 to 0.5); detectors: which of SPHEREx's six to search. `offline` uses only
+    cutouts already in the cache (never downloads). Returns plain data, ready for
+    json.dumps:
+
+    - objects: everything that passed, most trustworthy first. Each has `kind`
+      ("mover" or "changer"), `verdict` ("clean" or "caution", with `flags`), place,
+      significance (best detector and combined), `catalogue_status` (what the
+      catalogues that answered say, which answered and which did not, in words in
+      `meaning`), and `evidence`: the full measurement of the detector that saw it
+      best, including per-visit positions, the forced measurement at the predicted
+      place against empty places, and for a changer the dates and channels compared.
+    - rejected: candidates that reached 5 sigma but carry an artefact's signature,
+      each with its `reasons`. Never to be shown as finds.
+    - summary: counts, time taken, catalogue services that answered or failed.
+    - limits: what this search cannot find, in words.
+    With `detail` the full per-detector results (every source tested) are added.
+    """
+    result = search_detectors(ra, dec, fov, tuple(detectors), figures_dir=figures_dir, offline=offline,
+                              catalogues=catalogues)
+    per = result["per_detector"]
+    objects = []
+    for obj in result["objects"]:
+        lead = next(c for c in per[str(obj["lead"]["detector"])]["candidates"] if c["id"] == obj["lead"]["id"])
+        cat = obj["catalogue"]
+        objects.append({
+            "id": obj["id"], "kind": obj["kind"], "verdict": obj["grade"], "flags": obj["flags"],
+            "ra": obj["ra"], "dec": obj["dec"], "sigma_best": obj["sigma_best"], "best_detector": obj["best_detector"],
+            "sigma_combined": obj["sigma_combined"], "found_by": obj["found_by"],
+            "detectors_at_5_sigma": obj["detectors_at_5_sigma"], "detectors_at_3_sigma": obj["detectors_at_3_sigma"],
+            "motion_all_detectors": obj["motion_all_detectors"],
+            "catalogue_status": {"category": obj["category"], "meaning": KIND_WORDS.get(obj["category"]),
+                                 "label": obj["label"], "summary": obj["summary"],
+                                 "answered": cat.get("answered", []), "did_not_answer": cat.get("failed", {}),
+                                 "counterpart": cat.get("counterpart"), "nearest": (cat.get("matches") or [])[:5]},
+            "by_detector": obj["by_detector"], "evidence": _evidence(lead)})
+    tested = sum(r.get("n_sources", 0) - r.get("n_sources_on_glow_not_tested", 0) for r in per.values())
+    answered = sorted({a for r in per.values() for a in r.get("catalogues", {}).get("answered", [])})
+    failed = {k: v for r in per.values() for k, v in r.get("catalogues", {}).get("failed", {}).items()}
+    out: dict[str, Any] = {
+        "field": {"ra": ra, "dec": dec, "fov": fov, "detectors": list(detectors), "offline": offline},
+        "objects": objects, "rejected": result["rejected"],
+        "summary": {"n_objects": len(objects), "n_rejected": len(result["rejected"]),
+                    "n_below_threshold": result["n_groups_below_threshold"], "sources_tested": tested,
+                    "seconds": result["seconds"], "catalogues_answered": answered, "catalogues_failed": failed,
+                    "messages": {d: r["message"] for d, r in per.items() if r.get("message")},
+                    "download_failures": {d: len(r["failures"]) for d, r in per.items() if r.get("failures")},
+                    "exposures": {d: r.get("n_exposures", 0) for d, r in per.items()}},
+        "limits": LIMITS, "version": VERSION, "credit": next(iter(per.values()))["credit"] if per else pipeline.CREDIT}
+    if detail:
+        out["per_detector"] = per
+    return out
 
 
 # --------------------------------------------------------------------------- pictures
