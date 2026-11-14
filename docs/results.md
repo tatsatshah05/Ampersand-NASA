@@ -4,10 +4,13 @@ For issue #13. This is what the tool shows on real SPHEREx data for the five tar
 named in the challenge, written down after looking at every frame.
 
 - **When:** 2026-11-14.
-- **Code:** repo at commit `67557b5`. The code that makes the pictures and the numbers
-  (`backend/pipeline.py`, `photometry.py`, `astrometry.py`, `spherex.py`) was last
-  changed in `e287a08` and `c46075d`; `pipeline.VERSION` 2, `photometry.VERSION` 6.
-  `backend/cache/frames/` was deleted and every view rebuilt before this run.
+- **Code:** measured with the repo at commit `67557b5` (`git rev-parse --short HEAD`).
+  `backend/cache/frames/` was deleted and every view rebuilt at commit `88c8d5b`,
+  about twenty minutes earlier. Between the two, the code that makes the pictures and
+  the numbers did not change: `backend/pipeline.py`, `photometry.py` and
+  `astrometry.py` were last changed in `e287a08`, and `spherex.py` in `c46075d`, which
+  only added the setting for where the cache is kept. `pipeline.VERSION` 2,
+  `photometry.VERSION` 6.
 - **How:** `python scripts/warm_cache.py` (builds every view), then
   `python scripts/run_targets.py` (measures them and makes the contact sheets), then
   every contact sheet and chart was opened and looked at. Re-run both to check.
