@@ -22,8 +22,11 @@ export interface Frame {
   date_mean: string
   mjd_mean: number
   image: string
+  // Overlay PNG for the flags toggle: blue = no data, red = saturated. Missing from frames
+  // cached by an older backend.
+  flags_image?: string
   n_exposures: number
-  wavelength_um: [number, number]
+  wavelength_um: [number, number] | null
   flagged_fraction: number
   saturated_pixels: number
   rejected_readings: number

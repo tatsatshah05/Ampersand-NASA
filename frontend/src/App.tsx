@@ -2,6 +2,7 @@
 // issue #5 (Anu): extend or replace it freely; the panels only need `frames` and `current`.
 import { useEffect, useState } from 'react'
 import { fetchFrames, type FramesQuery, type FramesResponse } from './api'
+import { ContextView } from './components/ContextView'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import './App.css'
@@ -36,6 +37,7 @@ export default function App() {
   const [current, setCurrent] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [showGaia, setShowGaia] = useState(true)
+  const [showFlags, setShowFlags] = useState(false)
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -48,6 +50,7 @@ export default function App() {
   }, [query])
 
   const n = load.state === 'ready' ? load.data.frames.length : 0
+  const hasFlags = load.state === 'ready' && load.data.frames.every((f) => f.flags_image)
   useEffect(() => {
     if (!playing || n < 2) return
     const t = window.setInterval(() => setCurrent((i) => (i + 1) % n), 700)
@@ -74,6 +77,9 @@ export default function App() {
           <div className="viewer">
             <div className="stage">
               <img src={load.data.frames[current].image} alt={`SPHEREx frame ${current + 1} of ${n}`} />
+              {showFlags && load.data.frames[current].flags_image && (
+                <img className="flags" src={load.data.frames[current].flags_image} alt="" />
+              )}
               {showGaia && (
                 <GaiaOverlay
                   frames={load.data.frames}
@@ -127,7 +133,30 @@ export default function App() {
               <label>
                 <input type="checkbox" checked={showGaia} onChange={(e) => setShowGaia(e.target.checked)} /> Gaia overlay
               </label>
+              <label title={hasFlags ? undefined : 'Restart the backend and clear backend/cache/frames to get flags'}>
+                <input
+                  type="checkbox"
+                  checked={showFlags}
+                  disabled={!hasFlags}
+                  onChange={(e) => setShowFlags(e.target.checked)}
+                />{' '}
+                Flags
+              </label>
             </div>
+
+            {showFlags && (
+              <p className="readout">
+                <span className="key nodata">■</span> no data · <span className="key saturated">■</span> saturated (too
+                bright to measure){' '}
+                {load.data.frames[current].saturated_pixels === 0 && '· no saturated pixels in this frame'}
+              </p>
+            )}
+            {!hasFlags && (
+              <p className="hint">
+                Flags are not available for these frames: they were cached by an older backend. Delete
+                backend/cache/frames and reload.
+              </p>
+            )}
 
             {showGaia && (
               <GaiaReadout
@@ -139,7 +168,10 @@ export default function App() {
             )}
           </div>
 
-          <FrameDetails frame={load.data.frames[current]} detector={load.data.detector} />
+          <div className="side">
+            <FrameDetails frame={load.data.frames[current]} detector={load.data.detector} />
+            <ContextView ra={query.ra} dec={query.dec} fov={query.fov} />
+          </div>
         </>
       )}
 
