@@ -6,8 +6,8 @@ Type a star name or sky coordinates and see SPHEREx images of that patch of sky 
 one after another like a short video, so anything that moved or changed brightness
 stands out.
 
-**Status:** the backend builds frames from real SPHEREx data. The frontend is not built
-yet. See [plan.md](plan.md) for who is doing what and the team's lint and typecheck
+**Status:** the backend builds frames from real SPHEREx data, and a first page plays
+them (see "Open the viewer" below). Search, charts and overlays are not built yet. See [plan.md](plan.md) for who is doing what and the team's lint and typecheck
 rules, and the [issues](https://github.com/tatsatshah05/Ampersand-NASA/issues) for the
 work itself.
 
@@ -33,6 +33,18 @@ The very first start of the server can take 20 seconds or so. The first request 
 new position downloads about 60 image cutouts from NASA's archive and takes around a
 minute. After that it is served from `backend/cache/`
 instantly.
+
+## Open the viewer
+
+With the backend running on port 8000, open `frontend/index.html` in a browser (double
+click it, or drag it into a browser window). It shows Barnard's Star by default, with
+play/pause, blink, a trail of the measured positions, zoom and pan.
+
+Options go in the address, so a view can be shared:
+`?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal`. If the backend is somewhere
+else, add `&api=http://that-address`.
+
+The page is one plain file with no build step. It shows only what the backend returns.
 
 ## Check the pipeline
 
