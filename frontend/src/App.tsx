@@ -15,6 +15,7 @@ import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLaye
 import { PlayerControls } from './components/PlayerControls'
 import { SearchBar, type SearchTarget } from './components/SearchBar'
 import { Selectors } from './components/Selectors'
+import { SmallBodiesPanel } from './components/SmallBodiesPanel'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
 import { LoadingCard, StatusCard } from './components/StatusCard'
@@ -47,6 +48,8 @@ export default function App() {
   const [spectrum, setSpectrum] = useState<SpectrumRequest | null>(null)
   // Issue #9: whose brightness over time is shown, or null when that panel is closed.
   const [brightness, setBrightness] = useState<SpectrumRequest | null>(null)
+  // Known asteroids and comets (backend/smallbodies.py): open only when asked for, as the lookup is slow.
+  const [showSmallBodies, setShowSmallBodies] = useState(false)
   // Issue #12: colour the pixels with no data and the saturated ones.
   const [showFlags, setShowFlags] = useState(false)
   // Issue #12: the same patch of sky in other surveys. Off until asked for: it loads a
@@ -401,6 +404,9 @@ export default function App() {
               >
                 Brightness over time
               </button>
+              <button type="button" onClick={() => setShowSmallBodies(true)}>
+                Asteroids and comets
+              </button>
             </div>
 
             {showFlags && hasFlags && (
@@ -461,6 +467,12 @@ export default function App() {
           </div>
           {spectrum && <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />}
           {brightness && <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} />}
+          {showSmallBodies && (
+            <SmallBodiesPanel
+              query={{ ra: load.data.ra, dec: load.data.dec, fov: load.data.fov, detector: load.data.detector }}
+              onClose={() => setShowSmallBodies(false)}
+            />
+          )}
         </>
       )}
 
