@@ -88,7 +88,7 @@ from scipy.spatial import cKDTree
 
 from . import astrometry, photometry, pipeline, spherex
 
-VERSION = 2                       # part of the result cache key: raise it when results change
+VERSION = 3                       # part of the result cache key: raise it when results change
 # This module's own cache (results and catalogue answers). "search" holds the answers
 # of version 1, made with the old stacking rule; nothing reads it any more.
 SEARCH_DIR = spherex.CACHE / "search2"
