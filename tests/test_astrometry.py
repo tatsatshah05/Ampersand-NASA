@@ -108,6 +108,31 @@ def test_no_proper_motion_means_no_move():
     assert astrometry.position_at({**still, "parallax": -3.0}, J2026_MJD) == (10.0, -5.0)
 
 
+# ------------------------------------------------------------------- stars_near
+
+def test_stars_near_lists_catalogue_stars_by_distance():
+    """The WISE 0855 case, made up around one place: a static star 4.3 arcsec away, one
+    farther than the radius, and one at the place itself (the object)."""
+    ra, dec = 133.759765, -7.242182
+    step = 1.0 / 3600.0
+    sources = [
+        {"source_id": "far", "ra": ra + 20 * step, "dec": dec, "gmag": 15.0, "ref_epoch": 2026.0},
+        {"source_id": "blend", "ra": ra - 2.73 * step / np.cos(np.radians(dec)), "dec": dec + 3.41 * step,
+         "gmag": 16.3149, "ref_epoch": 2026.0},
+        {"source_id": "itself", "ra": ra + 0.2 * step, "dec": dec, "gmag": 12.0, "ref_epoch": 2026.0},
+    ]
+    near = astrometry.stars_near(ra, dec, sources, J2026_MJD, 6.15)
+    assert [s["source_id"] for s in near] == ["blend"]
+    assert near[0]["gmag"] == 16.31 and near[0]["index"] == 1
+    assert near[0]["distance_arcsec"] == pytest.approx(4.37, abs=0.01)
+    assert (near[0]["east_arcsec"], near[0]["north_arcsec"]) == pytest.approx((-2.73, 3.41), abs=0.01)
+    # A target that is itself a Gaia star is left out by its identifier, so a companion
+    # closer than 1.5 arcsec still counts (RW Aurigae is such a pair).
+    near = astrometry.stars_near(ra, dec, sources, J2026_MJD, 25.0, same_arcsec=0.0, exclude_id="blend")
+    assert [s["source_id"] for s in near] == ["itself", "far"]
+    assert astrometry.stars_near(ra, dec, [], J2026_MJD, 25.0) == []
+
+
 # ------------------------------------------------------------------- position_at
 
 def test_position_at_is_linear_proper_motion(barnard_gaia: dict):

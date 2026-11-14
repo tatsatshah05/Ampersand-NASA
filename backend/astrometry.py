@@ -175,6 +175,30 @@ def path_of(src: dict, mjds, parallax: bool = True) -> tuple[np.ndarray, np.ndar
                      parallax)
 
 
+def stars_near(ra: float, dec: float, sources: list[dict], mjd: float, radius_arcsec: float, *,
+               same_arcsec: float = 1.5, exclude_id: str | None = None) -> list[dict]:
+    """Catalogue stars within radius_arcsec of (ra, dec) on the date, nearest first.
+
+    Each is {source_id, gmag, distance_arcsec, east_arcsec, north_arcsec, index} (index
+    into `sources`). A star closer than same_arcsec, or with the identifier exclude_id,
+    is the object at (ra, dec) itself and is left out.
+    """
+    if not sources:
+        return []
+    sra, sdec = positions_at(sources, mjd)
+    out = []
+    for i, src in enumerate(sources):
+        east, north = offset_arcsec(ra, dec, float(sra[i]), float(sdec[i]))
+        distance = float(np.hypot(east, north))
+        if distance > radius_arcsec or distance < same_arcsec or (exclude_id and src.get("source_id") == exclude_id):
+            continue
+        gmag = src.get("gmag")
+        out.append({"source_id": src.get("source_id"), "gmag": round(gmag, 2) if gmag is not None else None,
+                    "distance_arcsec": round(distance, 2),
+                    "east_arcsec": round(east, 2), "north_arcsec": round(north, 2), "index": i})
+    return sorted(out, key=lambda s: s["distance_arcsec"])
+
+
 def offset_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> tuple[float, float]:
     """Small-angle offset of point 2 from point 1: (east, north) in arcseconds."""
     d_ra = ra2 - ra1

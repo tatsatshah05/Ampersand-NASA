@@ -1,5 +1,14 @@
-"""FastAPI service.  Run:  .venv/bin/uvicorn backend.app:app --reload"""
+"""FastAPI service.  Run:  .venv/bin/uvicorn backend.app:app --reload
+
+How errors are answered: a request that asks for something impossible (spherex.BadRequest)
+is a 400 with the reason; an archive or catalogue that does not answer is a 502; a name
+nobody knows is a 404; anything else is the server's own fault, logged in full and answered
+500 with a plain sentence (never a raw numpy or astropy message).
+"""
+import logging
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,21 +16,35 @@ from fastapi.staticfiles import StaticFiles
 
 from . import astrometry, photometry, pipeline, spherex, stars
 
+log = logging.getLogger("backend.app")
 app = FastAPI(title="SPHEREx sky-change viewer")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
 pipeline.FRAMES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/frames", StaticFiles(directory=pipeline.FRAMES_DIR), name="frames")
 
 
-@app.get("/api/resolve")
-def resolve(name: str = Query(..., min_length=1, max_length=80)):
-    """Object name to coordinates at 2026.0, with proper motion and parallax when known."""
+def _answer(work: Callable[[], Any], doing: str, archive: str) -> Any:
+    """Run one request's work and turn its failures into the right HTTP answer."""
     try:
-        return astrometry.resolve_name(name)
+        return work()
+    except HTTPException:
+        raise
+    except spherex.BadRequest as e:
+        raise HTTPException(400, str(e)) from e
     except astrometry.NameNotFound as e:
         raise HTTPException(404, str(e)) from e
     except spherex.ArchiveError as e:
-        raise HTTPException(502, f"The name service did not respond: {e}") from e
+        raise HTTPException(502, f"{archive} did not respond: {e}") from e
+    except Exception as e:  # noqa: BLE001 - anything else is a fault of this server, not of the request
+        log.exception("unexpected error while %s", doing)
+        raise HTTPException(500, f"Something went wrong on the server while {doing}. It has been logged; "
+                                 "please try again, or try another view.") from e
+
+
+@app.get("/api/resolve")
+def resolve(name: str = Query(..., min_length=1, max_length=80)):
+    """Object name to coordinates at 2026.0, with proper motion and parallax when known."""
+    return _answer(lambda: astrometry.resolve_name(name), "looking up the name", "The name service")
 
 
 @app.get("/api/frames")
@@ -36,13 +59,10 @@ def frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90,
            reference: str = Query("first", description="difference mode: 'first' or 'mean'"),
            track: str = Query("sky", description="sum mode: 'sky' or 'target'")):
     """Frames for the player. Plain `def`, so FastAPI runs it in a worker thread."""
-    try:
-        return pipeline.build_frames(ra, dec, fov, detector, mode, pmra=pmra, pmdec=pmdec, parallax=parallax,
-                                     pm_epoch=pm_epoch, reference=reference, track=track)
-    except ValueError as e:
-        raise HTTPException(400, str(e)) from e
-    except spherex.ArchiveError as e:
-        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+    return _answer(lambda: pipeline.build_frames(ra, dec, fov, detector, mode, pmra=pmra, pmdec=pmdec,
+                                                 parallax=parallax, pm_epoch=pm_epoch, reference=reference,
+                                                 track=track),
+                   "making the frames", "The SPHEREx archive (IRSA)")
 
 
 _PMRA = Query(None, description="mas/yr, including cos(dec); from /api/resolve")
@@ -63,13 +83,9 @@ def field_stars(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge
                 limit: int = Query(stars.DEFAULT_LIMIT, ge=1, le=stars.MAX_LIMIT,
                                    description="most stars to return, brightest first")):
     """Gaia stars in the frames of a view, placed on each frame. Same parameters as /api/frames."""
-    try:
-        return stars.field_stars(ra, dec, fov, detector, mode, limit=limit, pmra=pmra, pmdec=pmdec,
-                                 parallax=parallax, pm_epoch=pm_epoch, reference=reference, track=track)
-    except ValueError as e:
-        raise HTTPException(400, str(e)) from e
-    except spherex.ArchiveError as e:
-        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+    return _answer(lambda: stars.field_stars(ra, dec, fov, detector, mode, limit=limit, pmra=pmra, pmdec=pmdec,
+                                             parallax=parallax, pm_epoch=pm_epoch, reference=reference, track=track),
+                   "placing the catalogue stars", "The SPHEREx archive (IRSA)")
 
 
 @app.get("/api/lightcurve")
@@ -78,12 +94,9 @@ def lightcurve(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=
                pmra: float | None = _PMRA, pmdec: float | None = _PMDEC, parallax: float | None = _PARALLAX,
                pm_epoch: float = _PM_EPOCH):
     """Brightness of the object at (ra, dec) against time, grouped by wavelength bin."""
-    try:
-        return photometry.lightcurve(ra, dec, detector, pmra=pmra, pmdec=pmdec, parallax=parallax, pm_epoch=pm_epoch)
-    except ValueError as e:
-        raise HTTPException(400, str(e)) from e
-    except spherex.ArchiveError as e:
-        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+    return _answer(lambda: photometry.lightcurve(ra, dec, detector, pmra=pmra, pmdec=pmdec, parallax=parallax,
+                                                 pm_epoch=pm_epoch),
+                   "measuring the brightness", "The SPHEREx archive (IRSA)")
 
 
 @app.get("/api/spectrum")
@@ -93,13 +106,9 @@ def spectrum(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-9
              pmra: float | None = _PMRA, pmdec: float | None = _PMDEC, parallax: float | None = _PARALLAX,
              pm_epoch: float = _PM_EPOCH):
     """Brightness of the object at (ra, dec) against wavelength, one point per exposure."""
-    try:
-        return photometry.spectrum(ra, dec, epoch, detector, pmra=pmra, pmdec=pmdec, parallax=parallax,
-                                   pm_epoch=pm_epoch)
-    except ValueError as e:
-        raise HTTPException(400, str(e)) from e
-    except spherex.ArchiveError as e:
-        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+    return _answer(lambda: photometry.spectrum(ra, dec, epoch, detector, pmra=pmra, pmdec=pmdec, parallax=parallax,
+                                               pm_epoch=pm_epoch),
+                   "measuring the spectrum", "The SPHEREx archive (IRSA)")
 
 
 # The frontend, at "/". Registered last so every /api and /frames route wins.

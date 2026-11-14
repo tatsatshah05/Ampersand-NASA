@@ -93,6 +93,45 @@ def test_requests_at_the_limits_are_accepted_and_a_dead_archive_is_a_502(client:
     assert network, "the archive should have been asked"
 
 
+@pytest.mark.parametrize(("path", "module", "function"), [
+    ("/api/frames", "pipeline", "build_frames"),
+    ("/api/stars", "stars", "field_stars"),
+    ("/api/lightcurve", "photometry", "lightcurve"),
+    ("/api/spectrum", "photometry", "spectrum"),
+    ("/api/resolve", "astrometry", "resolve_name"),
+])
+def test_a_fault_of_the_server_is_a_500_with_a_plain_message(client: TestClient, monkeypatch: pytest.MonkeyPatch,
+                                                             caplog: pytest.LogCaptureFixture,
+                                                             path: str, module: str, function: str):
+    """A numerical failure inside the server is not the caller's fault: not a 400, and no raw message."""
+    import backend
+
+    def broken(*args: object, **kwargs: object) -> None:
+        raise ValueError("Singular matrix: numpy.linalg.LinAlgError in lstsq")
+
+    monkeypatch.setattr(getattr(backend, module), function, broken)
+    params = {"name": "Barnard's Star"} if path == "/api/resolve" else HERE
+    with caplog.at_level("ERROR", logger="backend.app"):
+        response = client.get(path, params=params)
+    assert response.status_code == 500, response.text
+    detail = response.json()["detail"]
+    assert "went wrong on the server" in detail and "numpy" not in detail and "Singular" not in detail
+    assert "Singular matrix" in caplog.text                    # the full story is in the server's log
+
+
+def test_an_impossible_request_is_a_400_with_its_reason(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    from backend import photometry, spherex
+
+    def refuse(*args: object, **kwargs: object) -> None:
+        raise spherex.BadRequest("epoch must be one of [1, 2, 3]")
+
+    monkeypatch.setattr(photometry, "spectrum", refuse)
+    response = client.get("/api/spectrum", params={**HERE, "epoch": 9})
+    assert response.status_code == 400 and response.json()["detail"] == "epoch must be one of [1, 2, 3]"
+    # Still a ValueError, so code that called the backend directly and caught that keeps working.
+    assert issubclass(spherex.BadRequest, ValueError)
+
+
 def test_resolve_answers_from_the_cache(client: TestClient, network: list[str], barnard):
     """The real answer for "Barnard's Star" is in the test cache; spelling it differently finds it too."""
     response = client.get("/api/resolve", params={"name": "Barnard's Star"}, headers={"Origin": "http://localhost:5173"})

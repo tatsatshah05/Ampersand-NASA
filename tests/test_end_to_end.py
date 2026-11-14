@@ -138,8 +138,14 @@ def test_the_star_is_where_gaia_says(normal: SimpleNamespace, barnard: SimpleNam
     for f in normal.frames:
         star = f["centroid"]
         assert star["snr"] > 15                               # measured: 43, 49, 41
-        assert NATIVE_PIXEL < star["fwhm_arcsec"] < 16        # measured: 10.0, 10.6, 12.0 (the PSF itself is 7.4)
-        assert star["err_arcsec"] < 0.5                       # measured: 0.05
+        assert NATIVE_PIXEL < star["fwhm_arcsec"] < 16        # measured: 10.0, 10.6, 12.0 (PSF_FWHM in D5: 8.63)
+        # Its core is saturated and bloomed in every exposure, and those pixels are in the fit.
+        # The fit's own error is far too small for such a star (docs/verification.md,
+        # section 4), so the error given is the 1 arcsec found for detectors 5 and 6.
+        assert star["saturated_core"] is True
+        assert star["err_arcsec_fit"] < 0.5                   # measured: 0.05
+        assert star["err_arcsec"] == 1.0
+        assert f["detection"] == "clear" and f["detection_sigma"] > 1000
 
 
 def test_the_star_moves_north_as_gaia_predicts(normal: SimpleNamespace, barnard: SimpleNamespace):
@@ -257,7 +263,13 @@ def test_without_gaia_the_frames_still_come_back_but_are_not_cached(barnard: Sim
     assert astrometry.GAIA_TAP in network                                 # it was asked, and did not answer
     assert meta["target"] is None and meta["gaia_error"]
     assert [f["predicted"] for f in meta["frames"]] == [None, None, None]
-    assert [f["centroid"] for f in meta["frames"]] == [f["centroid"] for f in normal.frames]
+    # The same star is measured in the same place. Whether a catalogue star is blended with
+    # it is known only around a target's predicted place, so `blended` is null here.
+    place = ("ra", "dec", "x", "y", "err_arcsec", "saturated_core", "fwhm_arcsec")
+    assert ([{k: f["centroid"][k] for k in place} for f in meta["frames"]]
+            == [{k: f["centroid"][k] for k in place} for f in normal.frames])
+    assert [f["centroid"]["blended"] for f in meta["frames"]] == [None, None, None]
+    assert [f["blend"] for f in meta["frames"]] == [[], [], []]
     assert not (pipeline.FRAMES_DIR / meta["key"] / "frames.json").exists()
 
 
@@ -265,12 +277,17 @@ def test_a_motion_given_in_the_request_makes_the_request_the_target(client: Test
                                                                     normal: SimpleNamespace, gaia_down: None,
                                                                     network: list[str]):
     """How an object Gaia does not list (WISE 0855) gets an expected position: the page passes on
-    pmra, pmdec and parallax from /api/resolve, for an object that is at (ra, dec) in 2026.0."""
+    pmra, pmdec and parallax from /api/resolve, for an object that is at (ra, dec) in 2026.0.
+
+    Gaia is down here. The target and its predicted positions do not need it. Gaia is still
+    asked (briefly), because its stars are the known neighbours of detection_sigma, and its
+    silence is reported so that the answer is not cached."""
     response = client.get("/api/frames", params={"ra": barnard.ra, "dec": barnard.dec, **barnard.motion})
     assert response.status_code == 200, response.text
     answer = response.json()
-    assert answer["target"]["origin"] == "request" and answer["gaia_error"] is None
-    assert astrometry.GAIA_TAP not in network                             # Gaia is not needed, so not asked
+    assert answer["target"]["origin"] == "request" and answer["gaia_error"]
+    assert astrometry.GAIA_TAP in network
+    assert not (pipeline.FRAMES_DIR / answer["key"] / "frames.json").exists()
     for frame, by_gaia in zip(answer["frames"], normal.frames, strict=True):
         # Same star, started from 2026.0 instead of Gaia's 2016.0. The two predictions differ by the
         # radial velocity that only astrometry.propagate applies. Measured: 0.063 arcsec. Leaving
@@ -411,3 +428,15 @@ def test_lightcurve_and_spectrum_of_a_star_too_bright_to_measure(client: TestCli
     assert waves == pytest.approx([4.223, 4.259, 4.296], abs=0.001)
 
     assert client.get("/api/spectrum", params={**params, "epoch": 4}).status_code in (400, 422)
+
+
+def test_lightcurve_without_a_motion_says_what_it_measured(client: TestClient, barnard: SimpleNamespace):
+    """Asked for at its 2026.0 position with no motion, Barnard's Star is still followed: the
+    Gaia star is 0.06 arcsec from the request. The answer says so."""
+    response = client.get("/api/lightcurve", params={"ra": barnard.ra, "dec": barnard.dec, "detector": 5})
+    assert response.status_code == 200, response.text
+    curve = response.json()
+    assert curve["target"]["source_id"] == barnard.gaia_id
+    assert curve["measured"]["what"] == "gaia_star" and curve["measured"]["offset_from_request_arcsec"] < 0.1
+    assert curve["stars_in_circle"]["known"] is True
+    assert sorted(p["epoch"] for b in curve["bins"] for p in b["points"]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
