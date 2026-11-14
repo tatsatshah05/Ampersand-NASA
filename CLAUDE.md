@@ -110,7 +110,8 @@ Endpoints (adjust if something better emerges, and keep this list current):
   answer 501). Defaults: fov 0.1 degrees, detector 5. Returns `size_px`, `pixel_arcsec`,
   `stretch`, `target` (the Gaia star nearest the centre, or null), `failures` and
   `frames`. Each frame has `epoch`, `date_start`, `date_end`, `date_mean`, `mjd_mean`,
-  `image` (PNG path under `/frames/`), `n_exposures`, `wavelength_um` [min, max],
+  `image` (PNG path under `/frames/`), `flags_image` (overlay PNG: blue = no data,
+  red = saturated, transparent elsewhere), `n_exposures`, `wavelength_um` [min, max] or null,
   `flagged_fraction`, `saturated_pixels`, `rejected_readings`, `centroid` and
   `predicted` (each with ra, dec, and x, y in PNG pixels from the top-left). In the PNG,
   north is up and east is left; white-with-no-detail pixels are saturated and

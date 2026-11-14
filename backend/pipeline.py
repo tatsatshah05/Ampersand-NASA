@@ -238,6 +238,16 @@ def to_png(st: dict, lim: dict, path: Path) -> None:
     Image.fromarray(rgba[::-1], "RGBA").save(path)
 
 
+def flags_png(st: dict, path: Path) -> None:
+    """Overlay PNG for the flags toggle: blue where there is no data, red where saturated, clear elsewhere."""
+    saturated = st["saturated"]
+    missing = ~np.isfinite(st["image"]) & ~saturated
+    rgba = np.zeros(saturated.shape + (4,), dtype="uint8")
+    rgba[missing] = (70, 130, 255, 255)
+    rgba[saturated] = (255, 60, 60, 255)
+    Image.fromarray(rgba[::-1], "RGBA").save(path)
+
+
 def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
                  mode: str = "normal", progress=None) -> dict:
     """Frames for the player: one stacked image per epoch for one detector."""
@@ -304,6 +314,8 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
         waves = [it["wave_at_target"] for it in items if it["wave_at_target"] is not None]
         name = f"epoch{ep + 1}.png"
         to_png(st, limits, out_dir / name)
+        flags_name = f"epoch{ep + 1}_flags.png"
+        flags_png(st, out_dir / flags_name)
 
         predicted = None
         x0 = y0 = (n - 1) / 2.0
@@ -327,6 +339,7 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
             "mjd_mean": mjd_mean,
             "date_mean": Time(mjd_mean, format="mjd").iso[:10],
             "image": f"/frames/{key}/{name}",
+            "flags_image": f"/frames/{key}/{flags_name}",
             "n_exposures": len(items),
             "wavelength_um": [min(waves), max(waves)] if waves else None,
             "flagged_fraction": float(np.mean([it["masked_fraction"] for it in items])),
