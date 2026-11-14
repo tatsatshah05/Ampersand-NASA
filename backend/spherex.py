@@ -46,6 +46,12 @@ class ArchiveError(RuntimeError):
     """IRSA could not be reached or returned something unusable."""
 
 
+class BadRequest(ValueError):
+    """The request asks for something that cannot be done (a mode that does not exist, an
+    epoch that was not observed, ...). The API answers it with HTTP 400 and this message;
+    any other error is the server's fault and is answered with 500."""
+
+
 def http_get(url: str, params: dict | None = None, tries: int = 10, timeout: float = 90) -> bytes:
     """GET with a concurrency cap and retries.
 

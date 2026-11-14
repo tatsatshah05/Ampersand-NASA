@@ -323,9 +323,9 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
     `measured` in the result says which (see choose_object).
     """
     if detector is not None and not 1 <= detector <= 6:
-        raise ValueError("detector must be 1 to 6")
+        raise spherex.BadRequest("detector must be 1 to 6")
     if (pmra is None) != (pmdec is None):
-        raise ValueError("give both pmra and pmdec, or neither")
+        raise spherex.BadRequest("give both pmra and pmdec, or neither")
     motion = None
     if pmra is not None and pmdec is not None:
         motion = {"source_id": None, "ra": ra, "dec": dec, "pmra": float(pmra), "pmdec": float(pmdec),
@@ -493,7 +493,7 @@ def spectrum(ra: float, dec: float, epoch: int | None = None, detector: int | No
         epochs.append({"epoch": ep, "date_start": Time(min(mjds), format="mjd").iso[:10],
                        "date_end": Time(max(mjds), format="mjd").iso[:10], "n_exposures": len(mjds)})
     if epoch is not None and epoch not in {e["epoch"] for e in epochs}:
-        raise ValueError(f"epoch must be one of {[e['epoch'] for e in epochs]}")
+        raise spherex.BadRequest(f"epoch must be one of {[e['epoch'] for e in epochs]}")
     pts = [p for p in data["points"] if p["wavelength_um"] is not None and (epoch is None or p["epoch"] == epoch)]
     pts.sort(key=lambda p: p["wavelength_um"])
     out = {k: v for k, v in data.items() if k != "points"}

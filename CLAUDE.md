@@ -289,6 +289,14 @@ Endpoints (adjust if something better emerges, and keep this list current):
 - `GET /api/spectrum?ra=&dec=&epoch=` BUILT. The same per-exposure points sorted by
   wavelength, for one epoch (`epoch=1`, 2, ...) or all (omit it). `epochs` lists the
   epochs with their dates; a wrong epoch answers 400. Same optional parameters.
+- Errors, every endpoint (`backend/app.py`, `_answer`): 422 when FastAPI's own checks
+  refuse a parameter; 400 with the reason when the request asks for something impossible
+  (`spherex.BadRequest`: a mode that does not exist, an epoch not observed, track=target
+  without a motion); 404 for a name SIMBAD does not know; 502 when the archive, SIMBAD
+  or Gaia does not answer; anything else is a fault of the server, logged in full
+  (logger `backend.app`) and answered 500 "Something went wrong on the server while
+  ...", never with a raw numpy or astropy message. Before, every `ValueError` was a 400.
+  `BadRequest` is a `ValueError`, so scripts that catch that still work.
 
 The page reads `?ra=&dec=&fov=&det=&mode=` from its address so a view can be linked, and
 passes `pmra`, `pmdec`, `parallax` through to `/api/frames` when they are in the address.

@@ -992,15 +992,15 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     that is at (ra, dec) at the Julian year pm_epoch, which is what /api/resolve returns.
     """
     if mode not in MODES:
-        raise ValueError(f"mode must be one of {', '.join(MODES)}")
+        raise spherex.BadRequest(f"mode must be one of {', '.join(MODES)}")
     if not 1 <= detector <= 6:
-        raise ValueError("detector must be 1 to 6")
+        raise spherex.BadRequest("detector must be 1 to 6")
     if reference not in REFERENCES:
-        raise ValueError(f"reference must be one of {', '.join(REFERENCES)}")
+        raise spherex.BadRequest(f"reference must be one of {', '.join(REFERENCES)}")
     if track not in TRACKS:
-        raise ValueError(f"track must be one of {', '.join(TRACKS)}")
+        raise spherex.BadRequest(f"track must be one of {', '.join(TRACKS)}")
     if (pmra is None) != (pmdec is None):
-        raise ValueError("give both pmra and pmdec, or neither")
+        raise spherex.BadRequest("give both pmra and pmdec, or neither")
     motion = None
     if pmra is not None and pmdec is not None:
         motion = {"source_id": None, "ra": ra, "dec": dec, "pmra": float(pmra), "pmdec": float(pmdec),
@@ -1121,7 +1121,7 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
         note = None
         if track == "target":
             if target is None or target.get("pmra") is None or target.get("pmdec") is None:
-                raise ValueError("track=target needs a proper motion: pass pmra and pmdec (see /api/resolve), "
+                raise spherex.BadRequest("track=target needs a proper motion: pass pmra and pmdec (see /api/resolve), "
                                  "or centre the request on a Gaia star")
             # Shift each exposure by how far the target is, on its date, from where it
             # is on the mean date. The target then adds up at one place; the sky does not.

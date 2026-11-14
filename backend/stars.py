@@ -39,7 +39,7 @@ def field_stars(ra: float, dec: float, fov: float = 0.1, detector: int = 5, mode
     because they are the ones an overlay of motions is for.
     """
     if not 1 <= limit <= MAX_LIMIT:
-        raise ValueError(f"limit must be 1 to {MAX_LIMIT}")
+        raise spherex.BadRequest(f"limit must be 1 to {MAX_LIMIT}")
     # Served from the frames cache when the view has been built. If it has not, this
     # builds it, which fetches exactly the cutouts /api/frames would fetch.
     meta = pipeline.build_frames(ra, dec, fov, detector, mode, **options)
