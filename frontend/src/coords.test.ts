@@ -41,7 +41,6 @@ describe('decimal degrees', () => {
     '269.4463deg 4.7682deg',
     '269.4463 deg, 4.7682 deg',
     '269.4463 degrees 4.7682 degrees',
-    '+269.4463 +4.7682',
     '(269.4463, 4.7682)',
     '269.4463; 4.7682',
     'RA 269.4463, Dec 4.7682',
@@ -273,8 +272,17 @@ describe('the edges of the range', () => {
   })
 
   it('rejects a negative RA', () => {
-    expect(why('-10 20')).toMatch(/RA cannot be negative/)
-    expect(why('-1h 20d')).toMatch(/RA cannot be negative/)
+    expect(why('-10 20')).toMatch(/RA has no plus or minus sign/)
+    expect(why('-1h 20d')).toMatch(/RA has no plus or minus sign/)
+    expect(why('-0 0')).toMatch(/RA has no plus or minus sign/)
+  })
+
+  it('rejects a plus sign on RA too, because it usually means Dec was typed first', () => {
+    // Read as RA then Dec these would be valid positions, in the wrong part of the sky.
+    expect(why('+04 41 36 17 57 48.5')).toMatch(/Write RA first, then Dec/)
+    expect(why('+4.7682 269.4463')).toMatch(/Write RA first, then Dec/)
+    expect(why('+30.401291 76.956587')).toMatch(/Write RA first, then Dec/)
+    expect(why('+269.4463 +4.7682')).toMatch(/RA has no plus or minus sign/)
   })
 
   it('accepts Dec at the poles and rejects anything past them', () => {

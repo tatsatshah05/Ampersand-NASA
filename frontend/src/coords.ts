@@ -20,8 +20,9 @@
 // Dec is always degrees. The sign is read from the text, so "-00 30 00" is south.
 //
 // Rejected rather than guessed: RA outside 0 to 360 degrees (0h to 24h, 24h itself
-// included), Dec outside -90 to +90, minutes or seconds of 60 or more, and five numbers
-// with nothing to show where RA ends.
+// included), Dec outside -90 to +90, minutes or seconds of 60 or more, an RA with a
+// sign (probably a Dec typed first), a sign or a unit that does not touch its number,
+// and five numbers with nothing to show where RA ends.
 
 export type CoordsResult = { ok: true; ra: number; dec: number } | { ok: false; reason: string }
 
@@ -38,7 +39,7 @@ const WHY = {
   unreadable: 'Could not read this as coordinates.',
   units: 'Could not read the units. Write RA like 17h57m48.5s and Dec like +04d41m36s.',
   decimal: 'Only the last number of RA, and the last number of Dec, can have a decimal point.',
-  raNegative: 'RA cannot be negative. It runs from 0 up to 360 degrees (0h up to 24h).',
+  raSign: 'RA has no plus or minus sign: it runs from 0 up to 360 degrees (0h up to 24h). Write RA first, then Dec.',
   raHours: 'RA in hours must be less than 24. If you meant degrees, put a d after the first number, like 269d26m47s.',
   raDegrees: 'RA must be less than 360 degrees.',
   decHours: 'Dec is measured in degrees, not hours. Write it like +04d41m36s.',
@@ -257,7 +258,10 @@ function readAngle(group: Field[], which: 'RA' | 'Dec'): Angle {
   const within = (limit: number) => (sexagesimal ? total < limit * 3600 : top < limit)
 
   if (which === 'RA') {
-    if (first.sign === '-') return fail(WHY.raNegative)
+    // A minus is out of range. A plus is refused too: nobody signs an RA, so a signed
+    // first value is most likely a Dec typed first, and reading it as RA would put the
+    // person somewhere else without a word.
+    if (first.sign) return fail(WHY.raSign)
     if (first.unit === 'h' || (!first.unit && sexagesimal)) {
       if (!within(24)) return fail(WHY.raHours)
       return { ok: true, degrees: sexagesimal ? total / 240 : top * 15 }
