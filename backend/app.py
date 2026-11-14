@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import astrometry, jobs, photometry, pipeline, spherex, stars, training
+from . import astrometry, jobs, photometry, pipeline, smallbodies, spherex, stars, training
 
 log = logging.getLogger("backend.app")
 app = FastAPI(title="SPHEREx sky-change viewer")
@@ -86,6 +86,22 @@ def field_stars(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge
     return _answer(lambda: stars.field_stars(ra, dec, fov, detector, mode, limit=limit, pmra=pmra, pmdec=pmdec,
                                              parallax=parallax, pm_epoch=pm_epoch, reference=reference, track=track),
                    "placing the catalogue stars", "The SPHEREx archive (IRSA)")
+
+
+# --- Known asteroids and comets (JPL small-body services); self-contained, see backend/smallbodies.py ---
+@app.get("/api/smallbodies")
+def small_bodies(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+                 fov: float = Query(0.1, gt=0.02, le=0.5), detector: int = Query(5, ge=1, le=6)):
+    """Known asteroids and comets predicted in the field at the time of a SPHEREx exposure. Slow the first time."""
+    try:
+        return smallbodies.known_bodies(ra, dec, fov, detector)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except smallbodies.JplError as e:
+        raise HTTPException(502, f"NASA/JPL's small-body services did not respond: {e}") from e
+    except spherex.ArchiveError as e:
+        raise HTTPException(502, f"The SPHEREx archive (IRSA) did not respond: {e}") from e
+# --- end of known asteroids and comets ---
 
 
 @app.get("/api/lightcurve")

@@ -18,6 +18,7 @@ import { PlayerControls } from './components/PlayerControls'
 import { SearchBar, type SearchTarget } from './components/SearchBar'
 import { SearchMarkers, SearchPanel } from './components/SearchPanel'
 import { Selectors } from './components/Selectors'
+import { SmallBodiesPanel } from './components/SmallBodiesPanel'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
 import { TrainingView } from './components/TrainingView'
@@ -61,6 +62,8 @@ function Viewer() {
   // Search mode: the patch being searched (null when the panel is closed), and what it found, to mark on the picture.
   const [search, setSearch] = useState<SearchQuery | null>(null)
   const [searchFound, setSearchFound] = useState<SearchObject[]>([])
+  // Known asteroids and comets (backend/smallbodies.py): open only when asked for, as the lookup is slow.
+  const [showSmallBodies, setShowSmallBodies] = useState(false)
   // Issue #12: colour the pixels with no data and the saturated ones.
   const [showFlags, setShowFlags] = useState(false)
   // Issue #12: the same patch of sky in other surveys. Off until asked for: it loads a
@@ -434,6 +437,9 @@ function Viewer() {
               <button type="button" onClick={() => setSearch({ ra: load.data.ra, dec: load.data.dec, fov: selection.fov })}>
                 Search this patch for anything that moved or changed
               </button>
+              <button type="button" onClick={() => setShowSmallBodies(true)}>
+                Asteroids and comets
+              </button>
             </div>
 
             {showFlags && hasFlags && (
@@ -507,6 +513,12 @@ function Viewer() {
               onClose={() => setSearch(null)}
               onObjects={setSearchFound}
               onLook={lookAt}
+            />
+          )}
+          {showSmallBodies && (
+            <SmallBodiesPanel
+              query={{ ra: load.data.ra, dec: load.data.dec, fov: load.data.fov, detector: load.data.detector }}
+              onClose={() => setShowSmallBodies(false)}
             />
           )}
         </>
