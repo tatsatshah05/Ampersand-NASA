@@ -21,6 +21,8 @@ Confirmed against the live bucket on 2026-11-14 (`scripts/check_s3.py` repeats i
   systems in the header: the sky (TAN-SIP), "A" (position on the detector) and "W"
   (wavelength lookup table). SIP distortion and the lookup table are both defined
   relative to CRPIX, so moving CRPIX by the corner of the box is the whole change.
+- Written this way, all 2,035 cutouts in the project's cache came out of S3 identical
+  to IRSA's, byte for byte.
 """
 from __future__ import annotations
 
@@ -62,6 +64,11 @@ MAX_HEADER = 200 * BLOCK                # no real header is this long: stop look
 _END_CARD = b"END" + b" " * (CARD - 3)
 _EMPTY_PRIMARY = fits.PrimaryHDU().header.tostring().encode("ascii")
 _PIXEL_TYPES = {8: "u1", 16: ">i2", 32: ">i4", 64: ">i8", -32: ">f4", -64: ">f8"}
+# Header keywords of a coordinate system; the last letter, if any, says which system.
+_SYSTEM_KEY = re.compile(r"(?:WCSAXES|WCSNAME|(?:CRPIX|CRVAL|CDELT|CROTA|CUNIT|CTYPE|CNAME)\d+|(?:PC|CD|PV|PS)\d+_\d+"
+                         r"|LONPOLE|LATPOLE|RADESYS|EQUINOX)([A-Z]?)")
+_SIP_KEY = re.compile(r"[AB]P?_(?:ORDER|DMAX|\d+_\d+)")   # distortion of the sky system
+_SIZE_KEYS = ("NAXIS", "NAXIS1", "NAXIS2")
 # Header lengths of VARIANCE and ZODI in the file read last, used to guess where their
 # pixels start in the next file. Only ever a guess: see _RemoteFile.
 _header_guess = {"VARIANCE": 4 * BLOCK, "ZODI": 4 * BLOCK}
@@ -96,16 +103,20 @@ class S3Reader:
 
     `max_concurrent` is the cap. Every read goes through a pool of that many threads,
     so sharing one reader between several callers keeps the cap for all of them together.
+    A request that fails is tried again, `tries` times in all, waiting 0.4 s, 0.8 s, ...
+    (plus or minus half) in between. `bucket_url` is there so that tests can point the
+    reader at a stand-in for the bucket.
     """
 
-    def __init__(self, max_concurrent: int = DEFAULT_CONCURRENCY, timeout: tuple[float, float] = (5.0, 20.0),
-                 tries: int = 4, cooloff_s: float = 30.0) -> None:
+    def __init__(self, max_concurrent: int = DEFAULT_CONCURRENCY, timeout: tuple[float, float] = (5.0, 10.0),
+                 tries: int = 4, cooloff_s: float = 30.0, bucket_url: str = BUCKET_URL) -> None:
         if max_concurrent < 1 or tries < 1:
             raise ValueError("max_concurrent and tries must be at least 1")
         self.max_concurrent = max_concurrent
         self.timeout = timeout          # seconds to connect, seconds of silence allowed while reading
         self.tries = tries
         self.cooloff_s = cooloff_s
+        self.bucket_url = bucket_url.rstrip("/")
         self.requests = 0               # counters, for timing reports
         self.bytes_read = 0
         self.retries = 0
@@ -115,8 +126,13 @@ class S3Reader:
         self._session = requests.Session()
         self._session.headers["User-Agent"] = USER_AGENT
         self._session.headers["Accept-Encoding"] = "identity"   # byte ranges must mean bytes of the file itself
-        self._session.mount("https://", HTTPAdapter(pool_connections=1, pool_maxsize=max_concurrent))
+        for scheme in ("https://", "http://"):
+            self._session.mount(scheme, HTTPAdapter(pool_connections=1, pool_maxsize=max_concurrent))
         self._pool = ThreadPoolExecutor(max_concurrent, thread_name_prefix="s3range")
+
+    def url_of(self, exp: dict) -> str:
+        """The address of an exposure's file in this reader's bucket."""
+        return f"{self.bucket_url}/{quote(s3_key(exp))}"
 
     def __enter__(self) -> S3Reader:
         return self
@@ -371,18 +387,22 @@ def cutout_box(header: fits.Header, ra: float, dec: float, size_deg: float, pad:
     0-based, on the full detector image, x1 and y1 exclusive. IRSA does not document
     its rule. This one was worked out from the 2,035 cutouts in the project's cache
     (sizes 0.15 and 0.3 degrees, five targets, 198 of them clipped by a detector edge)
-    and reproduces every one of them. It is what astropy's Cutout2D does:
+    and reproduces every one of them:
 
     - the centre goes to a pixel position with the full WCS, SIP distortion included;
     - the size becomes a whole number of pixels per axis, size / pixel scale rounded,
       the scale being that of the linear part of the WCS along that axis;
     - the box starts at ceil(centre - n / 2) and is n pixels long, clipped to the image.
 
+    That is where astropy's Cutout2D puts a box of nx by ny pixels. Cutout2D handed
+    the angular size itself is NOT the same: it takes the height from the x scale and
+    the width from the y scale, and lands one pixel off whenever the two round apart.
+
     `pad` adds that many pixels on every side, for a caller that wants a margin.
     """
     # spherex.fetch_cutout puts the centre in IRSA's URL with 6 decimals and the size with 5.
     ra, dec, size_deg = float(f"{ra:.6f}"), float(f"{dec:.6f}"), float(f"{size_deg:.5f}")
-    wcs = WCS(header)
+    wcs = WCS(_wcs_lines(header, ""))
     if [str(u) for u in wcs.wcs.cunit] != ["deg", "deg"]:
         raise S3LayoutError(f"sky coordinates in {list(wcs.wcs.cunit)}, expected degrees")
     try:
@@ -399,21 +419,45 @@ def cutout_box(header: fits.Header, ra: float, dec: float, size_deg: float, pad:
     return x0, x1, y0, y1
 
 
-def _shift_header(header: fits.Header, x0: int, y0: int, nx: int, ny: int) -> fits.Header:
-    """The header of the cut-out image: new size, and every CRPIX moved by the corner of the box.
+def _wcs_lines(header: fits.Header, system: str) -> fits.Header:
+    """Only the header lines of one coordinate system: "" for the sky, or its letter.
+
+    astropy builds a WCS from the text of the whole header, more than once. With 276
+    lines, most of them nothing to do with coordinates, that takes 13 ms of processor
+    time per WCS. The lines of the one system give the same numbers to the last bit
+    (the cutouts still come out byte for byte IRSA's) in 2 to 4 ms.
+    """
+    out = fits.Header()
+    for card in header.cards:
+        m = _SYSTEM_KEY.fullmatch(card.keyword)
+        if (m and m[1] == system) or (not system and _SIP_KEY.fullmatch(card.keyword)) or card.keyword in _SIZE_KEYS:
+            out.append(card)
+    return out
+
+
+def _shift_crpix(header: fits.Header, x0: int, y0: int) -> None:
+    """Move every CRPIX of a header by the corner of the box, in place.
 
     CRPIX1/2 is the sky WCS (SIP polynomials are in pixels from CRPIX, so they need no
-    change), CRPIX1A/2A the detector position, CRPIX1W/2W the wavelength lookup. IRSA
-    writes all of them as decimals, including the two that are whole numbers in the
-    full image, hence float().
+    change), CRPIX1A/2A the detector position, CRPIX1W/2W the wavelength lookup.
+
+    The arithmetic copies IRSA's to the last bit. The sky CRPIX is the old one minus
+    the corner, rounded to 15 significant digits (what wcslib prints). The others
+    move by the difference between the new and old sky CRPIX, and are written as
+    decimals even where they are whole numbers. For the usual CRPIX of 1020.5 this is
+    plain subtraction. About 1 exposure in 200 has another value (1023.8, 1135.6 or
+    1017.2, 905.4 or 1020.5, 1031.5), and there the steps matter: 1135.6 - 458 gives
+    677.5999999999999, IRSA writes 677.6, and its CRPIX2A and CRPIX2W become
+    -456.9999999999999, not -457.
     """
-    out = header.copy()
-    out["NAXIS1"], out["NAXIS2"] = nx, ny
-    for key in list(out):
-        m = re.fullmatch(r"CRPIX([12])[A-Z]?", key)
-        if m:
-            out[key] = float(out[key]) - (x0 if m[1] == "1" else y0)
-    return out
+    for axis, corner in (("1", x0), ("2", y0)):
+        old = float(header["CRPIX" + axis])
+        new = float(f"{old - corner:.15g}")
+        for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            key = f"CRPIX{axis}{letter}"
+            if key in header:
+                header[key] = float(header[key]) + (new - old)
+        header["CRPIX" + axis] = new
 
 
 def _tiles(remote: _RemoteFile, hdu: _Hdu, y0: int, y1: int) -> tuple[int, int, int, int, np.ndarray]:
@@ -481,7 +525,7 @@ def _pixels(remote: _RemoteFile, hdu: _Hdu, x0: int, x1: int, y0: int, y1: int) 
     raw = _EMPTY_PRIMARY + small.tostring().encode("ascii") + body + b"\0" * (_padded(len(body)) - len(body))
     with fits.open(io.BytesIO(raw)) as hdul:
         rows = np.asarray(hdul[1].data)
-        image_header = hdul[1].header.copy()
+        image_header = hdul[1].header
     return np.ascontiguousarray(rows[y0 - t0 * tile_h:y1 - t0 * tile_h, x0:x1]), image_header
 
 
@@ -515,7 +559,7 @@ def _wavelengths(header: fits.Header, table: bytes, nx: int, ny: int) -> tuple[n
     with fits.open(io.BytesIO(_EMPTY_PRIMARY + table)) as hdul:
         # Alternate WCS "W" is a -TAB lookup into the WCS-WAVE extension: axis 1 is
         # the central wavelength, axis 2 the bandwidth.
-        spectral = WCS(header, fobj=hdul, key="W")
+        spectral = WCS(_wcs_lines(header, "W"), fobj=hdul, key="W")
         spectral.sip = None
         xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
         wave, band = spectral.wcs_pix2world(xx, yy, 0)
@@ -530,9 +574,10 @@ def read_cutout(exp: dict, ra: float, dec: float, size_deg: float, *, reader: S3
     Raises S3Error (S3KeyMissing, S3LayoutError, ...) with a reason; nothing is ever
     filled in or approximated.
     """
-    url = s3_url(exp)
+    reader = reader or default_reader()
+    url = reader.url_of(exp)
     try:
-        return _read_cutout(_RemoteFile(reader or default_reader(), url), ra, dec, size_deg, pad)
+        return _read_cutout(_RemoteFile(reader, url), ra, dec, size_deg, pad)
     except S3Error:
         raise
     except (KeyError, ValueError, IndexError, OSError) as e:   # a header or table unlike those this was checked on
@@ -579,7 +624,9 @@ def _read_cutout(remote: _RemoteFile, ra: float, dec: float, size_deg: float, pa
         if hdu.shape != image.shape:
             raise S3LayoutError(f"{hdu.name} is {hdu.shape} pixels but IMAGE is {image.shape}")
         data, header = _pixels(remote, hdu, x0, x1, y0, y1)
-        out.append(fits.ImageHDU(data, header=_shift_header(header, x0, y0, nx, ny), name=hdu.name))
+        cut = fits.ImageHDU(data, header=header, name=hdu.name)   # copies the header and sets NAXIS1, NAXIS2
+        _shift_crpix(cut.header, x0, y0)
+        out.append(cut)
     wave, band = _wavelengths(out["IMAGE"].header, _wave_table(remote, zodi.end), nx, ny)
     out.append(fits.ImageHDU(wave, name="WAVE"))
     out.append(fits.ImageHDU(band, name="BANDWIDTH"))
@@ -605,7 +652,9 @@ def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float, path: Path, 
     # Process and thread in the name: two of them may fetch the same cutout at once.
     tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     try:
-        hdul.writeto(tmp, overwrite=True)
+        # The header lines are the archive's own. Having astropy check each of the 800
+        # again before writing takes 10 ms per cutout and changes no byte.
+        hdul.writeto(tmp, overwrite=True, output_verify="ignore")
         tmp.replace(path)
     finally:
         tmp.unlink(missing_ok=True)
@@ -613,28 +662,35 @@ def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float, path: Path, 
 
 
 def fetch_cutouts(exposures: list[dict], ra: float, dec: float, size_deg: float, root: Path, *,
-                  max_concurrent: int = DEFAULT_CONCURRENCY, progress: Callable[[int, int], None] | None = None,
-                  pad: int = 0, overwrite: bool = False) -> list[tuple[dict, Path | None, str | None]]:
+                  max_concurrent: int = DEFAULT_CONCURRENCY, reader: S3Reader | None = None,
+                  progress: Callable[[int, int], None] | None = None, pad: int = 0,
+                  overwrite: bool = False) -> list[tuple[dict, Path | None, str | None]]:
     """Fetch many cutouts from S3 into `root`, at most `max_concurrent` requests at a time.
 
     Files are named as `spherex._cutout_path` names them, under `root`. Returns
     (exposure, path, error) for each, in the order given, like `spherex.fetch_cutouts`:
     a cutout that could not be read has path None and a reason, and is never replaced
-    with anything.
+    with anything. Pass a `reader` to share one cap (the reader's own) and one set of
+    connections between calls, as a server answering several people at once should.
     """
-    def one(reader: S3Reader, exp: dict) -> tuple[dict, Path | None, str | None]:
+    def one(exp: dict) -> tuple[dict, Path | None, str | None]:
         try:
             path = cutout_path(root, exp, ra, dec, size_deg)
-            return exp, fetch_cutout(exp, ra, dec, size_deg, path, reader=reader, pad=pad, overwrite=overwrite), None
+            return exp, fetch_cutout(exp, ra, dec, size_deg, path, reader=shared, pad=pad, overwrite=overwrite), None
         except Exception as e:  # noqa: BLE001 - report every failure to the caller
             return exp, None, f"{type(e).__name__}: {e}"
 
+    shared = reader or S3Reader(max_concurrent)
     results = []
-    # One exposure needs up to five ranges at once, so half as many exposures in hand
-    # as the request cap keeps the requests flowing without a long queue.
-    with S3Reader(max_concurrent) as reader, ThreadPoolExecutor(max(1, (max_concurrent + 1) // 2)) as pool:
-        for n, res in enumerate(pool.map(lambda exp: one(reader, exp), exposures), 1):
-            results.append(res)
-            if progress:
-                progress(n, len(exposures))
+    try:
+        # One exposure needs up to five ranges at once, so half as many exposures in hand
+        # as the request cap keeps the requests flowing without a long queue.
+        with ThreadPoolExecutor(max(1, (shared.max_concurrent + 1) // 2)) as pool:
+            for n, res in enumerate(pool.map(one, exposures), 1):
+                results.append(res)
+                if progress:
+                    progress(n, len(exposures))
+    finally:
+        if reader is None:
+            shared.close()
     return results

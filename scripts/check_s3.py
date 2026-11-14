@@ -1,4 +1,5 @@
-"""Proof that a cutout read from S3 is the cutout IRSA serves, and how fast it arrives.
+"""Proof that a cutout read from S3 is the cutout IRSA serves, how fast it arrives, and what
+happens when the bucket misbehaves.
 
 Run:  SPHEREX_CACHE_DIR=<cache with IRSA cutouts> .venv/bin/python scripts/check_s3.py [options]
 
@@ -17,15 +18,21 @@ the public S3 bucket with `backend/s3fetch.py`, writes them to a folder of its o
 Every difference is printed. Exit status 1 if any pixel, header line or position differs.
 
   (no option)       a sample: per target, detector and visit two exposures, plus cutouts
-                    clipped by a detector edge. Targets: Barnard's Star (0.15 and 0.3
+                    clipped by a detector edge and exposures whose reference pixel is
+                    not the detector centre. Targets: Barnard's Star (0.15 and 0.3
                     degrees), RW Aurigae, R Draconis.
   --all             every cached cutout of the chosen sets
   --sets a,b        which sets (see SETS below); "every" for all of them
+  --skip-compare    leave the comparison out (with --speed or --faults)
   --speed           time ranged reads, single cutouts, a one-detector field, the
                     six-detector field and a 0.5 degree field through S3
-  --irsa N          also fetch N cutouts through IRSA at 0.15 and at 0.5 degrees (N <= 6),
-                    for a same-day time and a check of the box rule at a size the cache
-                    does not hold. IRSA is shared and fragile: keep N small.
+  --sweep 4,8,16    with --speed: the one-detector field at each of these request caps
+  --irsa N          with --speed: also fetch N cutouts through IRSA at 0.15 and at 0.5
+                    degrees (N <= 6), for a same-day time and a check of the box rule at a
+                    size the cache does not hold. IRSA is shared and fragile: keep N small.
+  --faults          failure handling: three bad requests to the real bucket, then a
+                    stand-in for the bucket on this machine that misbehaves on purpose
+                    (it serves one real exposure file, downloaded whole once: 65 MB)
   --concurrency N   simultaneous S3 requests (default 16)
   --out DIR         where fetched files go (default scripts/out/s3)
 """
@@ -33,10 +40,14 @@ import argparse
 import hashlib
 import io
 import json
+import socket
 import statistics
 import sys
+import threading
 import time
 from collections import Counter, defaultdict
+from collections.abc import Callable
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import numpy as np
@@ -65,6 +76,7 @@ SETS = {
 DEFAULT_SETS = "barnard,rwaur,rdra,barnard-0.3"
 ARRAYS = ("IMAGE", "FLAGS", "VARIANCE", "ZODI", "WAVE", "BANDWIDTH")
 DETECTOR_SIDE = 2040
+CENTRE = (1020.5, 1020.5)   # CRPIX of nearly every full image
 
 
 def name_of(exp: dict) -> tuple[str, int]:
@@ -76,6 +88,13 @@ def detector_box(header: fits.Header) -> tuple[int, int, int, int]:
     x, y = WCS(header, key="A").wcs_pix2world(0, 0, 0)
     x0, y0 = int(round(float(x))), int(round(float(y)))
     return x0, x0 + header["NAXIS1"], y0, y0 + header["NAXIS2"]
+
+
+def placement(header: fits.Header) -> tuple[tuple[int, int, int, int], bool, tuple[float, float]]:
+    """A cutout's box, whether a detector edge clipped it, and the CRPIX the full image has."""
+    box = detector_box(header)
+    clipped = box[0] == 0 or box[2] == 0 or box[1] == DETECTOR_SIDE or box[3] == DETECTOR_SIDE
+    return box, clipped, (round(header["CRPIX1"] + box[0], 6), round(header["CRPIX2"] + box[2], 6))
 
 
 def visits_of(exposures: list[dict]) -> dict[tuple[str, int], int]:
@@ -98,7 +117,8 @@ def compare(mine: Path, theirs: Path) -> dict:
     res: dict = {"differences": [], "file_identical": sha(mine) == sha(theirs)}
     with fits.open(mine) as a, fits.open(theirs) as b:
         ha, hb = a["IMAGE"].header, b["IMAGE"].header
-        box_a, box_b = detector_box(ha), detector_box(hb)
+        box_a = detector_box(ha)
+        box_b, res["clipped"], res["ref_pixel"] = placement(hb)
         res["box_s3"], res["box_irsa"] = box_a, box_b
         res["same_box"] = box_a == box_b
         res["covers"] = box_a[0] <= box_b[0] and box_a[1] >= box_b[1] and box_a[2] <= box_b[2] and box_a[3] >= box_b[3]
@@ -164,7 +184,11 @@ def compare(mine: Path, theirs: Path) -> dict:
 
 
 def choose(exposures: list[dict], cached: dict, visit: dict, per_visit: int, clipped_max: int) -> list[dict]:
-    """A sample spread over detectors and visits, plus cutouts that a detector edge clipped."""
+    """A sample spread over detectors and visits, plus the awkward cases.
+
+    Awkward: cutouts that a detector edge clipped (a few), and every exposure whose
+    reference pixel is not the detector centre (rare, and where CRPIX arithmetic shows).
+    """
     groups = defaultdict(list)
     for e in exposures:
         groups[(e["detector"], visit[name_of(e)])].append(e)
@@ -172,14 +196,16 @@ def choose(exposures: list[dict], cached: dict, visit: dict, per_visit: int, cli
     for _, group in sorted(groups.items()):
         for i in sorted({round(k * (len(group) - 1) / max(per_visit - 1, 1)) for k in range(per_visit)}):
             picked.append(group[i])
-    clipped = []
+    clipped, off_centre = [], []
     for e in exposures:
         with fits.open(cached[name_of(e)]) as hdul:
-            x0, x1, y0, y1 = detector_box(hdul["IMAGE"].header)
-        if (x0 == 0 or y0 == 0 or x1 == DETECTOR_SIDE or y1 == DETECTOR_SIDE) and e not in picked:
+            _, is_clipped, ref_pixel = placement(hdul["IMAGE"].header)
+        if ref_pixel != CENTRE and e not in picked:
+            off_centre.append(e)
+        elif is_clipped and e not in picked:
             clipped.append(e)
     step = max(len(clipped) // max(clipped_max, 1), 1)
-    return picked + clipped[::step][:clipped_max]
+    return picked + clipped[::step][:clipped_max] + off_centre
 
 
 def run_comparison(sets: list[str], out: Path, concurrency: int, everything: bool) -> tuple[int, list[dict]]:
@@ -191,22 +217,22 @@ def run_comparison(sets: list[str], out: Path, concurrency: int, everything: boo
         cached = {name_of(e): spherex._cutout_path(e, ra, dec, size) for e in exposures}
         have = [e for e in exposures if cached[name_of(e)].exists()]
         if not have:
-            print(f"{name} {size}: no IRSA cutouts in {spherex.CACHE / 'cutouts'}; set SPHEREX_CACHE_DIR")
+            print(f"\n{name}, {size} degrees: no IRSA cutouts in {spherex.CACHE / 'cutouts'}; set SPHEREX_CACHE_DIR")
             continue
         chosen = have if everything else choose(have, cached, visit, per_visit=2, clipped_max=6)
-        reader_start = time.perf_counter()
-        fetched = s3fetch.fetch_cutouts(chosen, ra, dec, size, out / "compare", max_concurrent=concurrency,
-                                        overwrite=True)
-        took = time.perf_counter() - reader_start
-        print(f"\n{name}, {size} degrees: {len(chosen)} of {len(have)} cached exposures fetched from S3 "
-              f"in {took:.1f}s ({concurrency} requests at a time)")
-        print(f"  {'exposure':<22}{'det':>3} {'visit':>5}  {'date':<10}  {'IRSA box x0:x1 y0:y1':<22} {'S3 box':<10}"
-              f"{'pixels':>7} {'NaN':>4}  IMAGE FLAGS VARIA ZODI  WAVE  BANDW  {'sky off (px)':>12}  hdr  file")
+        with s3fetch.S3Reader(concurrency) as reader:
+            start = time.perf_counter()
+            fetched = s3fetch.fetch_cutouts(chosen, ra, dec, size, out / "compare", reader=reader, overwrite=True)
+            took = time.perf_counter() - start
+            print(f"\n{name}, {size} degrees: {len(chosen)} of {len(have)} cached exposures fetched from S3 in "
+                  f"{took:.1f}s ({concurrency} requests at a time, {reader.requests} requests, "
+                  f"{reader.bytes_read / 1e6:.0f} MB, {reader.retries} retries)")
+        print(f"  {'exposure':<20}{'det':>3} {'visit':>5}  {'date':<10}  {'IRSA box x0:x1 y0:y1':<22} {'S3 box':<8}"
+              f"{'pixels':>7} {'NaN':>4}  IMAGE FLAGS VARIA  ZODI  WAVE BANDW  {'sky off (px)':>12}  hdr  file  note")
         for e, path, err in fetched:
-            label = f"{e['obs_id']}"
             if path is None:
                 bad += 1
-                print(f"  {label:<22}{e['detector']:>3}  NOT FETCHED: {err}")
+                print(f"  {e['obs_id']:<20}{e['detector']:>3}  NOT FETCHED: {err}")
                 rows.append({"set": key, "target": name, "size": size, "obs_id": e["obs_id"],
                              "detector": e["detector"], "error": err})
                 continue
@@ -215,11 +241,13 @@ def run_comparison(sets: list[str], out: Path, concurrency: int, everything: boo
             with fits.open(path) as hdul:
                 date = str(hdul["IMAGE"].header["DATE-AVG"])[:10]
             cells = "".join(f"{r.get(n, {}).get('bits', '-'):>5} " for n in ARRAYS)
-            print(f"  {label:<22}{e['detector']:>3} {visit[name_of(e)]:>5}  {date:<10}  "
-                  f"{f'{b[0]}:{b[1]} {b[2]}:{b[3]}':<22} {'same' if r['same_box'] else str(r['box_s3']):<10}"
+            note = ", ".join(n for n in ("edge" if r["clipped"] else "",
+                                         f"CRPIX {r['ref_pixel']}" if r["ref_pixel"] != CENTRE else "") if n)
+            print(f"  {e['obs_id']:<20}{e['detector']:>3} {visit[name_of(e)]:>5}  {date:<10}  "
+                  f"{f'{b[0]}:{b[1]} {b[2]}:{b[3]}':<22} {'same' if r['same_box'] else str(r['box_s3']):<8}"
                   f"{r['pixels']:>7} {r.get('nan_pixels', 0):>4}  {cells} "
                   f"{r.get('sky_offset_px', float('nan')):>12.1e}  "
-                  f"{r.get('header_lines', '-'):>3}  {'same' if r['file_identical'] else 'DIFF'}")
+                  f"{r.get('header_lines', '-'):>3}  {'same' if r['file_identical'] else 'DIFF'}  {note}")
             for d in r["differences"]:
                 print(f"      DIFFERENCE: {d}")
             bad += bool(r["differences"])
@@ -229,30 +257,33 @@ def run_comparison(sets: list[str], out: Path, concurrency: int, everything: boo
 
 
 def summarise(rows: list[dict]) -> None:
-    print("\nSummary (differing pixels are counted bit for bit; 'clipped' = cut by a detector edge)")
-    print(f"  {'target':<16}{'size':>5} {'det':>3} {'visits':>6} {'exposures':>9} {'clipped':>7} {'pixels':>9} "
-          f"{'IMAGE':>6}{'FLAGS':>6}{'VARIA':>6}{'ZODI':>6}{'WAVE':>6}{'BANDW':>6} {'max sky off (px)':>16} "
-          f"{'same box':>8} {'hdr lines':>9} {'files identical':>15}")
+    print("\nSummary. Differing pixels are counted bit for bit. 'edge': clipped by a detector edge. "
+          "'off-centre': reference pixel (CRPIX) of the full image is not 1020.5, 1020.5.")
+    print(f"  {'target':<16}{'size':>5} {'det':>3} {'visits':>6} {'exposures':>9} {'edge':>5} {'off-centre':>10} "
+          f"{'pixels':>9} {'IMAGE':>6}{'FLAGS':>6}{'VARIA':>6}{'ZODI':>6}{'WAVE':>6}{'BANDW':>6} "
+          f"{'max sky off (px)':>16} {'same box':>8} {'hdr lines':>9} {'files identical':>15}")
     groups = defaultdict(list)
     for r in rows:
         groups[(r["target"], r["size"], r["detector"])].append(r)
     total: Counter = Counter()
     for (target, size, det), rs in sorted(groups.items()):
         ok = [r for r in rs if "error" not in r]
-        clipped = sum(1 for r in ok if 0 in r["box_irsa"] or DETECTOR_SIDE in r["box_irsa"])
+        clipped = sum(r["clipped"] for r in ok)
+        off_centre = sum(tuple(r["ref_pixel"]) != CENTRE for r in ok)
         diffs = [sum(r.get(n, {}).get("bits", 0) for r in ok) for n in ARRAYS]
         pixels = sum(r["pixels"] for r in ok)
-        print(f"  {target:<16}{size:>5} {det:>3} {len({r['visit'] for r in ok}):>6} {len(ok):>9} {clipped:>7} "
-              f"{pixels:>9} " + "".join(f"{d:>6}" for d in diffs)
+        print(f"  {target:<16}{size:>5} {det:>3} {len({r['visit'] for r in ok}):>6} {len(ok):>9} {clipped:>5} "
+              f"{off_centre:>10} {pixels:>9} " + "".join(f"{d:>6}" for d in diffs)
               + f" {max((r.get('sky_offset_px', 0.0) for r in ok), default=0.0):>16.1e} "
               f"{sum(r['same_box'] for r in ok):>8} {sum(r.get('header_lines', 0) for r in ok):>9} "
               f"{sum(r['file_identical'] for r in ok):>15}")
-        total.update(exposures=len(ok), failed=len(rs) - len(ok), clipped=clipped, pixels=pixels,
-                     differing=sum(diffs), same_box=sum(r["same_box"] for r in ok),
+        total.update(exposures=len(ok), failed=len(rs) - len(ok), clipped=clipped, off_centre=off_centre,
+                     pixels=pixels, differing=sum(diffs), same_box=sum(r["same_box"] for r in ok),
                      covers=sum(r["covers"] for r in ok), identical=sum(r["file_identical"] for r in ok),
                      with_differences=sum(bool(r["differences"]) for r in ok))
-    print(f"\n  {total['exposures']} exposures compared ({total['clipped']} clipped by a detector edge), "
-          f"{total['failed']} not fetched; {total['pixels']} pixels in each of six arrays;")
+    print(f"\n  {total['exposures']} exposures compared ({total['clipped']} clipped by a detector edge, "
+          f"{total['off_centre']} with an off-centre reference pixel), {total['failed']} not fetched; "
+          f"{total['pixels']} pixels in each of six arrays;")
     print(f"  {total['differing']} pixel values differ; same box as IRSA in {total['same_box']}, IRSA's box covered "
           f"in {total['covers']}; {total['identical']} files identical byte for byte; "
           f"{total['with_differences']} exposures with any difference.")
@@ -295,24 +326,33 @@ def irsa_cutout(exp: dict, ra: float, dec: float, size: float) -> tuple[fits.HDU
 
 
 def timed_field(label: str, exposures: list[dict], ra: float, dec: float, size: float, folder: Path,
-                concurrency: int) -> list[tuple[dict, Path | None, str | None]]:
-    start = time.perf_counter()
-    results = s3fetch.fetch_cutouts(exposures, ra, dec, size, folder, max_concurrent=concurrency, overwrite=True)
-    took = time.perf_counter() - start
-    failed = [(e["obs_id"], e["detector"], err) for e, p, err in results if p is None]
-    megabytes = sum(p.stat().st_size for _, p, _ in results if p) / 1e6
-    print(f"  {label}: {len(results) - len(failed)} cutouts in {took:.1f}s = {took / len(results):.3f}s each, "
-          f"{concurrency} requests at a time; {megabytes:.0f} MB written; {len(failed)} failed")
+                concurrency: int, truth: float | None = None) -> tuple[list, int]:
+    """Fetch a field into a fresh folder and say how long it took. With `truth` (the size of the cached
+    IRSA cutouts to hold the files against) also count the files that are not those cutouts byte for byte."""
+    with s3fetch.S3Reader(concurrency) as reader:
+        start = time.perf_counter()
+        results = s3fetch.fetch_cutouts(exposures, ra, dec, size, folder, reader=reader, overwrite=True)
+        took = time.perf_counter() - start
+        failed = [(e["obs_id"], e["detector"], err) for e, p, err in results if p is None]
+        print(f"  {label}: {len(results) - len(failed)} cutouts in {took:.1f}s = {took / len(results):.3f}s each, "
+              f"{concurrency} requests at a time; {reader.requests} requests, {reader.bytes_read / 1e6:.0f} MB read "
+              f"({reader.bytes_read / 1e6 / took:.0f} MB/s), {reader.retries} retries; {len(failed)} failed")
     for f in failed:
         print("    FAILED", f)
-    return results
+    bad = len(failed)
+    if truth is not None:
+        pairs = [(p, spherex._cutout_path(e, ra, dec, truth)) for e, p, _ in results if p]
+        pairs = [(p, t) for p, t in pairs if t.exists()]
+        same = sum(sha(p) == sha(t) for p, t in pairs)
+        print(f"    {same} of {len(pairs)} files are byte for byte the cached IRSA cutouts")
+        bad += len(pairs) - same
+    return results, bad
 
 
-def run_speed(out: Path, concurrency: int, n_irsa: int) -> int:
+def run_speed(out: Path, concurrency: int, n_irsa: int, sweep: list[int]) -> int:
     name, ra, dec, _ = SETS["barnard"]
     exposures = spherex.find_exposures(ra, dec, max_age_s=float("inf"))
     d5 = [e for e in exposures if e["detector"] == 5]
-    bad = 0
     print(f"\nSpeed, measured from this machine against {name} ({len(exposures)} exposures, {len(d5)} in detector 5)")
 
     # 1. Single ranged reads on one warm connection, a different file each time.
@@ -333,48 +373,46 @@ def run_speed(out: Path, concurrency: int, n_irsa: int) -> int:
                   f"(fastest {min(times) * 1000:.0f}, slowest {max(times) * 1000:.0f}, 10 files)")
 
     # 2. One cutout at a time.
-    with s3fetch.S3Reader(concurrency) as reader:
-        times = []
-        for e in d5[:8]:
-            start = time.perf_counter()
-            s3fetch.fetch_cutout(e, ra, dec, 0.15, s3fetch.cutout_path(out / "speed-single", e, ra, dec, 0.15),
-                                 reader=reader, overwrite=True)
-            times.append(time.perf_counter() - start)
-        print(f"  one 0.15 degree cutout, alone: median {statistics.median(times):.2f}s (fastest {min(times):.2f}, "
-              f"slowest {max(times):.2f}, 8 exposures; the first includes opening the connections); "
-              f"{reader.requests / 8:.0f} requests and {reader.bytes_read / 8e6:.2f} MB per cutout")
+    for size in (0.15, 0.5):
+        with s3fetch.S3Reader(concurrency) as reader:
+            times = []
+            for e in d5[:9]:
+                start = time.perf_counter()
+                s3fetch.fetch_cutout(e, ra, dec, size, s3fetch.cutout_path(out / "speed-single", e, ra, dec, size),
+                                     reader=reader, overwrite=True)
+                times.append(time.perf_counter() - start)
+            print(f"  one {size} degree cutout, alone: median {statistics.median(times[1:]):.2f}s (fastest "
+                  f"{min(times[1:]):.2f}, slowest {max(times[1:]):.2f}, 8 exposures; the one before them, which "
+                  f"opened the connections, took {times[0]:.2f}s); {reader.requests / 9:.0f} requests and "
+                  f"{reader.bytes_read / 9e6:.2f} MB per cutout")
 
     # 3. Whole fields.
-    results = timed_field(f"detector 5 at 0.15 degrees ({len(d5)} exposures)", d5, ra, dec, 0.15,
-                          out / "speed-d5", concurrency)
-    same = sum(1 for e, p, _ in results if p and spherex._cutout_path(e, ra, dec, 0.15).exists()
-               and sha(p) == sha(spherex._cutout_path(e, ra, dec, 0.15)))
-    print(f"    {same} of {len(results)} files are byte for byte the cached IRSA cutouts")
-    bad += same != len(results)
-    results = timed_field(f"all six detectors at 0.15 degrees ({len(exposures)} exposures)", exposures, ra, dec,
-                          0.15, out / "speed-all", concurrency)
-    same = sum(1 for e, p, _ in results if p and spherex._cutout_path(e, ra, dec, 0.15).exists()
-               and sha(p) == sha(spherex._cutout_path(e, ra, dec, 0.15)))
-    print(f"    {same} of {len(results)} files are byte for byte the cached IRSA cutouts")
-    bad += same != len(results)
-    wide = timed_field(f"detector 5 at 0.5 degrees ({len(d5)} exposures)", d5, ra, dec, 0.5, out / "speed-wide",
-                       concurrency)
-    # No IRSA cutout of 0.5 degrees is cached, but the 0.3 and 0.15 degree ones are inside it.
+    bad = 0
+    for cap in sweep or [concurrency]:
+        _, n = timed_field(f"detector 5 at 0.15 degrees ({len(d5)} exposures)", d5, ra, dec, 0.15, out / "speed-d5",
+                           cap, truth=0.15)
+        bad += n
+    _, n = timed_field(f"all six detectors at 0.15 degrees ({len(exposures)} exposures)", exposures, ra, dec, 0.15,
+                       out / "speed-all", concurrency, truth=0.15)
+    bad += n
+    wide, n = timed_field(f"detector 5 at 0.5 degrees ({len(d5)} exposures)", d5, ra, dec, 0.5, out / "speed-wide",
+                          concurrency)
+    bad += n
+    # No IRSA cutout of 0.5 degrees is cached, but the 0.3 and 0.15 degree ones lie inside it.
     for inner in (0.3, 0.15):
-        n = pixels = differing = 0
+        compared = pixels = differing = 0
         for e, p, _ in wide:
             theirs = spherex._cutout_path(e, ra, dec, inner)
             if p and theirs.exists():
                 r = compare(p, theirs)
-                n += 1
+                compared += 1
                 pixels += r["pixels"]
                 differing += sum(r.get(a, {}).get("bits", 0) for a in ARRAYS) + (r.get("sky_offset_px", 0) > 0)
                 for d in r["differences"]:
-                    if not d.startswith("the S3 box"):
-                        print(f"    DIFFERENCE {e['obs_id']} D{e['detector']} against the {inner} degree cutout: {d}")
-        print(f"    against the cached {inner} degree IRSA cutouts of the same exposures: {n} compared, "
+                    print(f"    DIFFERENCE {e['obs_id']} D{e['detector']} against the {inner} degree cutout: {d}")
+                bad += bool(r["differences"])
+        print(f"    against the cached {inner} degree IRSA cutouts of the same exposures: {compared} compared, "
               f"{pixels} shared pixels in each of six arrays, {differing} differ")
-        bad += bool(differing)
 
     # 4. The same through IRSA, a handful only.
     if n_irsa:
@@ -396,12 +434,212 @@ def run_speed(out: Path, concurrency: int, n_irsa: int) -> int:
     return bad
 
 
+class StandIn:
+    """A stand-in for the bucket on this machine. Serves one real exposure file and misbehaves on request."""
+
+    def __init__(self, blob: bytes) -> None:
+        self.blob, self.lock = blob, threading.Lock()
+        self.reset("ok")
+        stand = self
+
+        class Handler(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def log_message(self, *args: object) -> None:
+                pass
+
+            def do_GET(self) -> None:  # noqa: N802 - the name http.server looks for
+                with stand.lock:
+                    stand.served += 1
+                    stand.in_flight += 1
+                    stand.peak = max(stand.peak, stand.in_flight)
+                    stand.seen[self.headers.get("Range")] += 1
+                    nth, count = stand.seen[self.headers.get("Range")], stand.served
+                try:
+                    stand.answer(self, nth, count)
+                except OSError:   # the client hung up, as some of these tests make it do
+                    pass
+                finally:
+                    with stand.lock:
+                        stand.in_flight -= 1
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.server.handle_error = lambda *args: None   # a client hanging up is part of the tests
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{self.server.server_port}"
+
+    def reset(self, mode: str, delay: float = 0.0) -> None:
+        self.mode, self.delay, self.etag = mode, delay, '"first"'
+        self.seen: Counter = Counter()
+        self.served = self.in_flight = self.peak = 0
+
+    def answer(self, h: BaseHTTPRequestHandler, nth: int, count: int) -> None:
+        """nth: how many times this very range has been asked for. count: requests so far."""
+        def send(status: int, body: bytes = b"", declared: int | None = None, **headers: str) -> None:
+            h.send_response(status)
+            for k, v in headers.items():
+                h.send_header(k.replace("_", "-"), v)
+            h.send_header("Content-Length", str(len(body) if declared is None else declared))
+            h.end_headers()
+            h.wfile.write(body)
+            h.wfile.flush()
+
+        time.sleep(self.delay)
+        a, b = (int(v) for v in h.headers["Range"].removeprefix("bytes=").split("-"))
+        b = min(b, len(self.blob) - 1)
+        whole = str(len(self.blob))
+        if self.mode == "503 twice" and nth <= 2 or self.mode == "always 503":
+            return send(503, b"<Error><Code>SlowDown</Code></Error>")
+        if self.mode == "whole file":   # what S3 does with a two-range request
+            return send(200, self.blob[:65536], declared=len(self.blob), ETag=self.etag)
+        if self.mode == "dropped" and nth == 1:   # half the answer, then the connection goes
+            send(206, self.blob[a:(a + b) // 2], declared=b - a + 1, Content_Range=f"bytes {a}-{b}/{whole}")
+            h.connection.shutdown(socket.SHUT_RDWR)
+            return None
+        if self.mode == "silent" and nth == 1:    # half the answer, then nothing
+            send(206, self.blob[a:(a + b) // 2], declared=b - a + 1, Content_Range=f"bytes {a}-{b}/{whole}")
+            time.sleep(4)
+            h.close_connection = True
+            return None
+        if self.mode == "wrong bytes" and nth == 1:
+            return send(206, self.blob[a + 80:b + 81], Content_Range=f"bytes {a + 80}-{b + 80}/{whole}", ETag=self.etag)
+        if self.mode == "replaced" and count == 4:   # the file changes in the bucket after three reads of it
+            self.etag = '"second"'
+        if h.headers.get("If-Match") not in (None, self.etag):
+            return send(412, b"<Error><Code>PreconditionFailed</Code></Error>")
+        return send(206, self.blob[a:b + 1], Content_Range=f"bytes {a}-{b}/{whole}", ETag=self.etag)
+
+
+def run_faults(out: Path) -> int:
+    name, ra, dec, size = SETS["barnard"]
+    exp = [e for e in spherex.find_exposures(ra, dec, max_age_s=float("inf")) if e["detector"] == 5][0]
+    truth = spherex._cutout_path(exp, ra, dec, size)
+    if not truth.exists():
+        print(f"\nFailure handling: skipped, no IRSA cutout at {truth}")
+        return 1
+    want = sha(truth)
+    failed = 0
+    folder = out / "faults"
+
+    def check(label: str, passed: bool, detail: str) -> None:
+        nonlocal failed
+        failed += not passed
+        print(f"  {'ok  ' if passed else 'FAIL'} {label}: {detail}")
+
+    def attempt(label: str, reader: s3fetch.S3Reader, expect: type | None = None, e: dict = exp, where: float = ra,
+                extra: Callable[[], str] = str) -> None:
+        """Fetch one cutout. expect None: the file must be the IRSA cutout. Else: that error, and no file."""
+        path = folder / "cutout.fits"
+        path.unlink(missing_ok=True)
+        start = time.perf_counter()
+        try:
+            s3fetch.fetch_cutout(e, where, dec, size, path, reader=reader)
+            got = "the file is IRSA's byte for byte" if sha(path) == want else "THE FILE DIFFERS from IRSA's"
+            passed = expect is None and sha(path) == want
+        except Exception as err:  # noqa: BLE001 - the error is the result
+            got = f"{type(err).__name__}: {err}"
+            passed = expect is not None and type(err) is expect and not list(folder.glob("cutout.fits*"))
+        took = time.perf_counter() - start
+        check(label, passed, f"{got[:140]} [{took:.2f}s, {reader.requests} good answers, {reader.retries} retries"
+                             f"{extra()}]")
+
+    print(f"\nFailure handling ({exp['obs_id']} D{exp['detector']} of {name})")
+    print(" The real bucket:")
+    with s3fetch.S3Reader(4) as reader:
+        attempt("a key that is not in the bucket", reader, s3fetch.S3KeyMissing,
+                e=dict(exp, url=exp["url"].replace("level2_", "no_such_")))
+        attempt("a file that is not FITS (the bucket's index.html)", reader, s3fetch.S3LayoutError,
+                e=dict(exp, url=exp["url"].split(s3fetch.IRSA_DATA_PATH)[0] + s3fetch.IRSA_DATA_PATH + "index.html"))
+        attempt("a position 5 degrees off the image", reader, s3fetch.S3Error, where=ra + 5)
+
+    full = out / "full" / Path(s3fetch.s3_key(exp)).name
+    if not full.exists():
+        full.parent.mkdir(parents=True, exist_ok=True)
+        start = time.perf_counter()
+        r = requests.get(s3fetch.s3_url(exp), headers={"User-Agent": s3fetch.USER_AGENT}, timeout=300)
+        r.raise_for_status()
+        full.write_bytes(r.content)
+        print(f" (downloaded the whole exposure file once for the stand-in: {len(r.content) / 1e6:.0f} MB in "
+              f"{time.perf_counter() - start:.0f}s)")
+    stand = StandIn(full.read_bytes())
+    print(f" A stand-in for the bucket at {stand.url}, serving that file:")
+
+    def reader_for(mode: str, **options: object) -> s3fetch.S3Reader:
+        stand.reset(mode)
+        return s3fetch.S3Reader(**{"max_concurrent": 8, "bucket_url": stand.url, **options})
+
+    with reader_for("ok") as reader:
+        attempt("nothing wrong", reader, extra=lambda: f", {stand.served} requests")
+    # Wrong guesses about where things are must cost requests, never correctness.
+    saved = {k: getattr(s3fetch, k) for k in ("FIRST_READ", "TABLE_HEADER_READ", "HEADER_READ", "TAIL_READ")}
+    guess = dict(s3fetch._header_guess)
+    for k in saved:
+        setattr(s3fetch, k, s3fetch.BLOCK)
+    s3fetch._header_guess.update(VARIANCE=s3fetch.BLOCK, ZODI=s3fetch.BLOCK)
+    with reader_for("ok") as reader:
+        attempt("every first read too short and every guess of a header length wrong", reader,
+                extra=lambda: f", {stand.served} requests instead of 9")
+    for k, v in saved.items():
+        setattr(s3fetch, k, v)
+    s3fetch._header_guess.update(guess)
+    with reader_for("503 twice") as reader:
+        attempt("HTTP 503 twice for every request, then fine", reader)
+    with reader_for("dropped") as reader:
+        attempt("connection dropped half way through every answer, once", reader)
+    with reader_for("silent", timeout=(1.0, 1.0)) as reader:
+        attempt("half an answer then silence, once (1 s allowed)", reader)
+    with reader_for("wrong bytes") as reader:
+        attempt("an answer holding other bytes than asked for, once", reader)
+    with reader_for("replaced") as reader:
+        attempt("the file replaced in the bucket during the read", reader, extra=lambda: f", {stand.served} requests")
+    with reader_for("whole file") as reader:
+        attempt("the server ignores Range and offers the whole file", reader, s3fetch.S3Error,
+                extra=lambda: f", {reader.bytes_read} bytes taken")
+    with reader_for("always 503", tries=3, cooloff_s=2.0) as reader:
+        attempt("HTTP 503 every time", reader, s3fetch.S3Error, extra=lambda: f", {stand.served} requests")
+        before = stand.served
+        attempt("the next cutout after that failure (fails at once, no request sent)", reader, s3fetch.S3Error,
+                extra=lambda: f", {stand.served - before} requests")
+        stand.mode = "ok"
+        time.sleep(2.1)
+        attempt("and once the 2 s pause is over", reader)
+    with s3fetch.S3Reader(4, tries=3, bucket_url="http://127.0.0.1:9") as reader:
+        attempt("nothing listening at the address", reader, s3fetch.S3Error)
+
+    for cap in (1, 4):
+        with reader_for("ok", max_concurrent=cap) as reader:
+            stand.delay = 0.03
+            copies = [dict(exp, obs_id=f"copy{i}") for i in range(8)]
+            results = s3fetch.fetch_cutouts(copies, ra, dec, size, folder / f"cap{cap}", reader=reader, overwrite=True)
+            good = sum(1 for _, p, _ in results if p and sha(p) == want)
+            check(f"request cap of {cap}", stand.peak <= cap and good == 8,
+                  f"at most {stand.peak} requests in flight at once over {stand.served}; {good} of 8 files are IRSA's")
+
+    # A write that cannot finish: the destination is a folder with something in it.
+    target = folder / "taken"
+    (target / "inside").mkdir(parents=True, exist_ok=True)
+    with reader_for("ok") as reader:
+        try:
+            s3fetch.fetch_cutout(exp, ra, dec, size, target, reader=reader, overwrite=True)
+            got = "no error"
+        except OSError as err:
+            got = type(err).__name__
+    left = sorted(p.name for p in folder.glob("taken*"))
+    check("a write that cannot be finished", got != "no error" and left == ["taken"],
+          f"{got}; nothing half-written left beside the destination ({left})")
+    stand.server.shutdown()
+    return failed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--sets", default=DEFAULT_SETS)
+    parser.add_argument("--skip-compare", action="store_true")
     parser.add_argument("--speed", action="store_true")
+    parser.add_argument("--sweep", default="")
     parser.add_argument("--irsa", type=int, default=0)
+    parser.add_argument("--faults", action="store_true")
     parser.add_argument("--concurrency", type=int, default=s3fetch.DEFAULT_CONCURRENCY)
     parser.add_argument("--out", type=Path, default=ROOT / "scripts" / "out" / "s3")
     args = parser.parse_args()
@@ -413,14 +651,20 @@ def main() -> int:
     sets = list(SETS) if args.sets == "every" else args.sets.split(",")
     print(f"IRSA cutouts (ground truth): {spherex.CACHE / 'cutouts'}\nS3 cutouts written to: {out}")
 
-    bad, rows = run_comparison(sets, out, args.concurrency, args.all)
-    if rows:
-        summarise(rows)
-        (out / "comparison.json").write_text(json.dumps(rows, indent=1))
+    bad, compared = 0, True
+    if not args.skip_compare:
+        bad, rows = run_comparison(sets, out, args.concurrency, args.all)
+        compared = bool(rows)
+        if rows:
+            summarise(rows)
+            (out / "comparison.json").write_text(json.dumps(rows, indent=1))
     if args.speed:
-        bad += run_speed(out, args.concurrency, args.irsa)
-    print("\nRESULT:", "no difference found" if not bad else f"{bad} exposures or checks with a difference or failure")
-    return 1 if bad or not rows else 0
+        bad += run_speed(out, args.concurrency, args.irsa, [int(n) for n in args.sweep.split(",") if n])
+    if args.faults:
+        bad += run_faults(out)
+    print("\nRESULT:", "no difference and no failure" if not bad else f"{bad} differences or failures, listed above",
+          "" if compared else "(nothing was compared: no IRSA cutouts found)")
+    return 1 if bad or not compared else 0
 
 
 if __name__ == "__main__":
