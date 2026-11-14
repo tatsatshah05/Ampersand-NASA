@@ -169,7 +169,9 @@ The frontend reads `?ra=&dec=&fov=` from the page URL so a view can be linked an
 1. Propagate the target position to the survey epoch if Gaia has a proper motion for it.
 2. Query for all images covering the position.
 3. Download cutouts concurrently.
-4. Per cutout: subtract ZODI, then subtract the sigma-clipped median that is left (it
+4. Per cutout: drop pixels whose raw value is more than 10 sigma below zero (see
+   "Unflagged negative pixels" in Verified facts), subtract ZODI, then subtract the
+   sigma-clipped median that is left (it
    differs per exposure because each one is at a different wavelength). Mask defect and
    cosmic-ray bits, but keep cosmic-ray-flagged pixels where BLOOM is also set: next to
    a saturated star those flags mean charge spill, and masking them erases the star.
@@ -313,8 +315,11 @@ Step 1 result (detector 5, fov 0.1 degrees, 2 arcsec grid)
 - 13 isolated Gaia field stars move by a median of 0.11 to 0.22 arcsec between frames.
 - Building the frames from cached cutouts takes about 10 s; a repeat request is served
   from `backend/cache/frames/` in milliseconds.
-- Delete `backend/cache/frames/` after any pipeline change: results are cached by
-  request, not by code version.
+- After a pipeline change that alters pictures or numbers, raise `pipeline.VERSION` (and
+  `photometry.VERSION` for the photometry). Both are part of the cache keys, so results
+  from older code are never served again. Deleting `backend/cache/frames/` then only
+  frees disk space. A process that was already running keeps the old code and the old
+  keys: restart the server and re-run the warm-up script after a version change.
 
 Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
 - SIMBAD TAP: `GET <mirror>/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=json&
@@ -416,3 +421,24 @@ Photometry checks (`scripts/check_photometry.py`, `scripts/check_flux_scale.py`)
 - Counts: RW Aurigae has 336 exposures (56 per detector), R Draconis 548 (89 to 93 per
   detector; it is 9 degrees from the north ecliptic pole). Measuring all exposures of a
   target from cached cutouts takes about 10 s.
+
+Unflagged negative pixels (found 2026-11-14)
+- Every target has pixels whose raw IMAGE value is more than 10 sigma below zero and
+  that carry no defect flag (only SOURCE): 45 to 108 pixels per target over 258 to 548
+  cutouts, mostly detectors 4 to 6, values from -0.1 to -2112 MJy/sr. `stack()` rejects
+  them when an epoch has 5 or more exposures. WISE 0855 has an epoch of 3 exposures in
+  detector 6 (2025-05-05), where one reading of -2000 MJy/sr left a black patch and set
+  the difference scale to +/-579 MJy/sr. `pipeline.impossible_pixels` now masks them
+  before stacking and photometry treats them as empty. Barnard's Star numbers did not
+  change.
+
+WISE 0855 in detector 6 (fov 0.1, motion from `/api/resolve`; `scripts/check_modes.py`)
+- 45 exposures in three epochs (3, 21 and 21). A faint source sits at the predicted
+  place in every epoch: measured minus predicted (-0.7, +0.5), (-1.2, +0.5) and
+  (-0.6, +0.9) arcsec east, north; fitted S/N 5, 19 and 27. Epoch 2 to 3 it moved
+  (-3.7, +0.9) arcsec against a predicted (-4.4, +0.5).
+- Sum of all 45: S/N 24, FWHM 11.7 arcsec sky-registered; S/N 32, FWHM 10.9 arcsec
+  following the motion.
+- Difference against epoch 1 shows a white spot at the epoch 3 position; the dark half
+  of the pair is lost in the noise of the 3-exposure reference. Other detectors were
+  not examined here.

@@ -27,6 +27,9 @@ logging.getLogger("astropy").setLevel(logging.ERROR)  # silence the per-file SIP
 GRID_ARCSEC = 2.0        # output pixel size; native SPHEREx pixels are 6.15 arcsec
 EPOCH_GAP_DAYS = 30.0    # a gap longer than this between exposures starts a new epoch
 FRAMES_DIR = spherex.CACHE / "frames"
+# Part of every cache key. Raise it whenever a change here alters the pictures or the
+# numbers: results made by older code are then never served again.
+VERSION = 2
 
 # Flag bits: Table 16 of the SPHEREx Explanatory Supplement v2.1 (2026-11-10).
 BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7,
@@ -80,6 +83,18 @@ def assign_epochs(exposures: list[dict]) -> list[int]:
     return idx
 
 
+def impossible_pixels(image: np.ndarray, variance: np.ndarray) -> np.ndarray:
+    """Pixels whose raw brightness is far below zero, which no sky can produce.
+
+    The archive leaves some of these unflagged: 50 to 100 pixels per target over a few
+    hundred cutouts, mostly in detectors 4 to 6, from -0.1 down to -2000 MJy/sr. One
+    of them put a black hole in a three-exposure epoch of WISE 0855, where there are
+    too few readings for stack() to reject it.
+    """
+    with np.errstate(invalid="ignore"):
+        return image < -10.0 * np.sqrt(variance)
+
+
 def prepare_cutout(path: Path, grid: WCS, n: int, ra: float, dec: float) -> dict | None:
     """Clean one cutout and resample it onto the shared grid."""
     with fits.open(path) as hdul:
@@ -93,7 +108,8 @@ def prepare_cutout(path: Path, grid: WCS, n: int, ra: float, dec: float) -> dict
 
     data = image - zodi
     bloom = (flags & BLOOM) != 0
-    bad = ((flags & ALWAYS_BAD) != 0) | (((flags & COSMIC_RAY) != 0) & ~bloom) | ~np.isfinite(data)
+    bad = (((flags & ALWAYS_BAD) != 0) | (((flags & COSMIC_RAY) != 0) & ~bloom) | ~np.isfinite(data)
+           | impossible_pixels(image, variance))
     saturated = ~np.isfinite(image) & ((flags & OVERFLOW) != 0)
     data[bad] = np.nan
     good = ~bad
@@ -363,8 +379,7 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
                   "parallax": float(parallax) if parallax is not None else None, "gmag": None,
                   "ref_epoch": float(pm_epoch), "origin": "request"}
 
-    # The first five parts are the whole key for a plain request, as they always were.
-    key_text = f"{ra:.5f},{dec:.5f},{fov:.4f},{detector},{mode}"
+    key_text = f"v{VERSION},{ra:.5f},{dec:.5f},{fov:.4f},{detector},{mode}"
     if motion:
         key_text += f",pm{motion['pmra']:.3f},{motion['pmdec']:.3f},{motion['parallax'] or 0:.3f},{pm_epoch:.3f}"
     if mode == "difference" and reference != "first":

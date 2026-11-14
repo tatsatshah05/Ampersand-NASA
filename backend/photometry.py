@@ -46,7 +46,7 @@ from astropy.wcs.utils import proj_plane_pixel_area
 
 from . import astrometry, pipeline, spherex
 
-VERSION = 4                      # part of the cache key: raise it when the measurement changes
+VERSION = 5                      # part of the cache key: raise it when the measurement changes
 PHOT_DIR = spherex.CACHE / "photometry"
 CUTOUT_DEG = 0.15                # same cutouts as /api/frames at its default field of view
 
@@ -156,6 +156,7 @@ def measure(path: Path, ra: float, dec: float) -> dict:
     point["bandwidth_um"] = float(band[yi, xi])
 
     data = image - zodi
+    data[pipeline.impossible_pixels(image, variance)] = np.nan   # unflagged negative glitches: treated as empty
     yy, xx = np.mgrid[0:ny, 0:nx]
     r = np.hypot(xx - x, yy - y)
     ring = (r >= SKY_PX[0]) & (r < SKY_PX[1]) & np.isfinite(data)
