@@ -31,13 +31,14 @@ EPOCH_GAP_DAYS = 30.0    # a gap longer than this between exposures starts a new
 FRAMES_DIR = spherex.CACHE / "frames"
 # Part of every cache key. Raise it whenever a change here alters the pictures or the
 # numbers: results made by older code are then never served again. (3 is taken by the
-# flags image of pull request #24; 4 was the new stacking rule; 5 is centroid meaning
-# the target or nothing.)
-VERSION = 5
+# flags image of pull request #24; 4 was the new stacking rule; 5 centroid meaning the
+# target or nothing; 6 photometry_saturated_exposures.)
+VERSION = 6
 
 # Dropping glitches when exposures are stacked (see Stacker).
 MIN_EXPOSURES_TO_REJECT = 5   # with fewer exposures nothing is dropped
 GLITCH_SIGMA = 6.0
+GLITCH_NEARBY_PX = 9          # side of the box in which "the brightest nearby pixel" is looked for
 # Largest patch a glitch makes on the grid: a 2 x 2 block of native pixels, which
 # resampling spreads over 3 x 3 native pixels (85 grid pixels).
 GLITCH_MAX_PX = int(round(9 * (NATIVE_ARCSEC / GRID_ARCSEC) ** 2))
@@ -122,10 +123,16 @@ def prepare_cutout(path: Path, grid: WCS, n: int, ra: float, dec: float) -> dict
         wave = hdul["WAVE"].data
     wcs = WCS(header)
 
+    from . import photometry  # here and not at the top: photometry imports this module
+
     data = image - zodi
+    impossible = impossible_pixels(image, variance)
+    # Pixels the brightness measurement calls saturated (a stricter rule than the one
+    # for the picture; see photometry.saturated_pixels), kept as their positions.
+    lost = photometry.saturated_pixels(flags, np.where(impossible, np.nan, data))
     bloom = (flags & BLOOM) != 0
     bad = (((flags & ALWAYS_BAD) != 0) | (((flags & COSMIC_RAY) != 0) & ~bloom) | ~np.isfinite(data)
-           | impossible_pixels(image, variance))
+           | impossible)
     saturated = ~np.isfinite(image) & ((flags & OVERFLOW) != 0)
     data[bad] = np.nan
     good = ~bad
@@ -161,7 +168,25 @@ def prepare_cutout(path: Path, grid: WCS, n: int, ra: float, dec: float) -> dict
         "mjd": float(header["MJD-AVG"]),
         "wave_at_target": float(wave[yi, xi]) if inside else None,
         "masked_fraction": float(bad.mean()),
+        "wcs": wcs,
+        "saturated_for_photometry": np.nonzero(lost),     # (rows, columns) in the cutout
     }
+
+
+def core_saturated(item: dict, ra: float, dec: float) -> bool:
+    """Would /api/lightcurve call (ra, dec) saturated in this exposure?
+
+    True if a pixel that its measuring circle touches is saturated by the photometry
+    rule. `item` is what prepare_cutout returned.
+    """
+    from . import photometry
+
+    rows, columns = item["saturated_for_photometry"]
+    if rows.size == 0:
+        return False
+    x, y = item["wcs"].all_world2pix(ra, dec, 0, quiet=True)
+    touched = photometry._coverage(columns, rows, float(x), float(y), 0.0, photometry.APERTURE_PX) > 0
+    return bool(touched.any())
 
 
 class Stacker:
@@ -233,7 +258,8 @@ class Stacker:
             weights = np.array(self.weights)
             noise = 1.0 / np.sqrt(weights)
             enough = self.count >= 3
-            nearby = maximum_filter(np.where(np.isfinite(self.high2), np.abs(self.high2), 0.0), size=9)
+            nearby = maximum_filter(np.where(np.isfinite(self.high2), np.abs(self.high2), 0.0),
+                                    size=GLITCH_NEARBY_PX)
             drops = []
             with np.errstate(invalid="ignore"):
                 for first, second, source, sign in ((self.high, self.high2, self.high_from, 1.0),
@@ -417,6 +443,15 @@ CENTROID_NOTES = {
 }
 
 
+SATURATION_NOTE = (
+    "Two different counts. saturated_pixels: picture pixels with no value in any exposure because the detector "
+    "overflowed there (drawn white). photometry_saturated_exposures: how many of the frame's n_exposures have a "
+    "saturated pixel inside the 15 arcsec circle in which /api/lightcurve measures the target (or the centre of "
+    "the picture, if there is no target), by its stricter rule: overflow within the first seconds, charge spilled "
+    "from a saturated neighbour, or no reliable correction. Such pixels usually still hold a value, so the picture "
+    "can look fine and show 0 saturated_pixels while no brightness can be measured in those exposures.")
+
+
 def _centroid(fit: dict, grid: WCS, n: int) -> dict:
     """A fitted source as the response gives it."""
     cra, cdec = grid.all_pix2world(fit["x"], fit["y"], 0)
@@ -472,6 +507,13 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
             centroid = _centroid(fit, grid, n)
         else:
             reason = "No source near the centre of the picture is bright enough to measure."
+    # In how many of these exposures would /api/lightcurve find the object saturated?
+    # Asked where the object is on each exposure's own date (the centre, if there is no target).
+    if target:
+        t_ra, t_dec = astrometry.path_of(target, mjds)
+    else:
+        t_ra, t_dec = (np.full(len(items), float(v)) for v in grid.wcs.crval)
+    lost = sum(core_saturated(it, float(r), float(d)) for it, r, d in zip(items, t_ra, t_dec, strict=True))
     return {
         "date_start": Time(mjds.min(), format="mjd").iso[:10],
         "date_end": Time(mjds.max(), format="mjd").iso[:10],
@@ -481,6 +523,7 @@ def _describe(items: list[dict], st: dict, grid: WCS, n: int, target: dict | Non
         "wavelength_um": [min(waves), max(waves)] if waves else None,
         "flagged_fraction": float(np.mean([it["masked_fraction"] for it in items])),
         "saturated_pixels": int(st["saturated"].sum()),
+        "photometry_saturated_exposures": int(lost),
         "rejected_readings": st["rejected_readings"],
         "centroid": centroid,
         "centroid_offset_arcsec": offset,
@@ -619,6 +662,7 @@ def _build(key: str, usable: list[tuple[Path, int]], failures: list[str], n_all:
         "target": target, "gaia_error": gaia_error,
         "centroid_is": "target" if target else "brightest_near_centre",
         "centroid_note": CENTROID_NOTES["target" if target else "brightest_near_centre"],
+        "saturation_note": SATURATION_NOTE,
         "exposures_total_all_detectors": n_all,
         "failures": failures, "frames": [], "credit": CREDIT,
     }

@@ -139,6 +139,15 @@ Endpoints (adjust if something better emerges, and keep this list current):
   `saturated_pixels`, `rejected_readings`, `centroid` and `predicted` (each with ra, dec,
   and x, y in PNG pixels from the top-left). In the PNG, north is up and east is left;
   white-with-no-detail pixels are saturated and transparent pixels have no data.
+  - Two saturation counts, which mean different things (`saturation_note` in the
+    response says the same). `saturated_pixels`: picture pixels with no value in any
+    exposure because the detector overflowed there; these are the white ones.
+    `photometry_saturated_exposures`: how many of the frame's `n_exposures` have a
+    saturated pixel inside the circle in which `/api/lightcurve` measures the target
+    (the centre of the picture if there is no target), by the photometry rule, which also
+    counts overflow within the first seconds, charge spilled from a neighbour and
+    uncorrectable pixels. Those pixels usually still hold a value, so a frame can look
+    fine, report 0 `saturated_pixels`, and have every exposure unusable for brightness.
   - `centroid` is the target, measured, or null. When the view has a `target`
     (`centroid_is` "target"), a source is fitted starting within 6 arcsec of `predicted`
     and kept only if it is a detection (fitted S/N 4 or more, width 6 to 36 arcsec) no
@@ -558,6 +567,13 @@ Photometry checks (`scripts/check_photometry.py`, `scripts/check_flux_scale.py`)
 - Counts: RW Aurigae has 336 exposures (56 per detector), R Draconis 548 (89 to 93 per
   detector; it is 9 degrees from the north ecliptic pole). Measuring all exposures of a
   target from cached cutouts takes about 10 s.
+- The frames' `photometry_saturated_exposures` agrees with the lightcurve's own count.
+  RW Aurigae, every frame reporting 0 `saturated_pixels`: detector 2, 7/18, 8/19 and
+  13/19 exposures in the three visits against 7, 8 and 13 "saturated" in
+  `/api/lightcurve`; detector 3, 14/19, 16/18, 16/18 against 14, 16, 16; detector 5,
+  17/18, 6/19, 0/19 against 17, 5, 0. Over all detectors 171 against 167 (the frames
+  also count the 10 exposures that have no wavelength and so no lightcurve point).
+  Barnard's Star 354 against 350 of 354; WISE 0855 0 against 0.
 
 Unflagged negative pixels (found 2026-11-14)
 - Every target has pixels whose raw IMAGE value is more than 10 sigma below zero and
