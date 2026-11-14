@@ -44,7 +44,7 @@ async function firstMirror(mirrors: readonly string[]): Promise<string | null> {
   }
 }
 
-const NO_IMAGE = 'The sky image could not be loaded right now, so only the field box and stars are shown.'
+const NO_IMAGE = 'The sky image could not be loaded right now.'
 
 const GAIA_DR3 = 'I/355/gaiadr3' // Gaia DR3 main catalogue on VizieR
 
@@ -86,7 +86,11 @@ export function ContextView({ ra, dec, fov }: Props) {
     let made: Aladin | null = null
     // Aladin reports a survey it cannot load as an unhandled rejection; turn that into a sentence.
     const onRejection = (e: PromiseRejectionEvent) => {
-      if (!/HiPS|CDS ID|survey/i.test(String((e.reason as Error | undefined)?.message ?? e.reason))) return
+      const msg = String((e.reason as Error | undefined)?.message ?? e.reason)
+      // Aladin also pings a usage logger at Strasbourg on start; when that host is down its fetch
+      // rejects with no handler. Nothing is lost by it, so it is not left as an uncaught error.
+      if (/Failed to fetch/i.test(msg)) e.preventDefault()
+      if (!/HiPS|CDS ID|survey/i.test(msg)) return
       e.preventDefault()
       if (!cancelled) setImageFailed(true)
     }
