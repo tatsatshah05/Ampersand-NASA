@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import astrometry, photometry, pipeline, spherex, stars
+from . import astrometry, photometry, pipeline, spherex, stars, training
 
 log = logging.getLogger("backend.app")
 app = FastAPI(title="SPHEREx sky-change viewer")
@@ -109,6 +109,20 @@ def spectrum(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-9
     return _answer(lambda: photometry.spectrum(ra, dec, epoch, detector, pmra=pmra, pmdec=pmdec, parallax=parallax,
                                                pm_epoch=pm_epoch),
                    "measuring the spectrum", "The SPHEREx archive (IRSA)")
+
+
+@app.get("/api/training")
+def training_frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+                    fov: float = Query(0.1, ge=training.MIN_FOV, le=training.MAX_FOV),
+                    detector: int = Query(5, ge=1, le=6),
+                    mode: str = Query("normal", description="'normal' or 'difference'"),
+                    level: str = Query("medium", description="'easy', 'medium' or 'hard'"),
+                    seed: int = Query(1, ge=0, le=2_000_000_000,
+                                      description="which made-up object: the same seed gives the same round")):
+    """SIMULATION. Real frames with one made-up moving object added, for practice. Never mixed
+    into /api/frames: its own endpoint, its own folders, and SIMULATION written in every picture."""
+    return _answer(lambda: training.build_training(ra, dec, fov, detector, mode, level, seed),
+                   "building the practice round", "The SPHEREx archive (IRSA)")
 
 
 # The frontend, at "/". Registered last so every /api and /frames route wins.
