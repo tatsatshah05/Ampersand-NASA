@@ -50,6 +50,9 @@ describe('decimal degrees', () => {
     'RA: 269.4463 Dec: 4.7682',
     '269.4463 4.7682 J2000',
     '269.4463 +4.7682 (ICRS)',
+    '269.4463 | 4.7682',
+    '269.4463/4.7682',
+    '269.4463[2] 4.7682[note 1]', // footnote marks
     'R.A. 269.4463 Decl. 4.7682',
     'Right Ascension 269.4463, Declination 4.7682',
     'α = 269.4463°, δ = +4.7682°',
@@ -128,6 +131,9 @@ describe('sexagesimal', () => {
     'RA: 17:57:48.5 Dec: +04:41:36',
     'Right ascension 17h 57m 48.5s Declination +04° 41′ 36″',
     '"17 57 48.5 +04 41 36"',
+    'RA 17h 57m 48.5s | Dec +04° 41′ 36″', // as a web search shows it
+    'Right ascension\t17h 57m 48.5s[1]\nDeclination\t+04° 41′ 36″[1]', // two rows copied from Wikipedia
+    '17h57m48.5s / +04d41m36s',
     '17 57 48.5 +04 41 36 J2000',
     '17h57m48.5s +04d41m36s (J2000.0)',
     '17:57:48.5 +04:41:36 ICRS',

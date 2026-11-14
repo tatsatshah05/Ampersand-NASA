@@ -13,6 +13,8 @@
 //   a designation     085510.83-071442.5 or J085510.83-071442.5   (hhmmss.ss then ddmmss.s)
 //   with labels       RA 08h55m10.831s, Dec -07d14m42.53s    ra=269.4463&dec=4.7682
 //   with a frame      17 57 48.5 +04 41 36 (J2000)           (J2000, ICRS and FK5 are ignored)
+//   as copied         RA 17h 57m 48s | Dec +4° 41′ 36″       (a web search result)
+//                     Right ascension 17h 57m 48.5s[1] Declination +04° 41′ 36″[1]   (Wikipedia)
 //
 // How RA is read:
 //   hours    if it carries an h, or is two or three numbers (17 57 48.5, 17:57:48.5);
@@ -92,6 +94,7 @@ function prepare(input: string): string {
     .normalize('NFKC') // full-width digits, superscript ʰ ᵐ ˢ, no-break and thin spaces
     .toLowerCase()
     .replace(/''/g, '"') // two primes for arcseconds
+    .replace(/\[(?:\d{1,3}|[a-z]|note \d+)\]/g, ' ') // footnote marks copied from Wikipedia: 48.49847s[1]
     .replace(/[()[\]{}]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
@@ -147,8 +150,9 @@ function read(text: string): Reading | null {
       if (!before || before.unit || tie || sign) flag(WHY.unreadable)
       tie = true
       i += 1
-    } else if (ch === ',' || ch === ';' || ch === '&') {
-      // "&" so that the "ra=269.4463&dec=4.7682" of a page address can be pasted.
+    } else if (ch === ',' || ch === ';' || ch === '&' || ch === '|' || ch === '/') {
+      // "&" so that the "ra=269.4463&dec=4.7682" of a page address can be pasted, and
+      // "|" for the "RA 17h 57m 48s | Dec +4° 41′ 36″" that a web search shows.
       if (fields.length === 0 || tie || sign) flag(WHY.unreadable)
       else breaks.push(fields.length)
       i += 1
