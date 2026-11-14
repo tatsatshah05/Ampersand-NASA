@@ -153,6 +153,29 @@ Endpoints (adjust if something better emerges, and keep this list current):
     shifts each exposure by the target's motion first (`registration` "target_motion",
     and a `note` saying stars are smeared and coordinates hold for the target only);
     it answers 400 if no motion is known.
+- `GET /api/stars?ra=&dec=&fov=&detector=` BUILT. Gaia DR3 stars in the frames of a view,
+  for the catalogue overlay. Takes every parameter `/api/frames` takes (`mode`,
+  `reference`, `track`, `pmra`, `pmdec`, `parallax`, `pm_epoch`) plus `limit`, and describes
+  exactly the frames that request returns: `frames` (each with `epoch`, `mjd_mean`,
+  `date_mean`, in the same order), `size_px`, `pixel_arcsec` and `stars`, brightest first.
+  A star has `source_id`, `gmag`, `pmra`, `pmdec`, `parallax` (mas/yr and mas; null when
+  Gaia has no motion for it), `is_target` and `positions`: one `{ra, dec, x, y}` per
+  frame, for that frame's mean date with the star's own proper motion and parallax
+  applied, x and y in PNG pixels exactly as for `centroid`. `target_source_id` names the
+  star that is the view's target, if one is (by identifier, or, when the target came
+  from the request's motion, the star that stays within 1.5 arcsec of `predicted`).
+  - Keeping it small: only stars brighter than G = 17 that are inside the picture on at
+    least one frame's date; at most `limit` of them (default 300, largest 2000), brightest
+    first, except that stars faster than 100 mas/yr are always kept. `n_in_field`,
+    `n_returned` and `truncated` say what was cut. Numbers are rounded (0.001 pixel,
+    1e-7 degree). About 0.3 kB per star with three frames.
+  - It has no cache of its own. It is worked out in milliseconds from two things that
+    are on disk once `/api/frames` has run for the view: the frames metadata and the Gaia
+    search around the centre. It calls `build_frames` with the same parameters, so it
+    never fetches a cutout that `/api/frames` would not. If the Gaia search is not on
+    disk (the view was only ever requested with a motion) it is made once, with 3 tries;
+    if Gaia does not answer, `gaia_error` is set and `stars` is empty.
+  - Check: `scripts/check_stars.py [name] [detector] [fov]`.
 - `GET /api/lightcurve?ra=&dec=` BUILT. Brightness of the object at (ra, dec) in every
   exposure of all six detectors, grouped into `bins` (SPHEREx's 102 wavelength channels,
   17 per detector). Each bin has `wavelength_um` [min, max], `detector`, counts, and
@@ -339,6 +362,21 @@ Step 1 result (detector 5, fov 0.1 degrees, 2 arcsec grid)
   from older code are never served again. Deleting `backend/cache/frames/` then only
   frees disk space. A process that was already running keeps the old code and the old
   keys: restart the server and re-run the warm-up script after a version change.
+
+Gaia field stars (`/api/stars`, `scripts/check_stars.py`, 2026-11-14)
+- Stars brighter than G = 17 inside the picture: Barnard's Star 64 at fov 0.1 and 280 at
+  fov 0.2; WISE 0855 15 at fov 0.1; Epsilon Indi B 103 at fov 0.3. The answer is 20 kB for
+  64 stars and three frames, 96 kB for 280, and a repeat request takes 2 to 5 ms.
+- The listed places agree with the pictures: for isolated stars fitted in each frame, the
+  median distance from the catalogue place is 0.15 to 0.37 arcsec (Barnard's Star 8 to 9
+  stars per frame at fov 0.1 and 42 to 46 at fov 0.2; Epsilon Indi B 36 to 46 at fov 0.3;
+  WISE 0855 detector 6, 4 to 5 stars, 0.16 to 0.53).
+- Epsilon Indi B itself (G = 18.0) is fainter than the G = 17 search limit, so it is not
+  in the list; it is drawn from `target` and `predicted` when the motion is passed.
+  Epsilon Indi A (G = 4.3, 4.7 arcsec/yr) is listed when the field is wide enough.
+- Gaia's synchronous TAP returned all 4288 stars (G < 17) within 0.435 degrees of
+  Barnard's Star, the search a 0.5 degree field makes, in 3.9 s with QUERY_STATUS OK: no
+  2000-row cut.
 
 Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
 - SIMBAD TAP: `GET <mirror>/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=json&
