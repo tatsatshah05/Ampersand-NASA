@@ -17,10 +17,58 @@ G_LIMIT = 17.0             # the magnitude limit of the cone search /api/frames 
 FAST_MAS_YR = 100.0        # stars moving faster than this are returned whatever the limit
 SAME_OBJECT_ARCSEC = 1.5   # a Gaia star this close to the target's expected place in every frame is the target
 CREDIT = "ESA Gaia DR3"
+# Very bright stars leave rings and streaks (reflections inside the telescope) that the
+# archive does not flag and that land elsewhere in each visit. Seen at Epsilon Indi B,
+# whose G = 4.3 primary is 6.7 arcmin away (docs/results.md, problem 4). There is no
+# filter for them, so the page is told when such a star is near.
+BRIGHT_G = 7.0
+BRIGHT_RADIUS_DEG = 0.25
 
 
 def _round(value: float | None, digits: int) -> float | None:
     return None if value is None else round(float(value), digits)
+
+
+def bright_note(stars: list[dict]) -> str | None:
+    """One plain paragraph about the very bright stars near a view, or None when there are none."""
+    if not stars:
+        return None
+
+    def where(star: dict) -> str:
+        if star["distance_arcmin"] < 0.2:
+            return "at the centre of this view"
+        side = "inside the picture" if star["inside_picture"] else "outside the picture"
+        return f"{star['distance_arcmin']:.1f} arcminutes from the centre of this view, {side}"
+
+    listed = "; ".join(f"Gaia magnitude {s['gmag']:.1f}, {where(s)}" for s in stars)
+    one = len(stars) == 1
+    return (f"{'A very bright star is' if one else 'Very bright stars are'} near: {listed}. Stars this bright can "
+            "leave rings and streaks in SPHEREx images. They are reflections inside the telescope, the archive does "
+            "not mark them, and they land in a different place in each visit. A ring or streak that moves between "
+            "frames here is most likely one of those, not a change on the sky.")
+
+
+def bright_nearby(ra: float, dec: float, fov: float, mjd: float) -> list[dict] | None:
+    """Gaia stars brighter than BRIGHT_G within BRIGHT_RADIUS_DEG of the centre on the given
+    date, brightest first; None when Gaia did not answer. Gaia DR3 lacks most stars brighter
+    than about magnitude 3, so an empty list does not rule those out."""
+    try:
+        cone = astrometry.gaia_cone(ra, dec, BRIGHT_RADIUS_DEG, BRIGHT_G, tries=3, timeout=30)
+    except spherex.ArchiveError:
+        return None
+    cone = [s for s in cone if s.get("gmag") is not None]
+    if not cone:
+        return []
+    ras, decs = astrometry.positions_at(cone, mjd)
+    half = fov * 3600.0 / 2.0
+    out = []
+    for src, s_ra, s_dec in zip(cone, ras, decs, strict=True):
+        east, north = astrometry.offset_arcsec(ra, dec, float(s_ra), float(s_dec))
+        out.append({"source_id": src["source_id"], "gmag": _round(src["gmag"], 2),
+                    "distance_arcmin": round(float(np.hypot(east, north)) / 60.0, 2),
+                    "east_arcsec": round(east, 1), "north_arcsec": round(north, 1),
+                    "inside_picture": bool(abs(east) <= half and abs(north) <= half)})
+    return out
 
 
 def field_stars(ra: float, dec: float, fov: float = 0.1, detector: int = 5, mode: str = "normal", *,
@@ -57,12 +105,18 @@ def field_stars(ra: float, dec: float, fov: float = 0.1, detector: int = 5, mode
                       "the cut. positions[i] is the star's place in frames[i]: ra, dec in degrees and x, y in PNG "
                       "pixels from the top-left, on that frame's mean date."),
         "target_source_id": None, "gaia_error": None, "failures": meta.get("failures") or [], "credit": CREDIT,
+        "bright_nearby": None, "bright_note": None,
     }
     if meta.get("note") and mode == "sum":
         out["note"] = meta["note"]
     if not frames:
         out["message"] = meta.get("message") or "This view has no frames, so there are no dates to place stars on."
         return out
+
+    # Very bright stars near the view, on the first frame's date: a warning about ghost rings.
+    # null means Gaia did not answer, so the page cannot say either way.
+    out["bright_nearby"] = bright_nearby(ra, dec, fov, frames[0]["mjd_mean"])
+    out["bright_note"] = bright_note(out["bright_nearby"] or [])
 
     try:
         # The same search /api/frames makes when it looks for a Gaia star at the centre,
