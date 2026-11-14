@@ -1,32 +1,34 @@
-# React + TypeScript + Vite
+# SPHEREx time-lapse viewer (frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A React page that shows SPHEREx infrared images of a small patch of sky over time. It asks the Python backend in `../backend` for the frames, finds the target star in each, and draws where Gaia says the star should be next to where it was measured.
 
-Currently, two official plugins are available:
+## Run it
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The backend serves the built page at `/`, so build first, then start the backend from the repository root:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+cd frontend
+npm ci
+npm run build
+cd ..
+uvicorn backend.app:app --port 8000
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open http://localhost:8000. For work on the page itself, `npm run dev` starts Vite with hot reload; it passes `/api` and `/frames` to a backend running on port 8000 (see `vite.config.ts`).
+
+## Checks
+
+```
+npm run lint        # oxlint
+npm run typecheck   # tsc
+npm test            # vitest
+npm run build       # type check and production build into dist/
+```
+
+## Where things are
+
+- `src/App.tsx`: the page; holds the search, the chosen frames and the layout.
+- `src/api.ts`, `src/stars.ts`: types and fetches for the backend's `/api/frames` and `/api/stars`.
+- `src/components/`: one file per panel. `Stage` (zoomable image), `PlayerControls`, `GaiaOverlay` (arrow, predicted marks and readout), `FieldStars`, `FrameDetails`, `SpectrumPanel`, `BrightnessPanel`, `MotionLayer`, `ContextView` (Aladin Lite sky atlas, opt-in), `SearchBar`, `Selectors`, `StatusCard`.
+- `src/*.ts`: helpers such as coordinate parsing (`coords.ts`), projection, zoom, spectrum and light-curve calculations. Tests sit next to them as `*.test.ts(x)`.
+- `public/viewer.html`: the earlier single-file viewer, served at `/viewer.html`.

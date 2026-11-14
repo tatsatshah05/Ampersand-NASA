@@ -16,11 +16,17 @@ interface OverlayProps {
 // Backend pixel positions are pixel centres; in the SVG, pixel i spans i..i+1.
 const c = (v: number) => v + 0.5
 
+// Below one image pixel of motion in a year the arrow would be an arrowhead with no shaft,
+// which reads as visible motion, so it is not drawn.
+const MIN_ARROW_IMAGE_PX = 1
+const yearMotionPx = (t: GaiaStar, pixelArcsec: number) =>
+  t.pmra == null || t.pmdec == null ? 0 : Math.hypot(t.pmra, t.pmdec) / 1000 / pixelArcsec
+
 export function GaiaOverlay({ frames, current, sizePx, pixelArcsec, target }: OverlayProps) {
   const first = frames[0]?.predicted
   // One year of Gaia proper motion, in PNG pixels. East is left (-x) and north is up (-y).
   const arrow =
-    target && target.pmra != null && target.pmdec != null && first
+    target && target.pmra != null && target.pmdec != null && first && yearMotionPx(target, pixelArcsec) >= MIN_ARROW_IMAGE_PX
       ? {
           x1: c(first.x),
           y1: c(first.y),
@@ -79,9 +85,10 @@ interface ReadoutProps {
   current: number
   target: GaiaStar | null
   gaiaError?: string | null
+  pixelArcsec?: number // the picture's pixel size; the SPHEREx pixel when not given
 }
 
-export function GaiaReadout({ frames, current, target, gaiaError }: ReadoutProps) {
+export function GaiaReadout({ frames, current, target, gaiaError, pixelArcsec }: ReadoutProps) {
   if (!target) {
     return (
       <p className="readout">
@@ -107,7 +114,10 @@ export function GaiaReadout({ frames, current, target, gaiaError }: ReadoutProps
   const header = (
     <p className="readout">
       <span className="key gaia">→</span> {target.source_id ? `Gaia DR3 ${target.source_id}` : 'The motion given for this object'}:
-      moves {pmTotal.toFixed(2)}″ per year (arrow shows one year).
+      moves {pmTotal.toFixed(2)}″ per year{' '}
+      {yearMotionPx(target, pixelArcsec ?? NATIVE_PIXEL_ARCSEC) < MIN_ARROW_IMAGE_PX
+        ? '(too small to draw as an arrow).'
+        : '(arrow shows one year).'}
     </p>
   )
   if (current === 0) {
