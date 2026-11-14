@@ -87,9 +87,12 @@ the field's own stars; 5 is the bar.
   neighbouring star fitted separately; our visit-3 value includes about 40 per cent from the
   G = 16.3 star that is less than one pixel away by then.) Detector 6, visit 1 (3 exposures):
   3.4 times the noise, i.e. marginal, as the verification also found (3.7).
-- The catalogue check matters here: Gaia has nothing at this place with this motion. SIMBAD
-  answered with WISEA J085510.74-071442.5 (a brown dwarf) whose motion agrees. Without SIMBAD
-  it would have come out as "moved, no counterpart". All five catalogues answered.
+- The catalogue check matters here: Gaia has nothing at this place with this motion (only the
+  G = 16.3 star, which does not move). SIMBAD answered with WISEA J085510.74-071442.5 (a brown
+  dwarf) whose motion agrees, and CatWISE2020 with three entries for it (its fast motion splits
+  it), each moving 7.9 to 8.0 arcsec/yr west, all agreeing with the measured shift to within 1.3
+  arcsec. With Gaia alone it would have come out as "moved, no counterpart". All five
+  catalogues answered.
 - The measured track is pulled about 1 arcsec north by the G = 16.3 star it passes; the
   verification (which fits the star separately) gets 8.3 +- 0.4 arcsec/yr west.
 

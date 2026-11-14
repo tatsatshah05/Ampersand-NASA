@@ -1903,14 +1903,14 @@ def _mover_reasons(s: dict[str, Any], st: dict[str, Any]) -> list[str]:
 
 
 def _drop_duplicates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Keep the most significant of candidates of one kind that are the same object.
+    """Keep the first of candidates of one kind that are the same object (the caller sorts them).
 
     A saturated star has a hole where its peak should be, so the peak finder returns
     pieces of its rim as separate sources, each of which then shows the star's motion.
     Two real movers, or two separable changers, within DUPLICATE_ARCSEC do not occur.
     """
     kept: list[dict[str, Any]] = []
-    for cand in candidates:                    # already sorted, most significant first
+    for cand in candidates:                    # already sorted: not rejected first, then most significant
         twin = next((k for k in kept if k["kind"] == cand["kind"] and math.hypot(*astrometry.offset_arcsec(
             k["ra"], k["dec"], cand["ra"], cand["dec"])) <= DUPLICATE_ARCSEC), None)
         if twin is None:
@@ -2104,8 +2104,10 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
             candidates.append(cand)
     for name in ("_scale", "_common", "_inflate"):
         changer_summary.pop(name)
-    candidates.sort(key=lambda c: -c["sigma"])
+    # Of two candidates of one kind at one place, the one kept is the one not rejected, then the clearer.
+    candidates.sort(key=lambda c: (c["grade"] == "rejected", -c["sigma"]))
     candidates = _drop_duplicates(candidates)
+    candidates.sort(key=lambda c: -c["sigma"])
     for number, cand in enumerate(candidates, 1):
         cand["id"] = f"D{detector}-{number:02d}"
         cand["label"] = cand["category"] = "not checked"
