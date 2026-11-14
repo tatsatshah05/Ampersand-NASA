@@ -20,7 +20,7 @@ export function GaiaOverlay({ frames, current, sizePx, pixelArcsec, target }: Ov
   const first = frames[0]?.predicted
   // One year of Gaia proper motion, in PNG pixels. East is left (-x) and north is up (-y).
   const arrow =
-    target && first
+    target && target.pmra != null && target.pmdec != null && first
       ? {
           x1: c(first.x),
           y1: c(first.y),
@@ -91,20 +91,30 @@ export function GaiaReadout({ frames, current, target, gaiaError }: ReadoutProps
       </p>
     )
   }
+  if (target.pmra == null || target.pmdec == null) {
+    return (
+      <p className="readout">
+        Gaia DR3 {target.source_id} is near the centre, but Gaia lists no motion for it, so there is no predicted
+        motion to compare with.
+      </p>
+    )
+  }
   const pmTotal = Math.hypot(target.pmra, target.pmdec) / 1000
+  // A target described by the request (a motion from /api/resolve) has no Gaia identifier.
+  const who = target.source_id ? 'Gaia' : 'the motion given for this object'
   const f0 = frames[0]
   const f = frames[current]
   const header = (
     <p className="readout">
-      <span className="key gaia">→</span> Gaia DR3 {target.source_id}: moves {pmTotal.toFixed(2)}″ per year (arrow shows
-      one year).
+      <span className="key gaia">→</span> {target.source_id ? `Gaia DR3 ${target.source_id}` : 'The motion given for this object'}:
+      moves {pmTotal.toFixed(2)}″ per year (arrow shows one year).
     </p>
   )
   if (current === 0) {
     return (
       <>
         {header}
-        <p className="readout">This is the first frame. Step forward to compare the measured shift with Gaia.</p>
+        <p className="readout">This is the first frame. Step forward to compare the measured shift with {who}.</p>
       </>
     )
   }
@@ -124,7 +134,7 @@ export function GaiaReadout({ frames, current, target, gaiaError }: ReadoutProps
       {header}
       <p className="readout">
         Since frame 1: <span className="key measured">○</span> measured shift {describe(m.east, m.north)}.{' '}
-        <span className="key gaia">+</span> Gaia predicts {describe(p.east, p.north)}.
+        <span className="key gaia">+</span> {who} predicts {describe(p.east, p.north)}.
       </p>
       <p className="readout">
         They differ by {diff.toFixed(1)}″, which is {(diff / NATIVE_PIXEL_ARCSEC).toFixed(2)} of a SPHEREx pixel.
