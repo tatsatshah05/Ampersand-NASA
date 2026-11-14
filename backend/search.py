@@ -80,15 +80,17 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_area
 from PIL import Image, ImageDraw
-from scipy import stats
+from scipy import ndimage, stats
 from scipy.ndimage import gaussian_filter, maximum_filter, median_filter
 from scipy.optimize import least_squares
 from scipy.spatial import cKDTree
 
 from . import astrometry, photometry, pipeline, spherex
 
-VERSION = 1                       # part of the result cache key: raise it when results change
-SEARCH_DIR = spherex.CACHE / "search"     # this module's own cache (results and catalogue answers)
+VERSION = 2                       # part of the result cache key: raise it when results change
+# This module's own cache (results and catalogue answers). "search" holds the answers
+# of version 1, made with the old stacking rule; nothing reads it any more.
+SEARCH_DIR = spherex.CACHE / "search2"
 
 # Finding sources
 SMOOTH_PX = 2.0                   # Gaussian sigma of the detection filter, in 2 arcsec grid pixels
@@ -163,16 +165,41 @@ Rows = list[dict[str, Any]]
 
 # --------------------------------------------------------------------------- loading
 
+NOT_IN_CACHE = "not in the cache (offline search)"
+
+
+def cached_only(exposures: list[dict], ra: float, dec: float, size_deg: float,
+                progress: Callable[[int, int], None] | None = None) -> list[tuple[dict, Path | None, str | None]]:
+    """Like `spherex.fetch_cutouts`, but never downloads: a cutout not on disk is reported missing."""
+    out: list[tuple[dict, Path | None, str | None]] = []
+    for k, exp in enumerate(exposures, 1):
+        path = spherex._cutout_path(exp, ra, dec, size_deg)
+        out.append((exp, path, None) if path.exists() else (exp, None, NOT_IN_CACHE))
+        if progress:
+            progress(k, len(exposures))
+    return out
+
+
+def _exposures(ra: float, dec: float, offline: bool) -> list[dict]:
+    """The archive's list of exposures covering (ra, dec); offline, the cached list whatever its age."""
+    if not offline:
+        return spherex.find_exposures(ra, dec)
+    key = hashlib.sha1(f"{ra:.5f},{dec:.5f}".encode()).hexdigest()[:16]
+    cache_file = spherex.CACHE / "queries" / f"sia_{key}.json"
+    return json.loads(cache_file.read_text()) if cache_file.exists() else []
+
+
 def _load(ra: float, dec: float, fov: float, detector: int, fetch: Fetch,
-          progress: Callable[[int, int], None] | None) -> dict[str, Any]:
+          progress: Callable[[int, int], None] | None, offline: bool = False) -> dict[str, Any]:
     """Every exposure of one detector, cleaned and resampled as for /api/frames."""
-    exposures = spherex.find_exposures(ra, dec)
+    exposures = _exposures(ra, dec, offline)
     epoch_of = pipeline.assign_epochs(exposures)
     chosen = [(e, ep) for e, ep in zip(exposures, epoch_of, strict=True) if e["detector"] == detector]
     grid, n = pipeline.make_grid(ra, dec, fov)
     cutout_deg = round(fov * 1.5, 4)      # the detector sits at any angle: fetch the diagonal, as /api/frames does
     fetched = fetch([e for e, _ in chosen], ra, dec, cutout_deg, progress=progress)
-    failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None]
+    failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None and err != NOT_IN_CACHE]
+    not_in_cache = sum(1 for _, p, err in fetched if p is None and err == NOT_IN_CACHE)
 
     data: list[np.ndarray] = []
     weights: list[float] = []
@@ -196,29 +223,55 @@ def _load(ra: float, dec: float, fov: float, detector: int, fetch: Fetch,
         saturated[ep] = saturated.get(ep, np.zeros((n, n), dtype=int)) + item["saturated"]
     return {"grid": grid, "n": n, "cube": np.stack(data) if data else np.empty((0, n, n), dtype="float32"),
             "weights": np.array(weights), "mjd": np.array(mjds), "epoch": np.array(epochs, dtype=int),
-            "paths": paths, "meta": meta, "failures": failures, "saturated": saturated,
-            "n_exposures_all_detectors": len(exposures)}
+            "paths": paths, "meta": meta, "failures": failures, "not_in_cache": not_in_cache,
+            "saturated": saturated, "n_exposures_all_detectors": len(exposures)}
 
 
-def _reject_like_stack(cube: np.ndarray, weights: np.ndarray, epoch: np.ndarray) -> None:
-    """Blank single readings far from the per-pixel median of their visit (in place).
+def _reject_like_stack(cube: np.ndarray, weights: np.ndarray, epoch: np.ndarray) -> int:
+    """Blank the readings that `pipeline.Stacker` drops, visit by visit (in place); returns how many.
 
-    The same rule as `pipeline.stack`, so the visit pictures used here are the ones the
-    viewer shows. It needs 5 exposures; a visit with fewer keeps every reading.
+    The same rule, so the visit pictures here are the ones the viewer shows: at each
+    pixel the highest reading is dropped only if it is far above the second highest
+    (the lowest, far below the second lowest), and only as part of a small patch. A
+    reading that disagrees with the median is NOT dropped: a source with a steep
+    spectrum is bright in a minority of a visit's exposures (pipeline.Stacker says why).
+    Known cost, inherited: two glitches of different exposures that overlap survive as
+    a small ring or bar. The search must not take those for sources; see `_two_out`.
     """
+    dropped = 0
+    noise_all = 1.0 / np.sqrt(weights)
     for ep in np.unique(epoch):
         sel = np.nonzero(epoch == ep)[0]
-        if len(sel) < 5:
+        if len(sel) < pipeline.MIN_EXPOSURES_TO_REJECT:
             continue
         sub = cube[sel]
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")              # all-NaN columns are expected
-            median = np.nanmedian(sub, axis=0)
-        local_peak = maximum_filter(np.nan_to_num(np.abs(median)), size=9)
-        noise = (1.0 / np.sqrt(weights[sel]))[:, None, None]
+        ok = np.isfinite(sub)
+        count = ok.sum(axis=0)
+        enough = count >= 3
+        up = np.where(ok, sub, -np.inf)
+        down = np.where(ok, sub, np.inf)
+        high_from, low_from = np.argmax(up, axis=0), np.argmin(down, axis=0)
+        ups, downs = np.sort(up, axis=0), np.sort(down, axis=0)
+        high, high2, low, low2 = ups[-1], ups[-2], downs[0], downs[1]
+        nearby = maximum_filter(np.where(np.isfinite(high2), np.abs(high2), 0.0), size=pipeline.GLITCH_NEARBY_PX)
+        noise = noise_all[sel]
+        drops: list[tuple[int, np.ndarray]] = []
         with np.errstate(invalid="ignore"):
-            sub[np.abs(sub - median) > 6.0 * noise + 1.0 * local_peak] = np.nan
+            for first, second, source, sign in ((high, high2, high_from, 1.0), (low, low2, low_from, -1.0)):
+                gap = sign * (first - second)
+                limit = pipeline.GLITCH_SIGMA * noise[source] + nearby
+                seed = enough & (gap > limit)
+                wide = enough & (gap > 0.5 * limit)
+                for i in np.unique(source[seed]):
+                    patches, _ = ndimage.label(wide & (source == i))
+                    sizes = np.bincount(patches.ravel())
+                    hit = np.unique(patches[seed & (source == i)])
+                    drops.append((int(i), np.isin(patches, hit[sizes[hit] <= pipeline.GLITCH_MAX_PX])))
+        for i, drop in drops:
+            dropped += int(drop.sum())
+            sub[i][drop] = np.nan
         cube[sel] = sub
+    return dropped
 
 
 def _smooth_frame(frame: np.ndarray) -> np.ndarray:
@@ -263,7 +316,7 @@ def _robust_sigma(values: np.ndarray) -> float:
 def _statistics(field: dict[str, Any]) -> dict[str, Any]:
     """Visit pictures, their smoothed versions and the per-pixel error from exposure scatter."""
     cube, weights, epoch = field["cube"], field["weights"], field["epoch"]
-    _reject_like_stack(cube, weights, epoch)
+    field["rejected_readings"] = _reject_like_stack(cube, weights, epoch)
     smooth = np.stack([_smooth_frame(frame) for frame in cube]).astype("float32")
     visits = sorted(int(e) for e in np.unique(epoch))
     index = {ep: np.nonzero(epoch == ep)[0] for ep in visits}
@@ -1534,7 +1587,7 @@ def _source_row(s: dict[str, Any], visits: list[int]) -> dict[str, Any]:
 
 def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, catalogues: bool = True,
                  bin_days: float | None = None, figures_dir: Path | None = None, use_cache: bool = True,
-                 fetch: Fetch | None = None, min_sigma: float | None = None,
+                 fetch: Fetch | None = None, min_sigma: float | None = None, offline: bool = False,
                  progress: Callable[[int, int], None] | None = None) -> dict[str, Any]:
     """Search one field in one detector for movers and changers. No target is given.
 
@@ -1553,22 +1606,25 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
         raise ValueError("fov must be between 0.02 and 0.5 degrees")
     mover_bar = min(MOVER_SIGMA, min_sigma) if min_sigma is not None else MOVER_SIGMA
     changer_bar = min(CHANGER_SIGMA, min_sigma) if min_sigma is not None else CHANGER_SIGMA
-    key_text = f"v{VERSION},{ra:.5f},{dec:.5f},{fov:.4f},{detector},{bin_days},{catalogues},{min_sigma}"
+    key_text = f"v{VERSION},{ra:.5f},{dec:.5f},{fov:.4f},{detector},{bin_days},{catalogues},{min_sigma},{offline}"
     key = hashlib.sha1(key_text.encode()).hexdigest()[:16]
     cache_file = SEARCH_DIR / "results" / f"{key}.json"
     if use_cache and figures_dir is None and cache_file.exists():
         return json.loads(cache_file.read_text())
 
     started = time.time()
-    field = _load(ra, dec, fov, detector, fetch or spherex.fetch_cutouts, progress)
+    field = _load(ra, dec, fov, detector, fetch or (cached_only if offline else spherex.fetch_cutouts), progress,
+                  offline)
     result: dict[str, Any] = {
         "key": key, "version": VERSION, "ra": ra, "dec": dec, "fov": fov, "detector": detector,
-        "failures": field["failures"], "candidates": [],
+        "failures": field["failures"], "exposures_not_in_cache": field["not_in_cache"], "candidates": [],
         "credit": pipeline.CREDIT + "; SIMBAD (CDS); AAVSO VSX; CatWISE2020 and AllWISE (NASA/IPAC IRSA)"}
     if len(field["paths"]) == 0:
         result["message"] = f"No usable detector {detector} exposures at this position."
         return result
     st = _statistics(field)
+    result["n_exposures"] = len(field["paths"])
+    result["rejected_readings"] = field["rejected_readings"]
     visits: list[int] = st["visits"]
     mjd_of = {ep: float(np.average(field["mjd"][st["index"][ep]], weights=field["weights"][st["index"][ep]]))
               for ep in visits}

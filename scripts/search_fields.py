@@ -73,7 +73,7 @@ def run_field(job: dict) -> dict:
             fetch = getattr(importlib.import_module(module), function)
         result = search.search_detectors(
             field["ra"], field["dec"], field["fov"], tuple(job["detectors"]), figures_dir=folder,
-            catalogues=job["catalogues"], bin_days=job["bin_days"], fetch=fetch)
+            catalogues=job["catalogues"], bin_days=job["bin_days"], fetch=fetch, offline=job["offline"])
         result["name"] = field["name"]
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "field.json").write_text(json.dumps(result, indent=1))
@@ -102,6 +102,8 @@ def main() -> None:
     parser.add_argument("--jobs", type=int, default=1, help="fields searched at the same time")
     parser.add_argument("--fetch", default=None, help="module:function to fetch cutouts with")
     parser.add_argument("--no-catalogues", action="store_true", help="skip the catalogue check")
+    parser.add_argument("--offline", action="store_true",
+                        help="use only cutouts already in the cache and the cached list of exposures (no download)")
     args = parser.parse_args()
 
     fields = [parse_field(text, args.fov) for text in args.field]
@@ -115,7 +117,7 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     jobs = [{"field": f, "out": str(out), "detectors": detectors, "bin_days": args.bin_days, "fetch": args.fetch,
-             "catalogues": not args.no_catalogues} for f in fields]
+             "catalogues": not args.no_catalogues, "offline": args.offline} for f in fields]
 
     started = time.time()
     if args.jobs > 1:
