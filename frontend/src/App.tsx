@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { fetchFrames, type FramesQuery, type FramesResponse } from './api'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
+import { SpectrumPanel } from './components/SpectrumPanel'
+import { targetMotion, type SpectrumRequest } from './spectrum'
 import './App.css'
 
 // Barnard's Star at 2026.0 (from CLAUDE.md), used when the URL gives no position.
@@ -42,6 +44,8 @@ export default function App() {
   const [current, setCurrent] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [showGaia, setShowGaia] = useState(true)
+  // Issue #11: what the spectrum panel is showing, or null when it is closed.
+  const [spectrum, setSpectrum] = useState<SpectrumRequest | null>(null)
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -133,6 +137,14 @@ export default function App() {
               <label>
                 <input type="checkbox" checked={showGaia} onChange={(e) => setShowGaia(e.target.checked)} /> Gaia overlay
               </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setSpectrum({ kind: 'target', ra: load.data.ra, dec: load.data.dec, motion: targetMotion(load.data.target) })
+                }
+              >
+                Spectrum of the target
+              </button>
             </div>
 
             {showGaia && (
@@ -146,13 +158,14 @@ export default function App() {
           </div>
 
           <FrameDetails frame={load.data.frames[current]} detector={load.data.detector} />
+          {spectrum && <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />}
         </>
       )}
 
       <footer>
         <p>
           <a href={viewerHref(query)}>Open this view in the detailed viewer</a>: zoom, blink, difference and sum views,
-          and the spectrum of the target.
+          and the spectrum of any spot you click.
         </p>
         Images: NASA/JPL-Caltech SPHEREx, served by NASA/IPAC Infrared Science Archive (IRSA). Star positions and
         motions: ESA Gaia DR3.

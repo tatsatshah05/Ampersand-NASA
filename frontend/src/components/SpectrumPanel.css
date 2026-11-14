@@ -1,0 +1,128 @@
+/* Spectrum panel (issue #11). Text stays in the page's text colours and never takes a
+   data colour; the coloured mark beside it carries the identity. */
+.spectrum {
+  grid-column: 1 / -1;
+}
+
+.spectrum-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.spectrum-what {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.spectrum-visits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.spectrum-visits button {
+  font-size: 0.88rem;
+  padding: 4px 10px;
+  opacity: 0.45;
+}
+
+.spectrum-visits button[aria-pressed='true'] {
+  opacity: 1;
+  border-color: var(--muted);
+}
+
+.spectrum-visits i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.spectrum-plot {
+  position: relative;
+  max-width: 760px;
+}
+
+.spectrum-plot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.spectrum-plot text {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.spectrum-plot text.spectrum-rail {
+  font-size: 11px;
+}
+
+.spectrum-plot text.spectrum-empty {
+  fill: var(--text);
+  font-size: 14px;
+}
+
+.spectrum-grid {
+  stroke: var(--border);
+}
+
+.spectrum-axis {
+  stroke: #666c78;
+}
+
+/* A thin ring in the panel colour keeps overlapping dots apart. */
+.spectrum-mark {
+  stroke: var(--panel);
+}
+
+.spectrum-ring {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.spectrum-tip {
+  position: absolute;
+  pointer-events: none;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.spectrum-tip b {
+  display: block;
+  color: var(--text);
+  font-size: 1.1em;
+}
+
+.spectrum-tip i {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.spectrum-foot {
+  max-width: 760px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.spectrum-foot p {
+  margin: 6px 0;
+}
+
+.spectrum-foot details {
+  margin-top: 6px;
+}
