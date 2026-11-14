@@ -11,8 +11,8 @@
   /* Outline of the box and the target buttons: 3.7 to 1 against the page, so the
      controls can be made out without relying on their fill. */
   --sb-edge: #666d7b;
-  /* Keyboard focus ring: the light blue that browsers themselves draw on a dark page,
-     so it matches the page's other controls and stands apart from the light button. */
+  /* Keyboard focus ring: the light blue Chrome itself draws on a dark page, so it
+     matches the page's other controls and stands apart from the light Search button. */
   --sb-focus: #99c8ff;
 
   grid-column: 1 / -1; /* the full width of the page grid in App.css */
@@ -42,6 +42,8 @@
   background: var(--sb-field);
   border: 1px solid var(--sb-edge);
   border-radius: 8px;
+  /* Without this, Safari draws a search field as a rounded pill and ignores the above. */
+  -webkit-appearance: none;
   appearance: none;
 }
 

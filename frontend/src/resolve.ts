@@ -85,7 +85,7 @@ function jsonOrNull(text: string): unknown {
   }
 }
 
-/** Check a 200 answer field by field: it is used to point a telescope archive at the sky. */
+/** Check a 200 answer field by field: the page goes on to fetch whatever patch of sky it names. */
 function readAnswer(body: unknown, asked: string): ResolvedName | null {
   if (!isRecord(body)) return null
   const ra = finite(body.ra)
