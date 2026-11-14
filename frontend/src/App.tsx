@@ -16,6 +16,7 @@ import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
 import { PlayerControls } from './components/PlayerControls'
 import { SearchBar, type SearchTarget } from './components/SearchBar'
+import { SearchMarkers, SearchPanel } from './components/SearchPanel'
 import { Selectors } from './components/Selectors'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
@@ -24,6 +25,7 @@ import { LoadingCard, StatusCard } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
 import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
+import type { SearchObject, SearchQuery } from './search'
 import { targetMotion, type SpectrumRequest } from './spectrum'
 import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
 import { newSeed, trainingAddress } from './training'
@@ -56,6 +58,9 @@ function Viewer() {
   const [spectrum, setSpectrum] = useState<SpectrumRequest | null>(null)
   // Issue #9: whose brightness over time is shown, or null when that panel is closed.
   const [brightness, setBrightness] = useState<SpectrumRequest | null>(null)
+  // Search mode: the patch being searched (null when the panel is closed), and what it found, to mark on the picture.
+  const [search, setSearch] = useState<SearchQuery | null>(null)
+  const [searchFound, setSearchFound] = useState<SearchObject[]>([])
   // Issue #12: colour the pixels with no data and the saturated ones.
   const [showFlags, setShowFlags] = useState(false)
   // Issue #12: the same patch of sky in other surveys. Off until asked for: it loads a
@@ -213,6 +218,14 @@ function Viewer() {
   const motionKnown = givenMotion !== null || (data?.target?.pmra != null && data.target.pmdec != null)
   const saturation = data && saturationSentence(data)
   const failures = data && failuresSentence(data)
+  // Search mode's "Look at this one": zoom to the object if it is in this picture, else move the view to it.
+  const lookAt = (ra: number, dec: number) => {
+    if (!grid) return
+    const p = skyToPixel(ra, dec, grid)
+    if (p.x >= 0 && p.y >= 0 && p.x <= grid.sizePx && p.y <= grid.sizePx) changeBox(() => startBox(grid.sizePx, p))
+    else applyTarget({ ra, dec })
+    document.querySelector('.viewer')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }
   const toggle = (on: boolean, set: (on: boolean) => void, text: string, title: string, disabled = false) => (
     <button
       type="button"
@@ -343,6 +356,7 @@ function Viewer() {
                       target={load.data.target}
                     />
                   )}
+                  {search && searchFound.length > 0 && <SearchMarkers objects={searchFound} grid={grid} scale={scale} />}
                   {aperture && <ApertureMark sizePx={grid.sizePx} at={aperture} radiusPx={SPECTRUM_APERTURE_ARCSEC / grid.pixelArcsec} />}
                 </>
               )}
@@ -417,6 +431,9 @@ function Viewer() {
               >
                 Brightness over time
               </button>
+              <button type="button" onClick={() => setSearch({ ra: load.data.ra, dec: load.data.dec, fov: selection.fov })}>
+                Search this patch for anything that moved or changed
+              </button>
             </div>
 
             {showFlags && hasFlags && (
@@ -483,6 +500,15 @@ function Viewer() {
           </div>
           {spectrum && <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />}
           {brightness && <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} />}
+          {search && (
+            <SearchPanel
+              key={`${search.ra},${search.dec},${search.fov}`}
+              query={search}
+              onClose={() => setSearch(null)}
+              onObjects={setSearchFound}
+              onLook={lookAt}
+            />
+          )}
         </>
       )}
 

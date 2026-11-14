@@ -1,0 +1,133 @@
+/* Search mode. Uses the page's .panel, .hint, .notice and .progress classes. */
+.search {
+  grid-column: 1 / -1;
+}
+
+.search-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.search-summary {
+  font-size: 1.05rem;
+  margin: 8px 0;
+}
+
+.search-catalogues {
+  margin: 4px 0 12px;
+  color: var(--muted);
+}
+
+.search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.search-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.search-card.candidate {
+  border-color: var(--notice);
+}
+
+.search-card p {
+  margin: 6px 0;
+}
+
+.search-card-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.search-badge {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--notice);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.search-kind {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.search-headline {
+  margin: 0;
+  font-weight: 600;
+}
+
+.search-verdict {
+  margin-left: 8px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+
+.search-verdict.caution {
+  color: var(--notice);
+  border-color: var(--notice);
+}
+
+.search-verdict.candidate-tag {
+  color: var(--notice);
+}
+
+.search-candidate {
+  border-left: 3px solid var(--notice);
+  padding-left: 10px;
+}
+
+.search-flags {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.search-rejected,
+.search-limits {
+  margin-top: 12px;
+}
+
+.search-rejected summary,
+.search-limits summary {
+  cursor: pointer;
+}
+
+.search-failed,
+.search-empty {
+  margin: 8px 0;
+}
+
+/* Markers on the picture: a ring and a number, with a dark edge so they show on white and black. */
+.search-ring {
+  fill: none;
+  stroke: var(--notice);
+  stroke-width: 2px;
+}
+
+.search-number {
+  fill: var(--notice);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #000;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}

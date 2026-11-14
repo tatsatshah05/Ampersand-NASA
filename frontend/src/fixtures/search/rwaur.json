@@ -1,0 +1,226 @@
+{
+ "status": "done",
+ "ra": 76.956587,
+ "dec": 30.401291,
+ "fov": 0.1,
+ "detectors": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "seconds": 29.1,
+ "detector_now": null,
+ "detectors_done": 6,
+ "detectors_total": 6,
+ "searches_ahead": 0,
+ "result": {
+  "field": {
+   "ra": 76.956587,
+   "dec": 30.401291,
+   "fov": 0.1,
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "offline": false
+  },
+  "objects": [
+   {
+    "id": "01",
+    "kind": "changer",
+    "verdict": "clean",
+    "flags": [],
+    "ra": 76.95641,
+    "dec": 30.401228,
+    "sigma_best": 7.7,
+    "best_detector": 5,
+    "sigma_combined": 11.0,
+    "found_by": "one detector alone",
+    "detectors_at_5_sigma": [
+     5,
+     6,
+     1
+    ],
+    "detectors_at_3_sigma": [
+     1,
+     5,
+     6
+    ],
+    "motion_all_detectors": null,
+    "catalogue_status": {
+     "category": "known_variable",
+     "meaning": "known variable star: listed as variable in a catalogue that answered",
+     "label": "known",
+     "summary": "Listed as variable: V* RW Aur B (SIMBAD, Or*) at 0.47 arcsec; RW Aur (AAVSO VSX, CTTS/ROT+WTTS, period 2.64 d, 9.2 V to 13.6 V) at 0.64 arcsec; V* RW Aur A (SIMBAD, Or*) at 1.06 arcsec.",
+     "answered": [
+      "Gaia DR3",
+      "SIMBAD",
+      "AAVSO VSX",
+      "CatWISE2020",
+      "AllWISE"
+     ],
+     "did_not_answer": {},
+     "counterpart": {
+      "catalogue": "SIMBAD",
+      "name": "V* RW Aur B",
+      "type": "Or*",
+      "variable": true,
+      "pmra": 4.906,
+      "pmdec": -24.578,
+      "parallax": 5.4541,
+      "separation_arcsec": 0.47
+     },
+     "nearest": [
+      {
+       "catalogue": "AllWISE",
+       "name": "WISEA J050749.54+302404.7",
+       "type": "var_flg 0420",
+       "variable": false,
+       "w1": 6.246,
+       "w2": 5.228,
+       "separation_arcsec": 0.4
+      },
+      {
+       "catalogue": "Gaia DR3",
+       "name": "Gaia DR3 156430817820015232",
+       "variable": false,
+       "gmag": 13.035076141357422,
+       "pmra": 4.90603392110511,
+       "pmdec": -24.577534567492915,
+       "parallax": 5.454096456582266,
+       "separation_arcsec": 0.47
+      }
+     ]
+    },
+    "evidence": {
+     "detector": 5,
+     "id": "D5-01",
+     "kind": "changer",
+     "sigma": 7.7,
+     "grade": "clean",
+     "flags": [],
+     "reasons": [],
+     "found_in": "all visits",
+     "times_noise_all_visits": 52797.9,
+     "typical_flux_mjy": 40.6881,
+     "visits": [
+      {
+       "epoch": 1,
+       "date_mean": "2025-09-09",
+       "n_exposures": 18,
+       "snr": 62.6,
+       "times_noise": 53300.0,
+       "empty_places_as_bright": 0,
+       "ra": 76.9562233054698,
+       "dec": 30.40124093790018,
+       "east_arcsec": -0.545,
+       "north_arcsec": -0.029,
+       "err_east_arcsec": 0.19,
+       "err_north_arcsec": 0.19,
+       "largest_shift_from_one_exposure_arcsec": 0.109,
+       "peak_mjy_sr": 700.5113,
+       "misfit": 0.028,
+       "fwhm_arcsec": 10.8
+      },
+      {
+       "epoch": 2,
+       "date_mean": "2026-03-04",
+       "n_exposures": 19,
+       "snr": 57.0,
+       "times_noise": 48330.8,
+       "empty_places_as_bright": 0,
+       "ra": 76.95652611846539,
+       "dec": 30.401221396509477,
+       "east_arcsec": 0.378,
+       "north_arcsec": 0.026,
+       "err_east_arcsec": 0.13,
+       "err_north_arcsec": 0.13,
+       "largest_shift_from_one_exposure_arcsec": 0.051,
+       "peak_mjy_sr": 608.9047,
+       "misfit": 0.024,
+       "fwhm_arcsec": 11.0
+      },
+      {
+       "epoch": 3,
+       "date_mean": "2026-09-13",
+       "n_exposures": 19,
+       "snr": 36.1,
+       "times_noise": 34965.5,
+       "empty_places_as_bright": 0,
+       "ra": 76.95652890519276,
+       "dec": 30.40121498016877,
+       "east_arcsec": 0.316,
+       "north_arcsec": -0.042,
+       "err_east_arcsec": 0.13,
+       "err_north_arcsec": 0.13,
+       "largest_shift_from_one_exposure_arcsec": 0.046,
+       "peak_mjy_sr": 390.8288,
+       "misfit": 0.019,
+       "fwhm_arcsec": 10.8
+      }
+     ],
+     "measure": "ring",
+     "change": {
+      "bins": [
+       0,
+       2
+      ],
+      "n_channels": 13,
+      "change": -0.5998449067314989,
+      "change_err": 0.03750487753435853,
+      "channels_up": 0,
+      "channels_down": 13,
+      "ratio": 0.5230852730392286,
+      "sigma": 7.904183088871983
+     },
+     "two_out": {
+      "left_out": [
+       0,
+       1
+      ],
+      "change": -0.5908,
+      "sigma": 7.3,
+      "survives": true
+     }
+    }
+   }
+  ],
+  "rejected": [],
+  "summary": {
+   "n_objects": 1,
+   "n_rejected": 0,
+   "n_below_threshold": 2,
+   "sources_tested": 197,
+   "seconds": 29.0,
+   "catalogues_answered": [
+    "AAVSO VSX",
+    "AllWISE",
+    "CatWISE2020",
+    "Gaia DR3",
+    "SIMBAD"
+   ],
+   "catalogues_failed": {},
+   "messages": {},
+   "download_failures": {},
+   "exposures": {
+    "1": 56,
+    "2": 56,
+    "3": 55,
+    "4": 56,
+    "5": 56,
+    "6": 56
+   }
+  },
+  "limits": "Finds only what stands 5 times above the noise of empty places in the picture of one visit or of all visits together, in at least one detector. A mover must move between visits (not within one: asteroids are averaged away), by less than 8 arcsec from one visit to the next (about 16 arcsec/yr for visits six months apart), and by more than about 1.2 to 3 arcsec/yr for 5 sigma, depending on brightness. Saturated stars are placed only to 1 to 2 arcsec. A brightness change must be at least 10 per cent (25 per cent for a saturated star's ring), seen at the same wavelength in at least 6 channels. Sources on the glow of a much brighter star are not tested, and a mover blended with catalogued neighbours is rejected. In nebulous young clusters, quote only changes seen the same way in two or more detectors. See docs/search.md.",
+  "version": 4,
+  "credit": "NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive (IRSA); ESA Gaia DR3; SIMBAD (CDS); AAVSO VSX; CatWISE2020 and AllWISE (NASA/IPAC IRSA)"
+ },
+ "_note": "A real response of GET /api/search, trimmed: per-channel tables and per-detector tables removed, nearest catalogue entries cut to 2."
+}
