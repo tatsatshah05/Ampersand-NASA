@@ -3,12 +3,23 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import pipeline, spherex
+from . import astrometry, pipeline, spherex
 
 app = FastAPI(title="SPHEREx sky-change viewer")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
 pipeline.FRAMES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/frames", StaticFiles(directory=pipeline.FRAMES_DIR), name="frames")
+
+
+@app.get("/api/resolve")
+def resolve(name: str = Query(..., min_length=1, max_length=80)):
+    """Object name to coordinates at 2026.0, with proper motion and parallax when known."""
+    try:
+        return astrometry.resolve_name(name)
+    except astrometry.NameNotFound as e:
+        raise HTTPException(404, str(e)) from e
+    except spherex.ArchiveError as e:
+        raise HTTPException(502, f"The name service did not respond: {e}") from e
 
 
 @app.get("/api/frames")

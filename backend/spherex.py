@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
 import threading
 import time
 import warnings
@@ -122,7 +123,8 @@ def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
         out.append(fits.ImageHDU(wave.astype("float32"), name="WAVE"))
         out.append(fits.ImageHDU(band.astype("float32"), name="BANDWIDTH"))
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(f".{threading.get_ident()}.tmp")
+        # Process and thread in the name: two processes may fetch the same cutout at once.
+        tmp = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
         out.writeto(tmp, overwrite=True)
         tmp.replace(path)
     return path

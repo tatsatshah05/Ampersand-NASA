@@ -82,13 +82,14 @@ All public, no key or account.
 - Worked notebooks to copy from: https://caltech-ipac.github.io/irsa-tutorials/spherex-cutouts
   and the other SPHEREx notebooks on that site.
 - User guide: https://caltech-ipac.github.io/spherex-archive-documentation/spherex-data-access
-- Gaia positions and proper motions: `astroquery.gaia`. Name lookup: `SkyCoord.from_name`.
+- Gaia positions and proper motions: Gaia's TAP service over plain HTTP. Name lookup:
+  SIMBAD's TAP service (see "Verified facts").
 - Known asteroids and comets (later, optional): JPL small-body identification API.
 
 The SIA query, column names, cutout syntax and FITS layout were confirmed against the
-live service on 2026-11-14 (see "Verified facts"). The Gaia TAP call is confirmed too.
-Name lookup, the JPL small-body API and the AWS route have not been run yet: verify each
-the first time you use it and record what works.
+live service on 2026-11-14 (see "Verified facts"). The Gaia TAP call and SIMBAD name
+lookup are confirmed too. The JPL small-body API and the AWS route have not been run
+yet: verify each the first time you use it and record what works.
 
 Be a polite client of IRSA: cap concurrent requests (about 6), set timeouts, retry with
 backoff, and cache every download on disk. Retries are not optional: IRSA's proxy
@@ -105,7 +106,12 @@ answers about one request in three with an immediate 502.
 
 Endpoints (adjust if something better emerges, and keep this list current):
 
-- `GET /api/resolve?name=` returns coordinates for an object name. NOT BUILT YET.
+- `GET /api/resolve?name=` BUILT. Object name to coordinates at the fixed date 2026.0
+  (`ra`, `dec`, `epoch`), with `pmra`, `pmdec` (mas/yr), `parallax` (mas) when known,
+  `source` ("Gaia DR3" or "SIMBAD"), `catalogue` (the position and epoch the motion
+  starts from), `j2000`, `moved_since_2000_arcsec` and `notes`. 404 if SIMBAD does not
+  know the name, 502 if SIMBAD is down. Same logic without a server:
+  `backend.astrometry.resolve_name(name)`. Check: `scripts/check_resolve.py`.
 - `GET /api/frames?ra=&dec=&fov=&detector=&mode=` BUILT for `mode=normal` (other modes
   answer 501). Defaults: fov 0.1 degrees, detector 5. Returns `size_px`, `pixel_arcsec`,
   `stretch`, `target` (the Gaia star nearest the centre, or null), `failures` and
@@ -256,3 +262,38 @@ Step 1 result (detector 5, fov 0.1 degrees, 2 arcsec grid)
   from `backend/cache/frames/` in milliseconds.
 - Delete `backend/cache/frames/` after any pipeline change: results are cached by
   request, not by code version.
+
+Name lookup (SIMBAD), confirmed 2026-11-14 with `scripts/check_resolve.py`
+- SIMBAD TAP: `GET <mirror>/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=json&
+  QUERY=...` answers in about 0.3 s with `{"metadata": [...], "data": [[...], ...]}`.
+- On 2026-11-14 the Strasbourg original (`simbad.cds.unistra.fr`) answered every request
+  with HTTP 404 "Page unavailable"; the CfA mirror (`simbad.harvard.edu`) worked. The
+  backend tries CfA first, then Strasbourg. The Sesame resolver at CDS timed out or took
+  5 s the same day; its CfA copy (`vizier.cfa.harvard.edu/viz-bin/nph-sesame`) worked but
+  is not used.
+- Name to object: `SELECT ... FROM basic AS b JOIN ident AS i ON i.oidref = b.oid WHERE
+  i.id = '<name>'`. SIMBAD normalises the name itself: "Barnard's Star", "Epsilon Indi B"
+  (stored as `* eps Ind B`), "RW Aurigae" (`V* RW Aur`) and "R Draconis" (`V* R Dra`) all
+  match as typed. "WISE 0855-0714" and "WISE 0855" do not: the stored names are
+  `WISE J085510.83-071442.5` and `WISEA J085510.74-071442.5`. The backend handles the
+  first with `i.id LIKE 'WISE% J0855%-0714%'` (1.6 s, one object) and the second with a
+  small alias table. "barnards star" without the apostrophe also needs the alias table.
+- `basic` columns used: `oid`, `main_id`, `ra`, `dec` (degrees, ICRS, epoch J2000),
+  `pmra`, `pmdec` (mas/yr), `plx_value` (mas), `otype`, `coo_bibcode`, `pm_bibcode`.
+  The Gaia identifier, when there is one: `SELECT id FROM ident WHERE oidref = <oid>
+  AND id LIKE 'Gaia DR3 %'`.
+- SIMBAD has a Gaia DR3 identifier for Barnard's Star (4472832130942575872), Epsilon
+  Indi B (6412596012146801152, G = 18.0) and R Draconis (1648328016354496384). It has
+  none for RW Aurigae (a close pair; SIMBAD's motion is from Hipparcos) or WISE 0855.
+- WISE 0855 in SIMBAD: J2000 position 133.818908, -7.247048, pm (-8123.7, +673.2)
+  mas/yr, parallax 439 mas, all from Kirkpatrick et al. 2021. That J2000 position is 85
+  arcsec east of the WISE name (which is where it was in 2010), as the motion requires,
+  so SIMBAD's position really is for epoch 2000 and 26 years of motion are applied.
+- Positions at 2026.0 from `resolve_name`: Barnard's Star 269.446267, +4.768222; Epsilon
+  Indi B 331.096653, -56.800663; WISE 0855 133.759765, -7.242182; RW Aurigae 76.956587,
+  +30.401291; R Draconis 248.167233, +66.755024.
+- Barnard's Star only lands on 269.446267, +4.768222 (the centre the cached cutouts were
+  fetched for) when Gaia's radial velocity (-110.5 km/s) is included in the motion.
+  Straight-line proper motion gives Dec +4.768204, 0.06 arcsec south, which is a
+  different cache key. `astrometry.propagate` does it the rigorous way.
+- Gaia by identifier: `... FROM gaiadr3.gaia_source WHERE source_id = <id>`, 1.5 to 2.5 s.
