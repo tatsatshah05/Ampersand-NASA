@@ -147,10 +147,11 @@ found, 683 tested for motion and 663 for brightness):
 | **All** | **5** | **5** | **0** | **1** |
 
 - **No false alarm was reported** in these 30 searches. One artefact did reach 7.0 sigma: the
-  reflection of Epsilon Indi A (K = 2.2, 8.5 arcmin away) in detector 6, a ring 35 arcsec across
-  seen in the two April visits at different places and absent from the two October visits. It
-  was rejected because at the place its "motion" predicts, visits 2 and 4 measure 1.1 and 2.1
-  times the noise where 9 and 13 were expected, and because it is not point-like. Before these
+  reflection of Epsilon Indi A (K = 2.2, 8.5 arcmin away) in detector 6: a ring about 30 arcsec
+  across (fitted width 25 arcsec, against 10 for the field's stars), seen at different places in
+  the two April-May visits and absent from the two September-November visits. It was rejected
+  because at the place its "motion" predicts, visits 2 and 4 measure 1.2 and 2.2 times the noise
+  where 9 and 13 were expected, and because it is not point-like. Before these
   tests existed (version 1 of the search) it was reported as a 7-sigma mover with no catalogue
   counterpart: exactly the kind of "find" we must never show.
 - Honest size of this number: 5 objects in 30 searches is a small sample. With 683 sources
@@ -161,6 +162,172 @@ found, 683 tested for motion and 663 for brightness):
 
 ![Rejected: reflection of Epsilon Indi A, detector 6](search/rejected_ghost_epsindib_D6.png)
 
-## Status of the hunt
+## The hunt in the fields already on disk
 
-In progress; this section is filled in as fields are searched.
+Every source in these pictures, not only the famous targets, was tested. Fields searched (all
+from the cache, nothing downloaded):
+
+| Field | Size | Detectors | Exposures | Why it is worth searching |
+|---|---|---|---|---|
+| The five challenge fields | 0.1 deg | all six | 258 to 548 per field | already here; R Draconis is 9 degrees from the north ecliptic pole and has about 90 exposures per detector |
+| Barnard's Star, wider | 0.2 deg | 5 | 62 | low Galactic latitude, many stars (138 found) |
+| Epsilon Indi B, wider | 0.3 deg | 5 | 86 | four visits over 17 months, the longest time span here (268 sources) |
+| NGC 1333 (Perseus) | 0.2 deg | 3 | 60 | young star cluster: young stars vary |
+| Serpens Main | 0.2 deg | 3 | 71 | young star cluster near the Galactic plane |
+| Near the north ecliptic pole (RA 249.6, Dec +67.3) | 0.2 deg | 3 | 90 | many exposures |
+| RA 240.0, Dec +30.0 | 0.2 deg | 3 | 72 | an ordinary high-latitude field, as a control |
+
+The four 0.2-degree detector-3 fields were downloaded by the previous search session; only
+detector 3 is on disk for them.
+
+In all: 36 searches (field times detector), 1950 sources found, 352 set aside because they sit
+on the glow of a much brighter star, 1578 tested for motion and 1550 for brightness. 6.7 seconds
+per search on average.
+
+### a. Known objects doing something in this data: 3 besides the targets
+
+All three are young stars that the catalogues already list as variable. What is new is only the
+measurement: how much each changed between SPHEREx's visits, at 1.6 to 2.4 microns (detector 3).
+Each comparison uses the same wavelength channels in both visits, and each survives leaving out
+the two exposures that help it most. None was checked in a second detector (only detector 3 is
+on disk for these fields).
+
+| Object | Place (RA, Dec) | What SPHEREx measured | Catalogue listing | Confidence |
+|---|---|---|---|---|
+| V371 Ser (Serpens) | 277.46372, +1.27732 | **faded to 0.34** of its brightness between 27 Aug - 1 Oct 2025 and 26 Aug - 3 Sep 2026; all 11 shared channels fainter; 7.4 sigma (6.9 without the two most helpful exposures) | SIMBAD: V* V371 Ser, Orion-type variable, 1.7 arcsec; AAVSO VSX: V0371 Ser, H = 11.7 to 14.1, period 543 d | High that the change is real. A factor 3 (1.2 magnitudes) is inside its catalogued range (2.4 magnitudes in H), so it is not unusual behaviour for this star. |
+| NSV 1155 = 2MASS J03284325+3117330 (NGC 1333) | 52.18059, +31.29265 | steady from Aug 2025 to Feb 2026, then **0.75 times** as bright on 19 - 21 Aug 2026; all 13 channels fainter; 6.9 sigma (6.1) | SIMBAD: Orion-type variable, 1.1 arcsec; AAVSO VSX: NSV 1155, T Tauri star | High that the change is real; the size of the change is ordinary for a T Tauri star. |
+| 2MASS J18295688+0114463 (Serpens) | 277.48710, +1.24611 | **1.17 times brighter** in Apr and Aug 2026 than in Sep 2025; all 13 channels brighter; 6.3 sigma (5.7) | SIMBAD: Orion-type variable, 0.2 arcsec; AAVSO VSX: WISEA J182956.88+011446.0, a young "dipper" star, r = 13.0 to 17.2, period 695 d | High that the change is real. 17 per cent is small for this star. |
+
+![V371 Ser](search/hunt_v371ser_D3.png)
+![NSV 1155 in NGC 1333](search/hunt_ngc1333_nsv1155_D3.png)
+![The dipper in Serpens](search/hunt_serpens_dipper_D3.png)
+
+### b. Brightness changes in objects not listed as variable: none
+
+No source whose brightness changed at 5 sigma is unlisted. "Listed" means: Gaia DR3's
+variability flag or classifier, an AAVSO VSX entry of category "Variable", AllWISE's variability
+flag (6 or more in the 3.4 or 4.6 micron band), or a SIMBAD type that is a variable-star type. A
+SIMBAD type that is only a kind of object that often varies (a young star, an active galaxy) does
+not count as listed; it would be named in the summary. All five catalogues answered for every
+candidate of this hunt.
+
+Below the bar, for the record only (none of these is a claim, and their catalogue status was not
+looked up): in NGC 1333, three sources changed by 16 to 22 per cent at 3.6 to 4.8 sigma; in the R Draconis field one star at 248.22882,
++66.79144 faded to 0.66 in detector 6 at 3.9 sigma, in a field too sparse to check the errors.
+
+### c. Movers with no catalogue counterpart: none
+
+Three sources passed the 5-sigma motion test and every one was rejected by the artefact tests;
+each was then looked at by eye and the rejection is right:
+
+| Field, detector | Motion test | Why rejected | By eye |
+|---|---|---|---|
+| Epsilon Indi B, 6 | 7.0 sigma, 8.2 arcsec/yr | missing from visits 2 and 4 (1.2 and 2.2 times the noise where 9 and 13 were expected); 25 arcsec wide against 10 for a star | a ring reflected from Epsilon Indi A (8.5 arcmin away), in a different place in each April visit |
+| Serpens, 3 | 7.2 sigma, 2.6 arcsec/yr | 24 arcsec wide against 9 | two stars blended north-south, next to a brighter star that changed; the blend's centre shifts |
+| NGC 1333, 3 | 5.8 sigma, 1.7 arcsec/yr | 17 arcsec wide against 9 | a patch of nebula, not a star |
+
+![Rejected: blend in Serpens](search/rejected_blend_serpens_D3.png)
+![Rejected: nebula in NGC 1333](search/rejected_nebula_ngc1333_D3.png)
+
+### False alarms over the whole hunt
+
+10 objects were reported at 5 sigma or more over the 36 searches, 8 of them different: the five
+targets (two of them found again in the wider fields) and the three known variables above.
+**None is a false alarm.** Three more sources reached 5 sigma and were rejected by rule as
+artefacts: the three movers in the table above, each confirmed by eye. With 1578 sources tested for motion and 1550 for
+brightness and none passing falsely, the false-alarm rate is below about 1 in 500 sources per
+test (95 per cent confidence). What that does not cover: fields unlike these (crowded Galactic
+plane, bright nebulae beyond what NGC 1333 and Serpens show), and artefacts we have not met.
+
+## What the search cannot find, and why
+
+- **Too faint.** A source must stand 5 times above the empty-place noise in the picture of one
+  visit or of all visits. The faintest sources found were 0.04 to 0.1 mJy, and 95 per cent of
+  those found were brighter than 0.13 to 0.33 mJy, depending on detector and field. A mover must
+  be clearly seen in at least two visits: about 0.15 to 0.2 mJy at 3.8 to 5 microns with 15 to
+  25 exposures per visit (WISE 0855, 0.43 mJy, stands 12 to 21 times the noise per visit in
+  detector 5). Infrared catalogues made from many years of WISE data reach fainter than this, so
+  an uncatalogued mover found here would have to be unusual: very red, or in a crowded patch the
+  catalogues skipped.
+- **Too slow.** With three visits over one year, the smallest motion that reaches 5 sigma is
+  about 1.2 arcsec/yr for sources brighter than 0.5 mJy and about 2 arcsec/yr for fainter ones.
+  Saturated stars need about 7 to 8 arcsec/yr in detectors 5 and 6 (Barnard's Star, 10.4, only
+  just passes) and cannot be measured in 1 to 4. A field with four visits over 17 months (Epsilon
+  Indi B) does better. Ordinary stars move far less than 1 arcsec/yr: only the nearest or fastest
+  objects can be found.
+- **Too fast.** A source that moves more than 8 arcsec between one visit and the next (about 16
+  arcsec/yr with visits six months apart) is not followed as one object; each of its places shows
+  up as a source that appeared or vanished, i.e. as a brightness change. Anything that moves
+  within a visit (asteroids, comets) is averaged away or removed as a glitch.
+- **Too small a change.** 5 sigma needs about 8 to 13 per cent for sources brighter than 2 mJy,
+  30 per cent at 0.5 to 2 mJy and about a doubling below 0.5 mJy; never less than 10 per cent (25
+  per cent for the ring around a saturated star, which is only measured in detectors 5 and 6).
+  Changes faster than a visit (days) are averaged within it.
+- **In the wrong place.** Sources on the glow of a much brighter star are not tested (352 of
+  1950). Movers that are not point-like in their own visits are rejected, so a mover blended with
+  a star in every visit would be lost. Frame edges are flagged.
+- **Where the stars are too few.** The errors are checked against the other stars in the
+  picture; with fewer than 8 plain stars (the R Draconis field) that check is impossible and
+  candidates are flagged `uncalibrated`.
+
+## Words for the demo
+
+What we are comfortable saying:
+
+> We built a blind search: give it a patch of sky, and it looks at every source in SPHEREx's
+> pictures for anything that moves or changes brightness between visits, without being told what
+> is there. Given only the field centres, it found Barnard's Star, the brown dwarfs WISE 0855 and
+> Epsilon Indi B moving at their catalogued speeds, and RW Aurigae changing: brighter in the far
+> red and about half as bright at 4 to 5 microns. It also caught the variable stars R Draconis,
+> V371 Serpentis and two young stars in NGC 1333 and Serpens changing between visits.
+>
+> It tries hard to fool itself first. Every detection is compared with the same measurement at
+> hundreds of empty places in the same picture, and every candidate is tested against the
+> artefacts we found in SPHEREx data: reflections of bright stars, overlapping glitches,
+> saturated stars, blends. In 36 searches testing about 1600 sources it reported 8 different
+> objects, all real and all already known, and it threw out 3 convincing-looking "movers" that
+> turned out to be a reflection, a blend and a patch of nebula. In the fields we searched, it found nothing that
+> is missing from the catalogues.
+
+Do not say: "discovered", "new object", "new variable", or quote the search's own sigma as
+"signal to noise" of a detection. Do say "candidate" for anything unexplained, with what would
+confirm it.
+
+## How to run it
+
+In Python (no server needed):
+
+```python
+from backend import search
+result = search.search(ra, dec, fov=0.1, detectors=(1, 2, 3, 4, 5, 6))   # add offline=True to use the cache only
+# result["objects"]: what passed, each with verdict, evidence and catalogue_status
+# result["rejected"]: what reached 5 sigma but looks like an artefact, with reasons
+# result["summary"], result["limits"]
+```
+
+Unattended, for a list of fields (one "name, ra, dec, fov" per line in a text file):
+
+```
+export SPHEREX_CACHE_DIR=<the shared cache>
+.venv/bin/python scripts/search_fields.py --fields fields.txt --detectors 123456 --out scripts/out/search
+.venv/bin/python scripts/search_fields.py --fields fields.txt --offline ...          # never download
+.venv/bin/python scripts/search_fields.py --fields fields.txt --fetch backend.search:fetch_to_own_cache ...
+.venv/bin/python scripts/search_report.py scripts/out/search                       # numbers for this page
+```
+
+Each field gets a folder with `field.json` (everything, including every source tested) and one
+small picture per candidate; `summary.json` lists every object of every field. A field that
+fails is recorded and the rest carry on. Results are cached in `backend/cache/search2/`
+(catalogue answers and finished searches); a repeat takes seconds.
+
+Time: from cached cutouts, 3 to 9 seconds per detector for a 0.1-degree field and about 30 for
+0.3 degrees. Downloading costs more: IRSA about 0.7 s per cutout, the S3 route about 0.13 s, and
+a 0.1-degree field has 40 to 100 exposures per detector.
+
+## Pictures
+
+Each figure is one row: the candidate in each visit (north up, east left, 80 arcsec across;
+the circle is its mean place, the cross where it was measured in that visit), then last visit
+minus first (white brighter, black fainter), and for a brightness change a chart of brightness
+against wavelength, one line per visit. A "ring" chart shows the relative brightness of a
+saturated star's ring of unsaturated pixels, not a flux.
