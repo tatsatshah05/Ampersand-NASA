@@ -1,0 +1,14 @@
+# Keep the build context small. The cache is NOT baked into the image: it lives on the
+# host's persistent disk, mounted at /app/backend/cache.
+.git
+.venv
+.env
+.DS_Store
+.mypy_cache
+.ruff_cache
+**/__pycache__
+**/*.pyc
+**/node_modules
+backend/cache
+scripts/out
+docs
