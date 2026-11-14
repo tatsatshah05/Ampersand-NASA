@@ -1,0 +1,134 @@
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 8px 24px;
+  align-items: start;
+}
+
+h1,
+.where,
+.status,
+footer {
+  grid-column: 1 / -1;
+}
+
+h1 {
+  margin: 8px 0 0;
+  font-size: 1.5rem;
+}
+
+.where {
+  margin: 0;
+  color: var(--muted);
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 1;
+  background: #000;
+  border: 1px solid var(--border);
+}
+
+.stage img,
+.stage .overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.compass {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.gaia-stroke {
+  stroke: var(--gaia);
+}
+
+.gaia-fill {
+  fill: var(--gaia);
+}
+
+.measured-stroke {
+  stroke: var(--measured);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.controls input[type='range'] {
+  flex: 1 1 120px;
+}
+
+.readout {
+  margin: 4px 0;
+}
+
+.key {
+  font-weight: 700;
+}
+
+.key.gaia {
+  color: var(--gaia);
+}
+
+.key.measured {
+  color: var(--measured);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.panel dt {
+  color: var(--muted);
+}
+
+.panel dd {
+  margin: 0;
+}
+
+footer {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+@media (max-width: 800px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
