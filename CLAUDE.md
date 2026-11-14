@@ -826,3 +826,58 @@ Reading cutouts straight from S3 (confirmed 2026-11-14, `scripts/check_s3.py` re
 - FLAGS is tile-compressed in the full files (one tile per image row), so its size
   differs from file to file and every later extension starts at a different byte: the
   headers are read, never assumed.
+
+Blind search (`backend/search.py`, `/api/search`; all numbers and pictures in `docs/search.md`)
+- Given only the field centres (0.1 degrees, six detectors) it finds Barnard's Star,
+  WISE 0855 and Epsilon Indi B as movers and RW Aurigae as a changer, each labelled as
+  already known. Five challenge fields: 683 sources tested for motion, 663 for brightness,
+  5 objects reported, all of them the targets, 0 false alarms. The 7 sigma reflection of
+  Epsilon Indi A is rejected by rule.
+- Four fresh young-cluster fields (0.2 degrees, about 2,400 sources): 17 listed variables,
+  2 candidates that survive every test, 9 that can be neither confirmed nor killed. No
+  mover without a catalogue counterpart survived anywhere.
+- `/api/search` starts the search in the background (one at a time) and answers at once
+  with `status` queued, running, done or failed; `backend/jobs.py`. A field takes 20 to 50
+  s with its cutouts on disk, about 3 minutes fresh. New cutouts go to `cache/search2/`.
+- Say "candidate", "not listed as variable in the catalogues we asked", never "new" or
+  "discovered". A search that finds nothing is reported as that.
+
+Serpens South candidate, checked from outside (2026-11-14, `scripts/check_neowise.py`)
+- RA 277.50547, Dec -2.06198 (SIMBAD: MSX6C G028.6477+03.8174, a young stellar object).
+  The viewer's own brightness code gives, at 4.0 to 5.0 microns, 178 mJy in September
+  2025 and 793, 656 and 805 mJy in March, May and September 2026; at 2.8 to 3.8 microns,
+  17 mJy rising to 114.
+- NEOWISE single exposures at IRSA (269 usable within 1.5 arcsec, 21 visits, 2014 to
+  2024): 177 to 1,603 mJy at 4.6 microns, a factor of 9; 32 to 236 mJy at 3.4 microns.
+  Its last visit, March 2024, is its faintest: 177 mJy, against 738 in September 2023.
+- So the brightening is real and seen by two telescopes, and it is the recovery from the
+  deepest dip in ten years, not a first outburst. Say "came back from a dip", not
+  "erupted". What stands: AAVSO VSX, Gaia DR3, SIMBAD's type and AllWISE's flag do not
+  list it as variable. Not checked: the tables of infrared surveys of young-star
+  variability (Park and others 2021 from NEOWISE; Wolk and others 2018 from Spitzer),
+  which very likely include it. Which member of the tight group varies is unknown: both
+  telescopes blur about 6 arcsec.
+- WISE zero points used: 309.540 Jy (3.4 microns) and 171.787 Jy (4.6 microns), WISE
+  Explanatory Supplement IV.4.h Table 1.
+
+Training mode (`backend/training.py`, `/api/training`, the practice screen at `?train=<seed>`)
+- The only simulated thing in the project. One made-up object is added to the real
+  stacked frames of each visit. It never reaches `/api/frames` or any measurement: its
+  own endpoint, its own `training-...` folders, `simulation: true` in the response, and
+  the word SIMULATION drawn into every picture (bottom right). The screen carries a
+  banner that cannot be closed and none of the real view's panels.
+- Its shape is a real star's: Gaussian sigma 1.98, 1.94, 1.95, 2.14, 2.14, 2.22 grid
+  pixels for detectors 1 to 6 (full width 9.2 to 10.5 arcsec), the median of 57 to 135
+  isolated field stars per detector around the five targets.
+- It moves as a body far beyond Neptune would (`astrometry.position_at`: yearly swing
+  plus slow drift). The distance is chosen so the swing is 22 to 38 per cent of the
+  picture: about 4,000 to 4,800 times the Earth-Sun distance at 0.1 degrees. The response
+  says so, and that a planet at 500 would swing about 13 arcminutes between visits, wider
+  than the picture.
+- Peak height: 12, 7 or 4.5 times the frame's background scatter (easy, medium, hard).
+  At medium it is hard to see in the ordinary frames and plain in the difference frames.
+
+Very bright stars near a view (`/api/stars`: `bright_nearby`, `bright_note`)
+- Gaia stars brighter than G = 7 within 0.25 degrees. Of the five targets: Epsilon Indi B
+  (its primary, G = 4.32, 6.7 arcmin away in 2026) and R Draconis (itself G = 6.37). Gaia
+  DR3 lacks most stars brighter than about magnitude 3, so no note is not proof.
