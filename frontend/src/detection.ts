@@ -7,7 +7,7 @@ import type { Measured, StarsInCircle } from './spectrum'
 import { listVisits } from './wording'
 
 /** A number of times the background scatter: one decimal under 10, whole above. */
-const times = (n: number) => (n < 10 ? n.toFixed(1) : String(Math.round(n)))
+const times = (n: number) => (n < 10 ? n.toFixed(1) : n >= 1000 ? 'over 1000' : String(Math.round(n)))
 
 /** One line on how strongly the target is detected in this frame; null when the response does not say. */
 export function detectionSentence(frame: Frame): string | null {
@@ -20,9 +20,11 @@ export function detectionSentence(frame: Frame): string | null {
         ? `Marginal detection, ${times(sigma)} times the background scatter: treat with care`
         : 'Marginal detection: treat with care'
     case 'none':
-      return sigma != null
-        ? `Not detected in this frame (${times(sigma)} times the background scatter; at least 3 is needed)`
-        : 'Not detected in this frame'
+      if (sigma == null) return 'Not detected in this frame'
+      // Below 1 (or negative) the measured value is just noise: say that, not "-0.8 times".
+      return sigma < 1
+        ? 'Not detected in this frame (nothing above the background scatter; at least 3 times it is needed)'
+        : `Not detected in this frame (${times(sigma)} times the background scatter; at least 3 is needed)`
     case 'saturated':
       return 'Too bright to measure here (saturated)'
     case 'unknown':
@@ -73,6 +75,7 @@ export function blendSentences(frame: Frame): string[] {
     if (s.light_share < 0.05) {
       return `A neighbouring star (${neighbour(s)}) supplies under 5 per cent of the light here.`
     }
+    if (s.light_share >= 0.95) return `Nearly all of the light here comes from a neighbouring star (${neighbour(s)}).`
     return `${shareWords(s.light_share)} of the light here comes from a neighbouring star (${neighbour(s)}).`
   })
 }

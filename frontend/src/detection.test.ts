@@ -32,6 +32,11 @@ describe('detectionSentence', () => {
       'Detected clearly, 5.3 times the background scatter',
     )
   })
+  it('does not print a six-figure number for a very bright star', () => {
+    expect(detectionSentence(frame({ detection: 'clear', detection_sigma: 95495.2 }))).toBe(
+      'Detected clearly, over 1000 times the background scatter',
+    )
+  })
   it('labels a marginal detection as marginal and asks for care', () => {
     const f = frame({ detection: 'marginal', detection_sigma: 3.4 })
     expect(detectionSentence(f)).toBe('Marginal detection, 3.4 times the background scatter: treat with care')
@@ -41,6 +46,8 @@ describe('detectionSentence', () => {
     const f = frame({ detection: 'none', detection_sigma: 2.5 })
     expect(detectionSentence(f)).toMatch(/^Not detected in this frame/)
     expect(detectionSentence(frame({ detection: 'none', detection_sigma: null }))).toBe('Not detected in this frame')
+    // A negative value is noise: it is never shown as "-0.8 times".
+    expect(detectionSentence(frame({ detection: 'none', detection_sigma: -0.8 }))).not.toContain('-')
     expect(isMarginal(f)).toBe(false)
   })
   it('says a saturated frame is too bright to measure', () => {
@@ -90,6 +97,10 @@ describe('blendSentences', () => {
   it('gives a percentage when the share is not a simple fraction', () => {
     const f = frame({ blend: [{ source_id: '1', gmag: 14, distance_arcsec: 3, light_share: 0.4 }] })
     expect(blendSentences(f)[0]).toMatch(/^About 40 per cent of the light/)
+  })
+  it('says nearly all when the neighbour has almost every bit of the light', () => {
+    const f = frame({ blend: [{ source_id: '1', gmag: 16.3, distance_arcsec: 4.2, light_share: 0.99 }] })
+    expect(blendSentences(f)[0]).toMatch(/^Nearly all of the light/)
   })
   it('says a star with no share cannot be separated', () => {
     const f = frame({ blend: [{ source_id: '1', gmag: 12.18, distance_arcsec: 1.66, light_share: null }] })
