@@ -45,7 +45,7 @@ export function Selectors({ selection, motionKnown, onChange }: Props) {
         <select value={selection.fov} onChange={pick((v) => ({ fov: Number(v) }))}>
           {fovs.map((f) => (
             <option key={f} value={f}>
-              {f}°{f === DEFAULT_SELECTION.fov ? ' (default)' : ''}
+              {f}°{f === DEFAULT_SELECTION.fov ? ' (default)' : f === 0.5 ? ' (as wide as the full Moon)' : ''}
             </option>
           ))}
         </select>

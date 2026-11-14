@@ -92,6 +92,12 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop)
   }, [fromAddress])
 
+  // The browser tab, and so the entries under the Back button, say which target this is.
+  const whereInWords = selection.name ?? `RA ${selection.ra.toFixed(4)}°, Dec ${selection.dec.toFixed(4)}°`
+  useEffect(() => {
+    document.title = `${whereInWords}: SPHEREx sky-change viewer`
+  }, [whereInWords])
+
   // ---- keyboard: the space bar plays and pauses, the arrow keys step ---------------------
 
   const { togglePlay, step } = player
@@ -319,7 +325,14 @@ export default function App() {
               </button>
             </div>
 
-            {showMotion && path.length > 0 && <MotionLegend start={path.length > 1} path={path.length > 1} arrow={arrow} />}
+            {showMotion && path.length > 0 && (
+              <MotionLegend
+                start={path.length > 1}
+                path={path.length > 1}
+                arrow={arrow}
+                note={load.data.mode === 'difference' ? "The positions were measured in each visit's own picture, not in the difference." : undefined}
+              />
+            )}
             {showGaia && gaiaFrames.length > 1 && (
               <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={load.data.target} gaiaError={load.data.gaia_error} />
             )}

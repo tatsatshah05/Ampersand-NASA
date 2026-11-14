@@ -257,7 +257,9 @@ export function toFramesQuery(s: Selection): FramesQuery {
  */
 export function withTarget(s: Selection, target: SearchTarget): Selection | null {
   if (!Number.isFinite(target.ra) || !validDec(target.dec)) return null
-  const ra = ((target.ra % 360) + 360) % 360
+  // A right ascension outside 0 to 360 is brought round into it; one inside is kept
+  // digit for digit, because the backend's cache is keyed on the number it is sent.
+  const ra = validRa(target.ra) ? target.ra : Number((((target.ra % 360) + 360) % 360).toFixed(9)) % 360
   const moving = validMotion(target.pmra ?? null) && validMotion(target.pmdec ?? null)
   return {
     ...s,

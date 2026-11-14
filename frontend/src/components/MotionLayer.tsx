@@ -92,8 +92,11 @@ export function MotionLayer({ sizePx, scale, start, path, here, arrow }: Props) 
   )
 }
 
-/** What the marks mean, each beside a small drawing of itself, so colour is not the only cue. */
-export function MotionLegend({ start, path, arrow }: { start: boolean; path: boolean; arrow: boolean }) {
+/**
+ * What the marks mean, each beside a small drawing of itself, so colour is not the only
+ * cue. `note` is one more line, without a drawing.
+ */
+export function MotionLegend({ start, path, arrow, note }: { start: boolean; path: boolean; arrow: boolean; note?: string }) {
   return (
     <ul className="legend">
       {start && (
@@ -125,6 +128,7 @@ export function MotionLegend({ start, path, arrow }: { start: boolean; path: boo
           its measured path, visit by visit
         </li>
       )}
+      {note && <li className="legend-note">{note}</li>}
     </ul>
   )
 }

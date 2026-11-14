@@ -220,7 +220,7 @@ function explainFailure(status: number, body: unknown): string {
   }
   const text = typeof detail === 'string' ? detail.trim() : ''
   if (status === 400 && text.startsWith('track=target')) {
-    return 'Following the target needs to know how it moves, and no motion is known for this position. Line the pictures up on the sky instead, or look the object up by name so that its motion comes with it.'
+    return 'Following the target needs to know how it moves, and no motion is known for this position. Choose "the sky" under "Lined up on", or look the object up by name so that its motion comes with it.'
   }
   if (text) {
     // 502 is the backend saying that NASA's archive did not answer it.

@@ -21,18 +21,28 @@ function preload(src: string): Promise<void> {
 }
 
 /**
+ * A view that has been made before comes back within a few hundredths of a second. For
+ * this long after asking, the previous pictures stay up, so that flipping between
+ * detectors or modes does not flash a "loading" message each time.
+ */
+const KEEP_PREVIOUS_MS = 250
+
+/**
  * The frames at `url` (see framesUrl in api.ts). `attempt` is a counter: raising it
  * asks again for the same view, for a "try again" button.
  */
 export function useFrames(url: string, attempt: number): Load {
   const key = `${attempt} ${url}`
   const [settled, setSettled] = useState<{ key: string; load: Settled } | null>(null)
+  // The request that has been waited on for longer than KEEP_PREVIOUS_MS, if any.
+  const [slow, setSlow] = useState<string | null>(null)
 
   useEffect(() => {
     const ctrl = new AbortController()
     const settle = (load: Settled) => {
       if (!ctrl.signal.aborted) setSettled({ key, load })
     }
+    const patience = window.setTimeout(() => setSlow(key), KEEP_PREVIOUS_MS)
     // Started on the next tick: in development React mounts every component twice, and
     // this way the first, discarded mount never sends a request to the archive.
     const timer = window.setTimeout(() => {
@@ -54,10 +64,14 @@ export function useFrames(url: string, attempt: number): Load {
     }, 0)
     return () => {
       window.clearTimeout(timer)
+      window.clearTimeout(patience)
       ctrl.abort()
     }
   }, [key, url])
 
-  // Until the request for this very view has settled, it is loading.
-  return settled?.key === key ? settled.load : { state: 'loading' }
+  if (settled?.key === key) return settled.load
+  // Not answered yet. For a moment the pictures already on screen stay; after that, or
+  // when there are none, it is loading.
+  if (settled?.load.state === 'ready' && slow !== key) return settled.load
+  return { state: 'loading' }
 }
