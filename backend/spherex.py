@@ -27,7 +27,12 @@ warnings.simplefilter("ignore", FITSFixedWarning)
 
 SIA_URL = "https://irsa.ipac.caltech.edu/SIA"
 # Level-2 spectral image collections. DR1 holds the first year; QR3 the newest weeks.
-COLLECTIONS = ["spherex_dr1", "spherex_qr3"]
+# A new data release is a new name here: set SPHEREX_COLLECTIONS (comma-separated) on the
+# server and restart, with no change to the code.
+COLLECTIONS = [c.strip() for c in os.environ.get("SPHEREX_COLLECTIONS", "spherex_dr1,spherex_qr3").split(",")
+               if c.strip()]
+LIST_MAX_AGE_S = 86400.0      # an exposure list older than this is asked for again
+LIST_RETRY_S = 600.0          # ... but not more often than this when the archive does not answer
 MAX_CONCURRENT = 6       # requests to IRSA at once
 S3_IN_HAND = 8           # cutouts being read from S3 at once (each is up to five requests)
 # Everything downloaded or built is kept here. SPHEREX_CACHE_DIR moves it: to a
@@ -87,7 +92,47 @@ def write_json(path: Path, obj: object, indent: int | None = None) -> None:
     tmp.replace(path)
 
 
-def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict]:
+_list_refresh: dict[str, float] = {}      # exposure lists being refreshed in the background: key -> when started
+_list_refresh_lock = threading.Lock()
+
+
+def _list_file(ra: float, dec: float) -> Path:
+    key = hashlib.sha1(f"{ra:.5f},{dec:.5f}".encode()).hexdigest()[:16]
+    return CACHE / "queries" / f"sia_{key}.json"
+
+
+def list_changed(ra: float, dec: float, built_with: int | None) -> bool:
+    """Has the archive listed a different number of exposures for this position than a
+    cached result was built with? This is how new SPHEREx data reaches views that are
+    already on disk.
+
+    It never waits for the archive. With a list less than a day old the answer is read
+    from disk. With an older one the answer is "no" for now, so the cached result is
+    served at once, and the list is asked for again in the background; the next request
+    then sees the new list and rebuilds if it differs.
+    """
+    cache_file = _list_file(ra, dec)
+    if built_with is None or not cache_file.exists():
+        return False
+    if time.time() - cache_file.stat().st_mtime >= LIST_MAX_AGE_S:
+        with _list_refresh_lock:
+            due = time.time() - _list_refresh.get(cache_file.name, 0.0) >= LIST_RETRY_S
+            if due:
+                _list_refresh[cache_file.name] = time.time()
+        if due:
+            threading.Thread(target=_refresh_list, args=(ra, dec), daemon=True, name="exposure-list").start()
+        return False
+    return len(find_exposures(ra, dec)) != built_with
+
+
+def _refresh_list(ra: float, dec: float) -> None:
+    try:
+        find_exposures(ra, dec)
+    except ArchiveError:
+        pass            # tried again after LIST_RETRY_S; the cached results stay in use meanwhile
+
+
+def find_exposures(ra: float, dec: float, max_age_s: float = LIST_MAX_AGE_S) -> list[dict]:
     """Every level-2 spectral image whose footprint contains (ra, dec), oldest first.
 
     The list is cached for a day, because new exposures keep arriving. If the archive
@@ -95,8 +140,7 @@ def find_exposures(ra: float, dec: float, max_age_s: float = 86400) -> list[dict
     only lacks the newest exposures, and that is better than refusing a view whose
     images are all on disk already.
     """
-    key = hashlib.sha1(f"{ra:.5f},{dec:.5f}".encode()).hexdigest()[:16]
-    cache_file = CACHE / "queries" / f"sia_{key}.json"
+    cache_file = _list_file(ra, dec)
     cached = json.loads(cache_file.read_text()) if cache_file.exists() else None
     if cached is not None and time.time() - cache_file.stat().st_mtime < max_age_s:
         return cached

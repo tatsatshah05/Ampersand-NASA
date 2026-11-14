@@ -108,6 +108,22 @@ seconds to load for the first time (about a minute if NASA's S3 copy is unavaila
 fallback is used); very bright stars saturate. Longer lists of faults are in
 [docs/results.md](docs/results.md).
 
+## When SPHEREx releases new data
+
+The tool keeps no copy of the survey. For every position it asks NASA's archive which
+exposures cover it, and builds its pictures from those.
+
+- **New exposures of a position reach the page by themselves.** The archive's list for a
+  position is asked for again once it is a day old. A view or a brightness chart that is
+  already on disk records how many exposures it was built from, and is built again when the
+  list changes. Nobody waits for the archive on a view that is on disk: it is served at once
+  and the list is refreshed in the background.
+- **A new data release is one setting.** The archive groups its images into named
+  collections (today `spherex_dr1` and `spherex_qr3`). Set `SPHEREX_COLLECTIONS` on the
+  server to the new list, comma-separated, and restart. No code changes.
+- After a release, `python scripts/warm_cache.py` rebuilds the demo views ahead of visitors.
+- Results of the blind search are a dated snapshot and are not refreshed automatically.
+
 ## Run it locally
 
 Needs Python 3.11 or newer and Node.js (the Docker build uses Node 22; the build here was run with Node 24).

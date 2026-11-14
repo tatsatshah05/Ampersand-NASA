@@ -973,6 +973,18 @@ def flags_png(st: dict, path: Path) -> None:
     Image.fromarray(rgba[::-1], "RGBA").save(path)
 
 
+def _cached_view(meta_file: Path, ra: float, dec: float) -> dict | None:
+    """A view already on disk, unless the archive has since listed a different number of
+    exposures of this position: then it is built again, so new SPHEREx data shows up by
+    itself. `spherex.list_changed` never waits for the archive."""
+    if not meta_file.exists():
+        return None
+    meta = json.loads(meta_file.read_text())
+    if spherex.list_changed(ra, dec, meta.get("exposures_total_all_detectors")):
+        return None
+    return meta
+
+
 def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
                  mode: str = "normal", progress=None, *,
                  pmra: float | None = None, pmdec: float | None = None, parallax: float | None = None,
@@ -1017,8 +1029,9 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     key = hashlib.sha1(key_text.encode()).hexdigest()[:16]
     out_dir = FRAMES_DIR / key
     meta_file = out_dir / "frames.json"
-    if meta_file.exists():
-        return json.loads(meta_file.read_text())
+    cached = _cached_view(meta_file, ra, dec)
+    if cached is not None:
+        return cached
 
     all_exposures = spherex.find_exposures(ra, dec)
     if not all_exposures:
@@ -1033,8 +1046,9 @@ def build_frames(ra: float, dec: float, fov: float = 0.1, detector: int = 5,
     usable = [(path, ep) for (_, path, _), (_, ep) in zip(fetched, chosen, strict=True) if path is not None]
 
     with _BUILD_LOCK:
-        if meta_file.exists():          # another request built this view while we waited
-            return json.loads(meta_file.read_text())
+        cached = _cached_view(meta_file, ra, dec)   # another request may have built it while we waited
+        if cached is not None:
+            return cached
         return _build(key, usable, failures, len(all_exposures), ra, dec, fov, detector, mode, motion,
                       reference, track)
 

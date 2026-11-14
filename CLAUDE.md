@@ -881,3 +881,12 @@ Very bright stars near a view (`/api/stars`: `bright_nearby`, `bright_note`)
 - Gaia stars brighter than G = 7 within 0.25 degrees. Of the five targets: Epsilon Indi B
   (its primary, G = 4.32, 6.7 arcmin away in 2026) and R Draconis (itself G = 6.37). Gaia
   DR3 lacks most stars brighter than about magnitude 3, so no note is not proof.
+
+New data reaches cached results (2026-11-14, `tests/test_new_data.py`)
+- Frames record `exposures_total_all_detectors` and brightness results `exposures_listed`
+  (photometry.VERSION 9). `spherex.list_changed` compares that with the archive's current
+  list and the result is built again when they differ. It never waits for the archive:
+  a list older than a day is refreshed in a background thread (at most every 10 minutes
+  when the archive does not answer) and the cached result is served meanwhile.
+- `SPHEREX_COLLECTIONS` (comma-separated) replaces the collection names without a code
+  change. Search results (`cache/search2/results`) are not refreshed automatically.

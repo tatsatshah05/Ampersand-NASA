@@ -149,6 +149,8 @@ describe('sexagesimal', () => {
 
   it.each([
     '08h55m10.831s -07d14m42.53s', // the challenge's own text
+    '08h55m10.831s -7d14m42.53s', // one digit of degrees, as the challenge page prints it
+    'Right Ascension 08h55m10.831s, declination -7d14m42.53s', // pasted whole from the challenge page
     'RA 08h55m10.831s, Dec -07d14m42.53s',
     '08h55m10.831s \u221207d14m42.53s',
     '08h55m10.831s \u201307d14m42.53s',

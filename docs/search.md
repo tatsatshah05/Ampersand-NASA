@@ -589,7 +589,8 @@ What we are comfortable saying:
 > twice a year from 2014 to 2024, and its public archive shows this star swinging by a factor of
 > nine. NEOWISE's last look, in March 2024, caught it at its faintest in ten years, at exactly the
 > level SPHEREx found in September 2025. So our search, knowing nothing, picked out a star that
-> really is strongly variable, and SPHEREx watched it climb back out of its deepest dip on record,
+> really is strongly variable, and SPHEREx watched it climb back out of the deepest dip in NEOWISE's
+> ten years of records,
 > in 102 colours at once. It is not a new kind of event, and specialists who study young stars
 > have very likely seen it vary. What we can say is that none of the variable-star lists we asked
 > has it, and that SPHEREx's pixels cannot tell which star of a tight group is the one changing.

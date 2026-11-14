@@ -48,7 +48,7 @@ from . import astrometry, pipeline, spherex
 
 # Part of the cache key: raise it when the measurement changes (7: stars_in_circle;
 # 8: a Gaia star is followed only within 3 arcsec of the request, and `measured`).
-VERSION = 8
+VERSION = 9
 PHOT_DIR = spherex.CACHE / "photometry"
 CUTOUT_DEG = 0.15                # same cutouts as /api/frames at its default field of view
 
@@ -337,11 +337,15 @@ def measure_all(ra: float, dec: float, detector: int | None = None, progress=Non
     key = hashlib.sha1(key_text.encode()).hexdigest()[:16]
     cache_file = PHOT_DIR / f"{key}.json"
     if cache_file.exists():
-        return json.loads(cache_file.read_text())
+        cached = json.loads(cache_file.read_text())
+        # Measured again when the archive lists new exposures (results from before this
+        # was recorded have no count and are kept).
+        if not spherex.list_changed(ra, dec, cached.get("exposures_listed")):
+            return cached
 
     exposures = spherex.find_exposures(ra, dec)
     base: dict = {"key": key, "ra": ra, "dec": dec, "detector": detector, "points": [], "failures": [],
-                  "credit": pipeline.CREDIT}
+                  "exposures_listed": len(exposures), "credit": pipeline.CREDIT}
     if not exposures:
         return {**base, "message": "SPHEREx has no public images covering this position."}
     epoch_of = pipeline.assign_epochs(exposures)
