@@ -46,6 +46,18 @@ async function firstMirror(mirrors: readonly string[]): Promise<string | null> {
 
 const NO_IMAGE = 'The sky image could not be loaded right now.'
 
+// The view is this many SPHEREx fields wide, so the orange box sits in its surroundings.
+const VIEW_FIELDS = 3
+// A survey sets its own starting zoom when it finishes loading, some time after it is asked for,
+// so the width is set again at these moments (milliseconds) after every change.
+const WIDTH_AGAIN_MS = [0, 700, 2000, 4500]
+
+/** Set the view's width now and again while the survey settles. Returns how to cancel. */
+function holdWidth(aladin: Aladin, fov: number): () => void {
+  const timers = WIDTH_AGAIN_MS.map((ms) => window.setTimeout(() => aladin.setFoV(fov * VIEW_FIELDS), ms))
+  return () => timers.forEach((t) => window.clearTimeout(t))
+}
+
 const GAIA_DR3 = 'I/355/gaiadr3' // Gaia DR3 main catalogue on VizieR
 
 interface Props {
@@ -77,6 +89,7 @@ export function ContextView({ ra, dec, fov }: Props) {
         : 'Gaia stars could not be loaded from VizieR right now.'
   const gaiaRef = useRef<Layer | null>(null)
   const boxRef = useRef<Layer | null>(null)
+  const fovRef = useRef(fov) // the newest field size, for the survey switch
   const start = useRef({ ra, dec, fov }) // only the first position; later changes go through gotoRaDec
 
   // Create the viewer once. The library is large, so it is loaded only when this panel mounts.
@@ -105,7 +118,7 @@ export function ContextView({ ra, dec, fov }: Props) {
         if (!mirror) setImageFailed(true)
         const aladin = A.aladin(div, {
           target: `${s.ra} ${s.dec}`,
-          fov: s.fov * 5,
+          fov: s.fov * VIEW_FIELDS,
           survey: mirror ?? SURVEYS[0].mirrors[0],
           cooFrame: 'ICRSd',
           showReticle: true,
@@ -148,8 +161,9 @@ export function ContextView({ ra, dec, fov }: Props) {
     if (!viewer) return
     const { A, aladin } = viewer
     let stale = false
+    fovRef.current = fov
     aladin.gotoRaDec(ra, dec)
-    aladin.setFoV(fov * 5)
+    const letGo = holdWidth(aladin, fov)
 
     if (boxRef.current) aladin.removeLayer(boxRef.current)
     const half = fov / 2
@@ -175,12 +189,12 @@ export function ContextView({ ra, dec, fov }: Props) {
       gaiaRef.current = null
     }
     const key = `${ra},${dec},${fov}`
-    // The view is a square fov*5 wide, so its corners are fov*5/sqrt(2) = 3.54*fov from the centre.
+    // The view is a square VIEW_FIELDS fields wide, so its corners are 0.71 of that from the centre.
     try {
       A.catalogFromVizieR(
         GAIA_DR3,
         `${ra} ${dec}`,
-        fov * 3.6,
+        fov * VIEW_FIELDS * 0.72,
         {
           name: 'Gaia DR3',
           color: '#38d6e8',
@@ -205,20 +219,25 @@ export function ContextView({ ra, dec, fov }: Props) {
     }
     return () => {
       stale = true
+      letGo()
     }
   }, [viewer, ra, dec, fov])
 
   useEffect(() => {
     if (!viewer) return
     let stale = false
+    let letGo = () => {}
     const chosen = SURVEYS.find((s) => s.id === survey) ?? SURVEYS[0]
     void firstMirror(chosen.mirrors).then((mirror) => {
       if (stale) return
       setImageFailed(!mirror)
-      if (mirror) viewer.aladin.setBaseImageLayer(mirror)
+      if (!mirror) return
+      viewer.aladin.setBaseImageLayer(mirror)
+      letGo = holdWidth(viewer.aladin, fovRef.current)
     })
     return () => {
       stale = true
+      letGo()
     }
   }, [viewer, survey])
 

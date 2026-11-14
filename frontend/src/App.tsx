@@ -431,11 +431,14 @@ export default function App() {
                 known motion there is nothing to compare, so one line says what the marks are. */}
             {showGaia &&
               (gaiaFrames.length > 1 || load.data.target?.pmra == null || load.data.target.pmdec == null ? (
-                <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={load.data.target} gaiaError={load.data.gaia_error} />
+                <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={load.data.target} gaiaError={load.data.gaia_error} pixelArcsec={load.data.pixel_arcsec} />
               ) : (
                 <p className="readout">
                   <span className="key gaia">+</span> marks where the target's known motion puts it on the middle date of
-                  this frame; the arrow is one year of that motion.
+                  this frame
+                  {Math.hypot(load.data.target.pmra, load.data.target.pmdec) / 1000 >= load.data.pixel_arcsec
+                    ? '; the arrow is one year of that motion.'
+                    : '. It moves too little in a year to draw as an arrow.'}
                 </p>
               ))}
             {showGaia && starsData && starsFrame >= 0 && <p className="readout">{fieldStarsSummary(starsData, load.data.pixel_arcsec)}</p>}
