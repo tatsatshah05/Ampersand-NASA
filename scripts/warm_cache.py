@@ -6,10 +6,11 @@ Run:  .venv/bin/python scripts/warm_cache.py                  warm everything
 
 Views: the five test targets x six detectors x every display mode and option the backend
 has (normal; difference against the first epoch and against the mean; sum on the sky
-and following the target), at the backend's default field of view. Each is requested
-twice: with the target's proper motion and parallax, as a name search on the site
-passes them, and without, as a plain coordinate link asks. The two are cached
-separately by the backend.
+and following the target), at the backend's default field of view, plus the brightness
+chart and spectrum (all detectors together and each alone). Each is requested twice:
+with the target's proper motion and parallax, as a name search on the site passes
+them, and without, as a plain coordinate link asks. The backend caches the two
+separately.
 
 The pipeline functions are called directly (no HTTP), one view at a time; the backend
 already runs six downloads in parallel and this script adds none. Finished work is
@@ -23,7 +24,6 @@ from __future__ import annotations
 import argparse
 import inspect
 import resource
-import shutil
 import socket
 import sys
 import time
@@ -32,6 +32,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend import astrometry, pipeline, spherex  # noqa: E402
+
+try:                                    # the brightness chart and spectrum, once they exist
+    from backend import photometry  # noqa: E402
+except ImportError:
+    photometry = None  # type: ignore[assignment]
 
 # `query` is the name handed to the resolver. `also` lists other spellings a person is
 # likely to type in the demo: the name search caches its answer per spelling, so each
@@ -95,7 +100,8 @@ def warm_view(ra: float, dec: float, fov: float, detector: int, mode: str,
     reference, track). Returns {"status", "frames", "seconds", "detail", "meta"}.
     Status is one of: ok; skipped (the backend has no such mode or option, or it does
     not apply to this target); empty (no frames: a result, not an error); partial
-    (built, but some cutouts never arrived); failed.
+    (some cutouts never arrived or Gaia did not answer: the backend does not cache
+    such a result, so the view is not warm); failed.
     """
     start = time.time()
     out: dict = {"status": "failed", "frames": 0, "detail": "", "meta": None}
@@ -119,13 +125,12 @@ def warm_view(ra: float, dec: float, fov: float, detector: int, mode: str,
             frames = meta.get("frames", [])
             missing = meta.get("failures") or []
             out.update(frames=len(frames), meta=meta)
-            if missing:
-                # The backend has cached this incomplete result. Remove that one cached
-                # view (never the cutouts) so the next try fetches what is missing.
-                out.update(status="partial", detail=f"{len(missing)} cutouts could not be fetched, e.g. {missing[0]}")
-                view_dir = pipeline.FRAMES_DIR / str(meta.get("key", ""))
-                if attempt < attempts and meta.get("key") and view_dir.parent == pipeline.FRAMES_DIR:
-                    shutil.rmtree(view_dir, ignore_errors=True)
+            if missing or meta.get("gaia_error"):
+                # Incomplete: the backend returns it but does not cache it, so this view
+                # is NOT warm. Trying again fetches what is missing.
+                why = [f"{len(missing)} cutouts could not be fetched, e.g. {missing[0]}"] if missing else []
+                why += [f"Gaia did not answer: {meta['gaia_error']}"] if meta.get("gaia_error") else []
+                out.update(status="partial", detail="; ".join(why))
             elif not frames:
                 out.update(status="empty", detail=meta.get("message", "no frames"))
                 break
@@ -137,6 +142,47 @@ def warm_view(ra: float, dec: float, fov: float, detector: int, mode: str,
                   f"{attempt + 1}/{attempts}", flush=True)
             time.sleep(pause_s)
     out["seconds"] = time.time() - start
+    return out
+
+
+def warm_series(ra: float, dec: float, detector: int | None, attempts: int = ATTEMPTS,
+                pause_s: float = PAUSE_S, **motion) -> dict:
+    """Build the brightness measurements behind /api/lightcurve and /api/spectrum.
+
+    Both endpoints read one cached set of per-exposure measurements, so one call of
+    each warms both. Returns {"status", "points", "counts", "seconds", "detail"}; seconds
+    is the slower of the two calls.
+    """
+    out: dict = {"status": "skipped", "points": 0, "counts": {}, "seconds": 0.0,
+                 "detail": "backend.photometry does not exist"}
+    if photometry is None:
+        return out
+    for attempt in range(1, attempts + 1):
+        try:
+            t0 = time.time()
+            curve = photometry.lightcurve(ra, dec, detector, **motion)
+            t1 = time.time()
+            photometry.spectrum(ra, dec, None, detector, **motion)
+            out["seconds"] = max(t1 - t0, time.time() - t1)
+        except spherex.ArchiveError as e:
+            out.update(status="failed", detail=f"archive: {e}")
+        except Exception as e:  # noqa: BLE001 - a backend bug must not stop the other views
+            out.update(status="failed", detail=f"{type(e).__name__}: {e}")
+            break
+        else:
+            missing = curve.get("failures") or []
+            out.update(points=curve.get("n_exposures", 0), counts=curve.get("status_counts", {}))
+            if not missing and not curve.get("gaia_error"):
+                out.update(status="ok" if out["points"] else "empty", detail=curve.get("message", ""))
+                break
+            # Incomplete results are not cached by the backend, so this one is not warm; try again.
+            why = [f"{len(missing)} cutouts could not be fetched, e.g. {missing[0]}"] if missing else []
+            why += [f"Gaia did not answer: {curve['gaia_error']}"] if curve.get("gaia_error") else []
+            out.update(status="partial", detail="; ".join(why))
+        if attempt < attempts:
+            print(f"      archive trouble ({out['detail'][:90]}); waiting {pause_s:.0f} s before retry "
+                  f"{attempt + 1}/{attempts}", flush=True)
+            time.sleep(pause_s)
     return out
 
 
@@ -177,6 +223,7 @@ def main() -> int:
 
     before = cache_megabytes()
     rows: list[tuple[dict, int, str, dict]] = []      # (target, detector, variant label, result)
+    series: list[tuple[dict, int | None, str, dict]] = []   # the same for lightcurve and spectrum
     slow = 0
     for t in targets:
         if t["slug"] not in positions:
@@ -206,6 +253,20 @@ def main() -> int:
                             print("\nNOT WARM: views needed the network. Run without --check first.")
                             return 1
 
+        # Brightness chart and spectrum: all detectors together, and each one alone.
+        if photometry is not None:
+            for det in [None, *args.detectors]:
+                for with_motion in (False, True):
+                    if with_motion and not motion:
+                        continue
+                    name = "lightcurve+spectrum" + (" +motion" if with_motion else "")
+                    res = warm_series(pos["ra"], pos["dec"], det, attempts=1 if args.check else ATTEMPTS,
+                                      **(motion if with_motion else {}))
+                    series.append((t, det, name, res))
+                    print(f"   {'all' if det is None else 'D' + str(det):3s} {name:27s} {res['status']:8s} "
+                          f"{res['points']:3d} exposures {res['seconds']:6.1f} s  {res['counts']}  "
+                          f"{res['detail'][:60]}", flush=True)
+
     # ---------------------------------------------------------------- summary
     print("\n" + "=" * 78)
     print("check (network blocked)" if args.check else "warm-up", "summary: frames built per view")
@@ -233,6 +294,18 @@ def main() -> int:
             notes.append(f"{where}: no frames: {r['detail']}")
         if args.check and r["status"] in ("ok", "empty") and r["seconds"] >= 1.0:
             problems.append(f"{where}: took {r['seconds']:.1f} s with the network blocked")
+    if series:
+        print("\nbrightness chart and spectrum (all detectors together, name-search motion): exposures by status")
+        for t, sdet, name, r in series:
+            where = f"{t['name']} {'all detectors' if sdet is None else 'D' + str(sdet)} {name}"
+            if sdet is None and (name.endswith("+motion") or not motion_options(positions[t["slug"]])):
+                print(f"  {t['name']:18s} {r['points']:4d} exposures  {r['counts']}")
+            if r["status"] in ("failed", "partial"):
+                problems.append(f"{where}: {r['status']}: {r['detail']}")
+            elif r["status"] == "empty":
+                notes.append(f"{where}: no measurements: {r['detail']}")
+            if args.check and r["status"] in ("ok", "empty") and r["seconds"] >= 1.0:
+                problems.append(f"{where}: took {r['seconds']:.1f} s with the network blocked")
     skipped = sorted({f"{name}: {r['detail']}" for _, _, name, r in rows if r["status"] == "skipped"})
     for label, items in (("skipped", skipped), ("no frames (a result, not an error)", notes),
                          ("PROBLEMS", problems)):
@@ -241,7 +314,7 @@ def main() -> int:
             print("  - " + item)
 
     after = cache_megabytes()
-    done = [r for _, _, _, r in rows if r["status"] != "skipped"]
+    done = [r for _, _, _, r in [*rows, *series] if r["status"] != "skipped"]
     print(f"\nviews requested: {len(done)}   slowest: {max((r['seconds'] for r in done), default=0):.2f} s   "
           f"total time: {(time.time() - started) / 60:.1f} min")
     peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1e6 if sys.platform == "darwin" else 1e3)

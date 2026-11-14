@@ -11,6 +11,7 @@ stay still between frames.
 Writes, under docs/results/:
   <slug>_sheet.jpg      contact sheet: one row per detector, one column per epoch
   <slug>_modes_sheet.jpg     the same for the sum and difference frames
+  <slug>_brightness.png      brightness against wavelength per epoch, and its change
   <slug>_D<n>_epoch<k>.png   the frames themselves, as the site serves them
   measured.json         every number, for later passes
   measured_tables.md    the same as markdown tables, pasted into docs/results.md
@@ -33,7 +34,7 @@ from pathlib import Path
 
 import numpy as np
 from astropy.stats import sigma_clipped_stats
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -510,6 +511,217 @@ def modes_table(modes: list[dict]) -> str:
     return "\n".join(lines) + "\n"
 
 
+# ----------------------------------------------------------------- brightness chart
+# Chart colours: one per epoch, in fixed order (never reassigned by rank). Checked for
+# colour-blind separation on this background; marker shape repeats the information.
+SURFACE, INK, INK_2, MUTED, GRID, AXIS = "#fcfcfb", "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3c2b7"
+EPOCH_COLOURS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]
+EPOCH_SHAPES = ["circle", "square", "triangle", "diamond"]
+
+
+def measure_brightness(pos: dict) -> dict | None:
+    """What /api/lightcurve returns for a target, boiled down to what can be compared.
+
+    Per detector: how many exposures gave a flux and how many were saturated or flagged.
+    Per wavelength bin: the median flux in each epoch. Only values in the same bin are
+    compared in time, because each bin is a different colour of light. For stars with a
+    saturated core the backend's "wing" value is used instead, in the detectors where
+    the backend says it can be trusted.
+    """
+    if warm_cache.photometry is None:
+        return None
+    curve = warm_cache.photometry.lightcurve(pos["ra"], pos["dec"], **warm_cache.motion_options(pos))
+    out: dict = {"n_exposures": curve.get("n_exposures", 0), "status_counts": curve.get("status_counts", {}),
+                 "failures": len(curve.get("failures") or []), "detectors": {}, "bins": [], "points": []}
+    for b in curve.get("bins", []):
+        det = out["detectors"].setdefault(str(b["detector"]), {"exposures": 0, "status": {}, "wing_ok": 0,
+                                                              "wing_trusted": bool(b.get("wing_trusted"))})
+        det["exposures"] += b["n_points"]
+        det["wing_ok"] += b.get("n_wing", 0)
+        for k, v in b["status_counts"].items():
+            det["status"][k] = det["status"].get(k, 0) + v
+        per_epoch: dict[int, dict] = {}
+        for pt in b["points"]:
+            e = per_epoch.setdefault(pt["epoch"], {"flux": [], "wing": []})
+            if pt["status"] == "ok":
+                e["flux"].append(pt["flux_mjy"])
+                out["points"].append({"epoch": pt["epoch"], "wavelength_um": pt["wavelength_um"], "mjd": pt["mjd"],
+                                      "flux_mjy": pt["flux_mjy"], "err_mjy": pt.get("flux_err_mjy"),
+                                      "detector": b["detector"]})
+            if pt.get("wing_status") == "ok" and b.get("wing_trusted"):
+                e["wing"].append(pt["wing_mjy"])
+        out["bins"].append({"bin": b["bin"], "detector": b["detector"], "center_um": b["center_um"],
+                            "flux": {str(ep): float(np.median(v["flux"])) for ep, v in per_epoch.items() if v["flux"]},
+                            "wing": {str(ep): float(np.median(v["wing"])) for ep, v in per_epoch.items() if v["wing"]}})
+    return out
+
+
+def comparable(brightness: dict) -> list[dict]:
+    """Per wavelength bin, the value to follow in time: {"um", "detector", "kind", "by_epoch"}.
+
+    Flux where most exposures of that detector gave one. Where most were saturated,
+    the backend's wing value instead, and only in detectors where it is trusted.
+    """
+    out = []
+    for b in brightness["bins"]:
+        info = brightness["detectors"][str(b["detector"])]
+        kind = "flux" if info["status"].get("ok", 0) >= info["status"].get("saturated", 0) else "wing"
+        values = {int(ep): v for ep, v in b[kind].items()}
+        if values:
+            out.append({"um": b["center_um"], "detector": b["detector"], "kind": kind, "by_epoch": values})
+    return out
+
+
+def pair_ratios(bins: list[dict], later: int, earlier: int, detector: int) -> list[float]:
+    """Later-epoch value over earlier-epoch value, for every bin of a detector that has both."""
+    return [b["by_epoch"][later] / b["by_epoch"][earlier] for b in bins
+            if b["detector"] == detector and later in b["by_epoch"] and b["by_epoch"].get(earlier, 0) > 0]
+
+
+def _marker(d: ImageDraw.ImageDraw, x: float, y: float, epoch: int, r: int = 5) -> None:
+    colour = EPOCH_COLOURS[(epoch - 1) % len(EPOCH_COLOURS)]
+    shape = EPOCH_SHAPES[(epoch - 1) % len(EPOCH_SHAPES)]
+    if shape == "circle":
+        d.ellipse([x - r, y - r, x + r, y + r], fill=colour, outline=SURFACE, width=1)
+    elif shape == "square":
+        d.rectangle([x - r + 1, y - r + 1, x + r - 1, y + r - 1], fill=colour, outline=SURFACE, width=1)
+    elif shape == "triangle":
+        d.polygon([(x, y - r), (x + r, y + r - 1), (x - r, y + r - 1)], fill=colour, outline=SURFACE)
+    else:
+        d.polygon([(x, y - r), (x + r, y), (x, y + r), (x - r, y)], fill=colour, outline=SURFACE)
+
+
+def _panel(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], title: str, ylabel: str,
+           series: dict[int, list[tuple[float, float, float | None]]], log: bool, legend: dict[int, str],
+           reference: float | None = None, empty: str = "") -> None:
+    """One scatter panel: wavelength across, one value up. series maps epoch -> (x, y, error)."""
+    font, small = ImageFont.load_default(size=15), ImageFont.load_default(size=12)
+    x0, y0, x1, y1 = box
+    d.text((x0, y0 - 68), title, fill=INK, font=font)
+    lx = x0
+    for ep, label in legend.items():                      # legend: marker then text in ink
+        _marker(d, lx + 6, y0 - 38, ep)
+        d.text((lx + 16, y0 - 45), label, fill=INK_2, font=small)
+        lx += 28 + int(d.textlength(label, font=small))
+    values = [y for pts in series.values() for _, y, _ in pts if not log or y > 0]
+    if not values:
+        d.rectangle(box, outline=AXIS)
+        d.text((x0 + 14, (y0 + y1) // 2 - 8), empty or "nothing to plot", fill=INK_2, font=font)
+        return
+    lo, hi = (np.percentile(values, 1), np.percentile(values, 99)) if len(values) > 20 else (min(values), max(values))
+    if reference is not None:
+        lo, hi = min(lo, reference), max(hi, reference)
+    if log:
+        lo, hi = np.log10(lo) - 0.08, np.log10(hi) + 0.08
+    else:
+        pad = 0.08 * (hi - lo or 1.0)
+        lo, hi = lo - pad, hi + pad
+
+    def px(w: float) -> float:
+        return x0 + (w - 0.7) / (5.1 - 0.7) * (x1 - x0)
+
+    def py(v: float) -> float:
+        v = np.log10(v) if log else v
+        return y1 - (min(max(v, lo), hi) - lo) / (hi - lo) * (y1 - y0)
+
+    steps = (1, 2, 5) if hi - lo > 1.5 else (1, 1.5, 2, 3, 5, 7)
+    raw_step = (hi - lo) / 5                               # linear axis: a round step near a fifth of the range
+    step = min((m * 10.0 ** np.floor(np.log10(raw_step)) for m in (1, 2, 5, 10)), key=lambda v: abs(v - raw_step))
+    ticks = ([m * 10.0 ** e for e in range(int(np.floor(lo)) - 1, int(np.ceil(hi)) + 1) for m in steps]
+             if log else list(np.arange(np.ceil(lo / step) * step, hi + step / 2, step)))
+    for t in ticks:
+        if (np.log10(t) if log else t) < lo or (np.log10(t) if log else t) > hi:
+            continue
+        d.line([x0, py(t), x1, py(t)], fill=GRID)
+        d.text((x0 - 8, py(t) - 7), f"{t:.3g}", fill=MUTED, font=small, anchor="ra")
+    for w in (1, 2, 3, 4, 5):
+        d.line([px(w), y1, px(w), y1 + 4], fill=AXIS)
+        d.text((px(w), y1 + 7), f"{w}", fill=MUTED, font=small, anchor="ma")
+    for w in (1.11, 1.64, 2.42, 3.82, 4.42):                # detector boundaries
+        d.line([px(w), y0, px(w), y1], fill=GRID)
+    for i, w in enumerate((0.92, 1.37, 2.02, 3.1, 4.12, 4.72)):
+        d.text((px(w), y0 + 3), f"D{i + 1}", fill=MUTED, font=small, anchor="ma")
+    d.line([x0, y1, x1, y1], fill=AXIS)
+    if reference is not None:
+        d.line([x0, py(reference), x1, py(reference)], fill=INK_2)
+        d.text((x1 - 4, py(reference) - 16), "no change", fill=INK_2, font=small, anchor="ra")
+    d.text((x0, y1 + 24), "wavelength (microns)", fill=INK_2, font=small)
+    d.text((18, y0 - 20), ylabel, fill=INK_2, font=small)
+    for ep, pts in sorted(series.items()):
+        for w, v, err in pts:
+            if log and v <= 0:
+                continue
+            if err and not log:
+                d.line([px(w), py(v - err), px(w), py(v + err)], fill=AXIS)
+            _marker(d, px(w), py(v), ep)
+
+
+def brightness_chart(target: dict, brightness: dict, epochs: dict[int, str], path: Path) -> None:
+    """Two panels: brightness against wavelength per epoch, and its change since the first epoch.
+
+    The second panel is the one that answers "did it vary": each mark compares the same
+    wavelength bin at two dates. It uses fluxes where the star is not saturated, and
+    the backend's wing values (trusted detectors only) where it is.
+    """
+    width, height = 1160, 880
+    im = Image.new("RGB", (width, height), SURFACE)
+    d = ImageDraw.Draw(im)
+    legend = {ep: f"epoch {ep} ({dates})" for ep, dates in sorted(epochs.items())}
+    spectrum: dict[int, list] = {}
+    for pt in brightness["points"]:
+        spectrum.setdefault(pt["epoch"], []).append((pt["wavelength_um"], pt["flux_mjy"], pt["err_mjy"]))
+    positive = [v for pts in spectrum.values() for _, v, _ in pts if v > 0]
+    n_all = sum(len(v) for v in spectrum.values())
+    log = bool(positive) and len(positive) > 0.9 * n_all and max(positive) / max(min(positive), 1e-9) > 30
+    counts = ", ".join(f"{v} {k}" for k, v in sorted(brightness["status_counts"].items()))
+    _panel(d, (90, 100, width - 30, 390), f"{target['name']}: brightness in each exposure ({counts})",
+           "flux (mJy)" + (", log scale" if log else ""), spectrum, log, legend,
+           empty="No exposure gave a flux: the core is saturated or flagged in every one.")
+    bins = comparable(brightness)
+    change: dict[int, list] = {}
+    for b in bins:
+        values = [v for v in b["by_epoch"].values() if v > 0]
+        if len(values) >= 2 and len(values) == len(b["by_epoch"]):
+            middle = float(np.exp(np.mean(np.log(values))))        # geometric mean of the epochs
+            for ep, v in b["by_epoch"].items():
+                change.setdefault(ep, []).append((b["um"], v / middle, None))
+    wing_dets = sorted({b["detector"] for b in bins if b["kind"] == "wing"})
+    note = (f" (wing value, not flux, in detector{'s' if len(wing_dets) > 1 else ''} "
+            f"{', '.join(map(str, wing_dets))}: saturated core)" if wing_dets else "")
+    _panel(d, (90, 530, width - 30, 820), "Each epoch against the same wavelength bin's average over all epochs" + note,
+           "ratio, log scale", change, True, {ep: legend.get(ep, f"epoch {ep}") for ep in sorted(change)},
+           reference=1.0, empty="No wavelength bin has a usable value in two epochs.")
+    im.save(path)
+
+
+def brightness_table(brightness: dict) -> str:
+    bins = comparable(brightness)
+    epochs = sorted({ep for b in bins for ep in b["by_epoch"]})
+    lines = ["Brightness measurements (`/api/lightcurve`, with the name-search motion): "
+             f"{brightness['n_exposures']} exposures. The last column compares the last epoch with each earlier "
+             "one inside the same wavelength bin (median ratio; smallest to largest; number of bins).", "",
+             "| Det | Exposures | Gave a flux | Saturated | Flagged or no data | Value compared | "
+             "Last epoch over an earlier one |", "|---|---|---|---|---|---|---|"]
+    for det, info in sorted(brightness["detectors"].items()):
+        st = info["status"]
+        other = sum(v for k, v in st.items() if k not in ("ok", "saturated"))
+        kind = "flux" if st.get("ok", 0) >= st.get("saturated", 0) else "wing"
+        if kind == "wing" and not info["wing_trusted"]:
+            what, cell = "none", "core saturated and the wing value is not trusted in this detector"
+        else:
+            what = "flux" if kind == "flux" else "wing (relative, not a flux)"
+            parts = []
+            for earlier in epochs[:-1]:
+                r = pair_ratios(bins, epochs[-1], earlier, int(det))
+                if r:
+                    parts.append(f"epoch {epochs[-1]}/{earlier}: x{np.median(r):.2f}; {min(r):.2f} to {max(r):.2f}; "
+                                 f"{len(r)}")
+            cell = "<br>".join(parts) or "no bin has a value in two epochs"
+        lines.append(f"| D{det} | {info['exposures']} | {st.get('ok', 0)} | {st.get('saturated', 0)} | {other} | "
+                     f"{what} | {cell} |")
+    return "\n".join(lines) + "\n"
+
+
 def fmt(v: float | None, spec: str = ".1f") -> str:
     return "n/a" if v is None else format(v, spec)
 
@@ -596,7 +808,8 @@ def main() -> int:
     def git(*cmd: str) -> str:
         return subprocess.run(["git", *cmd], cwd=ROOT, capture_output=True, text=True, check=False).stdout.strip()
     # The code that actually ran: the commit, and a warning if backend/ differed from it.
-    commit = git("rev-parse", "--short", "HEAD")
+    backend_commit = git("log", "-1", "--format=%h", "--", "backend")
+    commit = f"{git('rev-parse', '--short', 'HEAD')} (backend/ last changed in {backend_commit})"
     dirty = [line.split()[-1] for line in git("status", "--porcelain", "--", "backend").splitlines()]
     if dirty:
         commit += " plus uncommitted " + ", ".join(dirty)
@@ -622,8 +835,19 @@ def main() -> int:
         if not args.no_modes:
             modes = measure_modes(t, pos, args.fov, args.detectors)
             modes_sheet(t, modes, OUT / f"{t['slug']}{args.tag}_modes_sheet.jpg")
+        brightness = None
+        try:
+            brightness = measure_brightness(pos)
+            if brightness:
+                normal = max(views, key=lambda v: len(v["frames"]))
+                dates = {f["epoch"]: f"{f['date_start']} to {f['date_end'][5:]}" for f in normal["frames"]}
+                brightness_chart(t, brightness, dates, OUT / f"{t['slug']}{args.tag}_brightness.png")
+                brightness = {k: v for k, v in brightness.items() if k != "points"}   # keep the record small
+        except Exception as e:  # noqa: BLE001 - leans on the backend's photometry, which may change
+            print(f"   brightness chart failed: {type(e).__name__}: {e}")
+            brightness = {"error": f"{type(e).__name__}: {e}"}
         record["targets"][t["slug"]] = {"name": t["name"], "position": pos, "fov": args.fov,
-                                        "mode": args.mode, "commit": commit, "modes": modes,
+                                        "mode": args.mode, "commit": commit, "modes": modes, "brightness": brightness,
                                         "run_utc": time.strftime("%Y-%m-%d %H:%M", time.gmtime()), "views": views}
     record_path.write_text(json.dumps(record, indent=1))
     for t in warm_cache.TARGETS:          # every target on record, not only the ones run just now
@@ -631,7 +855,9 @@ def main() -> int:
         if r:
             tables.append(f"<!-- {t['slug']}: commit {r['commit']}, run {r['run_utc']} UTC -->\n"
                           + markdown_table(t, r["position"], r["views"])
-                          + ("\n" + modes_table(r["modes"]) if r.get("modes") else ""))
+                          + ("\n" + modes_table(r["modes"]) if r.get("modes") else "")
+                          + ("\n" + brightness_table(r["brightness"])
+                             if r.get("brightness") and "bins" in r["brightness"] else ""))
     (OUT / f"measured_tables{args.tag}.md").write_text(
         "<!-- written by scripts/run_targets.py; do not edit by hand -->\n\n" + "\n".join(tables))
     print(f"\nwrote {record_path} and the sheets in {OUT}")
