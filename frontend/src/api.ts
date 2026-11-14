@@ -15,47 +15,134 @@ export interface Centroid extends SkyPixel {
   fwhm_arcsec: number
 }
 
+/** normal: one picture per visit. difference: each visit minus a reference. sum: every visit in one picture. */
+export type Mode = 'normal' | 'difference' | 'sum'
+/** Difference mode: subtract the first visit, or the average of all visits. */
+export type Reference = 'first' | 'mean'
+/** Sum mode: line the exposures up on the sky, or on the target as it moves. */
+export type Track = 'sky' | 'target'
+
 export interface Frame {
-  epoch: number
+  /** Visit number, counted over all six detectors. Null in sum mode: that one frame holds every visit. */
+  epoch: number | null
   date_start: string
   date_end: string
   date_mean: string
   mjd_mean: number
   image: string
   n_exposures: number
-  wavelength_um: [number, number]
+  /** Null when no exposure recorded a wavelength at the centre of the request. */
+  wavelength_um: [number, number] | null
   flagged_fraction: number
   saturated_pixels: number
   rejected_readings: number
+  /** Measured position of the source nearest the target; null when nothing could be measured. */
   centroid: Centroid | null
+  /** Where the target should be on this frame's mean date; null when no target is known. */
   predicted: SkyPixel | null
+  /** Sum mode only: the visits that were added together. */
+  epochs_combined?: number[]
+  /** Difference mode only: the visit that was subtracted, or null when the average of all visits was. */
+  reference_epoch?: number | null
+  /** Difference mode only: the share of pixels present in both pictures. */
+  difference_valid_fraction?: number
 }
 
-export interface GaiaStar {
-  source_id: string
+/** The details of the subtracted first visit in difference mode: a frame without a picture. */
+export type ReferenceFrame = Omit<Frame, 'image'>
+
+/**
+ * The object whose expected position is drawn. Either the Gaia star nearest the centre
+ * ("gaia_nearest"), or the object at the centre with the motion the request gave
+ * ("request"), which has no Gaia identifier and no magnitude. Gaia lists some stars
+ * without a motion or parallax, so those can be null too.
+ */
+export interface Target {
+  origin: 'gaia_nearest' | 'request'
+  /** Julian year at which the object is at (ra, dec). */
+  ref_epoch: number
+  source_id: string | null
   ra: number
   dec: number
-  pmra: number // milliarcseconds per year, eastward (already includes cos dec)
-  pmdec: number // milliarcseconds per year, northward
-  parallax: number // milliarcseconds
-  gmag: number
+  pmra: number | null // milliarcseconds per year, eastward (already includes cos dec)
+  pmdec: number | null // milliarcseconds per year, northward
+  parallax: number | null // milliarcseconds
+  gmag: number | null
 }
 
+/** The earlier name of Target, still used by the Gaia overlay. */
+export type GaiaStar = Target
+
+export interface Stretch {
+  /** "asinh", or "asinh-symmetric" for difference pictures (mid-grey is no change). */
+  kind: string
+  vmin: number
+  vmax: number
+  soft: number
+  unit: string
+}
+
+/**
+ * What /api/frames answers. When the archive has nothing for the position or detector,
+ * only `key`, `frames` (empty), `message` and sometimes `failures` are present.
+ */
 export interface FramesResponse {
   key: string
+  frames: Frame[]
+  /** Why there are no frames. */
+  message?: string
+  /** Exposures that could not be downloaded; the frames were built without them. */
+  failures?: string[]
+  ra?: number
+  dec?: number
+  fov?: number
+  detector?: number
+  mode?: Mode
+  size_px?: number
+  pixel_arcsec?: number
+  target?: Target | null
+  /** Set when the Gaia catalogue did not answer, so no target could be looked up. */
+  gaia_error?: string | null
+  exposures_total_all_detectors?: number
+  credit?: string
+  /** Null in a difference view that has no frames. */
+  stretch?: Stretch | null
+  /** Difference mode, and sum mode following the target: how to read the picture. */
+  note?: string
+  /** Difference mode: what was subtracted. */
+  reference?: Reference
+  reference_description?: string
+  /** Difference mode against the first visit: that visit's own details. */
+  reference_frame?: ReferenceFrame
+  /** Sum mode: how the exposures were combined and lined up. */
+  combine?: string
+  registration?: 'sky' | 'target_motion'
+}
+
+/** A response with pictures in it. These fields are then always present. */
+export interface FramesReady extends FramesResponse {
   ra: number
   dec: number
   fov: number
   detector: number
-  mode: string
-  size_px?: number
-  pixel_arcsec?: number
-  target: GaiaStar | null
-  gaia_error?: string | null
-  failures: unknown[]
-  frames: Frame[]
-  message?: string
-  credit?: string
+  mode: Mode
+  size_px: number
+  pixel_arcsec: number
+  target: Target | null
+}
+
+export function hasFrames(r: FramesResponse): r is FramesReady {
+  return (
+    r.frames.length > 0 &&
+    typeof r.ra === 'number' &&
+    typeof r.dec === 'number' &&
+    typeof r.fov === 'number' &&
+    typeof r.detector === 'number' &&
+    typeof r.mode === 'string' &&
+    typeof r.size_px === 'number' &&
+    typeof r.pixel_arcsec === 'number' &&
+    r.target !== undefined
+  )
 }
 
 export interface FramesQuery {
@@ -63,28 +150,118 @@ export interface FramesQuery {
   dec: number
   fov: number
   detector: number
+  mode: Mode
+  /** Difference mode only. */
+  reference?: Reference
+  /** Sum mode only. */
+  track?: Track
+  /** The object's known motion, as /api/resolve returns it: both or neither. */
+  pmra?: number
+  pmdec?: number
+  parallax?: number
 }
 
-export async function fetchFrames(q: FramesQuery, signal?: AbortSignal): Promise<FramesResponse> {
+/** The address of a frames request. Also serves as the request's identity. */
+export function framesUrl(q: FramesQuery): string {
   const params = new URLSearchParams({
     ra: String(q.ra),
     dec: String(q.dec),
     fov: String(q.fov),
     detector: String(q.detector),
-    mode: 'normal',
+    mode: q.mode,
   })
-  const r = await fetch(`/api/frames?${params}`, { signal })
-  if (!r.ok) {
-    let detail = `HTTP ${r.status}`
-    try {
-      const body: unknown = await r.json()
-      if (body && typeof body === 'object' && 'detail' in body) detail += `: ${String(body.detail)}`
-    } catch {
-      // The error body was not JSON; the status code is enough.
-    }
-    throw new Error(detail)
+  if (q.mode === 'difference' && q.reference) params.set('reference', q.reference)
+  if (q.mode === 'sum' && q.track) params.set('track', q.track)
+  if (q.pmra !== undefined && q.pmdec !== undefined) {
+    params.set('pmra', String(q.pmra))
+    params.set('pmdec', String(q.pmdec))
+    if (q.parallax !== undefined) params.set('parallax', String(q.parallax))
   }
-  return (await r.json()) as FramesResponse
+  return `/api/frames?${params}`
+}
+
+// How the request's parameters are called on the page, for error messages.
+const PARAMETER_NAMES: Record<string, string> = {
+  ra: 'the right ascension (ra)',
+  dec: 'the declination (dec)',
+  fov: 'the field of view (fov)',
+  detector: 'the detector',
+  mode: 'the mode',
+  reference: 'what to compare with (reference)',
+  track: 'what to line up on (track)',
+  pmra: 'the motion (pmra)',
+  pmdec: 'the motion (pmdec)',
+  parallax: 'the parallax',
+  pm_epoch: 'the date of the position (pm_epoch)',
+}
+
+/** FastAPI's list of rejected parameters ({loc, msg, input}) as one plain sentence. */
+function rejectedParameters(detail: unknown[]): string {
+  const parts = detail.map((item) => {
+    if (!item || typeof item !== 'object') return String(item)
+    const { loc, msg, input } = item as { loc?: unknown; msg?: unknown; input?: unknown }
+    const field = Array.isArray(loc) && loc.length ? String(loc[loc.length - 1]) : ''
+    const name = PARAMETER_NAMES[field] ?? (field || 'a value')
+    let problem = typeof msg === 'string' && msg ? msg : 'was not accepted'
+    if (problem === 'Field required') problem = 'is missing'
+    else problem = problem.replace(/^Input /, '')
+    problem = problem.charAt(0).toLowerCase() + problem.slice(1)
+    const given = typeof input === 'string' || typeof input === 'number' ? ` (it was ${String(input).slice(0, 40)})` : ''
+    return `${name} ${problem}${given}`
+  })
+  return parts.join('; ')
+}
+
+/** Why a request failed, in words a visitor can act on. */
+function explainFailure(status: number, body: unknown): string {
+  const detail = body && typeof body === 'object' && 'detail' in body ? body.detail : undefined
+  if (Array.isArray(detail) && detail.length) {
+    return `The server did not accept this request: ${rejectedParameters(detail)}.`
+  }
+  const text = typeof detail === 'string' ? detail.trim() : ''
+  if (status === 400 && text.startsWith('track=target')) {
+    return 'Following the target needs to know how it moves, and no motion is known for this position. Line the pictures up on the sky instead, or look the object up by name so that its motion comes with it.'
+  }
+  if (text) {
+    // 502 is the backend saying that NASA's archive did not answer it.
+    const again = status === 502 ? ' This is usually temporary: try again in a minute.' : ''
+    return `${/[.!?]$/.test(text) ? text : `${text}.`}${again}`
+  }
+  if (status === 404) return 'This server does not offer the pictures (it answered "not found" for /api/frames).'
+  if (status === 502 || status === 503 || status === 504) {
+    return `The server could not be reached (error ${status}). Check that it is running, then try again.`
+  }
+  if (status >= 500) return `The server ran into a problem while making these pictures (error ${status}). Try again.`
+  return `The server answered with error ${status}.`
+}
+
+/**
+ * Ask the backend for the frames. Rejects with an Error whose message is a plain
+ * sentence for the visitor. A new position, detector or field of view takes about a
+ * minute, so there is no time limit here; pass a signal to give up early.
+ */
+export async function fetchFrames(url: string, signal?: AbortSignal): Promise<FramesResponse> {
+  let r: Response
+  try {
+    r = await fetch(url, { signal })
+  } catch (e) {
+    if (signal?.aborted) throw e
+    throw new Error('The server could not be reached. Check your connection and that the server is running, then try again.', {
+      cause: e,
+    })
+  }
+  let body: unknown
+  try {
+    body = await r.json()
+  } catch (e) {
+    if (signal?.aborted) throw e
+    body = undefined // not JSON: the status code has to do
+  }
+  if (!r.ok) throw new Error(explainFailure(r.status, body))
+  if (!body || typeof body !== 'object' || !Array.isArray((body as { frames?: unknown }).frames)) {
+    throw new Error('The server answered, but not with pictures. It may be the wrong server, or still starting up.')
+  }
+  return body as FramesResponse
 }
 
 /** Offset on the sky from a to b in arcseconds, as (east, north). */
