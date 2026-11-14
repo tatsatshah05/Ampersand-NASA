@@ -45,7 +45,9 @@ Method, in the order the code runs
    two_visits, follows_roll, one_roll_only, uncalibrated) and a verdict: "rejected"
    (an artefact's signature; `reasons` says which), "caution" or "clean". What passes
    is looked up in Gaia DR3 (with its variability flag and class), SIMBAD, AAVSO VSX,
-   CatWISE2020 and AllWISE, with catalogue positions moved to the date of each visit.
+   CatWISE2020 and AllWISE, with catalogue positions moved to the date of each visit. A
+   mover with two or more catalogued objects within one pixel of its track, none of them
+   with its motion, is then rejected as an unresolved group whose centre shifted.
 
 Limits
 - Nothing is found that is not a peak in a stack: a source must be visible in the sum
@@ -2335,7 +2337,9 @@ LIMITS = (
     "months apart), and by more than about 1.2 to 3 arcsec/yr for 5 sigma, depending on brightness. "
     "Saturated stars are placed only to 1 to 2 arcsec. A brightness change must be at least 10 per cent (25 "
     "per cent for a saturated star's ring), seen at the same wavelength in at least 6 channels. Sources on the "
-    "glow of a much brighter star are not tested. See docs/search.md.")
+    "glow of a much brighter star are not tested, and a mover blended with catalogued neighbours is rejected. "
+    "In nebulous young clusters, quote only changes seen the same way in two or more detectors. "
+    "See docs/search.md.")
 
 
 def _evidence(cand: dict[str, Any]) -> dict[str, Any]:
