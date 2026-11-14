@@ -37,7 +37,8 @@ infrared cameras, together covering 0.75 to 5.0 micrometres.
 - **Sky context.** The same patch in other surveys (WISE, 2MASS, optical) from the Aladin
   sky atlas. It depends on outside servers; if they are down the panel says so and the
   rest of the page still works.
-- **Blind search.** `/api/search` looks at every source in a field for anything that moves
+- **Blind search.** The button "Search this patch for anything that moved or changed" (the
+  endpoint is `/api/search`) looks at every source in a field for anything that moves
   or changes brightness between visits, without being told what to look for, and checks
   each candidate against known artefacts and five catalogues. Results are in
   [docs/search.md](docs/search.md).
