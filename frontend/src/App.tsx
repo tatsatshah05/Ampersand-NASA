@@ -173,7 +173,7 @@ export default function App() {
       <header>
         <h1>SPHEREx sky-change viewer</h1>
         <p className="tagline">
-          Pictures of one patch of sky from NASA's SPHEREx space telescope, played like a short film, so that anything
+          Images of one patch of sky from NASA's SPHEREx space telescope, played like a short film, so that anything
           that moved or changed stands out.
         </p>
 
@@ -213,7 +213,7 @@ export default function App() {
       <div className="viewer">
         {load.state === 'loading' && <LoadingCard key={url} />}
         {load.state === 'error' && (
-          <StatusCard title="The pictures could not be loaded" tone="error">
+          <StatusCard title="The frames could not be loaded" tone="error">
             <p>{load.message}</p>
             <button type="button" onClick={() => setAttempt(attempt + 1)}>
               Try again
@@ -221,7 +221,7 @@ export default function App() {
           </StatusCard>
         )}
         {load.state === 'empty' && (
-          <StatusCard title="No pictures to show here">
+          <StatusCard title="No frames to show here">
             <p>{load.message}</p>
             <p>Another detector or another mode may have some.</p>
             <button
@@ -273,7 +273,7 @@ export default function App() {
             </Stage>
             <p id="stage-help" className="hint">
               Scroll or pinch to zoom, drag to move, click a spot to measure its spectrum. The space bar plays and
-              pauses and the arrow keys step. With the picture selected, + and - zoom and Shift with an arrow key
+              pauses and the arrow keys step. With the image selected, + and - zoom and Shift with an arrow key
               moves it. North is up and east is left. A flat white patch is too bright to measure; hatching is sky
               with no data.
             </p>
@@ -283,7 +283,7 @@ export default function App() {
 
       {load.state === 'ready' && frame && (
         <>
-          <section className="now" aria-label="The picture on screen">
+          <section className="now" aria-label="The frame on screen">
             {/* Read out when stepping, but not while playing: it would never stop talking. */}
             <div aria-live={player.playback === 'paused' ? 'polite' : 'off'}>
               <p className="frame-label">
@@ -307,7 +307,7 @@ export default function App() {
             />
 
             <div className="controls">
-              {toggle(showMotion, setShowMotion, 'Motion markers', 'Mark where the target was measured in each picture')}
+              {toggle(showMotion, setShowMotion, 'Motion markers', 'Mark where the target was measured in each frame')}
               {toggle(
                 showGaia,
                 setShowGaia,
@@ -325,12 +325,18 @@ export default function App() {
               </button>
             </div>
 
+            {showPixels && (
+              <p className="hint">
+                Each square is {load.data.pixel_arcsec} arcseconds across. The frames are drawn on a finer grid than
+                SPHEREx's own pixels, which are {NATIVE_PIXEL_ARCSEC} arcseconds across.
+              </p>
+            )}
             {showMotion && path.length > 0 && (
               <MotionLegend
                 start={path.length > 1}
                 path={path.length > 1}
                 arrow={arrow}
-                note={load.data.mode === 'difference' ? "The positions were measured in each visit's own picture, not in the difference." : undefined}
+                note={load.data.mode === 'difference' ? "The positions were measured in each visit's own image, not in the difference." : undefined}
               />
             )}
             {showGaia && gaiaFrames.length > 1 && (
@@ -339,7 +345,7 @@ export default function App() {
             {showGaia && gaiaFrames.length === 1 && load.data.target && (
               <p className="readout">
                 <span className="key gaia">+</span> marks where the target's catalogued motion puts it on the middle date of
-                this picture; the arrow is one year of that motion.
+                this frame; the arrow is one year of that motion.
               </p>
             )}
           </section>

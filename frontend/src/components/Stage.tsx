@@ -14,8 +14,11 @@ import { releaseFocusAfterPointer } from '../focus'
 import { pixelToSky, type Grid } from '../projection'
 import { maxZoom, panBy, pointAt, zoomAbout, type ZoomBox } from '../zoom'
 
-/** Pixel edges are drawn once a picture pixel is at least this wide on screen. */
-const GRID_FROM_PX = 8
+/**
+ * Pixel edges are drawn once a picture pixel is at least this wide on screen. The
+ * starting view is at most 8, so the edges come in with the first step of zooming in.
+ */
+const GRID_FROM_PX = 9
 /** A press that moves less than this many screen pixels is a click, not a drag. */
 const CLICK_SLOP_PX = 5
 const BUTTON_ZOOM = 1.5
@@ -196,7 +199,7 @@ export function Stage({ grid, images, current, alt, box, onBoxChange, onReset, s
         className={`stage-surface${dragging ? ' dragging' : ''}`}
         tabIndex={0}
         role="group"
-        aria-label="The picture. Drag to move it; scroll, pinch or press plus and minus to zoom."
+        aria-label="The image. Drag to move it; scroll, pinch or press plus and minus to zoom."
         aria-describedby={describedBy}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

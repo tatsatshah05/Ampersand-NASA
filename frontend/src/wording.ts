@@ -43,15 +43,15 @@ export function frameTick(frame: Frame, data: FramesReady): string {
 
 /** How far the marked object in this frame is from where it started, in words. */
 export function motionSentence(frame: Frame, data: FramesReady): string {
-  if (!frame.centroid) return 'No position could be measured in this picture.'
+  if (!frame.centroid) return 'No position could be measured in this frame.'
   if (data.frames.length === 1 && !data.reference_frame) {
     return data.mode === 'sum'
-      ? 'Every visit is in this one picture, so nothing moves in it.'
+      ? 'Every visit is in this one frame, so nothing moves in it.'
       : 'This is the only visit so far with this detector, so there is nothing to compare it with yet.'
   }
-  if (frame.centroid === startCentroid(data)) return 'This is where it started. Later pictures are measured against it.'
+  if (frame.centroid === startCentroid(data)) return 'This is where it started. Later frames are measured against it.'
   const shift = shiftFromStart(data, frame)
-  if (!shift) return 'No position could be measured in this picture.'
+  if (!shift) return 'No position could be measured in this frame.'
   if (shift.total < 0.05) return 'Measured in the same place as at the start.'
   const parts: string[] = []
   if (Math.abs(shift.north) >= 0.05) parts.push(`${Math.abs(shift.north).toFixed(1)} ${shift.north > 0 ? 'north' : 'south'}`)
@@ -61,19 +61,19 @@ export function motionSentence(frame: Frame, data: FramesReady): string {
   return `${moved} That is under a third of one SPHEREx pixel (${NATIVE_PIXEL_ARCSEC} arcseconds), so it may be measurement error rather than real movement.`
 }
 
-/** One line on how to read the pictures in the mode they were made in. */
+/** One line on how to read the frames in the mode they were made in. */
 export function modeSentence(data: FramesReady): string {
   if (data.mode === 'difference') {
     const minus = data.reference === 'mean' ? 'the average of all visits' : `visit ${data.reference_frame?.epoch ?? data.frames[0]?.reference_epoch ?? 1}`
-    return `Difference: each picture is one visit minus ${minus}. Grey is no change, white is brighter, black is fainter.`
+    return `Difference: each frame is one visit minus ${minus}. Grey is no change, white is brighter, black is fainter.`
   }
   if (data.mode === 'sum') {
     if (data.registration === 'target_motion') {
       return "Sum, following the target: every exposure is shifted along the target's known motion and then added, so the target is sharp and the stars around it are smeared."
     }
-    return 'Sum: every exposure from every visit added into one deeper picture. Nothing moves in it, and anything that moved between visits is smeared.'
+    return 'Sum: every exposure from every visit added into one deeper frame. Nothing moves in it, and anything that moved between visits is smeared.'
   }
-  return 'Normal: one picture for each visit SPHEREx has made to this patch of sky. Play them to see what moved or changed.'
+  return 'Normal: one frame for each visit SPHEREx has made to this patch of sky. Play them to see what moved or changed.'
 }
 
 /** A note for frames with saturated pixels, pointing to the detectors that cope best; null when there are none. */
@@ -81,7 +81,7 @@ export function saturationSentence(data: FramesReady): string | null {
   const n = data.frames.length
   const k = data.frames.filter((f) => f.saturated_pixels > 0).length
   if (k === 0) return null
-  const which = n === 1 ? 'This picture has' : k === n ? `All ${n} pictures have` : `${k} of the ${n} pictures ${k === 1 ? 'has' : 'have'}`
+  const which = n === 1 ? 'This frame has' : k === n ? `All ${n} frames have` : `${k} of the ${n} frames ${k === 1 ? 'has' : 'have'}`
   const advice =
     data.detector <= 4
       ? 'Try detector 5 or 6, which bright stars overload least.'
@@ -93,5 +93,5 @@ export function saturationSentence(data: FramesReady): string | null {
 export function failuresSentence(data: FramesReady): string | null {
   const n = data.failures?.length ?? 0
   if (n === 0) return null
-  return `${plural(n, 'exposure', 'exposures')} could not be downloaded from NASA's archive, so these pictures are built from fewer exposures than exist.`
+  return `${plural(n, 'exposure', 'exposures')} could not be downloaded from NASA's archive, so these frames are built from fewer exposures than exist.`
 }

@@ -55,7 +55,7 @@ export function useFrames(url: string, attempt: number): Load {
           try {
             await Promise.all(body.frames.map((frame) => preload(frame.image)))
           } catch {
-            settle({ state: 'error', message: 'The pictures were made, but one of them could not be loaded. Try again.' })
+            settle({ state: 'error', message: 'The frames were made, but one of them could not be loaded. Try again.' })
             return
           }
           settle({ state: 'ready', data: body })

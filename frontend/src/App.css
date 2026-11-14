@@ -335,6 +335,10 @@ h1 {
   color: var(--muted);
 }
 
+.now .hint {
+  margin: 0 0 10px;
+}
+
 /* ---- in place of the picture: loading, nothing found, an error -------------------------- */
 
 .stage-status {

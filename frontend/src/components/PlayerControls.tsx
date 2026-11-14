@@ -31,8 +31,8 @@ export function PlayerControls({ frames, tickTitle, current, playback, speedMs, 
         <button
           type="button"
           className="icon"
-          aria-label="Previous picture"
-          title="Previous picture (left arrow key)"
+          aria-label="Previous frame"
+          title="Previous frame (left arrow key)"
           disabled={!several}
           onClick={(e) => {
             onStep(-1)
@@ -58,8 +58,8 @@ export function PlayerControls({ frames, tickTitle, current, playback, speedMs, 
         <button
           type="button"
           className="icon"
-          aria-label="Next picture"
-          title="Next picture (right arrow key)"
+          aria-label="Next frame"
+          title="Next frame (right arrow key)"
           disabled={!several}
           onClick={(e) => {
             onStep(1)
@@ -74,7 +74,7 @@ export function PlayerControls({ frames, tickTitle, current, playback, speedMs, 
           type="button"
           className="toggle"
           aria-pressed={playback === 'blinking'}
-          title="Flip between the first and the last picture, which shows a small shift best"
+          title="Flip between the first and the last frame, which shows a small shift best"
           disabled={!several}
           onClick={(e) => {
             onToggleBlink()
@@ -110,7 +110,7 @@ export function PlayerControls({ frames, tickTitle, current, playback, speedMs, 
             max={count - 1}
             step={1}
             value={current}
-            aria-label="Picture"
+            aria-label="Frame"
             aria-valuetext={frames[current]?.label}
             onChange={(e) => onShow(Number(e.target.value))}
             onPointerUp={(e) => e.currentTarget.blur()}

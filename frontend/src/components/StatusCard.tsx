@@ -30,7 +30,7 @@ export function LoadingCard() {
   return (
     <div className="stage stage-status loading">
       <div className="status-card" role="status">
-        <h2>Getting the pictures…</h2>
+        <h2>Loading the frames…</h2>
         <p>
           A position, detector or field of view that nobody has asked for before takes about a minute: the exposures
           are fetched from NASA's archive and added together. After that it is quick.

@@ -7,9 +7,9 @@ import type { Mode, Reference, Track } from '../api'
 import { releaseFocusAfterPointer } from '../focus'
 
 const MODE_LABELS: [Mode, string][] = [
-  ['normal', 'Normal (one picture per visit)'],
+  ['normal', 'Normal (one frame per visit)'],
   ['difference', 'Difference (what changed)'],
-  ['sum', 'Sum (one deeper picture)'],
+  ['sum', 'Sum (one deeper frame)'],
 ]
 
 interface Props {
@@ -45,7 +45,7 @@ export function Selectors({ selection, motionKnown, onChange }: Props) {
         <select value={selection.fov} onChange={pick((v) => ({ fov: Number(v) }))}>
           {fovs.map((f) => (
             <option key={f} value={f}>
-              {f}°{f === DEFAULT_SELECTION.fov ? ' (default)' : f === 0.5 ? ' (as wide as the full Moon)' : ''}
+              {f}°{f === DEFAULT_SELECTION.fov ? ' (default)' : f === 0.5 ? ' (Moon-sized)' : ''}
             </option>
           ))}
         </select>

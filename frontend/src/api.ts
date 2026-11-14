@@ -227,11 +227,11 @@ function explainFailure(status: number, body: unknown): string {
     const again = status === 502 ? ' This is usually temporary: try again in a minute.' : ''
     return `${/[.!?]$/.test(text) ? text : `${text}.`}${again}`
   }
-  if (status === 404) return 'This server does not offer the pictures (it answered "not found" for /api/frames).'
+  if (status === 404) return 'This server does not offer the frames (it answered "not found" for /api/frames).'
   if (status === 502 || status === 503 || status === 504) {
     return `The server could not be reached (error ${status}). Check that it is running, then try again.`
   }
-  if (status >= 500) return `The server ran into a problem while making these pictures (error ${status}). Try again.`
+  if (status >= 500) return `The server ran into a problem while making these frames (error ${status}). Try again.`
   return `The server answered with error ${status}.`
 }
 
@@ -259,7 +259,7 @@ export async function fetchFrames(url: string, signal?: AbortSignal): Promise<Fr
   }
   if (!r.ok) throw new Error(explainFailure(r.status, body))
   if (!body || typeof body !== 'object' || !Array.isArray((body as { frames?: unknown }).frames)) {
-    throw new Error('The server answered, but not with pictures. It may be the wrong server, or still starting up.')
+    throw new Error('The server answered, but not with frames. It may be the wrong server, or still starting up.')
   }
   return body as FramesResponse
 }

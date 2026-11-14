@@ -111,7 +111,7 @@ export function MotionLegend({ start, path, arrow, note }: { start: boolean; pat
         <svg viewBox="0 0 22 22" aria-hidden="true">
           <circle className="mark-line mark-measured" cx="11" cy="11" r="7" />
         </svg>
-        where it was measured in this picture
+        where it was measured in this frame
       </li>
       {path && (
         <li>

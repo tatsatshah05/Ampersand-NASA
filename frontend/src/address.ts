@@ -193,7 +193,7 @@ export function readAddress(search: string): { selection: Selection; notes: stri
   const track = oneOf(trackRaw, TRACKS)
   if (track) s.track = track
   else if (trackRaw !== null && s.mode === 'sum') {
-    notes.push(`The address asks to line the pictures up on ${quote(trackRaw)}. The choices are sky and target, so the sky is used.`)
+    notes.push(`The address asks to line the exposures up on ${quote(trackRaw)}. The choices are sky and target, so the sky is used.`)
   }
 
   return { selection: s, notes }
