@@ -38,11 +38,13 @@ def _num(v) -> float | None:
     return None if v is None or np.ma.is_masked(v) or not np.isfinite(v) else float(v)
 
 
-def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0) -> list[dict]:
+def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0, *,
+              tries: int = 10, timeout: float = 90) -> list[dict]:
     """Gaia DR3 sources within radius_deg of (ra, dec), brightest first. Cached on disk.
 
     Positions are at epoch 2016.0. A fast star can be arcminutes from where it is
     today, so callers should search wider than the field they want to cover.
+    `tries` and `timeout` only matter when the answer is not cached yet.
     """
     key = hashlib.sha1(f"{ra:.5f},{dec:.5f},{radius_deg:.4f},{g_limit}".encode()).hexdigest()[:16]
     cache_file = CACHE / "queries" / f"gaia_{key}.json"
@@ -53,7 +55,8 @@ def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0) -
         "FROM gaiadr3.gaia_source WHERE 1=CONTAINS(POINT('ICRS', ra, dec), "
         f"CIRCLE('ICRS', {ra}, {dec}, {radius_deg})) AND phot_g_mean_mag < {g_limit} "
         "ORDER BY phot_g_mean_mag")
-    raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query})
+    raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query},
+                   tries=tries, timeout=timeout)
     sources = _gaia_rows(raw)
     write_json(cache_file, sources)
     return sources
@@ -130,6 +133,45 @@ def position_at(src: dict, mjd: float, parallax: bool = True) -> tuple[float, fl
                         - earth[2] * np.cos(d))
     mas = 1.0 / 3.6e6
     return ra + d_ra * mas / np.cos(np.radians(dec)), dec + d_dec * mas
+
+
+def _apparent(ra, dec, pmra, pmdec, plx, ref_epoch, t: Time, parallax: bool) -> tuple[np.ndarray, np.ndarray]:
+    """The arithmetic of position_at() on arrays; the source fields and the dates broadcast."""
+    dt = t.jyear - ref_epoch
+    d_ra = pmra * dt
+    d_dec = pmdec * dt
+    if parallax:
+        ex, ey, ez = get_body_barycentric("earth", t).xyz.to_value("au")
+        a, d = np.radians(ra), np.radians(dec)
+        d_ra = d_ra + plx * (ex * np.sin(a) - ey * np.cos(a))
+        d_dec = d_dec + plx * (ex * np.cos(a) * np.sin(d) + ey * np.sin(a) * np.sin(d) - ez * np.cos(d))
+    mas = 1.0 / 3.6e6
+    return ra + d_ra * mas / np.cos(np.radians(dec)), dec + d_dec * mas
+
+
+def _columns(sources: list[dict]) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """ra, dec, pmra, pmdec, parallax and reference epoch of many sources, as position_at() reads them."""
+    def column(key: str, default: float) -> np.ndarray:
+        return np.array([s.get(key) or default for s in sources], dtype=float)
+
+    plx = column("parallax", 0.0)
+    return (np.array([s["ra"] for s in sources], dtype=float), np.array([s["dec"] for s in sources], dtype=float),
+            column("pmra", 0.0), column("pmdec", 0.0), np.where(plx > 0, plx, 0.0), column("ref_epoch", GAIA_EPOCH))
+
+
+def positions_at(sources: list[dict], mjd: float, parallax: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    """position_at() for many sources on one date: arrays of ra and dec, in the order given."""
+    if not sources:
+        return np.zeros(0), np.zeros(0)
+    ra, dec, pmra, pmdec, plx, ref = _columns(sources)
+    return _apparent(ra, dec, pmra, pmdec, plx, ref, Time(mjd, format="mjd"), parallax)
+
+
+def path_of(src: dict, mjds, parallax: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    """position_at() for one source on many dates: arrays of ra and dec, one per date."""
+    ra, dec, pmra, pmdec, plx, ref = (c[0] for c in _columns([src]))
+    return _apparent(ra, dec, pmra, pmdec, plx, ref, Time(np.atleast_1d(np.asarray(mjds, dtype=float)), format="mjd"),
+                     parallax)
 
 
 def offset_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> tuple[float, float]:
