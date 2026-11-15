@@ -1,0 +1,148 @@
+V7994 Sgr  RA 270.96983 Dec -31.45739  maximum JD 2460944.6 = 2025-09-26
+319 exposures measured: {'flagged': 142, 'ok': 165, 'off_image': 6, 'saturated': 12}; download failures: 0
+what was measured: Gaia DR3 4043865228497098624 (G = 16.39), 2.1 arcsec from the requested position in 2026, followed with its Gaia proper motion and parallax.
+
+1. THE MEASUREMENT, by run of dates and detector (wavelength band)
+   ok = a brightness; ok-OF = of those, with at least one OVERFLOW pixel in the circle (a partial reading, valid per the Supplement);
+   sat = saturated, no brightness; other = flagged, off the image, no sky. mJy columns are over the ok readings.
+
+  run 0: 2025-08-24 to 2025-09-10 (day -33 to -16 from maximum)
+    det          um   n  ok ok-OF sat other      min  median     max (mJy)
+      1   0.75-1.10  18   8     0   0    10     -2.7    -2.1    -0.0
+      2   1.10-1.62  18   3     0   0    15     -6.4    -5.2    -0.8
+      3   1.66-2.41  17   0     0   0    17        -       -       -
+      4   2.44-3.76  16   3     0   0    13     -7.0    -6.6    -6.4
+      5   3.83-4.40  18   9     0   0     9     -6.1    -4.3    -3.6
+      6   4.41-5.00  18  13     0   0     5     -4.5    -3.5    -2.6
+
+  run 1: 2026-03-20 to 2026-04-06 (day +175 to +192 from maximum)
+    det          um   n  ok ok-OF sat other      min  median     max (mJy)
+      1   0.75-1.10  18  14     0   0     4      1.0     2.5     5.6
+      2   1.11-1.63  18   9     0   0     9     -2.8     0.8     2.9
+      3   1.64-2.42  19  10     0   0     9      3.3    29.1    69.0
+      4   2.44-3.78  18   7     5  10     1     93.8   152.2   246.4
+      5   3.83-4.41  18  16    16   0     2    775.6  1072.9  1516.1
+      6   4.42-4.98  18  13    13   2     3   1224.2  1422.4  1692.7
+
+  run 2: 2026-08-26 to 2026-09-08 (day +334 to +347 from maximum)
+    det          um   n  ok ok-OF sat other      min  median     max (mJy)
+      1   0.76-1.11  18  14     0   0     4     -0.8     0.4     4.0
+      2   1.12-1.64  18   7     0   0    11     -2.8    -1.2     0.5
+      3   1.79-2.38  14   2     0   0    12     -1.8    -0.9    -0.0
+      4   2.46-3.80  16   7     0   0     9      2.2    16.3    36.9
+      5   3.81-4.42  19  15     0   0     4     61.9    96.5   122.4
+      6   4.42-4.98  18  13     0   0     5    124.2   176.6   225.5
+
+  run 3: 2026-09-22 to 2026-09-22 (day +361 to +361 from maximum)
+    det          um   n  ok ok-OF sat other      min  median     max (mJy)
+      3   2.03-2.03   1   1     0   0     0     -2.3    -2.3    -2.3
+      6   4.73-4.73   1   1     0   0     0    136.7   136.7   136.7
+
+2. LIKE WITH LIKE: the same detector and channel on two dates
+
+  run 2 divided by run 1, 44 channels measured on both (same detector and channel)
+    detector 1: 12 channels, median ratio 0.12 (16 to 84 per cent: -0.10 to 0.35)
+    detector 2:  5 channels, median ratio -0.45 (16 to 84 per cent: -2.42 to 0.63)
+    detector 3:  2 channels, median ratio -0.03 (16 to 84 per cent: -0.05 to -0.01)
+    detector 4:  2 channels, median ratio 0.04 (16 to 84 per cent: 0.04 to 0.04)
+    detector 5: 13 channels, median ratio 0.09 (16 to 84 per cent: 0.08 to 0.10)
+    detector 6: 10 channels, median ratio 0.13 (16 to 84 per cent: 0.12 to 0.13)
+
+  run 2 divided by run 3, 2 channels measured on both (same detector and channel)
+    detector 3:  1 channels, median ratio 0.01 (16 to 84 per cent: 0.01 to 0.01)
+    detector 6:  1 channels, median ratio 1.32 (16 to 84 per cent: 1.32 to 1.32)
+
+  run 2 second half divided by run 2 first half, 1 channels measured on both (same detector and channel)
+        um det run 2 firs run 2 seco  ratio          days  note
+     4.732   6      186.6      175.3   0.94   +334  +340  
+    detector 6:  1 channels, median ratio 0.94 (16 to 84 per cent: 0.94 to 0.94)
+
+3. SATURATION: are the readings biased by being close to the level where others saturate?
+
+  run 1: 2026-03-20 to 2026-04-06 (day +175 to +192 from maximum)
+    detector 1: no-overflow readings 14 (median 3, max 6 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 2: no-overflow readings 9 (median 1, max 3 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 3: no-overflow readings 10 (median 29, max 69 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 4: no-overflow readings 2 (median 106, max 118 mJy); partial (OVERFLOW) readings 5 (median 186, max 246 mJy); saturated 10
+    detector 5: no-overflow readings 0; partial (OVERFLOW) readings 16 (median 1073, max 1516 mJy); saturated 0
+    detector 6: no-overflow readings 0; partial (OVERFLOW) readings 13 (median 1422, max 1693 mJy); saturated 2
+
+  run 2: 2026-08-26 to 2026-09-08 (day +334 to +347 from maximum)
+    detector 1: no-overflow readings 14 (median 0, max 4 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 2: no-overflow readings 7 (median -1, max 1 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 3: no-overflow readings 2 (median -1, max -0 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 4: no-overflow readings 7 (median 16, max 37 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 5: no-overflow readings 15 (median 96, max 122 mJy); partial (OVERFLOW) readings 0; saturated 0
+    detector 6: no-overflow readings 13 (median 177, max 226 mJy); partial (OVERFLOW) readings 0; saturated 0
+
+  Wing against core, in the last run, in channels with both on two dates 10 or more days apart (detectors 5 and 6, the only ones where the wing repeats). If the core readings, which all carry an OVERFLOW pixel there, are right, the core and the wing must change by the same factor:
+    no channel qualifies
+
+4. WHAT ELSE IS IN THE MEASURING CIRCLE (radius 15.4 arcsec)
+  Gaia DR3 stars brighter than G = 17 inside the circle: 3; G=16.7 at 11.8 arcsec; G=16.7 at 13.1 arcsec; G=16.5 at 13.7 arcsec
+  2MASS: 5 source(s) inside the circle; summed J 15.26 mJy; summed H 18.31 mJy; summed K 14.70 mJy
+       2.0 arcsec: j_m=14.57, h_m=14.08, k_m=13.98
+      10.5 arcsec: j_m=14.64, h_m=13.84, k_m=13.62
+      13.2 arcsec: j_m=13.76, h_m=12.97, k_m=12.72
+      13.8 arcsec: j_m=14.93, h_m=14.90, k_m=14.67
+  AllWISE: 1 source(s) inside the circle; summed W1 3.45 mJy; summed W2 0.94 mJy
+      14.1 arcsec: w1mpro=12.38, w2mpro=13.16
+  CatWISE2020: 8 source(s) inside the circle; summed W1 9.95 mJy; summed W2 4.02 mJy
+       0.7 arcsec: w1mpro=16.32, w2mpro=17.01
+       3.3 arcsec: w1mpro=13.69, w2mpro=14.06
+       6.3 arcsec: w1mpro=14.21, w2mpro=14.75
+       9.4 arcsec: w1mpro=15.52, w2mpro=17.36
+
+5. FIELD STARS in the same exposures (Gaia stars of the field, isolated, measured with the same code)
+  no isolated Gaia star (G 10 to 15.5, nothing else brighter than G = 17 within 16 arcsec) within 125 arcsec: this check cannot be made in this field
+
+5. FIELD STARS in the same exposures (Gaia stars of the field, isolated, measured with the same code)
+  no isolated Gaia star (G 10 to 15.5, nothing else brighter than G = 17 within 16 arcsec) within 125 arcsec: this check cannot be made in this field
+
+6. AAVSO OPTICAL LIGHT CURVE of V7994 Sgr (observations of the community, fetched from AAVSO)
+  1312 observations (upper limits left out)
+  V: 24 ten-day medians. Faintest 16.2 mag around day +45; afterwards back to 14.6 around day +285 (1.7 mag brighter again).
+     no observations between days +45 and +125, +285 and +335
+     V medians (day: mag): -5: 7.1, +15: 12.0, +35: 15.8, +125: 15.7, +145: 15.6, +165: 15.3, +185: 15.3, +205: 15.2, +225: 15.1, +245: 15.2, +265: 15.1, +285: 14.6
+  I: 22 ten-day medians. Faintest 15.7 mag around day +275.
+     no observations between days +45 and +125
+  SPHEREx 0.75 to 0.95 micrometres against AAVSO I band (zero point 2416 Jy; roughly the same colour, different apertures):
+    day +175 to +192: SPHEREx 3 mJy (10 readings); AAVSO I = 14.42 (34 obs) = 4 mJy; SPHEREx / AAVSO = 0.62
+
+8. EMISSION-LINE CANDIDATES: channels more than 5 times the scatter of their neighbours above them (the scatter is never counted as less than 5%, and the excess must be at least 1.25 times)
+
+  run 1: 2026-03-20 to 2026-04-06 (day +175 to +192 from maximum): 1 candidate(s)
+     1.967 um (det 3, 1 reading(s) in 1 channel(s) on 1 day(s)):    37.5 mJy against   17.2 around it (13 sigma); tentative (one channel, one day); nearest: [Si VI] 1.9641 (+0.003), Br-delta 1.9451 (+0.022)
+
+  run 2: 2026-08-26 to 2026-09-08 (day +334 to +347 from maximum): 0 candidate(s)
+
+7. CONTINUUM of run 1: 2026-03-20 to 2026-04-06 (day +175 to +192 from maximum): a blackbody (warm dust) fitted to the channels that are not line candidates
+  68 continuum readings, days +175 to +192; level at 1.0 to 1.8 micrometres 1.2 mJy (13 readings). Errors include 5 per cent for bandpass and fading within the run.
+  A: no subtraction, 2.0 to 5.0 um: 41 readings; blackbody T = 583 +- 4 K (formal 3; reduced chi2 1.8); power law index +4.56 +- 0.13 (reduced chi2 13.0)
+  B: subtract the short-wavelength level (constant), 2.0 to 5.0 um: 41 readings; blackbody T = 581 +- 4 K (formal 3; reduced chi2 1.8); power law index +4.57 +- 0.14 (reduced chi2 13.5)
+  C: subtract it as a hot star's tail (lambda^-2), 2.0 to 5.0 um: 41 readings; blackbody T = 582 +- 4 K (formal 3; reduced chi2 1.8); power law index +4.57 +- 0.14 (reduced chi2 13.3)
+  D: no subtraction, 3.8 to 5.0 um only: 29 readings; blackbody T = 591 +- 20 K (formal 16; reduced chi2 1.7); power law index +2.56 +- 0.20 (reduced chi2 1.9)
+  E: subtract the level (constant), 3.0 to 5.0 um: 29 readings; blackbody T = 591 +- 20 K (formal 16; reduced chi2 1.7); power law index +2.56 +- 0.20 (reduced chi2 1.9)
+  Temperature across the choices above: 581 to 591 K
+  B, earlier third of the run (days +175 to +179, 8 readings): T = 595 +- 9 K (reduced chi2 1.2)
+  B, later third of the run (days +183 to +192, 17 readings): T = 585 +- 5 K (reduced chi2 1.3)
+
+7. CONTINUUM of run 2: 2026-08-26 to 2026-09-08 (day +334 to +347 from maximum): a blackbody (warm dust) fitted to the channels that are not line candidates
+  58 continuum readings, days +334 to +347; level at 1.0 to 1.8 micrometres -0.9 mJy (10 readings). Errors include 5 per cent for bandpass and fading within the run.
+  A: no subtraction, 2.0 to 5.0 um: 35 readings; blackbody T = 432 +- 5 K (formal 5; reduced chi2 1.1); power law index +5.42 +- 0.16 (reduced chi2 3.2)
+  B: subtract the short-wavelength level (constant), 2.0 to 5.0 um: 36 readings; blackbody T = 438 +- 5 K (formal 5; reduced chi2 1.2); power law index +5.37 +- 0.14 (reduced chi2 2.7)
+  C: subtract it as a hot star's tail (lambda^-2), 2.0 to 5.0 um: 36 readings; blackbody T = 433 +- 5 K (formal 5; reduced chi2 1.1); power law index +5.41 +- 0.15 (reduced chi2 3.0)
+  D: no subtraction, 3.8 to 5.0 um only: 28 readings; blackbody T = 423 +- 8 K (formal 8; reduced chi2 1.0); power law index +4.82 +- 0.16 (reduced chi2 1.3)
+  E: subtract the level (constant), 3.0 to 5.0 um: 32 readings; blackbody T = 438 +- 6 K (formal 5; reduced chi2 1.2); power law index +5.18 +- 0.11 (reduced chi2 1.6)
+  Temperature across the choices above: 423 to 438 K
+  B, earlier third of the run (days +334 to +338, 16 readings): T = 428 +- 14 K (reduced chi2 0.5)
+
+Pictures
+  note: 51 readings at or below zero are not drawn on the log charts
+  wrote docs/novae/v7994_sgr_time.png (27 kB, 1100x470)
+  note: 3 readings at or below zero are not drawn on the log chart (2026-03-20 run)
+  wrote docs/novae/v7994_sgr_spectrum_run1.png (22 kB, 1100x430)
+  note: 11 readings at or below zero are not drawn on the log chart (2026-08-26 run)
+  wrote docs/novae/v7994_sgr_spectrum_run2.png (20 kB, 1100x430)
+  wrote docs/novae/v7994_sgr_saturation.png (26 kB, 1100x430)
+  wrote docs/novae/v7994_sgr_optical.png (23 kB, 1100x380)

@@ -59,7 +59,8 @@ MIN_FIT_POINTS = 8
 
 # Wavelengths in micrometres (vacuum). H I, He I/II, and the lines usually seen in novae at 0.7 to 5 micrometres.
 LINES = [
-    ("O I 0.7774", 0.7774), ("O I 0.8446", 0.8446), ("Ca II 0.8542", 0.8542), ("Pa-epsilon 0.9546", 0.9546),
+    ("O I 0.7774", 0.7774), ("O I 0.8446", 0.8446), ("Ca II 0.8542", 0.8542), ("Pa-eta 0.9015", 0.9015),
+    ("Pa-zeta 0.9229", 0.9229), ("Pa-epsilon 0.9546", 0.9546),
     ("[S VIII] 0.9915", 0.9915), ("Pa-delta 1.0049", 1.0049), ("He II 1.0124", 1.0124),
     ("Pa-gamma 1.0941", 1.0941), ("He I 1.0830", 1.0830), ("[Fe XIII] 1.0747", 1.0747),
     ("O I 1.1287", 1.1287), ("[S IX] 1.2523", 1.2523), ("Pa-beta 1.2822", 1.2822), ("O I 1.3164", 1.3164),
@@ -141,7 +142,8 @@ def print_runs(points: list[dict], runs: list[dict], max_mjd: float) -> None:
             span = f"{min(wl):.2f}-{max(wl):.2f}" if wl else "-"
             of = sum(p["overflow_pixels"] > 0 for p in ok)
             sat = sum(p["status"] == "saturated" for p in mem)
-            nums = (f"{min(flux):7.1f} {np.median(flux):7.1f} {max(flux):7.1f}" if flux else f"{'-':>7} {'-':>7} {'-':>7}")
+            dash = f"{'-':>7}"
+            nums = f"{min(flux):7.1f} {np.median(flux):7.1f} {max(flux):7.1f}" if flux else f"{dash} {dash} {dash}"
             print(f"    {det:>3} {span:>11} {len(mem):3d} {len(ok):3d} {of:5d} {sat:3d} {len(mem) - len(ok) - sat:5d}  "
                   f"{nums}")
 
@@ -166,7 +168,8 @@ def compare(points: list[dict], name_a: str, sel_a, name_b: str, sel_b, max_mjd:
     a, b = channel_table(points, sel_a), channel_table(points, sel_b)
     rows = []
     for k in sorted(set(a) & set(b), key=lambda k: a[k]["wave"]):
-        rows.append({"key": k, "wave": a[k]["wave"], "a": a[k]["flux"], "b": b[k]["flux"], "ratio": b[k]["flux"] / a[k]["flux"],
+        rows.append({"key": k, "wave": a[k]["wave"], "a": a[k]["flux"], "b": b[k]["flux"],
+                     "ratio": b[k]["flux"] / a[k]["flux"],
                      "day_a": a[k]["mjd"] - max_mjd, "day_b": b[k]["mjd"] - max_mjd,
                      "of": a[k]["overflow"] or b[k]["overflow"], "err": float(np.hypot(a[k]["err"] / a[k]["flux"],
                                                                                        b[k]["err"] / b[k]["flux"]))})
@@ -202,7 +205,8 @@ def saturation_check(points: list[dict], runs: list[dict], max_mjd: float) -> No
                 continue
             clean = [p["flux_mjy"] for p in ok if p["overflow_pixels"] == 0]
             part = [p["flux_mjy"] for p in ok if p["overflow_pixels"] > 0]
-            text = (f"no-overflow readings {len(clean)}" + (f" (median {np.median(clean):.0f}, max {max(clean):.0f} mJy)"
+            text = (f"no-overflow readings {len(clean)}"
+                    + (f" (median {np.median(clean):.0f}, max {max(clean):.0f} mJy)"
                                                            if clean else ""))
             text += f"; partial (OVERFLOW) readings {len(part)}" + (f" (median {np.median(part):.0f}, max "
                                                                      f"{max(part):.0f} mJy)" if part else "")
@@ -316,7 +320,7 @@ def field_stars(ra: float, dec: float, curve: dict) -> list[dict]:
     out = []
     for s, dist in chosen:
         pts = []
-        for (exp, path, _err), ep in zip(fetched, epoch_of, strict=True):
+        for (exp, path, _err), _ep in zip(fetched, epoch_of, strict=True):
             if path is None:
                 continue
             with warnings.catch_warnings():
@@ -328,7 +332,8 @@ def field_stars(ra: float, dec: float, curve: dict) -> list[dict]:
             ch = None
             if p["wavelength_um"] is not None:
                 edges = photometry.channel_edges(lo, hi)
-                ch = int(np.clip(np.searchsorted(edges, p["wavelength_um"]) - 1, 0, photometry.CHANNELS_PER_DETECTOR - 1))
+                top = photometry.CHANNELS_PER_DETECTOR - 1
+                ch = int(np.clip(np.searchsorted(edges, p["wavelength_um"]) - 1, 0, top))
             pts.append({"detector": exp["detector"], "channel": ch, "mjd": p["mjd"], "status": p["status"],
                         "wavelength_um": p["wavelength_um"], "flux_mjy": p["flux_mjy"],
                         "flux_err_mjy": p["flux_err_mjy"]})
@@ -337,10 +342,15 @@ def field_stars(ra: float, dec: float, curve: dict) -> list[dict]:
     return out
 
 
-def field_star_check(ra: float, dec: float, curve: dict, windows: list[tuple[str, float, float]], min_dist: float) -> None:
+def field_star_check(ra: float, dec: float, curve: dict, windows: list[tuple[str, float, float]],
+                     min_dist: float) -> None:
     print("\n5. FIELD STARS in the same exposures (Gaia stars of the field, isolated, measured with the same code)")
     stars = field_stars(ra, dec, curve)
-    print(f"  {len(stars)} stars, G = {min(s['gmag'] for s in stars):.1f} to {max(s['gmag'] for s in stars):.1f}, "
+    if not stars:
+        print("  no isolated Gaia star (G 10 to 15.5, nothing else brighter than G = 17 within 16 arcsec) within "
+              "125 arcsec: this check cannot be made in this field")
+        return
+    print(f"  {len(stars)} stars,G = {min(s['gmag'] for s in stars):.1f} to {max(s['gmag'] for s in stars):.1f}, "
           f"{min(s['distance_arcsec'] for s in stars):.0f} to {max(s['distance_arcsec'] for s in stars):.0f} arcsec "
           "from the object. Same channel on two windows, readings with signal to noise above 10 only.")
 
@@ -376,7 +386,8 @@ def field_star_check(ra: float, dec: float, curve: dict, windows: list[tuple[str
             def tab(lo: float, hi: float, s=s) -> dict:
                 g: dict[tuple, list[float]] = defaultdict(list)
                 for p in s["points"]:
-                    if p["status"] == "ok" and p["wavelength_um"] is not None and p["detector"] >= 4 and lo <= p["mjd"] < hi:
+                    if (p["status"] == "ok" and p["wavelength_um"] is not None and p["detector"] >= 4
+                            and lo <= p["mjd"] < hi):
                         g[(p["detector"], p["channel"])].append(p["flux_mjy"])
                 return {k: float(np.median(v)) for k, v in g.items()}
             ta, tb = tab(base[1], base[2]), tab(b0, b1)
@@ -390,9 +401,9 @@ def field_star_check(ra: float, dec: float, curve: dict, windows: list[tuple[str
 # ---------------------------------------------------------------------------------------------------------
 # 6. AAVSO
 # ---------------------------------------------------------------------------------------------------------
-def aavso_check(aavso_name: str, max_jd: float, out_dir: Path | None) -> list[dict] | None:
+def aavso_check(aavso_name: str, max_jd: float) -> list[dict] | None:
     print(f"\n6. AAVSO OPTICAL LIGHT CURVE of {aavso_name} (observations of the community, fetched from AAVSO)")
-    folder = out_dir if out_dir else spherex.CACHE / "queries"
+    folder = spherex.CACHE / "queries"      # the raw answer is several MB: kept in the cache, not in docs/
     rows = vc.aavso(aavso_name, max_jd - 30.0, max_jd + 520.0, folder / f"aavso_{aavso_name.replace(' ', '_')}.txt")
     if rows is None:
         print("  AAVSO did not answer: no optical comparison was made")
@@ -504,7 +515,7 @@ def temperature_check(points: list[dict], run: int, lines: list[dict], max_mjd: 
         return None
     lam = np.array([p["wavelength_um"] for p in cont])
     flux = np.array([p["flux_mjy"] for p in cont])
-    err = np.hypot(np.array([p["flux_err_mjy"] for p in cont]), 0.05 * flux)   # 5 per cent: bandpass and fading in a run
+    err = np.hypot(np.array([p["flux_err_mjy"] for p in cont]), 0.05 * flux)   # 5 per cent: bandpass, fading
     days = np.array([p["mjd"] - max_mjd for p in cont])
     short = (lam >= 1.0) & (lam < 1.8)
     level = float(np.median(flux[short])) if short.sum() >= 3 else 0.0
@@ -558,7 +569,7 @@ def find_features(points: list[dict], run: int) -> list[dict]:
     for p in ok:
         near = [q for q in ok if q["detector"] == p["detector"] and q is not p
                 and 0.008 < abs(q["wavelength_um"] / p["wavelength_um"] - 1) < 0.07]
-        if len(near) < 3:
+        if len(near) < 2:
             continue
         f = np.array([q["flux_mjy"] for q in near])
         cont = float(np.median(f))
@@ -589,7 +600,8 @@ def find_features(points: list[dict], run: int) -> list[dict]:
         cands = sorted(((abs(w - peak["wavelength_um"]), n) for n, w in LINES), key=lambda t: t[0])
         names = [f"{n} ({peak['wavelength_um'] - 0 - w:+.3f})" for d, n in cands[:2] for w in [dict(LINES)[n]]
                  if d < 1.0 * bw]
-        out.append({"detector": f["detector"], "wave": peak["wavelength_um"], "wave_lo": min(p["wavelength_um"] for p in pts),
+        out.append({"detector": f["detector"], "wave": peak["wavelength_um"],
+                    "wave_lo": min(p["wavelength_um"] for p in pts),
                     "wave_hi": max(p["wavelength_um"] for p in pts), "flux": peak["flux_mjy"], "cont": peak["cont"],
                     "nsig": max(p["nsig"] for p in pts), "n_points": len(pts), "channels": channels,
                     "days": days_seen, "ids": names, "overflow": any(p["overflow_pixels"] > 0 for p in pts),
@@ -656,13 +668,14 @@ def draw_time(points: list[dict], max_mjd: float, name: str, ylim_low: float) ->
                      ylabel="brightness (mJy, log scale)", xdate=True, logy=True, height=470, legend_width=300)
     chart.vline(max_mjd, color=vp.GREY, label="optical maximum")
     for label, col in BAND_COLOURS.items():
-        sel = [p for p in points if p["status"] == "ok" and p["wavelength_um"] and colour_of(p["wavelength_um"])[0] == label]
+        sel = [p for p in points
+               if p["status"] == "ok" and p["wavelength_um"] and colour_of(p["wavelength_um"])[0] == label]
         chart.scatter([p["mjd"] for p in sel], [p["flux_mjy"] for p in sel], color=col, size=3,
                       label=f"{label} micrometres, measured" if "micro" not in label else f"{label}, measured")
     sat = [p for p in points if p["status"] == "saturated"]
     chart.scatter([p["mjd"] for p in sat], [ylim_low * 1.5] * len(sat), color=vp.GREY, marker="x", size=3,
                   label="saturated exposure: no brightness, drawn at the bottom of the chart")
-    all_ok = [p["flux_mjy"] for p in points if p["status"] == "ok"]
+    all_ok = [p["flux_mjy"] for p in points if p["status"] == "ok" and p["flux_mjy"] > 0]
     chart.ylim = (ylim_low, max(all_ok) * 1.5)
     chart.xlim = (min(p["mjd"] for p in points) - 8, max(p["mjd"] for p in points) + 8)
     return chart.render()
@@ -671,18 +684,24 @@ def draw_time(points: list[dict], max_mjd: float, name: str, ylim_low: float) ->
 def draw_spectrum(points: list[dict], run: dict, feats: list[dict], max_mjd: float, name: str) -> vp.Image.Image:
     mem = [p for p in points if p["run"] == run["id"] and p["wavelength_um"]]
     ok = [p for p in mem if p["status"] == "ok"]
-    chart = vp.Chart(title=f"{name}: spectrum, {day(run['start'])} to {day(run['end'])} (day {run['start'] - max_mjd:+.0f} "
+    chart = vp.Chart(title=f"{name}: spectrum, {day(run['start'])} to {day(run['end'])} "
+                           f"(day {run['start'] - max_mjd:+.0f} "
                      f"to {run['end'] - max_mjd:+.0f})", xlabel="wavelength (micrometres)", ylabel="brightness (mJy)",
                      logx=True, logy=True, height=430, legend_width=300)
     for hollow, text in ((False, "measured"), (True, "measured, partial (OVERFLOW pixel in the circle)")):
         sel = [p for p in ok if (p["overflow_pixels"] > 0) == hollow]
-        chart.scatter([p["wavelength_um"] for p in sel], [p["flux_mjy"] for p in sel], yerr=[p["flux_err_mjy"] for p in sel],
+        chart.scatter([p["wavelength_um"] for p in sel], [p["flux_mjy"] for p in sel],
+                      yerr=[p["flux_err_mjy"] for p in sel],
                       color=vp.RED if hollow else vp.BLUE, hollow=hollow, size=3, label=text)
-    lo = min(p["flux_mjy"] for p in ok) / 1.6
+    positive = [p["flux_mjy"] for p in ok if p["flux_mjy"] > 0]
+    if len(positive) < len(ok):
+        print(f"  note: {len(ok) - len(positive)} readings at or below zero are not drawn on the log chart "
+              f"({day(run['start'])} run)")
+    lo = min(positive) / 1.6
     sat = [p for p in mem if p["status"] == "saturated"]
     chart.scatter([p["wavelength_um"] for p in sat], [lo * 1.3] * len(sat), color=vp.GREY, marker="x", size=3,
                   label="saturated exposure: no brightness, drawn at the bottom")
-    chart.ylim = (lo, max(p["flux_mjy"] for p in ok) * 1.6)
+    chart.ylim = (lo, max(positive) * 1.6)
     chart.xlim = (0.72, 5.1)
     for f in feats:
         if f["ids"]:
@@ -695,7 +714,8 @@ def draw_map(points: list[dict], max_mjd: float, name: str) -> vp.Image.Image:
     chart = vp.Chart(title=f"{name}: what each exposure gave, by wavelength and day from maximum",
                      xlabel="wavelength (micrometres)", ylabel="days after optical maximum", logx=True, height=430,
                      legend_width=300, xlim=(0.72, 5.1))
-    kinds = [("measured, no OVERFLOW pixel", lambda p: p["status"] == "ok" and p["overflow_pixels"] == 0, vp.GREEN, "o"),
+    kinds = [("measured, no OVERFLOW pixel", lambda p: p["status"] == "ok" and p["overflow_pixels"] == 0,
+              vp.GREEN, "o"),
              ("measured, partial (OVERFLOW pixel)", lambda p: p["status"] == "ok" and p["overflow_pixels"] > 0,
               vp.ORANGE, "o"),
              ("saturated, no brightness", lambda p: p["status"] == "saturated", vp.RED, "x"),
@@ -738,7 +758,7 @@ def main() -> None:
     parser.add_argument("--name", default=None)
     parser.add_argument("--max-jd", type=float, required=True, help="Julian date of the optical maximum")
     parser.add_argument("--aavso-name", default=None, help="name for AAVSO if it differs from --name")
-    parser.add_argument("--out", type=Path, default=None, help="folder for the pictures (PNG) and the AAVSO file")
+    parser.add_argument("--out", type=Path, default=None, help="folder for the pictures (PNG)")
     parser.add_argument("--offline", action="store_true", help="skip sections 4 to 6 (network)")
     parser.add_argument("--verbose", action="store_true", help="print every channel of the like-with-like tables")
     parser.add_argument("--min-star-distance", type=float, default=80.0,
@@ -752,7 +772,8 @@ def main() -> None:
     points = flatten(curve)
     runs = make_runs(points, max_mjd - SPLIT_BEFORE_MAX_DAYS)
     print(f"{name}  RA {args.ra:.5f} Dec {args.dec:+.5f}  maximum JD {args.max_jd} = {day(max_mjd)}")
-    print(f"{len(points)} exposures measured: {curve['status_counts']}; download failures: {len(curve.get('failures') or [])}")
+    print(f"{len(points)} exposures measured: {curve['status_counts']}; "
+          f"download failures: {len(curve.get('failures') or [])}")
     print(f"what was measured: {curve['measured']['description']}")
     print_runs(points, runs, max_mjd)
 
@@ -793,7 +814,7 @@ def main() -> None:
         print("\n4 and 5 skipped (--offline): catalogues and field stars were not checked this time")
     optical = None
     if not args.offline:
-        optical = aavso_check(args.aavso_name or name, args.max_jd, args.out)
+        optical = aavso_check(args.aavso_name or name, args.max_jd)
         if optical:
             optical_vs_spherex(optical, points, after, max_mjd)
     else:
@@ -809,8 +830,6 @@ def main() -> None:
         print(f"\n  {run_label(r, max_mjd)}: {len(all_feats[r['id']])} candidate(s)")
         print_features(all_feats[r["id"]], saturated_among_ok(points, r["id"]),
                        [v for k, v in all_feats.items() if k != r["id"]])
-    for r in after:
-        pass
     fits = {}
     for r in after:
         feats_as_channels = [{"detector": f["detector"], "channels": f["channels"]} for f in all_feats[r["id"]]]
@@ -822,12 +841,16 @@ def main() -> None:
 
     if args.out:
         print("\nPictures")
-        ok = [p["flux_mjy"] for p in points if p["status"] == "ok"]
+        ok = [p["flux_mjy"] for p in points if p["status"] == "ok" and p["flux_mjy"] > 0]
         out = args.out
+        n_neg = sum(p["status"] == "ok" and p["flux_mjy"] <= 0 for p in points)
+        if n_neg:
+            print(f"  note: {n_neg} readings at or below zero are not drawn on the log charts")
         vp.save(draw_time(points, max_mjd, name, min(ok) / 1.5), out / f"{slug}_time.png")
         for r in after:
             if r["n_ok"] >= 15:
-                vp.save(draw_spectrum(points, r, all_feats[r["id"]], max_mjd, name), out / f"{slug}_spectrum_run{r['id']}.png")
+                vp.save(draw_spectrum(points, r, all_feats[r["id"]], max_mjd, name),
+                        out / f"{slug}_spectrum_run{r['id']}.png")
         vp.save(draw_map(points, max_mjd, name), out / f"{slug}_saturation.png")
         if optical:
             vp.save(draw_optical(optical, points, args.max_jd, name), out / f"{slug}_optical.png")
