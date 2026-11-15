@@ -862,14 +862,16 @@ def band_excess(
     window: tuple[float, float],
     left: tuple[float, float],
     right: tuple[float, float],
+    one_sided: bool = False,
 ) -> dict:
     """Mean excess over a straight-line continuum fitted to the neighbouring channels.
 
     Points inside `window` are compared with a line (flux against wavelength) fitted, weighted by the errors, to the
     points inside `left` and `right`. The error adds the points' own errors and the fit's, the fit's error enlarged
     by the scatter about the line when that is larger than the errors say. Needs one point in the window, and at
-    least three continuum points with some on each side; otherwise `ok` is False.
-    Returns {ok, n_band, n_side, excess_mjy, err_mjy, sigma, reduced_chi2}.
+    least three continuum points with some on each side; otherwise `ok` is False. With `one_sided`, channels on one
+    side only (at least two) are enough, and the continuum is then a flat level (`one_sided` is True in the answer).
+    Returns {ok, n_band, n_left, n_right, excess_mjy, err_mjy, sigma, reduced_chi2}.
     """
     wave, flux, err = (np.asarray(a, float) for a in (wave, flux, err))
     band = (wave >= window[0]) & (wave <= window[1])
@@ -886,18 +888,26 @@ def band_excess(
         "reduced_chi2": None,
     }
     side = lo | hi
-    if band.sum() < 1 or lo.sum() < 1 or hi.sum() < 1 or side.sum() < 3:
+    two_sided = lo.sum() >= 1 and hi.sum() >= 1 and side.sum() >= 3
+    if band.sum() < 1 or not (two_sided or (one_sided and side.sum() >= 2)):
         return out
+    out["one_sided"] = not two_sided
     x0 = 0.5 * (window[0] + window[1])
-    a = np.vstack([np.ones(int(side.sum())), wave[side] - x0]).T
+    n_par = 2 if two_sided else 1  # a line, or (with channels on one side only) a flat level
+
+    def design(sel: np.ndarray) -> np.ndarray:
+        cols = [np.ones(int(sel.sum()))] + ([wave[sel] - x0] if two_sided else [])
+        return np.vstack(cols).T
+
+    a = design(side)
     w = 1.0 / np.maximum(err[side], 1e-12) ** 2
     cov = np.linalg.inv(a.T @ (a * w[:, None]))
     beta = cov @ (a.T @ (w * flux[side]))
     resid = flux[side] - a @ beta
-    dof = int(side.sum()) - 2
+    dof = int(side.sum()) - n_par
     chi2 = float(np.sum(w * resid**2)) / dof if dof > 0 else 1.0
     cov = cov * max(chi2, 1.0)
-    ab = np.vstack([np.ones(int(band.sum())), wave[band] - x0]).T
+    ab = design(band)
     cont = ab @ beta
     var_cont = float(np.mean(np.einsum("ij,jk,ik->i", ab, cov, ab)))
     excess = float(np.mean(flux[band] - cont))
@@ -972,6 +982,119 @@ def all_bands(points: list[dict], which: str = "flux_mjy") -> list[dict]:
             res["integral_mjy_um"] = None if not res["ok"] else res["excess_mjy"] * (b["window"][1] - b["window"][0])
             row["bands"][key] = res
         out.append(row)
+    return out
+
+
+def band_by_night(points: list[dict], which: str = "flux_mjy") -> list[dict]:
+    """The band arithmetic done separately for each stretch of observing (points less than 0.6 day apart, at most
+    1.5 days in all), so a feature that shows on several separate days can be counted.
+
+    Within one stretch the body is the same and consecutive exposures of a detector step along the spectrum within
+    minutes, so neighbouring channels are a fair continuum. One-sided continua are allowed (flat level) and said so.
+    Returns [{first, last, n_points, bands: {name: band_excess result}}]; there are no control windows at this scale,
+    so nothing here is called a detection: `sigma` is the formal significance only.
+    """
+    errkey = "err_mjy" if which == "flux_mjy" else "err_large_mjy"
+    ok = sorted(
+        (p for p in points if p["status"] == "ok" and p.get(which) is not None and p.get(errkey)),
+        key=lambda p: p["mjd"],
+    )
+    groups: list[list[dict]] = []
+    for p in ok:
+        if groups and p["mjd"] - groups[-1][-1]["mjd"] < 0.6 and p["mjd"] - groups[-1][0]["mjd"] <= 1.5:
+            groups[-1].append(p)
+        else:
+            groups.append([p])
+    out = []
+    for g in groups:
+        w = np.array([p["wavelength_um"] for p in g])
+        f = np.array([p[which] for p in g])
+        e = np.array([p[errkey] for p in g])
+        bands = {k: band_excess(w, f, e, b["window"], b["left"], b["right"], one_sided=True) for k, b in BANDS.items()}
+        out.append({"first": g[0]["time"], "last": g[-1]["time"], "n_points": len(g), "bands": bands})
+    return out
+
+
+SEQUENCE_GAP_DAYS = 15.0 / 1440.0  # exposures of one detector this close in time belong to one sequence
+SCAN_WIDTH_UM = 0.11
+SCAN_REACH_UM = 0.35
+SCAN_STEP_UM = 0.036
+
+
+def sequences(points: list[dict]) -> list[list[dict]]:
+    """Runs of ok points of one detector taken less than 15 minutes apart. The detectors step through their
+    wavelengths one exposure after another, so a run is a short stretch of the body's spectrum measured within minutes,
+    the body, the sky and the detector all being the same."""
+    ok = sorted(
+        (p for p in points if p["status"] == "ok" and p.get("flux_mjy") is not None and p.get("err_mjy")),
+        key=lambda p: (p["detector"], p["mjd"]),
+    )
+    runs: list[list[dict]] = []
+    for p in ok:
+        if runs and runs[-1][-1]["detector"] == p["detector"] and p["mjd"] - runs[-1][-1]["mjd"] < SEQUENCE_GAP_DAYS:
+            runs[-1].append(p)
+        else:
+            runs.append([p])
+    return [r for r in runs if len(r) >= 3]
+
+
+def scan_sequences(points: list[dict], which: str = "flux_mjy") -> list[dict]:
+    """In every sequence, slide a window of SCAN_WIDTH_UM along the wavelengths measured and compare the channels in
+    it with the others of the sequence within SCAN_REACH_UM (a line through them, or a flat level when they are on one
+    side only). One entry per window: {time, detector, centre, excess_mjy, err_mjy, sigma, one_sided}.
+
+    The windows that fall on a gas band are the measurement; all the others, at wavelengths where no gas band is
+    expected, say how often the same arithmetic gives a large number for no reason (a star, a change of the body's
+    brightness during the sequence, a calibration step).
+    """
+    errkey = "err_mjy" if which == "flux_mjy" else "err_large_mjy"
+    out = []
+    for run in sequences(points):
+        w = np.array([p["wavelength_um"] for p in run])
+        f = np.array([p[which] if p.get(which) is not None else np.nan for p in run])
+        e = np.array([p[errkey] if p.get(errkey) else np.nan for p in run])
+        good = np.isfinite(f) & np.isfinite(e)
+        if good.sum() < 3:
+            continue
+        w, f, e = w[good], f[good], e[good]
+        for c in np.arange(w.min(), w.max() + 1e-9, SCAN_STEP_UM):
+            lo, hi = c - SCAN_WIDTH_UM / 2, c + SCAN_WIDTH_UM / 2
+            r = band_excess(w, f, e, (lo, hi), (c - SCAN_REACH_UM, lo - 1e-6), (hi + 1e-6, c + SCAN_REACH_UM), True)
+            if r["ok"]:
+                out.append(
+                    {
+                        "time": run[0]["time"],
+                        "detector": run[0]["detector"],
+                        "centre": float(c),
+                        "excess_mjy": r["excess_mjy"],
+                        "err_mjy": r["err_mjy"],
+                        "sigma": r["sigma"],
+                        "one_sided": r["one_sided"],
+                        "n_band": r["n_band"],
+                    }
+                )
+    return out
+
+
+def scan_summary(scan: list[dict]) -> dict:
+    """For each gas band: the sequences whose windows on the band reach 5 times their error, and how often windows
+    away from every gas band (more than 0.2 micrometre from the three) reach it too."""
+    centres = [b["centre"] for b in BANDS.values()]
+    null = [s for s in scan if all(abs(s["centre"] - c) > 0.2 for c in centres)]
+    out: dict = {
+        "null_windows": len(null),
+        "null_ge5": sum(s["sigma"] >= DETECT_SIGMA for s in null),
+        "null_le_minus5": sum(s["sigma"] <= -DETECT_SIGMA for s in null),
+        "bands": {},
+    }
+    for k, b in BANDS.items():
+        on = [s for s in scan if abs(s["centre"] - b["centre"]) <= 0.05]
+        times = sorted({s["time"][:10] for s in on if s["sigma"] >= DETECT_SIGMA})
+        out["bands"][k] = {
+            "windows_on_band": len(on),
+            "nights_with_5_sigma": times,
+            "best": max(on, key=lambda s: s["sigma"]) if on else None,
+        }
     return out
 
 

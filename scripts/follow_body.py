@@ -96,6 +96,25 @@ def table(res: dict) -> str:
                     f"   {k}: not enough exposures in the band or beside it "
                     f"({b['n_band']} in band, {b['n_left']}+{b['n_right']} continuum)"
                 )
+    for key, label in (("scan", "12.3 arcsec"), ("scan_large", "36.9 arcsec")):
+        s = res.get(key)
+        if not s:
+            continue
+        lines.append(
+            f"sequence scan ({label} circle): windows away from the gas bands: {s['null_windows']}, "
+            f"{s['null_ge5']} at +5 times the error or more, {s['null_le_minus5']} at -5 or less"
+        )
+        for k, b in s["bands"].items():
+            best = b["best"]
+            lines.append(
+                f"   {k}: {b['windows_on_band']} windows on the band; nights with +5 or more: "
+                f"{', '.join(b['nights_with_5_sigma']) or 'none'}"
+                + (
+                    f"; best {best['excess_mjy']:+.2f} +- {best['err_mjy']:.2f} mJy ({best['sigma']:+.1f}x)"
+                    if best
+                    else ""
+                )
+            )
     return "\n".join(lines)
 
 
@@ -253,6 +272,8 @@ def main() -> None:
     res = follow.follow_body(a.name, stop=a.stop, progress=prog, max_exposures=a.max)
     res["bands"] = follow.all_bands(res["points"])  # always from the points, so a change to the
     res["bands_large"] = follow.all_bands(res["points"], "flux_large_mjy")  # band arithmetic needs no new download
+    res["scan"] = follow.scan_summary(follow.scan_sequences(res["points"]))
+    res["scan_large"] = follow.scan_summary(follow.scan_sequences(res["points"], "flux_large_mjy"))
     slug = follow._slug(a.name)
     (out / f"{slug}.json").write_text(json.dumps(res, indent=1))
     print(table(res))
