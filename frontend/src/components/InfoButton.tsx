@@ -99,7 +99,7 @@ export function InfoButton({ name, text, id, className, onOpen }: Props) {
         aria-label={name}
         aria-expanded={open}
         aria-controls={popId}
-        title={name}
+        aria-describedby={open ? popId : undefined}
         onClick={(e) => {
           if (open) setOpen(false)
           else {
@@ -114,7 +114,7 @@ export function InfoButton({ name, text, id, className, onOpen }: Props) {
       </button>
       {mounted &&
         createPortal(
-          <div ref={pop} id={popId} className="info-popover" role="note" aria-label={name} hidden={!open}>
+          <div ref={pop} id={popId} className="info-popover" role="note" hidden={!open}>
             {text.map((p) => (
               <p key={p}>{p}</p>
             ))}

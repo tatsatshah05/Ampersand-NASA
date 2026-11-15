@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Frame, FramesReady } from './api'
 import { placePopover } from './popover'
+import { motionSentence } from './wording'
 import {
   brightStarInfo,
   dayMonthYear,
@@ -48,7 +49,7 @@ const data = (frames = [frame(1), frame(2), frame(3)]): FramesReady => ({
   mode: 'normal',
   size_px: 100,
   pixel_arcsec: 2,
-  target: null,
+  target: { name: 'Test star' } as never,
   frames,
 })
 
@@ -68,12 +69,12 @@ describe('the steps', () => {
     expect(guideSteps({ chose: false, flipped: true, read: false }).map((s) => s.state)).toEqual(['now', 'done', 'later'])
   })
   it('have a few words each and a name for a screen reader', () => {
-    for (const s of guideSteps(NO_PROGRESS)) expect(words(s.label)).toBeLessThanOrEqual(4)
+    for (const s of guideSteps(NO_PROGRESS)) expect(words(s.label)).toBeLessThanOrEqual(5)
     expect(stepName(guideSteps(NO_PROGRESS)[0])).toBe('Step 1, you are here')
     expect(stepName(guideSteps({ chose: true, flipped: false, read: false })[0])).toBe('Step 1, done')
   })
   it('end with where to go further: Practise, helping check, and Expert', () => {
-    expect(GO_FURTHER).toMatch(/practise.*help check.*Expert/)
+    expect(GO_FURTHER).toMatch(/practise.*help check.*Expert/i)
   })
 })
 
@@ -100,7 +101,7 @@ describe('the words', () => {
 describe('the picture', () => {
   it('tells the whole story: archive, public copy, cleaned, lined up, averaged per visit', () => {
     const text = pictureInfo(null, null)[0]
-    for (const part of ['asked NASA’s archive', 'NASA’s public copy', 'cleaned', 'lined them up', 'averaged the exposures of each visit']) {
+    for (const part of ['asked NASA’s archive', 'NASA’s public copy', 'cleaned', 'lined them up', 'averaged each visit’s exposures into one picture']) {
       expect(text).toContain(part)
     }
   })
@@ -117,7 +118,10 @@ describe('the picture', () => {
     expect(pictureInfo(data([frame(1, { n_exposures: 1 })]), null)[0]).toContain('In all, 1 exposure went into 1 visit picture')
   })
   it('says how to move around in the picture', () => {
-    expect(pictureInfo(null, null)[1]).toContain('amber ring')
+    const d = data()
+    expect(pictureInfo(d, d.frames[1], 'Barnard’s Star')[1]).toContain('The amber ring circles Barnard’s Star')
+    expect(pictureInfo(d, frame(2, { centroid: null }))[1]).toContain('No ring is drawn')
+    expect(pictureInfo(d, d.frames[1])[1]).toContain('Scroll or pinch to zoom')
   })
   it('formats a date from its text, not through a time zone', () => {
     expect(dayMonthYear('2025-08-15')).toBe('15 Aug 2025')
@@ -127,14 +131,14 @@ describe('the picture', () => {
 
 describe('the visits and the player', () => {
   it('give the number of visits, their months and their exposures', () => {
-    expect(visitsInfo(data()).join(' ')).toContain('Here there are 3 visits, from Jan 2025 to Mar 2025. They hold 21, 22 and 23 exposures.')
+    expect(visitsInfo(data()).join(' ')).toContain('Here there are 3 visits, between Jan 2025 and Mar 2025. They hold 21, 22 and 23 exposures.')
   })
   it('say so when there is one visit only', () => {
     expect(visitsInfo(data([frame(1)])).join(' ')).toContain('only one visit')
     expect(playerInfo(data([frame(1)])).join(' ')).toContain('only one visit')
   })
   it('name the first and last visit for Blink', () => {
-    expect(playerInfo(data()).join(' ')).toContain('Blink flips between visit 1 and visit 3.')
+    expect(playerInfo(data()).join(' ')).toContain('Blink flips between visit 1 and visit 3,')
   })
 })
 
@@ -144,22 +148,23 @@ describe('the movement line', () => {
     const far = data([frame(1), frame(2, { centroid: { ra: 10, dec: 20, x: 51, y: 51, err_arcsec: 0.5, snr: 50, fwhm_arcsec: 6 } })])
     // The test frames sit 0.0001 degrees apart in declination: 0.36 arcseconds.
     const small = movementInfo(d.frames[1], d).join(' ')
-    expect(small).toContain('Here it moved 0.4 arcseconds, which is 0.06 of a pixel.')
-    expect(small).toContain('under a third of a pixel')
-    expect(small).toContain('One SPHEREx pixel is 6.15 arcseconds wide.')
+    expect(small).toContain('Here it moved 0.4 arcseconds, 0.06 of a pixel.')
+    expect(small).toContain('within the measuring error')
+    expect(small).toContain('6.15 arcseconds across')
     expect(movementInfo(far.frames[1], far)).toBeTruthy()
   })
   it('says the first visit is the starting point, and that no spot could be measured when none was', () => {
     expect(movementInfo(d.frames[0], d).join(' ')).toContain('starting point')
-    expect(movementInfo(frame(2, { centroid: null }), d).join(' ')).toContain('no clear spot could be measured')
+    expect(movementInfo(frame(2, { centroid: null, detection: 'none' }), d).join(' ')).toContain('no clear spot could be measured')
+    expect(movementInfo(frame(2, { centroid: null, detection: 'clear' }), d).join(' ')).toContain('too far from where this object should be')
   })
 })
 
 describe('the detection line', () => {
   it('gives the visit’s own number and the true thresholds', () => {
     const text = detectionInfo(frame(1)).join(' ')
-    expect(text).toContain('Here it is 25 times the scatter.')
-    expect(text).toContain('At least 5 times the scatter counts as clear. From 3 to 5 is marginal')
+    expect(text).toContain('Here the object is 25 times the scatter.')
+    expect(text).toContain('At least 5 times the scatter counts as clear. From 3 to 5 it may be real or may be chance')
   })
   it('has a line for each outcome', () => {
     expect(detectionInfo(frame(1, { detection: 'saturated', detection_sigma: null })).join(' ')).toContain('overflowed')
@@ -176,7 +181,57 @@ describe('the bright-star warning and the switch', () => {
     expect(brightStarInfo(null)[0]).toContain('very bright')
   })
   it('the switch says what Expert adds', () => {
-    expect(levelInfo().join(' ')).toContain('distant world (Planet X)')
+    expect(levelInfo().join(' ')).toContain('search for a far-off planet')
+  })
+})
+
+describe('the corrected claims', () => {
+  const at = (ra: number, dec: number, err: number) => ({ ra, dec, x: 50, y: 50, err_arcsec: err, snr: 50, fwhm_arcsec: 6 })
+  const target = { name: 'T' } as never
+  it('does not call a spot that jumped in a view with no known object real movement', () => {
+    const d = { ...data([frame(1, { centroid: at(10, 20, 2) }), frame(2, { centroid: at(10, 20 + 6.3 / 3600, 2) })]), target: null }
+    const text = movementInfo(d.frames[1], d).join(' ')
+    expect(text).toContain('No known object is listed at the centre')
+    expect(text).not.toContain('Here it moved')
+  })
+  it('needs three times the position error before it calls a shift real', () => {
+    const d = { ...data([frame(1, { centroid: at(10, 20, 2) }), frame(2, { centroid: at(10, 20 + 6.3 / 3600, 2) })]), target }
+    expect(movementInfo(d.frames[1], d).join(' ')).toContain('within the measuring error')
+    const e = { ...data([frame(1, { centroid: at(10, 20, 1) }), frame(2, { centroid: at(10, 20 + 10.4 / 3600, 1) })]), target }
+    const t = movementInfo(e.frames[1], e).join(' ')
+    expect(t).toContain('Here it moved 10.4 arcseconds, about 1.7 pixels.')
+    expect(t).toContain('more than the measuring error')
+  })
+  it('says the same place when nothing moved, and checks the catalogue motion', () => {
+    const d = { ...data([frame(1, { centroid: at(10, 20, 1) }), frame(2, { centroid: at(10, 20, 1) })]), target }
+    expect(movementInfo(d.frames[1], d).join(' ')).toContain('in the same place as at the start')
+    const p = (dec: number) => ({ ra: 10, dec, x: 50, y: 50 })
+    const m = {
+      ...data([frame(1, { centroid: at(10, 20, 1), predicted: p(20) }), frame(2, { centroid: at(10, 20 + 10 / 3600, 1), predicted: p(20 + 10.2 / 3600) })]),
+      target,
+    }
+    expect(movementInfo(m.frames[1], m).join(' ')).toContain('should have moved 10.2 arcseconds by now. That fits what we measured.')
+  })
+  it('the line beside the picture hedges a jump of a view with no known object, and an error-sized one', () => {
+    const none = { ...data([frame(1, { centroid: at(10, 20, 2) }), frame(2, { centroid: at(10, 20 + 6.3 / 3600, 2) })]), target: null }
+    expect(motionSentence(none.frames[1], none)).toContain('No known object is listed at the centre')
+    const known = { ...none, target }
+    expect(motionSentence(known.frames[1], known)).toContain('within the position error')
+  })
+  it('says where the bright star is', () => {
+    expect(brightStarInfo([{ gmag: 6.37, distance_arcmin: 0, inside_picture: true }])[0]).toContain('The star in the middle of this picture')
+    expect(brightStarInfo([{ gmag: 6.75, distance_arcmin: 6.8, inside_picture: false }])[0]).toContain('just outside this picture')
+    expect(brightStarInfo([{ gmag: 5, distance_arcmin: 1, inside_picture: true }])[0]).toContain('is in this picture')
+  })
+  it('does not say the sky flickers', () => {
+    expect(detectionInfo(null).join(' ')).not.toMatch(/flicker/)
+  })
+  it('keeps every popover short', () => {
+    const d = data()
+    for (const k of KEYS) {
+      const n = infoFor(k, d, d.frames[1], [{ gmag: 4.3 }]).join(' ').split(/\s+/).length
+      expect(n, k).toBeLessThanOrEqual(k === 'picture' ? 150 : 115)
+    }
   })
 })
 

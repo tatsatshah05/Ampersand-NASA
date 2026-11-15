@@ -1,7 +1,7 @@
 // Plain-language sentences built from an /api/frames response. Every number in them
 // comes from the response.
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady } from './api'
-import { SMALL_SHIFT_ARCSEC, shiftFromStart, startCentroid } from './motion'
+import { SMALL_SHIFT_ARCSEC, realShiftBar, shiftFromStart, startCentroid } from './motion'
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
@@ -80,7 +80,13 @@ export function motionSentence(frame: Frame, data: FramesReady): string {
   if (Math.abs(shift.north) >= 0.05) parts.push(`${Math.abs(shift.north).toFixed(1)} ${shift.north > 0 ? 'north' : 'south'}`)
   if (Math.abs(shift.east) >= 0.05) parts.push(`${Math.abs(shift.east).toFixed(1)} ${shift.east > 0 ? 'east' : 'west'}`)
   const moved = `Moved ${shift.total.toFixed(1)} ${shift.total.toFixed(1) === '1.0' ? 'arcsecond' : 'arcseconds'} from where it started: ${parts.join(', ')}.`
-  if (shift.total >= SMALL_SHIFT_ARCSEC) return moved
+  const start = startCentroid(data)
+  const bar = start ? realShiftBar(start, frame.centroid) : SMALL_SHIFT_ARCSEC
+  if (shift.total >= SMALL_SHIFT_ARCSEC && !data.target && shift.total < bar) {
+    return `${moved} No known object is listed at the centre, so this may be a different spot, not movement.`
+  }
+  if (shift.total >= bar) return moved
+  if (shift.total >= SMALL_SHIFT_ARCSEC) return `${moved} That is within the position error, so it may not be real movement.`
   return `${moved} That is under a third of one SPHEREx pixel (${NATIVE_PIXEL_ARCSEC} arcseconds), so it may be measurement error rather than real movement.`
 }
 

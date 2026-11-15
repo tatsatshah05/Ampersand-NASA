@@ -11,6 +11,12 @@ describe('ui in the page address', () => {
     expect(readAddress(addressOf(DEFAULT_SELECTION)).selection.ui).toBe('beginner')
   })
 
+  it('a Beginner address with the sum or difference view shows the normal view, as its words describe', () => {
+    const read = readAddress('?ra=133.759765&dec=-7.242182&det=6&mode=sum&ui=beginner')
+    expect(read.selection.ui).toBe('beginner')
+    expect(read.selection.mode).toBe('normal')
+    expect(readAddress('?mode=sum&ui=expert').selection.mode).toBe('sum')
+  })
   it('a Beginner address that looks like an expert one says ui=beginner, and reads back as Beginner', () => {
     const wise = { ...DEFAULT_SELECTION, det: 6 }
     expect(addressOf(wise)).toContain('ui=beginner')

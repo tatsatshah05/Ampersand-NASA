@@ -35,8 +35,8 @@ import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
 import { PlateLoading, PlateMessage } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
-import { infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
-import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
+import { brightLine, infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
+import { isRealShift, measuredPath, overallEnds, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
 import type { Candidate } from './distant'
 import type { SearchObject, SearchQuery } from './search'
@@ -119,7 +119,7 @@ export function Viewer() {
   // The player opens playing, so the visits flip by themselves; with reduced motion asked for it opens still and the guide says to press Play.
   const [startedStill] = useState(prefersStillness)
   const mark = useCallback((what: keyof Progress) => setProgress((was) => (was[what] ? was : { ...was, [what]: true })), [])
-  const { togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
+  const { pause: pausePlayer, togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
   const togglePlay = useCallback(() => {
     playerTogglePlay()
     mark('flipped')
@@ -284,9 +284,10 @@ export function Viewer() {
   const grid: Grid | null = data && { ra: data.ra, dec: data.dec, sizePx: data.size_px, pixelArcsec: data.pixel_arcsec }
   const start = data ? startCentroid(data) : null
   const path = data ? measuredPath(data) : []
-  const overall = data ? overallShift(data) : null
-  // An arrowhead says "it went this way", so it is drawn only for a shift large enough to be real.
-  const arrow = overall !== null && overall.total >= SMALL_SHIFT_ARCSEC
+  const ends = data ? overallEnds(data) : null
+  // An arrowhead says "it went this way", so it is drawn only for a shift large enough to be real,
+  // and in Beginner only when a known object is listed at the centre (else the marker is just the brightest spot).
+  const arrow = ends !== null && isRealShift(ends[0], ends[1]) && (expert || data?.target != null)
 
   // The view starts on the target (on the whole picture if nothing was measured) and
   // goes back to that when the patch of sky changes. A change of detector or mode keeps
@@ -373,10 +374,14 @@ export function Viewer() {
     !expert && (
       <InfoButton
         name={INFO_NAMES[key]}
-        text={infoFor(key, data, frame, starsData?.bright_nearby)}
+        text={infoFor(key, data, frame, starsData?.bright_nearby, shownName)}
         className={className}
         id={id}
-        onOpen={() => mark('read')}
+        onOpen={() => {
+          mark('read')
+          // What is explained is on screen now: stop the film so the words and the picture stay the same.
+          pausePlayer()
+        }}
       />
     )
 
@@ -567,7 +572,7 @@ export function Viewer() {
               {/* Shown at both levels and whether or not the overlay is on: it warns about shapes in the picture itself. */}
               {starsData?.bright_note && (
                 <p className="hint bright-star">
-                  {starsData.bright_note}
+                  {expert ? starsData.bright_note : brightLine(starsData.bright_nearby)}
                   {infoButton('bright')}
                 </p>
               )}
@@ -751,7 +756,7 @@ export function Viewer() {
                 </details>
               </>
             ) : (
-              <StepGuide progress={progress} still={startedStill} />
+              <StepGuide progress={progress} still={startedStill} info={infoButton('steps')} />
             )}
 
             <footer className="credits">

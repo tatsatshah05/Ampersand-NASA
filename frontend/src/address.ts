@@ -258,6 +258,12 @@ export function readAddress(search: string, stored: string | null = null): { sel
     notes.push(`The address asks for a practice round with train=${quote(trainRaw)}, which is not a whole number from 0 up, so the ordinary view is shown.`)
   }
 
+  // Beginner shows the normal view, as changeLevel does: its words describe that one.
+  if (new URLSearchParams(search).get('ui') === 'beginner' && s.mode !== 'normal') {
+    s.mode = 'normal'
+    notes.push('Beginner shows the normal view, so that is used.')
+  }
+
   return { selection: s, notes }
 }
 

@@ -48,7 +48,7 @@ describe('the page at each level', () => {
     const html = viewerAt('')
     expect(html).toContain(`class="guide-further">${GO_FURTHER}<`)
     expect(html).toContain('aria-label="About Beginner and Expert"')
-    expect(levelInfo().join(' ')).toContain('a search for a distant world (Planet X)')
+    expect(levelInfo().join(' ')).toContain('a search for a far-off planet')
     // Expert's own tooltip on the switch is unchanged.
     expect(EXPERT_ADDS).toContain('the search for a distant world (Planet X)')
   })
@@ -60,8 +60,8 @@ describe('the page at each level', () => {
   it('Beginner has the steps; Expert has neither the steps nor any i button', () => {
     const beginner = viewerAt('')
     expect(beginner).toContain('class="guide-steps"')
-    expect(beginner).toContain('Choose a star above')
-    expect(beginner).toContain('Watch the visits flip')
+    expect(beginner).toContain('Press a star above')
+    expect(beginner).toContain('Press Blink or a visit')
     expect(beginner).toContain('Read what changed')
     const expert = viewerAt('?ui=expert')
     expect(expert).not.toContain('class="guide')

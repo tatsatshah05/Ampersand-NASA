@@ -624,8 +624,8 @@
 
 /* Beginner has fewer sentences per visit, so its block is shorter and leaves less empty space. */
 .inspector.beginner .readout-block {
-  height: clamp(170px, 24vh, 220px);
-  height: clamp(170px, 24dvh, 220px);
+  height: clamp(230px, 38vh, 290px);
+  height: clamp(230px, 38dvh, 290px);
 }
 
 /* Which visit: a quiet line over the result. */
@@ -686,8 +686,8 @@
 /* Beginner: the one sentence that matters, how far it moved, is the largest type in the
    column; which visit it is is secondary. Sentence case. */
 .inspector.beginner .motion-readout {
-  font-size: var(--size-title);
-  line-height: 1.35;
+  font-size: var(--size-read);
+  line-height: 1.4;
 }
 
 .inspector.beginner .readout-block .frame-label {
@@ -1095,6 +1095,39 @@
 
   .readout-block {
     height: 200px;
+  }
+
+  /* Beginner on a narrow screen: the steps come first, under the targets, so a newcomer sees
+     them without scrolling past the picture. The side column dissolves into the page. */
+  .bench {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .inspector.beginner {
+    display: contents;
+  }
+
+  .inspector.beginner > * {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .inspector.beginner .guide {
+    order: -1;
+    margin: 0;
+    padding: 10px 16px;
+    border-top: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .guide-steps {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 6px 12px;
+  }
+
+  .guide-further {
+    margin-top: 8px;
   }
 
   .tool-slot {

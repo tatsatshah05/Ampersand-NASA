@@ -54,3 +54,34 @@ export function overallShift(data: FramesReady): Shift | null {
   const path = measuredPath(data)
   return path.length >= 2 ? shiftBetween(path[0], path[path.length - 1]) : null
 }
+
+/**
+ * The smallest shift trusted as real between two measured positions: a third of a pixel, or
+ * three times their combined position error when that is larger (a saturated core has an error
+ * of 1 to 2 arcseconds, so the bar rises with it).
+ */
+export function realShiftBar(from: Centroid, to: Centroid): number {
+  return Math.max(SMALL_SHIFT_ARCSEC, 3 * Math.hypot(from.err_arcsec ?? 0, to.err_arcsec ?? 0))
+}
+
+/** True when the shift from `from` to `to` is larger than the bar above. */
+export function isRealShift(from: Centroid, to: Centroid): boolean {
+  return shiftBetween(from, to).total >= realShiftBar(from, to)
+}
+
+/** The first and last measured positions, or null with fewer than two. */
+export function overallEnds(data: FramesReady): [Centroid, Centroid] | null {
+  const path = measuredPath(data)
+  return path.length >= 2 ? [path[0], path[path.length - 1]] : null
+}
+
+/**
+ * How far the catalogue says the target should have moved between the start picture and this
+ * one (from the predicted positions the frames carry); null when either is missing.
+ */
+export function expectedShift(data: FramesReady, frame: Frame): Shift | null {
+  const start = startCentroid(data)
+  const all = data.reference_frame ? [data.reference_frame, ...data.frames] : data.frames
+  const first = all.find((f) => f.centroid === start)
+  return first?.predicted && frame.predicted ? shiftBetween(first.predicted as Centroid, frame.predicted as Centroid) : null
+}
