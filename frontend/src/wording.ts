@@ -11,6 +11,7 @@
 // at the centre; otherwise the words say what was measured and why it may not be movement.
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady, type Target } from './api'
 import { blendNotes, coreNotes, detectionNotes, detectionShort, isMarginal, listVisits } from './detection'
+import { findAt } from './finds'
 import {
   measuredRows,
   realShiftBar,
@@ -233,6 +234,9 @@ export function shiftDoubt(row: VisitRow, data: FramesReady): 'within error' | '
  */
 export function plainResult(row: VisitRow, data: FramesReady): string {
   let words: string
+  // Under a headline about what was seen when, Beginner's column says how clearly it is seen in each
+  // visit (plainColumn), by the same rule: "not seen" where it is not.
+  if (changeHeadline(data)) return seenWords(row.frame)
   if (isSum(data)) words = 'every visit in one picture'
   else if (isAlone(data)) words = 'the only visit so far'
   else if (row.start) words = 'start'
@@ -269,8 +273,10 @@ export function expertCells(row: VisitRow, data: FramesReady): ExpertCells {
   const f = row.frame
   const c = f.centroid
   let measured = ''
+  const notSeen = changeHeadline(data)?.notSeen ?? []
   if (isSum(data)) measured = 'one picture'
   else if (isAlone(data)) measured = 'only visit'
+  else if (f.epoch !== null && notSeen.includes(f.epoch)) measured = 'not seen'
   else if (row.start) measured = 'start'
   else if (!c || !row.shift) measured = 'not found'
   else measured = pair(row.shift)
@@ -309,12 +315,22 @@ export function predictedBy(target: Target | null): string | null {
 /** The visit the shifts are measured from, or null when no visit has a position. */
 const startEpoch = (data: FramesReady): number | null => visitRows(data).find((r) => r.start)?.frame.epoch ?? null
 
+/** One of our candidates, asked for as its button asks: at its place, with a motion of zero (finds.ts, findTarget). */
+const heldAtFind = (data: FramesReady): boolean =>
+  findAt(data.ra, data.dec) !== null && data.target?.origin === 'request' && data.target.pmra === 0 && data.target.pmdec === 0
+
 /** What Expert's table holds, in one line over it. */
 export function tableCaption(data: FramesReady): string {
   if (isSum(data)) return 'The sum of all visits: one picture, so there is nothing to compare.'
   if (isAlone(data)) return 'One visit only, so there is nothing to compare yet.'
   const from = startEpoch(data)
   if (from === null) return 'Every visit. No position could be measured in any of them.'
+  // One of our candidates, asked for at its corrected place with no motion (finds.ts): + is that
+  // place. That no Gaia star to G 17 lies within 15″ is what /api/frames answers there without a
+  // motion (no target: src/fixtures/frames/find_*_d6_nomotion.json).
+  if (heldAtFind(data)) {
+    return `Shift since visit ${from} in ″, east and north; + is its fixed place (no Gaia star to G 17 within 15″ to predict from).`
+  }
   const by = predictedBy(data.target)
   return `Shift since visit ${from} in ″, east and north${by ? `; + from ${by}` : ''}.`
 }
@@ -359,7 +375,11 @@ function warnings(data: FramesReady) {
 export function tableNotes(data: FramesReady, level: 'beginner' | 'expert'): string[] {
   const { withinError, inPositionError, otherSpot, notFound } = warnings(data)
   const notes: string[] = []
+  const change = changeHeadline(data)
   if (level === 'beginner') {
+    // Under a headline about what was seen when, the rows say how clearly it is seen, not how far
+    // it moved: there is no shift and no lost position to explain.
+    if (change) return notes
     // The overall sentence already says it when nothing moved, so this is only for a mover.
     if ((withinError.length || inPositionError.length) && overallKind(data) === 'moved') {
       notes.push('Within error: too small to be sure.')
@@ -367,6 +387,8 @@ export function tableNotes(data: FramesReady, level: 'beginner' | 'expert'): str
     if (notFound.length) notes.push(`Not found in ${listVisits(notFound)}: no clear spot could be measured there.`)
     return notes
   }
+  // Expert has no headline over its table: the same words come first under it.
+  if (change) notes.push(change.sentence, ...changeLines(data, 'expert'))
   if (isSum(data)) notes.push('Every visit is in this one frame, so nothing moves in it.')
   if (isAlone(data)) notes.push('This is the only visit so far with this detector, so there is nothing to compare it with yet.')
   if (data.mode === 'difference') {
@@ -393,6 +415,150 @@ export function tableNotes(data: FramesReady, level: 'beginner' | 'expert'): str
   const none = noPredictionSentence(data)
   if (none && !isSum(data) && !isAlone(data)) notes.push(none)
   return notes
+}
+
+// ---- something that appears or fades ------------------------------------------------------------
+//
+// For a place where nothing is detected in some visits and something clearly is in others, the
+// sentence about the whole run says exactly that, from the detection measure each visit already
+// carries (detection.ts: "clear" is 5 or more times the background scatter, "not seen" under 3),
+// and nothing about what the object is. It is said only where that measure can be trusted to be
+// about one place: a target whose predicted place is the same spot in every visit, fitted there
+// with its known neighbours (detection_measure.at "predicted"; a view with no target measures the
+// brightest spot near the centre, which may be a neighbour), with no neighbour sharing its light
+// (`blend`), nothing saturated at the place in a visit where it is not seen, the place well inside
+// the picture, and a visit deep enough that what is seen elsewhere would have been clear in it.
+
+/**
+ * How one visit counts, or null when the visit makes the measure untrustworthy (see above).
+ * "unknown": how clearly could not be worked out (too few pixels or empty places); such a visit
+ * is left out of the headline, which then says nothing about it.
+ */
+type Presence = 'clear' | 'marginal' | 'none' | 'unknown'
+
+/** A place nearer the picture's edge than this share of its width is not counted as "not seen". */
+const EDGE_SHARE = 0.2
+/** "Clear" is this many times the background scatter (pipeline.DETECT_CLEAR). */
+const CLEAR_TIMES = 5
+
+interface Measure {
+  at?: string
+  status?: string
+  flux_mjy?: number | null
+  noise_mjy?: number | null
+}
+
+const measureOf = (f: VisitFrame): Measure => (f.detection_measure ?? {}) as Measure
+
+function presenceOf(f: VisitFrame, data: FramesReady): Presence | null {
+  const m = measureOf(f)
+  if (!data.target || !f.predicted || m.at !== 'predicted' || (f.blend?.length ?? 0) > 0) return null
+  if (f.detection === 'clear' || f.detection === 'saturated') return 'clear'
+  if (f.detection === 'marginal') return 'marginal'
+  if (f.detection === 'unknown') return 'unknown'
+  if (f.detection !== 'none' || m.status !== 'measured' || m.noise_mjy == null) return null
+  if ((f.photometry_saturated_exposures ?? 0) > 0) return null
+  const edge = EDGE_SHARE * data.size_px
+  const { x, y } = f.predicted
+  return x >= edge && y >= edge && x <= data.size_px - edge && y <= data.size_px - edge ? 'none' : null
+}
+
+/** "August 2025", "May and August 2025", "August 2025 and March 2026": the visits' middle months. */
+function monthsOf(frames: VisitFrame[]): string {
+  const months = [...new Set(frames.map((f) => monthYearLong(f.date_mean)))]
+  const years = new Set(months.map((m) => m.slice(-4)))
+  const parts = years.size === 1 ? [...months.slice(0, -1).map((m) => m.slice(0, -5)), months[months.length - 1]] : months
+  return parts.length < 2 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
+}
+
+export interface Change {
+  kind: 'appeared' | 'appeared and faded' | 'faded'
+  /** The headline: what was and was not detected, and when. */
+  sentence: string
+  /** The visits where it is not seen (said "not seen" in the table). */
+  notSeen: number[]
+}
+
+/**
+ * The headline for a place where something is not seen in some visits and clearly seen in
+ * others, or null when that is not what the visits show (or the measure cannot be trusted).
+ * "Not seen in August 2025. Clearly there by March 2026." It never says what the object is.
+ */
+export function changeHeadline(data: FramesReady): Change | null {
+  if (data.mode !== 'normal' || data.reference_frame) return null
+  const all = visitRows(data).map((r) => r.frame)
+  const counted = all.map((f) => presenceOf(f, data))
+  if (all.length < 2 || counted.some((p) => p === null)) return null
+  // The visits where how clearly is not known are left out: the headline speaks of the others only.
+  const frames = all.filter((_, i) => counted[i] !== 'unknown')
+  const presence = counted.filter((p) => p !== 'unknown')
+  const letters = presence.map((p) => (p === 'clear' ? 'c' : p === 'none' ? 'n' : 'm')).join('')
+  const where = (p: Presence) => frames.filter((_, i) => presence[i] === p)
+  const clear = where('clear')
+  const none = where('none')
+  if (!clear.length || !none.length) return null
+  // Deep enough: at its faintest clear brightness it would have been clear in every visit where it is not seen.
+  // (A saturated visit with no number is certainly brighter than that.)
+  const faintest = Math.min(...clear.map((f) => measureOf(f).flux_mjy ?? Number.POSITIVE_INFINITY))
+  if (!none.every((f) => faintest >= CLEAR_TIMES * (measureOf(f).noise_mjy as number))) return null
+  const notSeen = none.map((f) => f.epoch ?? 0)
+  const firstClear = letters.indexOf('c')
+  if (/^n+c+$/.test(letters)) {
+    return { kind: 'appeared', sentence: `Not seen in ${monthsOf(none)}. Clearly there by ${monthYearLong(frames[firstClear].date_mean)}.`, notSeen }
+  }
+  if (/^n+c+[nm]+$/.test(letters)) {
+    const before = frames.slice(0, firstClear)
+    const after = frames[letters.lastIndexOf('c') + 1]
+    return {
+      kind: 'appeared and faded',
+      sentence: `Not seen in ${monthsOf(before)}. Clearly there in ${monthsOf(clear)}, and faint again by ${monthYearLong(after.date_mean)}.`,
+      notSeen,
+    }
+  }
+  if (/^c+n+$/.test(letters)) return { kind: 'faded', sentence: `Clearly there in ${monthsOf(clear)}. Not seen in ${monthsOf(none)}.`, notSeen }
+  return null
+}
+
+/** How clearly it is seen in one visit, in Beginner's words (detection.ts's rule). */
+function seenWords(f: VisitFrame): string {
+  switch (f.detection) {
+    case 'clear':
+      return 'seen clearly'
+    case 'marginal':
+      return 'only just seen'
+    case 'none':
+      return 'not seen'
+    case 'saturated':
+      return 'seen, too bright to measure'
+    default:
+      return 'not known'
+  }
+}
+
+/**
+ * Beginner's second column: how far it had moved since the start, or, under a headline about
+ * something appearing or fading, how clearly it is seen in each visit.
+ */
+export function plainColumn(data: FramesReady): { header: string; label: string } {
+  return changeHeadline(data)
+    ? { header: 'Seen', label: 'Every visit, and how clearly it is seen in it' }
+    : { header: 'Moved (arcseconds)', label: 'Every visit, and how far it had moved since the start' }
+}
+
+/** The brightness tool by the name it has at each level. */
+const BRIGHTNESS_TOOL = { beginner: 'Expert’s Brightness over time', expert: 'Brightness over time' } as const
+/** The one line said under the headline for any place that is not one of our candidates. */
+export const CHANGE_CAUTION = 'This can be a real change in the sky or a measuring problem. The brightness tool shows every measurement.'
+
+/**
+ * The lines under the headline, in normal type: for one of our candidates (finds.ts), the
+ * referee's allowed sentence word for word and where the brightness tool is; for anywhere
+ * else, one line saying it may be a measuring problem.
+ */
+export function changeLines(data: FramesReady, level: 'beginner' | 'expert'): string[] {
+  const find = findAt(data.ra, data.dec)
+  if (!find) return [CHANGE_CAUTION]
+  return [find.allowed, `For brightness, see ${BRIGHTNESS_TOOL[level]}.`]
 }
 
 type OverallKind = 'sum' | 'alone' | 'none found' | 'found once' | 'moved' | 'other spot' | 'came back' | 'still'
@@ -428,6 +594,13 @@ export function overallResult(data: FramesReady): { sentence: string; more: stri
   const kind = overallKind(data)
   if (kind === 'sum') return { sentence: 'Every visit is added into this one picture, so nothing moves in it.', more: [], pointer: null }
   if (kind === 'alone') return { sentence: 'This is the only visit so far, so there is nothing to compare yet.', more: [], pointer: null }
+  // Something that is not seen in some visits and clearly is in others: that, and nothing about movement.
+  const change = changeHeadline(data)
+  if (change) {
+    const lines = changeLines(data, 'beginner')
+    // One of our candidates: its sentence and where the brightness tool is, both in normal type under the headline.
+    return findAt(data.ra, data.dec) ? { sentence: change.sentence, more: lines, pointer: null } : { sentence: change.sentence, more: lines, pointer: BRIGHTNESS_ELSEWHERE }
+  }
   const rows = visitRows(data)
   const measured = measuredRows(rows)
   if (kind === 'none found') return { sentence: 'No position could be measured in any visit.', more: [], pointer: null }
@@ -485,6 +658,9 @@ export interface CatalogueCheck {
  * when nothing is predicted or fewer than two visits have a position.
  */
 export function catalogueCheck(data: FramesReady): CatalogueCheck | null {
+  // One of our candidates is held still at its corrected place: no catalogue gives it a motion,
+  // so there is nothing to check against (and "its catalogue motion" would be untrue).
+  if (heldAtFind(data)) return null
   const by = predictedBy(data.target)
   const ends = runEnds(data)
   if (!by || !ends) return null
@@ -518,6 +694,8 @@ export function catalogueLine(data: FramesReady): string | null {
 export function seenLine(data: FramesReady): string | null {
   const visits = allVisits(data)
   if (!visits.some((f) => f.detection)) return null
+  // The headline about something appearing or fading says this already, by the same rule.
+  if (changeHeadline(data)) return null
   const n = visits.length
   const which = (es: number[]) => (isSum(data) ? 'the sum of all visits' : n === 1 ? 'its one visit' : es.length === n ? `all ${n} visits` : listVisits(es))
   const where = (d: string) => visits.filter((f) => f.detection === d).map((f) => f.epoch ?? 0)
@@ -551,6 +729,7 @@ export function rowAnnouncement(data: FramesReady, index: number): string {
   const k = all.indexOf(f) + 1
   const head = f.epoch === k ? `${rowName(f, data)} of ${all.length}, ${monthYearLong(f.date_mean)}` : `${rowName(f, data)}, number ${k} of ${all.length}, ${monthYearLong(f.date_mean)}`
   if (isAlone(data)) return `${head}: the only visit so far.`
+  if (f.epoch !== null && changeHeadline(data)?.notSeen.includes(f.epoch)) return `${head}: not seen.`
   if (row.start) return `${head}: where it started.`
   if (!row.shift) return `${head}: no position could be measured.`
   if (row.shift.total < 0.05) return `${head}: in the same place as at the start.`

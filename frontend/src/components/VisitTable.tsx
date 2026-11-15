@@ -3,14 +3,16 @@
 // (a hairline and bold weight, so it is seen without colour, plus aria-current). Pressing a
 // row's button shows that visit, like pressing its thumbnail.
 //
-// Beginner: the visit (number and month) and how far it had moved, in plain words.
+// Beginner: the visit (number and month) and how far it had moved, in plain words; or, under a
+// headline about something that appeared or faded (wording.ts, changeHeadline), how clearly it is
+// seen in each visit.
 // Expert: two lines per visit. The first has the measured shift since the start (east, north
 // and total), the shift the catalogue predicts and how far the two differ; the second the
 // dates, exposures, how clearly it is detected, the position's error and short warnings.
 import { useLayoutEffect, useRef } from 'react'
 import type { FramesReady } from '../api'
 import { releaseFocusAfterPointer } from '../focus'
-import { expertCells, plainResult, rowMonth, rowName, tableCaption, tableRows } from '../wording'
+import { expertCells, plainColumn, plainResult, rowMonth, rowName, tableCaption, tableRows } from '../wording'
 
 interface Props {
   data: FramesReady
@@ -56,8 +58,10 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
   )
 
   if (!expert) {
+    // How far it moved; or, for something that appears or fades, how clearly it is seen in each visit.
+    const column = plainColumn(data)
     return (
-      <table className="visit-table" ref={table} aria-label="Every visit, and how far it had moved since the start">
+      <table className="visit-table" ref={table} aria-label={column.label}>
         <colgroup>
           <col className="c-visit" />
           <col className="c-moved" />
@@ -65,7 +69,7 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
         <thead>
           <tr>
             <th scope="col">Visit</th>
-            <th scope="col">Moved (arcseconds)</th>
+            <th scope="col">{column.header}</th>
           </tr>
         </thead>
         <tbody>

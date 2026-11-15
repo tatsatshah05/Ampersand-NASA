@@ -317,6 +317,9 @@ Endpoints (adjust if something better emerges, and keep this list current):
 
 The page reads `?ra=&dec=&fov=&det=&mode=` from its address so a view can be linked, and
 passes `pmra`, `pmdec`, `parallax` through to `/api/frames` when they are in the address.
+An address with no position opens on Candidate B (`address.ts`, `LANDING`; see "The sweep's
+candidates in the app"); Barnard's Star stays the example for an unusable position, the
+practice screen and `DEFAULT_SELECTION`'s settings (detector 5, fov 0.1, normal).
 
 Results are cached only when complete. If any cutout failed to download, or Gaia did not
 answer, the response still comes back (with `failures` or `gaia_error` set) but is not
@@ -485,6 +488,13 @@ Cadence and counts at Barnard's Star
 Gaia
 - `https://gea.esac.esa.int/tap-server/tap/sync` with `REQUEST=doQuery&LANG=ADQL&
   FORMAT=votable&QUERY=...` on `gaiadr3.gaia_source` answers in about 3.5 s.
+- On 2026-11-15 that server took no connections at all. `astrometry.gaia_cone` now tries it
+  3 times (30 s each) and then asks the same table at CfA's copy of VizieR
+  (`https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?-source=I/355/gaiadr3`, columns Source,
+  RA_ICRS, DE_ICRS, pmRA, pmDE, Plx, Gmag, `-out.max=unlimited`). For four cached cones
+  (Barnard's Star, V462 Lup, V572 Vel, Serpens South; 1,850 stars) the copy gave the same stars
+  at the same positions; for the first three (1,835 stars) positions agree to 2e-8 arcsec,
+  motions to 0.0005 mas/yr and parallaxes to 0.00005 mas (the copy's printed precision).
 - Barnard's Star is Gaia DR3 4472832130942575872: pm (-801.55, +10362.39) mas/yr,
   parallax 546.98 mas. Position at 2026.0: RA 269.446267, Dec +4.768222 (4.50 arcmin
   from J2000).
@@ -1018,3 +1028,26 @@ Earth-reflex stacking (2026-11-14, `backend/reflex.py`, `scripts/check_reflex.py
 - Eris, visit 2025-07-10 to 07-25, 0.13 degree field centred on JPL's position: 1.2 arcsec from JPL, S/N 14.8, best 111 AU, epoch-bootstrap 68% range 100-143 (misses JPL's 95.5), 95% range 77 to unbounded; straight track rejected at delta S^2 48 (about 7 sigma) but only 17 (about 4 sigma) with the first epoch (D1, 2025-07-10) removed. Field moved 2.5 arcmin: 1.1 arcsec, S/N 15.6, 118 AU, 68% range 91-138. Acceptance: all lines pass except the strict A4 (68% range) of the centred run. The profile interval (82-156 AU) is statistical only and 2-3 times too narrow; the shifted run is a noise draw, not a systematic.
 - Three band fluxes only (D1-D3, 0.75-2.4 um, matched-filter scale, about 0.68 of aperture scale): 0.105 / 0.066 / 0.049 mJy; a solar-coloured body also falls (about 1 : 0.95 : 0.72), so no methane claim. Not a 0.75-5 um spectrum.
 - False alarms: 6 null field-visits, raw peaks of 8 or more in 4 of 6 forward and 2 of 6 reversed maxima, all removed by other-visit / edge / few-exposure / detector vetoes, 0 survivors (rate below about 0.5 per field-visit at 95%); raw S/N 8 is NOT a calibrated threshold. Sedna (V 20.8) forced S/N 7.5: not found. Depth: about 0.6 mag fainter than Eris (about V 19.3 Eris-coloured, V 20.7 Sedna-coloured), 0.05-0.06 mJy aperture scale at S/N 8, 50% completeness: does not test Planet Nine. A distance only within about 120 AU at S/N 8 (15-day visit), not "50-400 AU". Searched area 0.0169 square degrees per field.
+
+The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the referee's ruling and the evidence: `docs/sweep.md`)
+- Candidates A (Sagittarius), B (Scorpius) and C (Norma): found in no catalogue or report we checked; nobody has
+  confirmed them; nothing has been reported anywhere. Their buttons come first in the row of targets, each with the
+  referee's one allowed sentence as its description, and the page opens on B. Positions are the reviewers' corrected
+  ones (A 270.80408 -23.46818, B 253.18038 -44.67697, C 241.70906 -52.20564), never the sweep's.
+- The buttons ask `/api/frames` with `pmra=0&pmdec=0`, so the target is that one place and `detection_sigma` is
+  measured there. Without a motion (no Gaia star to G 17 within 15 arcsec, so no target) the view measures the
+  brightest source near the centre, which in 2025 was a neighbouring star: A detector 6 "clear", 97 times the
+  scatter, 385 mJy, 19.7 arcsec off (the 437 mJy star 20 arcsec away); B detector 6 27 times, 34 mJy, 10.3 arcsec
+  off (the 40 mJy star 10 arcsec away); C detector 5 9.5 times, 47 mJy.
+- At the fixed place (detector, visits 2025 / spring 2026 / Aug-Sep 2026, times the scatter, fitted mJy):
+  A D6 -6.2 (-26) / 521 (1,925) / 168 (631); B D6 -1.8 (-3.3) / 282 (377) / 619 (926); C D5 -1.1 (-3.2) /
+  75 (114) / 0.7 (0.3). The ruling: A about 0, 2,419-2,926 (partly saturated), 670-803; B about 0, 393-424,
+  1,006-1,089; C about 0, about 85-110, about 3-5. A's negative 2025 value is most likely the wing of the 437 mJy
+  star, which the fit does not model: it is not a Gaia star brighter than G 17 (the three within 30 arcsec are
+  22.7 to 29.0 arcsec from A and none is at its place). C in detector 6 has a fourth visit of
+  two April 2026 exposures spoiled by cosmic-ray "snowballs" ("unknown"), so its button uses detector 5.
+- `wording.ts` `changeHeadline`: where a target is "not seen" (under 3) in some visits and "clear" (5 or more) in
+  others, Beginner's sentence says exactly that ("Not seen in August 2025. Clearly there by March 2026."), then the
+  allowed sentence for a candidate (`findAt`, within 5 arcsec) or one hedged line elsewhere. It never fires without
+  a target, with a blended Gaia neighbour, with saturation at the place in a "not seen" visit, near the picture's
+  edge, or when a "not seen" visit is too shallow for the brightness seen elsewhere to have been clear in it.
