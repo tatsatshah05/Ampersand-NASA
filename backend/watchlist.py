@@ -208,7 +208,8 @@ def _same_patch(a: dict[str, Any], b: dict[str, Any]) -> bool:
 def _upsert(con: sqlite3.Connection, now: str, group: str, machine: dict[str, Any], patch: dict[str, Any]) -> str:
     kind, ra, dec = machine["kind"], float(machine["ra"]), float(machine["dec"])
     rejected = group == "artefact"
-    seen = {"ra": patch["ra"], "dec": patch["dec"], "fov": patch["fov"], "detectors": patch["detectors"], "last_seen": now}
+    seen = {"ra": patch["ra"], "dec": patch["dec"], "fov": patch["fov"], "detectors": patch["detectors"],
+            "last_seen": now}
     row = _find_match(con, kind, rejected, ra, dec)
     if row is None:
         cid = candidate_id(kind, ra, dec, rejected)
@@ -340,7 +341,7 @@ def _mine(con: sqlite3.Connection, voter: str | None) -> dict[str, str]:
 
 
 def _all_rows(con: sqlite3.Connection, voter: str | None, group: str | None, kind: str | None) -> list[dict[str, Any]]:
-    sql, args = "SELECT * FROM candidates WHERE 1=1", []
+    sql, args = "SELECT * FROM candidates WHERE 1=1", []  # type: tuple[str, list[Any]]
     if group:
         sql, args = sql + " AND grp=?", [*args, group]
     if kind:

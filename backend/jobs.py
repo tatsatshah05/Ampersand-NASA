@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from typing import Any
 
-from . import search, spherex
+from . import search, spherex, watchlist
 
 log = logging.getLogger("backend.jobs")
 
@@ -47,6 +47,7 @@ def _run(job: dict[str, Any], ra: float, dec: float, fov: float, detectors: tupl
         job["detector_now"] = None
         job["result"] = search.search(ra, dec, fov, detectors, fetch=search.fetch_to_own_cache)
         job["state"] = "done"
+        watchlist.ingest_safely(job["result"])   # add the finds to the shared watchlist; never fails the search
     except spherex.BadRequest as e:
         job.update(state="failed", error=str(e))
     except spherex.ArchiveError as e:
