@@ -1,0 +1,123 @@
+{
+ "key": "a9e332df38415c56",
+ "ra": 156.30783,
+ "dec": -53.522,
+ "fov": 0.1,
+ "detector": 2,
+ "mode": "normal",
+ "size_px": 180,
+ "pixel_arcsec": 2.0,
+ "target": null,
+ "gaia_error": null,
+ "failures": [],
+ "frames": [
+  {
+   "epoch": 1,
+   "date_start": "2025-05-29",
+   "date_end": "2025-06-23",
+   "mjd_mean": 60841.059195054884,
+   "date_mean": "2025-06-15",
+   "n_exposures": 21,
+   "wavelength_um": [
+    1.09584379196167,
+    1.6581511497497559
+   ],
+   "flagged_fraction": 0.08011732585596222,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 5,
+   "rejected_readings": 316,
+   "centroid": {
+    "ra": 156.30961792333392,
+    "dec": -53.52049368542591,
+    "x": 87.58662988171997,
+    "y": 86.78865777036674,
+    "err_arcsec": 2.0,
+    "err_arcsec_fit": 0.2731672707791678,
+    "saturated_core": true,
+    "snr": 8.261286736526033,
+    "fwhm_arcsec": 5.363112634898105,
+    "blended": null
+   },
+   "centroid_offset_arcsec": null,
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": null,
+   "detection_sigma": 1853.72,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/a9e332df38415c56/epoch1.png"
+  },
+  {
+   "epoch": 2,
+   "date_start": "2025-12-22",
+   "date_end": "2026-01-20",
+   "mjd_mean": 61039.934680396975,
+   "date_mean": "2025-12-30",
+   "n_exposures": 27,
+   "wavelength_um": [
+    1.1167186498641968,
+    1.6308622360229492
+   ],
+   "flagged_fraction": 0.055397822806814406,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 12,
+   "rejected_readings": 0,
+   "centroid": {
+    "ra": 156.3079298006526,
+    "dec": -53.521933139657,
+    "x": 89.39320062301064,
+    "y": 89.3796514574512,
+    "err_arcsec": 2.0,
+    "err_arcsec_fit": 0.03139193922327399,
+    "saturated_core": true,
+    "snr": 71.88973940772145,
+    "fwhm_arcsec": 9.371755761836226,
+    "blended": null
+   },
+   "centroid_offset_arcsec": null,
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": null,
+   "detection_sigma": 1868.63,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/a9e332df38415c56/epoch2.png"
+  },
+  {
+   "epoch": 3,
+   "date_start": "2026-05-31",
+   "date_end": "2026-07-08",
+   "mjd_mean": 61204.95800035738,
+   "date_mean": "2026-06-13",
+   "n_exposures": 23,
+   "wavelength_um": [
+    1.1082854270935059,
+    1.6368242502212524
+   ],
+   "flagged_fraction": 0.036078422565576716,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 20,
+   "centroid": {
+    "ra": 156.3077433122849,
+    "dec": -53.522010320473754,
+    "x": 89.59276669895866,
+    "y": 89.51857690923896,
+    "err_arcsec": 0.2947422131836548,
+    "err_arcsec_fit": 0.2947422131836548,
+    "saturated_core": false,
+    "snr": 7.656719106442061,
+    "fwhm_arcsec": 8.846910639842896,
+    "blended": null
+   },
+   "centroid_offset_arcsec": null,
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": null,
+   "detection_sigma": 165.61,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/a9e332df38415c56/epoch3.png"
+  }
+ ]
+}

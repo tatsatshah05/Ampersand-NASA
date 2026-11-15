@@ -82,7 +82,7 @@ export function WatchlistView() {
   }
 
   useEffect(() => {
-    document.title = 'Help check what the search found'
+    document.title = 'Vote on what the search found'
     const ctrl = new AbortController()
     for (const g of GROUPS) run(g, 0, ctrl.signal)
     return () => ctrl.abort()
@@ -98,7 +98,7 @@ export function WatchlistView() {
         <p>
           <a href={new URLSearchParams(window.location.search).get('ui') === 'expert' ? '/?ui=expert' : '/'}>Back to the viewer</a>
         </p>
-        <h1>Help check what the search found</h1>
+        <h1>Vote on what the search found</h1>
         <p className="intro">{INTRO}</p>
         <p className="intro">{ORDER_SENTENCE}</p>
         <p className="hint">

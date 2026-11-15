@@ -10,7 +10,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import type { FramesReady } from '../api'
 import { releaseFocusAfterPointer } from '../focus'
-import { expertCells, plainResult, predictedBy, rowMonth, rowName, tableCaption, tableRows } from '../wording'
+import { expertCells, plainResult, rowMonth, rowName, tableCaption, tableRows } from '../wording'
 
 interface Props {
   data: FramesReady
@@ -58,6 +58,10 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
   if (!expert) {
     return (
       <table className="visit-table" ref={table} aria-label="Every visit, and how far it had moved since the start">
+        <colgroup>
+          <col className="c-visit" />
+          <col className="c-moved" />
+        </colgroup>
         <thead>
           <tr>
             <th scope="col">Visit</th>
@@ -82,10 +86,16 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
     )
   }
 
-  const by = predictedBy(data.target)
   return (
     <table className="visit-table expert" ref={table}>
       <caption>{tableCaption(data)}</caption>
+      <colgroup>
+        <col className="c-visit" />
+        <col className="c-measured" />
+        <col className="c-total" />
+        <col className="c-predicted" />
+        <col className="c-differ" />
+      </colgroup>
       <thead>
         <tr>
           <th scope="col">Visit</th>
@@ -94,7 +104,7 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
           </th>
           <th scope="col">Total</th>
           <th scope="col">
-            <span className="key gaia">+</span> {by === 'Gaia' ? 'Gaia' : 'Predicted'}
+            <span className="key gaia">+</span> Predicted
           </th>
           <th scope="col">Differ</th>
         </tr>
@@ -106,16 +116,14 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
         return (
           <tbody key={index} className="visit-rows" aria-current={on ? 'true' : undefined}>
             <tr className="visit-row">
-              <th scope="row" rowSpan={2}>
-                {button(index, rowName(row.frame, data))}
-              </th>
+              <th scope="row">{button(index, rowName(row.frame, data))}</th>
               <td>{cells.measured}</td>
               <td>{cells.total}</td>
               <td>{cells.predicted}</td>
               <td>{cells.differ}</td>
             </tr>
             <tr className="visit-row-about">
-              <td colSpan={4}>{cells.about}</td>
+              <td colSpan={5}>{cells.about}</td>
             </tr>
           </tbody>
         )

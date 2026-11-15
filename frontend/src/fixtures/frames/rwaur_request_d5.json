@@ -1,0 +1,190 @@
+{
+ "key": "21247c32c6befc66",
+ "ra": 76.956587,
+ "dec": 30.401291,
+ "fov": 0.1,
+ "detector": 5,
+ "mode": "normal",
+ "size_px": 180,
+ "pixel_arcsec": 2.0,
+ "target": {
+  "source_id": null,
+  "ra": 76.956587,
+  "dec": 30.401291,
+  "pmra": 7.23,
+  "pmdec": -20.33,
+  "parallax": 15.42,
+  "gmag": null,
+  "ref_epoch": 2026.0,
+  "origin": "request"
+ },
+ "gaia_error": null,
+ "failures": [],
+ "frames": [
+  {
+   "epoch": 1,
+   "date_start": "2025-09-08",
+   "date_end": "2025-09-10",
+   "mjd_mean": 60927.41401027939,
+   "date_mean": "2025-09-09",
+   "n_exposures": 18,
+   "wavelength_um": [
+    3.8271145820617676,
+    4.401551246643066
+   ],
+   "flagged_fraction": 0.03260588842975207,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 17,
+   "rejected_readings": 62,
+   "centroid": {
+    "ra": 76.956272891909,
+    "dec": 30.40127650611916,
+    "x": 89.98765416537273,
+    "y": 89.52608830907428,
+    "err_arcsec": 1.0,
+    "err_arcsec_fit": 0.041275272732030445,
+    "saturated_core": true,
+    "snr": 54.675795224894806,
+    "fwhm_arcsec": 11.180121869832377,
+    "blended": true
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.9884822481099236,
+    "north": -0.05981515047750463,
+    "total": 0.990290365021843
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 76.95659124282282,
+    "dec": 30.401293121438737,
+    "x": 89.49341300041029,
+    "y": 89.49618141016232
+   },
+   "detection_sigma": 7511.48,
+   "detection": "clear",
+   "blend": [
+    {
+     "source_id": "156430822114424576",
+     "gmag": 12.18,
+     "distance_arcsec": 1.66,
+     "east_arcsec": -1.55,
+     "north_arcsec": -0.58,
+     "flux_mjy": null,
+     "light_share": null
+    }
+   ],
+   "image": "/frames/21247c32c6befc66/epoch1.png"
+  },
+  {
+   "epoch": 2,
+   "date_start": "2026-03-01",
+   "date_end": "2026-03-09",
+   "mjd_mean": 61103.51225425553,
+   "date_mean": "2026-03-04",
+   "n_exposures": 19,
+   "wavelength_um": [
+    3.812875509262085,
+    4.423494815826416
+   ],
+   "flagged_fraction": 0.022326009317636113,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 6,
+   "rejected_readings": 158,
+   "centroid": {
+    "ra": 76.95651454355311,
+    "dec": 30.401222346405817,
+    "x": 89.61248900852848,
+    "y": 89.62357643355628,
+    "err_arcsec": 1.0,
+    "err_arcsec_fit": 0.0203561338407763,
+    "saturated_core": true,
+    "snr": 110.86380065641671,
+    "fwhm_arcsec": 11.258981962782624,
+    "blended": true
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.2110109615792997,
+    "north": -0.24245543486500765,
+    "total": 0.32141914037935054
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 76.95658250179189,
+    "dec": 30.401289695137724,
+    "x": 89.50698348654994,
+    "y": 89.50234875196654
+   },
+   "detection_sigma": 11871.8,
+   "detection": "clear",
+   "blend": [
+    {
+     "source_id": "156430822114424576",
+     "gmag": 12.18,
+     "distance_arcsec": 1.64,
+     "east_arcsec": -1.54,
+     "north_arcsec": -0.59,
+     "flux_mjy": null,
+     "light_share": null
+    }
+   ],
+   "image": "/frames/21247c32c6befc66/epoch2.png"
+  },
+  {
+   "epoch": 3,
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-15",
+   "mjd_mean": 61296.108141333185,
+   "date_mean": "2026-09-13",
+   "n_exposures": 19,
+   "wavelength_um": [
+    3.8148868083953857,
+    4.422290802001953
+   ],
+   "flagged_fraction": 0.028077307498160765,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 383,
+   "centroid": {
+    "ra": 76.95654469769448,
+    "dec": 30.401232176913414,
+    "x": 89.56567454149432,
+    "y": 89.605881543619,
+    "err_arcsec": 0.016841074414817723,
+    "err_arcsec_fit": 0.016841074414817723,
+    "saturated_core": false,
+    "snr": 134.00322844449383,
+    "fwhm_arcsec": 10.979386305604798,
+    "blended": true
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.15184077330216467,
+    "north": -0.19900105426557957,
+    "total": 0.25031388302651436
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 76.95659359957072,
+    "dec": 30.401287454984043,
+    "x": 89.4897541391343,
+    "y": 89.50638102843688
+   },
+   "detection_sigma": 7999.48,
+   "detection": "clear",
+   "blend": [
+    {
+     "source_id": "156430822114424576",
+     "gmag": 12.18,
+     "distance_arcsec": 1.66,
+     "east_arcsec": -1.56,
+     "north_arcsec": -0.59,
+     "flux_mjy": null,
+     "light_share": null
+    }
+   ],
+   "image": "/frames/21247c32c6befc66/epoch3.png"
+  }
+ ]
+}

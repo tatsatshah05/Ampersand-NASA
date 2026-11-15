@@ -77,8 +77,12 @@ export interface VisitRow {
   predicted: { east: number; north: number } | null
   /** How far the measured and the predicted shift differ, in arcseconds. */
   differ: number | null
-  /** The measured shift is under SMALL_SHIFT_ARCSEC, so it may be measurement error. */
+  /** The measured shift is under SMALL_SHIFT_ARCSEC (a third of a SPHEREx pixel), so it may be measurement error. */
   withinError: boolean
+  /** The smallest shift trusted as real from the start to this visit (realShiftBar); null without both positions. */
+  bar: number | null
+  /** The measured shift is at least `bar`: the only kind the page calls movement. */
+  real: boolean
 }
 
 /** Every visit of the view in time order (the subtracted one of a difference view first), with its shifts. */
@@ -94,9 +98,42 @@ export function visitRows(data: FramesReady): VisitRow[] {
     const shift = !start && from?.centroid && frame.centroid ? shiftBetween(from.centroid, frame.centroid) : null
     const predicted = !start && from?.predicted && frame.predicted ? skyOffsetArcsec(from.predicted, frame.predicted) : null
     const differ = shift && predicted ? Math.hypot(shift.east - predicted.east, shift.north - predicted.north) : null
-    return { index, frame, start, shift, predicted, differ, withinError: shift !== null && shift.total < SMALL_SHIFT_ARCSEC }
+    const bar = shift && from?.centroid && frame.centroid ? realShiftBar(from.centroid, frame.centroid) : null
+    const real = shift !== null && bar !== null && shift.total >= bar
+    return { index, frame, start, shift, predicted, differ, withinError: shift !== null && shift.total < SMALL_SHIFT_ARCSEC, bar, real }
   })
 }
 
 /** The rows with a measured position. */
 export const measuredRows = (rows: VisitRow[]): VisitRow[] => rows.filter((r) => r.frame.centroid)
+
+/**
+ * The smallest shift trusted as real between two measured positions: a third of a pixel, or
+ * three times their combined position error when that is larger (a saturated core has an error
+ * of 1 to 2 arcseconds, so the bar rises with it).
+ */
+export function realShiftBar(from: Centroid, to: Centroid): number {
+  return Math.max(SMALL_SHIFT_ARCSEC, 3 * Math.hypot(from.err_arcsec ?? 0, to.err_arcsec ?? 0))
+}
+
+/** True when the shift from `from` to `to` is larger than the bar above. */
+export function isRealShift(from: Centroid, to: Centroid): boolean {
+  return shiftBetween(from, to).total >= realShiftBar(from, to)
+}
+
+/** The first and last measured positions, or null with fewer than two. */
+export function overallEnds(data: FramesReady): [Centroid, Centroid] | null {
+  const path = measuredPath(data)
+  return path.length >= 2 ? [path[0], path[path.length - 1]] : null
+}
+
+/**
+ * How far the catalogue says the target should have moved between the start picture and this
+ * one (from the predicted positions the frames carry); null when either is missing.
+ */
+export function expectedShift(data: FramesReady, frame: Frame): Shift | null {
+  const start = startCentroid(data)
+  const all = data.reference_frame ? [data.reference_frame, ...data.frames] : data.frames
+  const first = all.find((f) => f.centroid === start)
+  return first?.predicted && frame.predicted ? shiftBetween(first.predicted as Centroid, frame.predicted as Centroid) : null
+}

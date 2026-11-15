@@ -5,6 +5,7 @@ import type { Frame, FramesReady } from '../api'
 import { loadFor, type Load } from '../useFrames'
 import { monthYear, visitCaption } from '../wording'
 import { VisitStrip } from './Transport'
+import { VisitDetails } from './VisitDetails'
 
 // The page's frames come from useFrames; here each test says what it returns.
 const held = vi.hoisted(() => ({ load: { state: 'loading', previous: null, slow: false } as unknown }))
@@ -123,8 +124,11 @@ describe('the page while a view loads', () => {
     const strip = html.slice(html.indexOf('class="visit-strip"'), html.indexOf('</aside>'))
     expect(strip.match(/class="visit"/g)).toHaveLength(3)
     expect(html).toMatch(/class="visit"[^>]*disabled=""/)
+    // The last star's table stays, dimmed, with its rows' buttons switched off until the new one arrives.
     expect(html).toContain('class="readout-block busy"')
-    expect(html).toContain('Visit 1: 2025-01-10 to 2025-01-12, 4 exposures')
+    const block = html.slice(html.indexOf('class="readout-block'), html.indexOf('<p class="sr-only" aria-live="polite">'))
+    expect(block.match(/aria-label="Show visit \d"/g)).toHaveLength(3)
+    expect(block).toMatch(/class="visit-row-button"[^>]*disabled=""/)
   })
 
   it('a quick answer leaves the pictures as they are: no dimming, no message', () => {
@@ -153,20 +157,37 @@ describe('the page while a view loads', () => {
 })
 
 describe('the page with a view loaded', () => {
-  it('shows the first visit, marked in the strip, and its sentences in the readout block', () => {
+  it('shows every visit in one table, the first marked in the strip and in the table', () => {
     const html = pageWith({ state: 'ready', data: view('new') })
     expect(html).toContain('class="plate"')
     expect(html).not.toContain('Loading ')
     const strip = html.slice(html.indexOf('class="visit-strip"'))
     expect(strip.split('<button').slice(1, 4).map((b) => b.includes('aria-current="true"'))).toEqual([true, false, false])
-    const block = html.slice(html.indexOf('class="readout-block'))
-    expect(block).toContain('Visit 1: 2025-01-10 to 2025-01-12, 4 exposures')
-    expect(block).toContain('This is where it started. Later frames are measured against it.')
+    const block = html.slice(html.indexOf('class="readout-block'), html.indexOf('<p class="sr-only" aria-live="polite">'))
+    // A real table: a name, column headers, and one row per visit with a button that shows it.
+    expect(block).toMatch(/<table class="visit-table" aria-label="[^"]+">/)
+    expect(block.match(/<th scope="col">/g)).toHaveLength(2)
+    const rows = block.split('<tr class="visit-row"').slice(1)
+    expect(rows).toHaveLength(3)
+    expect(rows.map((r) => r.startsWith(' aria-current="true"'))).toEqual([true, false, false])
+    expect(rows.map((r) => /aria-label="Show visit (\d)"/.exec(r)?.[1])).toEqual(['1', '2', '3'])
+    expect(rows[0]).toContain('<td>start</td>')
+    // The whole run, said once, and none of the old sentences about the visit on screen.
+    expect(block).toContain('class="result-sentence">No movement seen between January 2025 and March 2025.')
+    expect(block).not.toContain('This is where it started')
+    expect(block).not.toContain('Visit 1: 2025-01-10')
+    expect(block).not.toContain('class="tag"')
+  })
+
+  it('says nothing to a screen reader until the visitor steps or chooses a visit', () => {
+    const html = pageWith({ state: 'ready', data: view('new') })
+    expect(html).toContain('<p class="sr-only" aria-live="polite"></p>')
+    expect(html).not.toMatch(/readout-block[^>]*aria-live/)
   })
 
   it('Beginner has an i button on the movement and the detection lines, and the stage is described by the picture\'s', () => {
     const html = pageWith({ state: 'ready', data: view('new') })
-    const block = html.slice(html.indexOf('class="readout-block'))
+    const block = html.slice(html.indexOf('class="readout-block'), html.indexOf('<p class="sr-only" aria-live="polite">'))
     expect(block).toContain('aria-label="About the movement line"')
     expect(html).toContain('aria-describedby="stage-help"')
     expect(html).toContain('aria-controls="stage-help"')
@@ -176,13 +197,38 @@ describe('the page with a view loaded', () => {
     expect(pageWith({ state: 'ready', data: view('new') }, '?ui=expert')).not.toContain('info-button')
   })
 
-  it('Expert has the same readout block, with the tools under it', () => {
+  it('Expert has the same readout block holding the full table, with the tools under it', () => {
     const html = pageWith({ state: 'ready', data: view('new') }, '?ui=expert')
     expect(html).toContain('class="readout-block"')
+    const block = html.slice(html.indexOf('class="readout-block'), html.indexOf('<p class="sr-only" aria-live="polite">'))
+    expect(block).toContain('<table class="visit-table expert">')
+    expect(block).toContain('<caption>Shift since visit 1 in ″, east and north.</caption>')
+    expect(block.match(/<th scope="col">/g)).toHaveLength(5)
+    // One tbody per visit: two lines, the first headed by the visit's button.
+    const visits = block.split('<tbody class="visit-rows"').slice(1)
+    expect(visits).toHaveLength(3)
+    expect(visits[0]).toMatch(/^ aria-current="true"/)
+    expect(visits[1]).toContain('aria-label="Show visit 2"')
+    expect(visits[1]).toContain('10–12 Feb 2025 · 4 exp. · ±0.5″')
+    // The tools, with their long names kept for screen readers (and the checks).
     expect(html).toContain('aria-label="Search for a distant world (Planet X)"')
     expect(html).toContain('aria-label="Search this patch for anything that moved or changed"')
-    expect(html).toContain('>Spectrum of the target<')
+    expect(html).toContain('aria-label="Spectrum of the target"')
     expect(html).toContain('>Brightness over time<')
     expect(html).toContain('>Asteroids and comets<')
+    // The three folds, closed, with nothing inside them in the page until opened.
+    expect(html.match(/<details class="fold"><summary>(Catalogue notes|Visit details|Sky context)<\/summary><\/details>/g)).toHaveLength(3)
+    expect(html).not.toContain('Frame details')
+  })
+
+  it('Visit details holds every visit at once, each with its own cautions in detection.ts words', () => {
+    const data = view('new')
+    data.frames[1] = { ...data.frames[1], detection: 'marginal', detection_sigma: 3.4, centroid: { ...data.frames[1].centroid!, saturated_core: true, err_arcsec: 1 } }
+    data.frames[2] = { ...data.frames[2], centroid: null, centroid_reason: 'The predicted position is off the picture.' }
+    const html = renderToStaticMarkup(<VisitDetails data={data} />)
+    expect(html.match(/class="visit-detail"/g)).toHaveLength(3)
+    expect(html).toContain('Marginal detection, 3.4 times the background scatter: treat with care.')
+    expect(html).toContain('The core is overexposed, so the position is good to about 1″, not the much smaller error of the fit.')
+    expect(html).toContain('No position could be measured in this frame. The predicted position is off the picture.')
   })
 })

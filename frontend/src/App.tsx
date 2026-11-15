@@ -9,7 +9,7 @@
 // the plate. Together they fill the window and never move: text that changes with the
 // visit sits in a block of fixed height, and while a new view loads the old pictures stay
 // on the plate, dimmed. Expert's tool panels open below, and the page scrolls to them.
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { addressOf, DEFAULT_SELECTION, readAddress, readStoredLevel, storeLevel, toFramesQuery, withTarget, writeAddress, type Selection, type UiLevel } from './address'
 import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
 import { BrightnessPanel } from './components/BrightnessPanel'
@@ -35,8 +35,8 @@ import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
 import { PlateLoading, PlateMessage } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
-import { infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
-import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
+import { brightLine, infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
+import { isRealShift, measuredPath, overallEnds, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
 import type { Candidate } from './distant'
 import type { SearchObject, SearchQuery } from './search'
@@ -138,7 +138,7 @@ export function Viewer() {
   // The player opens playing, so the visits flip by themselves; with reduced motion asked for it opens still and the guide says to press Play.
   const [startedStill] = useState(prefersStillness)
   const mark = useCallback((what: keyof Progress) => setProgress((was) => (was[what] ? was : { ...was, [what]: true })), [])
-  const { togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
+  const { pause: pausePlayer, togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
   const togglePlay = useCallback(() => {
     playerTogglePlay()
     setSpokenFor(null)
@@ -302,6 +302,8 @@ export function Viewer() {
   // The stars are placed on each visit's frame. Find the visit on screen among them: a
   // difference view leaves the first visit out, and a sum has no single visit at all.
   const starsFrame = starsData && frame && frame.epoch !== null ? starsData.frames.findIndex((f) => f.epoch === frame.epoch) : -1
+  // Whether they are drawn on every visit of the view (not on a sum): said once, whichever visit is on screen.
+  const starsOnVisits = starsData !== null && data !== null && data.frames.every((f) => f.epoch !== null && starsData.frames.some((s) => s.epoch === f.epoch))
   const hasFlags = data !== null && data.frames.every((f) => f.flags_image)
 
   // ---- what is drawn over the picture ------------------------------------------------------
@@ -309,9 +311,10 @@ export function Viewer() {
   const grid: Grid | null = data && { ra: data.ra, dec: data.dec, sizePx: data.size_px, pixelArcsec: data.pixel_arcsec }
   const start = data ? startCentroid(data) : null
   const path = data ? measuredPath(data) : []
-  const overall = data ? overallShift(data) : null
-  // An arrowhead says "it went this way", so it is drawn only for a shift large enough to be real.
-  const arrow = overall !== null && overall.total >= SMALL_SHIFT_ARCSEC
+  const ends = data ? overallEnds(data) : null
+  // An arrowhead says "it went this way", so it is drawn only for a shift large enough to be real,
+  // and in Beginner only when a known object is listed at the centre (else the marker is just the brightest spot).
+  const arrow = ends !== null && isRealShift(ends[0], ends[1]) && (expert || data?.target != null)
 
   // The view starts on the target (on the whole picture if nothing was measured) and
   // goes back to that when the patch of sky changes. A change of detector or mode keeps
@@ -353,7 +356,12 @@ export function Viewer() {
   useEffect(() => {
     if (opened) document.getElementById(`tool-${opened.tool}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
   }, [opened])
-  const backToPicture = () => shell.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+  const backToPicture = () => {
+    shell.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+    // The picture takes the focus, so the space bar and the arrow keys play and step again
+    // (the button that was pressed goes away once the picture is in view).
+    shell.current?.querySelector<HTMLElement>('.stage-surface')?.focus({ preventScroll: true })
+  }
   // Whether the picture is in the window: when it is not and a panel is open, a button leads back to it.
   const [benchInView, setBenchInView] = useState(true)
   useEffect(() => {
@@ -398,12 +406,21 @@ export function Viewer() {
     !expert && (
       <InfoButton
         name={INFO_NAMES[key]}
-        text={infoFor(key, data, frame, starsData?.bright_nearby)}
+        text={infoFor(key, data, starsData?.bright_nearby, shownName)}
         className={className}
         id={id}
-        onOpen={() => mark('read')}
+        onOpen={() => {
+          mark('read')
+          // What is explained is on screen now: stop the film so the words and the picture stay the same.
+          pausePlayer()
+        }}
       />
     )
+
+  // Beginner's sentence about the whole run and the clearness line; the notes under the table (both levels).
+  const result = data && !expert ? overallResult(data) : null
+  const seen = data && !expert ? seenLine(data) : null
+  const underTable = data ? tableNotes(data, expert ? 'expert' : 'beginner') : []
 
   return (
     <div className="app">
@@ -423,10 +440,10 @@ export function Viewer() {
                 <TargetButtons search={skySearch} picked={pickedHere} shown={selection.name} />
                 <div className="target-actions">
                   <button type="button" className="quiet" onClick={() => window.location.assign(trainingAddress(selection, newSeed()))}>
-                    Practise: find a planted object
+                    Practise spotting a moving object
                   </button>
                   <a className="quiet" href={expert ? `${WATCHLIST_ADDRESS}&ui=expert` : WATCHLIST_ADDRESS}>
-                    Help check what the search found
+                    Vote on what the search found
                   </a>
                 </div>
               </nav>
@@ -437,7 +454,7 @@ export function Viewer() {
         <main className="bench" ref={bench}>
           <section className="stagecol" aria-label="The picture">
             <div className="plate-col">
-              <div className={busy ? 'plate busy' : 'plate'}>
+              <div className={busy ? 'plate busy' : 'plate'} ref={plate}>
                 {data && grid && frame && box ? (
                   <Stage
                     grid={grid}
@@ -549,7 +566,7 @@ export function Viewer() {
               <p className={shownName ? 'object-where' : 'object-where object-name'}>
                 <abbr title="right ascension">RA</abbr> {`${selection.ra.toFixed(5)}°, `}
                 <abbr title="declination">Dec</abbr> {`${selection.dec >= 0 ? '+' : '-'}${Math.abs(selection.dec).toFixed(5)}°`}
-                {expert && givenMotion !== null && `, followed with its known motion of ${givenMotion.toFixed(2)} arcseconds a year`}
+                {expert && givenMotion !== null && `; moving ${givenMotion.toFixed(2)}″ a year`}
               </p>
             </div>
 
@@ -572,31 +589,50 @@ export function Viewer() {
               </div>
             )}
 
-            {/* Everything that changes with the visit on screen, in a block whose height never changes. */}
+            {/* The table of every visit, with Beginner's sentence about the whole run over it, in a
+                block whose height never changes. Nothing in it depends on the visit on screen: only
+                the mark of that visit's row moves. While another star loads, the last one's table
+                stays, dimmed. */}
             <div className={busy ? 'readout-block busy' : 'readout-block'} aria-busy={busy || undefined}>
-              {data && frame && (
-                // Read out when stepping, but not while playing: it would never stop talking.
-                <div aria-live={player.playback === 'paused' ? 'polite' : 'off'}>
-                  <p className="frame-label">
-                    {player.playback === 'blinking' && <span className="tag">{player.current === 0 ? 'First' : 'Last'}</span>}
-                    {frameLabel(frame, data)}
-                  </p>
-                  <p className="motion-readout">
-                    {motionSentence(frame, data)}
+              {data && result && (
+                <>
+                  <p className="result-sentence">
+                    {result.sentence}
                     {infoButton('movement')}
                   </p>
-                  <DetectionReadout frame={frame} detectionOnly={!expert} info={infoButton('detection')} />
-                </div>
+                  {result.more.map((line) => (
+                    <p key={line} className="result-more">
+                      {line}
+                    </p>
+                  ))}
+                </>
               )}
+              {data && seen && (
+                <p className="seen-line">
+                  {seen}
+                  {infoButton('detection')}
+                </p>
+              )}
+              {data && <VisitTable data={data} current={player.current} expert={expert} disabled={busy} onShow={showVisit} follow={voice !== ''} />}
+              {underTable.map((line) => (
+                <p key={line} className="table-note">
+                  {line}
+                </p>
+              ))}
+              {result?.pointer && <p className="table-note result-pointer">{result.pointer}</p>}
               {expert && saturation && <p className="notice">{saturation}</p>}
               {/* Shown at both levels and whether or not the overlay is on: it warns about shapes in the picture itself. */}
               {starsData?.bright_note && (
                 <p className="hint bright-star">
-                  {starsData.bright_note}
+                  {expert ? starsData.bright_note : brightLine(starsData.bright_nearby)}
                   {infoButton('bright')}
                 </p>
               )}
             </div>
+            {/* For screen readers: the row of the visit just stepped to or chosen. Never while playing. */}
+            <p className="sr-only" aria-live="polite">
+              {voice}
+            </p>
 
             {expert ? (
               <>
@@ -610,12 +646,10 @@ export function Viewer() {
                       show({ ...selection, ...change }, 'replace')
                     }}
                   />
-                  {data && <p className="mode-note">{modeSentence(data)}</p>}
-                </section>
-
-                <section className="ins-section" aria-labelledby="ins-picture">
-                  <h3 id="ins-picture">On the picture</h3>
-                  <div className="chips">
+                  {/* How to read a difference or a sum; the normal view needs no note. */}
+                  {data && data.mode !== 'normal' && <p className="mode-note">{modeSentence(data)}</p>}
+                  {/* What is drawn on the picture: under the menus, in the same section, to save a heading's height. */}
+                  <div className="chips on-picture" role="group" aria-label="On the picture">
                     {toggle(showMotion, setShowMotion, 'Motion markers', 'Mark where the target was measured in each frame')}
                     {toggle(
                       showGaia,
@@ -634,22 +668,11 @@ export function Viewer() {
                       !hasFlags,
                     )}
                   </div>
-                  {data && showMotion && path.length > 0 && (
-                    <MotionLegend
-                      start={path.length > 1}
-                      path={path.length > 1}
-                      arrow={arrow}
-                      marginal={data.frames.some(isMarginal)}
-                      note={data.mode === 'difference' ? "The positions were measured in each visit's own image, not in the difference." : undefined}
-                    />
-                  )}
-                  {data && frame && showFlags && hasFlags && (
+                  {/* Shown only while their switch is on; the legend of the marks is in Catalogue notes. */}
+                  {data && showFlags && hasFlags && (
                     <p className="readout">
-                      <span className="key nodata">■</span> no data, <span className="key saturated">■</span> saturated: no
-                      value in any exposure of this frame
-                      {frame.saturated_pixels === 0 && ' (none here)'}
-                      {(frame.photometry_saturated_exposures ?? 0) > 0 &&
-                        `. For measuring brightness the star's core is saturated in ${frame.photometry_saturated_exposures} of this frame's ${frame.n_exposures} exposures, even where the image looks fine.`}
+                      <span className="key nodata">■</span> no data, <span className="key saturated">■</span> saturated
+                      {flagsNote(data)}
                     </p>
                   )}
                   {data && showPixels && (
@@ -660,11 +683,14 @@ export function Viewer() {
                   )}
                 </section>
 
-                <section className="ins-section" aria-labelledby="ins-measure">
-                  <h3 id="ins-measure">Measure</h3>
-                  <div className="tool-buttons">
+                {/* Two columns of tools. A short label shows; the button's name keeps the long one. */}
+                <section className="ins-section" aria-labelledby="ins-tools">
+                  <h3 id="ins-tools">Measure and search</h3>
+                  <div className="tool-buttons two-columns">
                     <button
                       type="button"
+                      aria-label="Spectrum of the target"
+                      title="Spectrum of the target"
                       disabled={!ready}
                       onClick={() => {
                         if (!ready) return
@@ -672,7 +698,7 @@ export function Viewer() {
                         openTool('spectrum')
                       }}
                     >
-                      Spectrum of the target
+                      Spectrum
                     </button>
                     <button
                       type="button"
@@ -685,15 +711,10 @@ export function Viewer() {
                     >
                       Brightness over time
                     </button>
-                  </div>
-                </section>
-
-                <section className="ins-section" aria-labelledby="ins-search">
-                  <h3 id="ins-search">Search this patch</h3>
-                  <div className="tool-buttons">
                     <button
                       type="button"
                       aria-label="Search this patch for anything that moved or changed"
+                      title="Search this patch for anything that moved or changed"
                       disabled={!ready}
                       onClick={() => {
                         if (!ready) return
@@ -701,11 +722,12 @@ export function Viewer() {
                         openTool('search')
                       }}
                     >
-                      Anything that moved or changed
+                      Moved or changed
                     </button>
                     <button
                       type="button"
                       aria-label="Search for a distant world (Planet X)"
+                      title="Search for a distant world (Planet X)"
                       disabled={!ready}
                       onClick={() => {
                         if (!ready) return
@@ -713,7 +735,7 @@ export function Viewer() {
                         openTool('distant')
                       }}
                     >
-                      A distant world (Planet X)
+                      Distant world
                     </button>
                     <button
                       type="button"
@@ -729,16 +751,23 @@ export function Viewer() {
                   </div>
                 </section>
 
-                {/* Open from the start: measured against predicted is the check a judge looks for. The
-                    inspector scrolls inside itself, so its length moves nothing. */}
-                <details className="fold" open>
-                  <summary>Catalogue notes</summary>
-                  {/* The Gaia readout compares frames with the first one. With a single frame and a
-                      known motion there is nothing to compare, so one line says what the marks are. */}
+                {/* Only what does not depend on the visit: what the marks mean and the other Gaia
+                    stars. The measured-against-predicted comparison of every visit is the table. */}
+                <Fold title="Catalogue notes">
+                  {data && showMotion && path.length > 0 && (
+                    <MotionLegend
+                      start={path.length > 1}
+                      path={path.length > 1}
+                      arrow={arrow}
+                      marginal={data.frames.some(isMarginal)}
+                      note={data.mode === 'difference' ? "The positions were measured in each visit's own image, not in the difference." : undefined}
+                    />
+                  )}
+                  {/* With a single frame and a known motion there is nothing to compare, so one line says what the marks are. */}
                   {data &&
                     showGaia &&
                     (gaiaFrames.length > 1 || data.target?.pmra == null || data.target.pmdec == null ? (
-                      <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={data.target} gaiaError={data.gaia_error} pixelArcsec={data.pixel_arcsec} />
+                      <GaiaReadout target={data.target} gaiaError={data.gaia_error} pixelArcsec={data.pixel_arcsec} />
                     ) : (
                       <p className="readout">
                         <span className="key gaia">+</span> marks where the target's known motion puts it on the middle date
@@ -748,21 +777,19 @@ export function Viewer() {
                           : '. It moves too little in a year to draw as an arrow.'}
                       </p>
                     ))}
-                  {showGaia && starsData && starsFrame >= 0 && data && <p className="readout">{fieldStarsSummary(starsData, data.pixel_arcsec)}</p>}
-                  {showGaia && starsData && starsFrame < 0 && (
+                  {showGaia && starsData && starsOnVisits && data && <p className="readout">{fieldStarsSummary(starsData, data.pixel_arcsec)}</p>}
+                  {showGaia && starsData && !starsOnVisits && (
                     <p className="hint">The other Gaia stars are drawn on single visits only, so not on a sum of all visits.</p>
                   )}
                   {showGaia && starsError && <p className="hint">The other Gaia stars could not be loaded: {starsError}.</p>}
-                  {!showGaia && <p className="hint">Turn on the Gaia overlay to compare the picture with the catalogue.</p>}
-                </details>
+                  {!showGaia && <p className="hint">Turn on the Gaia overlay to see the catalogue's places on the picture.</p>}
+                </Fold>
 
-                <details className="fold">
-                  <summary>Frame details</summary>
-                  {data && frame ? <FrameDetails frame={frame} detector={data.detector} /> : <p className="hint">No frame yet.</p>}
-                </details>
+                <Fold title="Visit details">
+                  {data ? <VisitDetails data={data} /> : <p className="hint">No visits yet.</p>}
+                </Fold>
 
-                <details className="fold">
-                  <summary>Sky context</summary>
+                <Fold title="Sky context">
                   {showContext ? (
                     <ContextView ra={selection.ra} dec={selection.dec} fov={selection.fov} />
                   ) : (
@@ -773,10 +800,10 @@ export function Viewer() {
                       </button>
                     </>
                   )}
-                </details>
+                </Fold>
               </>
             ) : (
-              <StepGuide progress={progress} still={startedStill} />
+              <StepGuide progress={progress} still={startedStill} info={infoButton('steps')} />
             )}
 
             <footer className="credits">
@@ -845,6 +872,20 @@ export function Viewer() {
         </button>
       )}
     </div>
+  )
+}
+
+/**
+ * A folded section of Expert's side column. What it holds is in the page only while it is
+ * open, so a closed fold has nothing to read, count or lay out.
+ */
+function Fold({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <details className="fold" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary>{title}</summary>
+      {open && children}
+    </details>
   )
 }
 

@@ -31,14 +31,16 @@ type Seen = Pick<Frame, 'epoch' | 'detection' | 'detection_sigma' | 'centroid' |
  */
 export function detectionShort(frame: Seen): string | null {
   const sigma = frame.detection_sigma
+  // In a table cell, "over 1000" is written ">1000".
+  const x = (n: number) => (n >= 1000 ? '>1000' : times(n))
   switch (frame.detection) {
     case 'clear':
-      return sigma != null ? `clear, ${times(sigma)}×` : 'clear'
+      return sigma != null ? `clear, ${x(sigma)}×` : 'clear'
     case 'marginal':
-      return sigma != null ? `marginal, ${times(sigma)}×` : 'marginal'
+      return sigma != null ? `marginal, ${x(sigma)}×` : 'marginal'
     case 'none':
       // Below 1 (or negative) the measured value is just noise: say that, not "-0.8×".
-      return sigma != null && sigma >= 1 ? `not seen, ${times(sigma)}×` : 'not seen'
+      return sigma != null && sigma >= 1 ? `not seen, ${x(sigma)}×` : 'not seen'
     case 'saturated':
       return 'saturated'
     case 'unknown':
@@ -213,7 +215,7 @@ export function detectionNotes(frames: Seen[]): string[] {
  * Why no position was measured in this frame, in the backend's own words, and what the fit
  * found instead (`nearest_source`). Null when there is a position.
  */
-export function notFoundSentence(frame: Frame): string | null {
+export function notFoundSentence(frame: Omit<Frame, 'image'>): string | null {
   if (frame.centroid) return null
   const parts = ['No position could be measured in this frame.']
   const why = frame.centroid_reason?.trim()

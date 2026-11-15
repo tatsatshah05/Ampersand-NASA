@@ -27,6 +27,8 @@
 
 /* Inside a line of text: a little air before it. */
 .motion-readout .info-button,
+.result-sentence .info-button,
+.seen-line .info-button,
 .detection .info-button,
 .bright-star .info-button {
   margin-left: 8px;

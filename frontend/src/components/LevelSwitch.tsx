@@ -1,4 +1,5 @@
 // The Beginner / Expert switch, and the few plain sentences Beginner shows about the picture.
+import type { ReactNode } from 'react'
 import type { UiLevel } from '../address'
 import { releaseFocusAfterPointer } from '../focus'
 import { GO_FURTHER, guideSteps, stepName, type Progress } from '../guide'
@@ -39,7 +40,7 @@ export function LevelSwitch({ level, onChange }: { level: UiLevel; onChange: (le
  * is marked by the hairline and the text colour only, inside badges of one fixed size, so
  * nothing moves when a step is done. It is a list, not a set of buttons: it never gets in the way.
  */
-export function StepGuide({ progress, still = false }: { progress: Progress; still?: boolean }) {
+export function StepGuide({ progress, still = false, info }: { progress: Progress; still?: boolean; info?: ReactNode }) {
   return (
     <section className="guide" aria-label="Where to start">
       <ol className="guide-steps">
@@ -52,7 +53,10 @@ export function StepGuide({ progress, still = false }: { progress: Progress; sti
           </li>
         ))}
       </ol>
-      <p className="guide-further">{GO_FURTHER}</p>
+      <p className="guide-further">
+        {GO_FURTHER}
+        {info}
+      </p>
     </section>
   )
 }

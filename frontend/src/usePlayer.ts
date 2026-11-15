@@ -73,6 +73,9 @@ export function usePlayer(framesKey: string, count: number, resting = false) {
     [framesKey, count],
   )
 
+  /** Stop where it is (a visitor reading an explanation should not have it change under them). */
+  const pause = useCallback(() => setPlayback('paused'), [])
+
   const togglePlay = useCallback(() => setPlayback((was) => (was === 'paused' ? 'playing' : 'paused')), [])
 
   /** Blink starts on the first frame, so the first flip goes to the last. */
@@ -81,7 +84,7 @@ export function usePlayer(framesKey: string, count: number, resting = false) {
     setAt((was) => (was.key === framesKey && (was.index === 0 || was.index === count - 1) ? was : { key: framesKey, index: 0 }))
   }, [framesKey, count])
 
-  return { current, playback, speedMs, setSpeedMs, show, step, togglePlay, toggleBlink }
+  return { current, playback, speedMs, setSpeedMs, show, step, pause, togglePlay, toggleBlink }
 }
 
 /** What watchSight needs from the page, so that it can be tested without one. */
