@@ -203,3 +203,102 @@ def test_fixed_source_verdict() -> None:
     assert not none["fixed"]
     few = follow.fixed_source_verdict(1.0, [o(1.0, 0.1), o(1.0, 0.1)])
     assert not few["fixed"]  # fewer than three: no verdict
+
+
+# --- the band arithmetic, on real measured points ------------------------------------------------------------------
+
+
+def _points(name: str) -> list[dict]:
+    return json.loads((FOLLOW / name).read_text())["points"]
+
+
+def _arrays(points: list[dict], which: str = "flux_mjy", err: str = "err_mjy") -> tuple[np.ndarray, ...]:
+    ok = [p for p in points if p["status"] == "ok" and p[which] is not None and p[err]]
+    return (
+        np.array([p["wavelength_um"] for p in ok]),
+        np.array([p[which] for p in ok]),
+        np.array([p[err] for p in ok]),
+    )
+
+
+def test_band_excess_equals_an_independent_weighted_line_fit() -> None:
+    """3I/ATLAS, 6 to 15 August 2025, carbon dioxide band: redo the arithmetic in the plainest way."""
+    wave, flux, err = _arrays(_points("points_3i_2025-08.json"))
+    band = follow.BANDS["CO2"]
+    got = follow.band_excess(wave, flux, err, band["window"], band["left"], band["right"])
+    side = ((wave >= band["left"][0]) & (wave <= band["left"][1])) | (
+        (wave >= band["right"][0]) & (wave <= band["right"][1])
+    )
+    inside = (wave >= band["window"][0]) & (wave <= band["window"][1])
+    slope, intercept = np.polyfit(wave[side], flux[side], 1, w=1.0 / err[side])
+    expected = float(np.mean(flux[inside] - (slope * wave[inside] + intercept)))
+    assert got["ok"] and got["n_band"] == int(inside.sum()) == 4
+    assert got["excess_mjy"] == pytest.approx(expected, rel=1e-9)
+    assert got["excess_mjy"] == pytest.approx(20.365, abs=0.01)
+    assert got["err_mjy"] == pytest.approx(0.467, abs=0.01)
+
+
+def test_band_excess_ignores_a_constant_level_and_follows_the_scale() -> None:
+    wave, flux, err = _arrays(_points("points_3i_2025-08.json"))
+    b = follow.BANDS["CO2"]
+    base = follow.band_excess(wave, flux, err, b["window"], b["left"], b["right"])
+    shifted = follow.band_excess(wave, flux + 7.5, err, b["window"], b["left"], b["right"])
+    scaled = follow.band_excess(wave, flux * 3.0, err * 3.0, b["window"], b["left"], b["right"])
+    assert shifted["excess_mjy"] == pytest.approx(base["excess_mjy"], rel=1e-9)  # a flat level is not a band
+    assert scaled["excess_mjy"] == pytest.approx(3.0 * base["excess_mjy"], rel=1e-9)
+    assert scaled["sigma"] == pytest.approx(base["sigma"], rel=1e-9)  # the significance does not change
+
+
+def test_band_excess_needs_channels_on_both_sides() -> None:
+    wave, flux, err = _arrays(_points("points_3i_2025-08.json"))
+    b = follow.BANDS["CO2"]
+    one_sided = follow.band_excess(
+        wave, flux, err, b["window"], b["left"], (b["left"][1] + 0.001, b["left"][1] + 0.002)
+    )
+    assert not one_sided["ok"] and one_sided["excess_mjy"] is None
+
+
+def test_three_bands_of_3i_in_august() -> None:
+    bands = follow.all_bands(_points("points_3i_2025-08.json"))
+    assert len(bands) == 1 and bands[0]["first"].startswith("2025-08-06")
+    h2o, co2, co = (bands[0]["bands"][k] for k in ("H2O", "CO2", "CO"))
+    assert (h2o["verdict"], co2["verdict"], co["verdict"]) == ("detected", "detected", "marginal")
+    assert h2o["excess_mjy"] == pytest.approx(0.592, abs=0.005) and h2o["sigma"] == pytest.approx(11.6, abs=0.1)
+    assert co2["sigma"] == pytest.approx(43.6, abs=0.1) and len(co2["controls"]) == 9
+    assert co["sigma"] == pytest.approx(3.5, abs=0.1)
+    # the controls are the same arithmetic elsewhere in the spectrum: none is anywhere near the carbon dioxide value
+    assert max(abs(c) for c in co2["controls"]) < 0.25 * co2["sigma"]
+
+
+def test_classify_follows_its_rules() -> None:
+    wide = [2.5, -1.75, 3.0, -0.6, -0.2]
+    assert follow.classify(43.6, wide) == "detected"
+    assert follow.classify(43.6, []) == "marginal"  # no controls: never "detected"
+    assert follow.classify(43.6, [30.0, -35.0, 31.0, -29.0]) == "marginal"  # the controls are just as large
+    assert follow.classify(4.9, wide) == "marginal"
+    assert follow.classify(2.0, wide) == "not seen"
+    assert follow.classify(None, wide) == "no measurement"
+
+
+def test_ratio_of_two_band_fluxes_only_when_both_are_detected() -> None:
+    bands = follow.all_bands(_points("points_3i_2025-12-14.json"), "flux_large_mjy")
+    co2, co = bands[0]["bands"]["CO2"], bands[0]["bands"]["CO"]
+    assert co2["verdict"] == co["verdict"] == "detected"
+    ratio = follow.flux_ratio(co2, co)
+    assert (
+        ratio is not None
+        and ratio["ratio"] == pytest.approx(4.86, abs=0.02)
+        and ratio["err"] == pytest.approx(0.25, abs=0.02)
+    )
+    aug = follow.all_bands(_points("points_3i_2025-08.json"))[0]["bands"]
+    assert follow.flux_ratio(aug["CO2"], aug["CO"]) is None  # the carbon monoxide band is only marginal
+
+
+def test_pluto_methane_dips_by_the_same_rules() -> None:
+    pts = _points("points_pluto.json")
+    out = {k: follow.band_dip(pts, b["window"], b["left"], b["right"]) for k, b in follow.ICE_BANDS.items()}
+    assert not out["CH4 1.7"]["ok"]  # no channel on the short side of 1.7 micrometre
+    assert out["CH4 2.3"]["depth_mjy"] == pytest.approx(0.825, abs=0.01)
+    assert out["CH4 2.3"]["depth_sigma"] == pytest.approx(7.04, abs=0.1)
+    assert out["CH4 2.3"]["verdict"] == "marginal"  # other places in the spectrum scatter as much
+    assert out["CH4 3.3"]["verdict"] == "no dip seen"
