@@ -22,7 +22,7 @@ export interface Where {
 export interface Step {
   id: string
   title: string
-  /** One or two short sentences: what this is and what it shows. */
+  /** What this is and what it shows, as two to four short points: one sentence to a line (pointsOf). */
   what: string
   /** What to press: a bar item (named at the level in use), a visible name, or null for a step that only shows something. */
   press: { feature: FeatureKey } | string | null
@@ -109,7 +109,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'opening',
     title: 'A source appears',
-    what: `This is Candidate B. The picture blinks between SPHEREx's visits in August 2025 and March 2026. ${CANDIDATE_LINE}`,
+    what: `This is Candidate B, in the constellation Scorpius.\nThe picture blinks between SPHEREx's visits in August 2025 and March 2026.\n${CANDIDATE_LINE}`,
     press: null,
     target: '.plate-col',
     url: landingUrl,
@@ -118,7 +118,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'sentence',
     title: 'The words beside the picture',
-    what: 'One sentence about the whole run, and one table of every visit. They stay still while the pictures play. Here: Not seen in August 2025. Clearly there by March 2026.',
+    what: `One sentence sums up the whole run.\nThe table has one row for every visit.\nThe words stay still while the pictures play.`,
     press: null,
     target: 'aside.inspector',
     url: landingUrl,
@@ -127,7 +127,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'player',
     title: 'The player',
-    what: 'Play, pause and step through the visits here. Blink flips between the before and the after picture, the best way to see a change.',
+    what: `Play, pause and step through the visits here.\nBlink flips between the before picture and the after picture.\nBlinking is the easiest way to see a change.`,
     press: null,
     target: '.transport',
     url: landingUrl,
@@ -136,7 +136,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'visits',
     title: 'The visits',
-    what: 'Each button is one visit of SPHEREx to this patch of sky: about twenty photos added up. Press one to see that visit alone.',
+    what: `Each button is one visit of SPHEREx to this patch of sky.\nA visit is about twenty photos added up.\nPress one to see that visit alone.`,
     press: null,
     target: '.visit-strip',
     url: landingUrl,
@@ -145,7 +145,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'level',
     title: 'Beginner and Expert',
-    what: 'Beginner uses plain words. Expert shows every setting, number and table. Press Expert to look, then Beginner to come back.',
+    what: `Beginner uses plain words.\nExpert shows every setting, number and table.\nPress Expert to look, then Beginner to come back.`,
     press: null,
     target: '.level-switch',
     url: landingUrl,
@@ -154,7 +154,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'search',
     title: 'Search the sky',
-    what: "Type a star's name, or a position (right ascension then declination), to look at any patch of sky.",
+    what: `Type a star's name to look at its patch of sky.\nOr type a position: right ascension, then declination.\nA place nobody has opened before takes about a minute, so the tour does not type one.`,
     press: null,
     target: 'form.searchbar',
     url: landingUrl,
@@ -163,7 +163,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'targets',
     title: 'Ready-made places',
-    what: "One press opens a place we prepared: the three sources we found, the five test targets from NASA's challenge, and some more.",
+    what: `One press opens a place we prepared.\nFirst the three sources we found, then the five test targets from NASA's challenge.\nThen three more places where something changed.`,
     press: null,
     target: '.target-list',
     url: landingUrl,
@@ -172,7 +172,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'barnard-button',
     title: 'A star that moves',
-    what: "Barnard's Star is the fastest-moving star in the sky. Press its button.",
+    what: `Barnard's Star is the fastest-moving star in the sky.\nPress its button to open it.`,
     press: "Barnard's Star",
     target: '.target-group button.target',
     targetText: "Barnard's Star",
@@ -182,7 +182,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'barnard-moves',
     title: 'Watch it step north',
-    what: 'Play the three visits. The star steps north while the stars around it stay still.',
+    what: `Press Play to run the three visits.\nThe star steps north.\nThe stars around it stay still.`,
     press: 'Play',
     target: '.transport .play-button',
     url: viewerUrl(BARNARD, null),
@@ -191,7 +191,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'barnard-gaia',
     title: 'Measured against a catalogue',
-    what: "The page measured 10.4 arcseconds north in a year. Gaia's star map predicted 10.3. They agree.",
+    what: `The page measured the star moving 10.4 arcseconds north in a year.\nGaia's star map predicted 10.3.\nThe two agree.`,
     press: null,
     target: 'aside.inspector',
     url: viewerUrl(BARNARD, null),
@@ -200,7 +200,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'watch',
     title: 'Watch',
-    what: 'The real pictures of a patch of sky, one for each visit, played like a short film. This is where you start.',
+    what: `The real pictures of a patch of sky, one for each visit.\nThey play like a short film.\nThis is where every star starts.`,
     press: { feature: 'watch' },
     target: bar('watch'),
     url: viewerUrl(BARNARD, null),
@@ -211,47 +211,47 @@ export const STEPS: readonly Step[] = [
     RW_AUR,
     'brightness',
     'Brightness',
-    'How bright RW Aurigae, a young star, looked at each visit, compared only in the same colour of infrared light.',
+    `How bright RW Aurigae, a young star, looked at each visit.\nEach dot is one photo.\nEach colour of infrared light is compared only with itself.`,
   ),
   toolStep(
     'spectrum',
     RW_AUR,
     'spectrum',
     'Colours',
-    'How bright RW Aurigae is in each colour of infrared light that SPHEREx sees, from 0.75 to 5 micrometres.',
+    `How bright RW Aurigae is in each colour of infrared light.\nSPHEREx sees colours from 0.75 to 5 micrometres.`,
   ),
   toolStep(
     'search',
     WISE_0855,
     'find-changes',
     'Find changes',
-    'A computer search of this patch for anything that moved or changed brightness between visits. In WISE 0855’s patch it finds the one thing that moved, and says it is already known in star catalogues.',
+    `A computer search of this patch.\nIt looks for anything that moved or changed brightness between visits.\nIn WISE 0855’s patch it finds the one thing that moved, and says it is already known.`,
   ),
   toolStep(
     'distant',
     WISE_0855,
     'far-off-planet',
     'Far-off planet',
-    'A search for a far-off planet: such a world would jump between visits, because SPHEREx looks from opposite sides of the Earth’s path. On the real sky it finds nothing here, and says how bright an object would have had to be.',
+    `A search for a far-off planet.\nSuch a world would jump between visits, because SPHEREx looks from opposite sides of the Earth’s path.\nOn the real sky it finds nothing here, and says how bright an object would have had to be.`,
   ),
   toolStep(
     'smallbodies',
     BARNARD,
     'asteroids',
     'Asteroids',
-    'Known asteroids and comets that crossed this patch, from lists kept by NASA. If none did, it says so.',
+    `Known asteroids and comets that crossed this patch.\nThe lists are kept by NASA.\nIf none crossed, it says so.`,
   ),
   toolStep(
     'context',
     BARNARD,
     'what-is-it',
     'What is it?',
-    'What the star catalogues know about an object, in plain words, and a drawing made from their numbers. The drawing says it is not a photograph.',
+    `What the star catalogues know about an object, in plain words.\nThe drawing is made from the catalogues' numbers.\nThe page says the drawing is not a photograph.`,
   ),
   {
     id: 'practise',
     title: 'Practise',
-    what: 'A practice round: one made-up moving object is added to real pictures, and you try to find it. It is a SIMULATION, and the page says so on every picture.',
+    what: `A practice round: one made-up moving object is added to real pictures.\nYou try to find it.\nIt is a SIMULATION, and the page says so on every picture.`,
     press: { feature: 'practise' },
     target: bar('practise'),
     url: trainUrl,
@@ -260,7 +260,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'watchlist',
     title: 'Observe anomalies',
-    what: `Everything our searches saw change in the pictures, sorted by the part of the sky. Three candidates come first. ${CANDIDATE_LINE}`,
+    what: `Everything our searches saw change in the pictures, sorted by the part of the sky.\nThree candidates come first.\n${CANDIDATE_LINE}`,
     press: { feature: 'vote' },
     target: bar('vote'),
     url: watchlistUrl,
@@ -269,7 +269,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'pick-patch',
     title: 'Pick a patch of sky',
-    what: 'Choose a patch that is already searched from this menu. The field above it searches a patch nobody has searched yet, which takes minutes, so we leave it alone here.',
+    what: `Choose a patch that is already searched from this menu.\nThe field above it searches a patch nobody has searched yet.\nThat takes minutes, so the tour leaves it alone.`,
     press: 'The menu under Pick a patch of sky',
     target: '#region-choice',
     url: watchlistUrl,
@@ -278,7 +278,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'watch-it-appear',
     title: 'Watch it appear',
-    what: `Each candidate has a card with a before and an after picture, and a link that opens its view. ${CANDIDATE_LINE}`,
+    what: `Each candidate has a card with a before picture and an after picture.\nThe link on the card opens that candidate's own view.\n${CANDIDATE_LINE}`,
     press: 'Watch it appear',
     target: '.anomaly-watch',
     url: watchlistUrl,
@@ -289,7 +289,7 @@ export const STEPS: readonly Step[] = [
     // (linkLeadsOn); Next opens the first card's view.
     id: 'candidate-view',
     title: 'The candidate’s own view',
-    what: `The link opens that candidate’s own view. It blinks between the visit before it was seen and the first visit where it is clearly seen. ${CANDIDATE_LINE}`,
+    what: `This is the candidate’s own view.\nIt blinks between the visit before it was seen and the first visit where it is clearly seen.\n${CANDIDATE_LINE}`,
     press: null,
     target: '.plate-col',
     url: (level) => withUi(findAddress(FINDS[0], level), level),
@@ -298,7 +298,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'three-tools',
     title: 'Three tools',
-    what: 'Three ways scientists look for planets, each tested on a world astronomers already know, so the answer can be checked. No planet is claimed.',
+    what: `Three ways scientists look for planets.\nEach is tested on a world astronomers already know, so the answer can be checked.\nNo planet is claimed.`,
     press: { feature: 'tools' },
     target: bar('tools'),
     url: toolsUrl,
@@ -307,7 +307,7 @@ export const STEPS: readonly Step[] = [
   {
     id: 'credits',
     title: 'Where the pictures come from',
-    what: 'The pictures are NASA/JPL-Caltech SPHEREx, from NASA/IPAC IRSA. Star positions are from ESA Gaia, and names from SIMBAD. Everything shown is real data, except what is marked as made up.',
+    what: `The pictures are NASA/JPL-Caltech SPHEREx, from NASA/IPAC IRSA.\nStar positions are from ESA Gaia, and names from SIMBAD.\nEverything shown is real data, except what is marked as made up.`,
     press: null,
     target: 'footer.credits',
     url: landingUrl,
@@ -461,3 +461,8 @@ export const DEMO_BUTTON = 'Demo mode'
 export const DEMO_BUTTON_ABOUT = 'A guided walk through every feature: it shows what to press and what each thing does.'
 /** What that button sends to the window; Tour.tsx starts the tour when it hears it. */
 export const TOUR_START_EVENT = 'spherex-tour-start'
+
+// ---------- said in points ----------
+
+/** A step's points, in the order to say them: the lines its text was written in, and nothing cleverer. */
+export const pointsOf = (step: Pick<Step, 'what'>): string[] => step.what.split('\n')

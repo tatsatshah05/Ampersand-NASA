@@ -1230,7 +1230,8 @@ presentation):
 - The tour: `?demo=1` (or `?demo=<n>`, removed from the address at once) or the "Demo mode" button at the right end of
   the top bar of every screen (`components/TourStart.tsx`; it sends `TOUR_START_EVENT`, and is hidden while the tour
   runs) starts it; `frontend/src/tour.ts` holds the 24 steps and all logic, `components/Tour.tsx` and
-  `Tour.css` draw a ring round the thing to press and a card (step n of 24, title, "Press: ...", what it shows; Back,
+  `Tour.css` draw a ring round the thing to press and a card (step n of 24, title, "Press: ...", what it shows as two to four short points, one sentence
+  to a line of the step's `what` (`pointsOf`; asked for on 15 Nov so that the presenter reads points, not a paragraph); Back,
   Next, End tour; Right and Left arrows, Escape). The step is kept in `sessionStorage` (`spherex-tour-step`), so it
   survives the page loads between screens. Every step has its own address: Next and Back first bring the page there
   (so a presenter who has wandered off is brought back), Next presses the ringed thing for the presenter, pressing it

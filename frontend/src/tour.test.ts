@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { readAddress, type UiLevel } from './address'
 import { CANDIDATE_LINE } from './finds'
 import { FEATURES } from './features'
-import { STEPS, clearStep, hrefOf, nextStep, parseDemo, pressName, prevStep, readStep, saveStep, withoutDemo, type StorageLike, cardPlace, linkLeadsOn } from './tour'
+import { STEPS, clearStep, hrefOf, nextStep, parseDemo, pressName, prevStep, readStep, saveStep, withoutDemo, type StorageLike, cardPlace, linkLeadsOn, pointsOf } from './tour'
 
 const LEVELS: UiLevel[] = ['beginner', 'expert']
 const SCIENTISTS_WORDS = /\b(sigma|flux|fluxes|epoch|epochs|detector|detectors|centroid|centroids|mJy)\b|σ/i
@@ -192,5 +192,28 @@ describe('a ringed link that leads to the next step', () => {
     expect(linkLeadsOn(i, 'https://example.org/?tools=1&ui=beginner', 'beginner')).toBe(false)
     expect(linkLeadsOn(STEPS.length - 1, 'https://example.org/?watchlist=1', 'beginner')).toBe(false)   // no step after the last
     expect(linkLeadsOn(i, 'not an address', 'beginner')).toBe(false)
+  })
+})
+
+describe('each step is said in points, not in a paragraph', () => {
+  it('has two to four short points, each a sentence of its own', () => {
+    for (const s of STEPS) {
+      const points = pointsOf(s)
+      expect(points.length, s.id).toBeGreaterThanOrEqual(2)
+      expect(points.length, s.id).toBeLessThanOrEqual(4)
+      for (const p of points) {
+        expect(p.length, `${s.id}: ${p}`).toBeLessThanOrEqual(140)
+        expect(p, s.id).toMatch(/^[A-Z].*\.$/)
+        expect(p.trim(), s.id).toBe(p)
+      }
+    }
+  })
+  it('gives the allowed sentence about a candidate a point to itself, word for word', () => {
+    const about = STEPS.filter((x) => /candidate/i.test(x.what))
+    expect(about.map((x) => x.id)).toEqual(['opening', 'watchlist', 'watch-it-appear', 'candidate-view'])
+    for (const s of about) expect(pointsOf(s), s.id).toContain(CANDIDATE_LINE)
+  })
+  it('splits nothing but the lines the step was written in', () => {
+    expect(pointsOf({ what: 'One thing.\nAnother, with a number: 10.4 arcseconds. And more.' })).toEqual(['One thing.', 'Another, with a number: 10.4 arcseconds. And more.'])
   })
 })

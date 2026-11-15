@@ -12,6 +12,7 @@ import {
   needsOpening,
   nextStep,
   parseDemo,
+  pointsOf,
   pressName,
   prevStep,
   readStep,
@@ -259,7 +260,11 @@ export function Tour() {
         </p>
         <h2 className="tour-title">{s.title}</h2>
         {press && <p className="tour-press">Press: {press}</p>}
-        <p className="tour-what">{s.what}</p>
+        <ul className="tour-points">
+          {pointsOf(s).map((point) => (
+            <li key={point}>{point}</li>
+          ))}
+        </ul>
         {box === null && gaveUp && <p className="tour-wait">Still loading…</p>}
         <div className="tour-buttons">
           <button type="button" onClick={back} disabled={step === 0}>

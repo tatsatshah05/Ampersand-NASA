@@ -111,8 +111,22 @@
   margin: 0 0 6px;
   font-weight: 600;
 }
-.tour-what {
-  margin: 0 0 8px;
+/* What the step shows, in points: one to a line, with the page's own round bullets. */
+.tour-points {
+  margin: 0 0 10px;
+  padding: 0 0 0 18px;
+  list-style: disc;
+}
+.tour-points li {
+  margin: 0 0 5px;
+  padding-left: 2px;
+  line-height: 1.35;
+}
+.tour-points li:last-child {
+  margin-bottom: 0;
+}
+.tour-points li::marker {
+  color: var(--muted);
 }
 .tour-wait {
   margin: 0 0 8px;
