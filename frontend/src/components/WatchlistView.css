@@ -102,6 +102,14 @@
   background: #121212;
 }
 
+.strip-wrap {
+  overflow-x: auto;
+}
+
+.strip-wrap .strip {
+  min-width: 640px;
+}
+
 .no-picture {
   border: 1px dashed var(--border);
   padding: 10px;

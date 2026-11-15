@@ -579,7 +579,7 @@ def _flat(r: dict[str, Any], base: str) -> dict[str, Any]:
         "best_detector": best, "detectors_at_5_times_noise": _join(detectors_at_5),
         "speed_arcsec_per_year": motion.get("speed"),
         "direction_deg_east_of_north": motion.get("direction_deg_east_of_north"),
-        "brightness_ratio_later_over_earlier": change.get("ratio"),
+        "brightness_ratio_later_over_earlier": (round(change["ratio"], 3) if change.get("ratio") is not None else None),
         "change_earlier_visit": visits[bins[0]]["date_mean"] if len(bins) == 2 and len(visits) > max(bins) else None,
         "change_later_visit": visits[bins[1]]["date_mean"] if len(bins) == 2 and len(visits) > max(bins) else None,
         "catalogue_status": cat.get("category"), "catalogue_summary": cat.get("summary"),

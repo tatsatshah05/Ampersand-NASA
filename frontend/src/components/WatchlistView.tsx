@@ -166,13 +166,15 @@ function Picture({ row }: { row: WatchRow }) {
       </p>
     )
   return (
-    <img
-      className="strip"
-      loading="lazy"
-      src={pictureUrl(row.id)}
-      alt="The candidate in each visit, side by side, then the last visit minus the first"
-      onError={() => setFailed(true)}
-    />
+    <div className="strip-wrap">
+      <img
+        className="strip"
+        loading="lazy"
+        src={pictureUrl(row.id)}
+        alt="The candidate in each visit, side by side, then the last visit minus the first"
+        onError={() => setFailed(true)}
+      />
+    </div>
   )
 }
 
