@@ -1,0 +1,12 @@
+column_name,datatype,unit,description
+"oidref","BIGINT",,"Object internal identifier"
+"teff","INTEGER","unit-degK","Effective Temperature"
+"mespos","SMALLINT",,"Position of a measurement in a list of measurements"
+"log_g_prec","SMALLINT",,"Precision (# of decimal positions) associated with the column log_g"
+"log_g","REAL","cm/s**2","Decimal logarithm of the surface gravity"
+"fe_h","REAL","","Metallicity index relative to the Sun"
+"fe_h_prec","SMALLINT",,"Precision (# of decimal positions) associated with the column fe_h"
+"flag","CHAR","","Flag on the [Fe/H] value"
+"compstar","CHAR","","Designates the comparison star from which the [Fe/H] value was obtained"
+"catno","CHAR","","Star in the Cayrel et al. (1997A&AS..124..299C) compilation"
+"bibcode","CHAR",,"measurement bibcode"

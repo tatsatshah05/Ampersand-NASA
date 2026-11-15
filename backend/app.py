@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from . import (
     astrometry,
     distant_jobs,
+    identify,
     jobs,
     photometry,
     pipeline,
@@ -57,6 +58,18 @@ def _answer(work: Callable[[], Any], doing: str, archive: str) -> Any:
 def resolve(name: str = Query(..., min_length=1, max_length=80)):
     """Object name to coordinates at 2026.0, with proper motion and parallax when known."""
     return _answer(lambda: astrometry.resolve_name(name), "looking up the name", "The name service")
+
+
+@app.get("/api/identify")
+def identify_place(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+                   radius: float = Query(identify.DEFAULT_RADIUS_ARCSEC, gt=0, le=identify.MAX_RADIUS_ARCSEC,
+                                         description="arcsec: catalogue entries this close are the object"),
+                   epoch: float = Query(astrometry.RESOLVE_EPOCH, ge=1990, le=2040,
+                                        description="Julian year at which the object is at (ra, dec)")):
+    """What Gaia DR3 and SIMBAD know about the thing at (ra, dec), for the 'What is it?' card.
+    A catalogue that does not answer is named in `unreachable`; the rest of the answer stands."""
+    return _answer(lambda: identify.identify(ra, dec, radius, epoch), "looking up what is at this place",
+                   "Gaia DR3 and SIMBAD")
 
 
 @app.get("/api/frames")
