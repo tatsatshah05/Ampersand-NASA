@@ -40,8 +40,8 @@ export const PAGE = {
   // the black-and-white page. Numbers are printed in the text colour with a small mark before them,
   // and the main button is filled with the ink colour, so the key describes those marks.
   key: {
-    measured: 'Amber dot, ring or line: what our tool measured. A small amber dot comes before each of its numbers.',
-    known: 'Cyan cross or line: the known answer, from NASA or other astronomers. A small cyan cross comes before each known number.',
+    measured: 'Amber dot, ring or line: what our tool measured.',
+    known: 'Cyan cross or line: the known answer, from NASA or other astronomers.',
     button: 'Filled button: the main thing to try.',
     sketch: 'Thin outline drawing: a sketch of the idea. Everything else shows real data.',
   },
@@ -519,7 +519,8 @@ export const T3 = {
     up: 'Brightness (100 = normal), zoomed in so a small dip shows',
     keyGrey: 'Grey dots: single readings.',
     keyAmber: 'Amber dots: each is the average of the readings in one 45-minute slot.',
-    keyLines: 'Cyan line: the published dip. Amber line: the dip our tool measured.',
+    keyLineKnown: 'Cyan dashed line: the published dip.',
+    keyLineMeasured: 'Amber line: the dip our tool measured.',
     keyBand: 'Pale band: when a crossing should happen.',
     keyEdge: 'Triangles at the edge: readings beyond the zoomed-in range.',
     // CHANGED (do-not-say list): docs/transits.md forbids a single depth for WASP-62 b without its
@@ -529,6 +530,7 @@ export const T3 = {
     wrong: 'A wrong timetable: the crossings land in different places, and the dip blurs away.',
     chance: 'A dip this small comes and goes by chance.',
     tooFew: 'Too few readings land inside a crossing on this timetable, so the tool cannot measure a dip here.',
+    noDip: 'The dip on this timetable is not available.',
     grey: 'The grey dots stay scattered on every timetable. Only the amber averages show the dip.',
     chartSummary: (p: Str, n: Str, dip: Str) => `Chart: ${n} single readings lined up on a ${p}-day timetable. ${dip}`,
     tableCaption: (p: Str) => `Averages in 45-minute slots, on the ${p}-day timetable`,

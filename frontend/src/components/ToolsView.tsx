@@ -146,7 +146,7 @@ function Key() {
 }
 
 /** The small marks beside numbers and in keys: an amber dot (measured) or a cyan cross (known). */
-function Mark({ kind }: { kind: 'measured' | 'known' | 'band' | 'grey' | 'greydot' | 'greyband' | 'line' }) {
+function Mark({ kind }: { kind: 'measured' | 'known' | 'band' | 'grey' | 'greydot' | 'greyband' | 'line' | 'dashed' | 'mline' }) {
   return (
     <svg className={`tl-mark tl-mark-${kind}`} width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
       {kind === 'measured' && <circle cx="6" cy="6" r="4.5" />}
@@ -156,6 +156,8 @@ function Mark({ kind }: { kind: 'measured' | 'known' | 'band' | 'grey' | 'greydo
       {kind === 'greydot' && <circle cx="6" cy="6" r="2" />}
       {kind === 'greyband' && <rect x="0" y="2" width="12" height="8" />}
       {kind === 'line' && <path d="M1 6 H11" />}
+      {kind === 'dashed' && <path d="M0 6 H4 M7 6 H11" />}
+      {kind === 'mline' && <path d="M1 6 H11" />}
     </svg>
   )
 }
@@ -703,6 +705,28 @@ function BendSketch({ d, cur }: { d: NonNullable<ReflexView['distance']>; cur: S
   const cy = (H - (y1 - y0) * s) / 2 + 6
   const P = (p: [number, number]) => [cx + (p[0] - x0) * s, cy + (p[1] - y0) * s] as const
   const pts = (q: [number, number][]) => q.map((p) => P(p).join(',')).join(' ')
+  // The track is known only at the exposure times, which come in groups with days between them;
+  // a smooth curve through every one of those points (Catmull-Rom) draws the path between them
+  // without corners that the sampling, not the sky, would put there.
+  const smooth = (q: [number, number][]) => {
+    // Exposures a few minutes apart sit on one spot; keep one point per spot (3 px apart), and the last.
+    const all = q.map(P)
+    const s: (readonly [number, number])[] = []
+    all.forEach((p, i) => {
+      const last = s[s.length - 1]
+      if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > 3) s.push(p)
+      else if (i === all.length - 1) s[s.length - 1] = p
+    })
+    if (s.length < 3) return `M${s.map((p) => p.join(',')).join(' L')}`
+    let d = `M${s[0][0]},${s[0][1]}`
+    for (let i = 0; i + 1 < s.length; i++) {
+      const p0 = s[Math.max(0, i - 1)]
+      const [p1, p2] = [s[i], s[i + 1]]
+      const p3 = s[Math.min(s.length - 1, i + 2)]
+      d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`
+    }
+    return d
+  }
   const a = P(cur.sketch.track[0])
   const b = P(cur.sketch.track[cur.sketch.track.length - 1])
   // The dashed line's label sits beside its middle, on the side away from the bend.
@@ -722,7 +746,7 @@ function BendSketch({ d, cur }: { d: NonNullable<ReflexView['distance']>; cur: S
     <Sketch label={T1.distance.sketchLabel(d.exaggeration)} alt={alt} className="sketch-bend">
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="sketch-svg" style={{ maxWidth: W }}>
         <polyline className="sk-dashed" points={pts(cur.sketch.linear)} />
-        <polyline className="sk-line" points={pts(cur.sketch.track)} />
+        <path className="sk-line" d={smooth(cur.sketch.track)} />
         <circle className="sk-dot" cx={a[0]} cy={a[1]} r="3.5" />
         <circle className="sk-dot" cx={b[0]} cy={b[1]} r="3.5" />
         {d.startLabel && (
@@ -1025,7 +1049,7 @@ function SketchTorches() {
       <circle className="sk-line sk-soft" cx={x + 62} cy="80" r="32" />
       <circle className={redBright ? 'sk-line sk-soft' : 'sk-thin sk-dotted'} cx={x + 102} cy="80" r="32" />
       <path className="sk-line" d={`M${crossX - 6} 74 L${crossX + 6} 86 M${crossX + 6} 74 L${crossX - 6} 86`} />
-      <text className="sk-text" x={crossX} y="60" textAnchor="middle">
+      <text className="sk-text" x={crossX} y="42" textAnchor="middle">
         {s.middle}
       </text>
       <text className="sk-text" x={x + 50} y="132" textAnchor="middle">
@@ -1138,7 +1162,7 @@ function DipTry({ dial, say }: { dial: NonNullable<TransitView['dial']>; say: (s
   const go = (n: number) => {
     setI(n)
     const s = dial.stops[n]
-    say([s.spoken, s.readout, ...s.lines].filter(Boolean).join('. '))
+    say([s.spoken, s.readout ?? s.missing, ...s.lines].filter(Boolean).join('. '))
   }
   return (
     <>
@@ -1160,10 +1184,12 @@ function DipTry({ dial, say }: { dial: NonNullable<TransitView['dial']>; say: (s
         </button>
       </div>
       <DipChart dial={dial} stop={i} />
-      {cur.readout && (
+      {cur.readout ? (
         <p className="readout figure-readout">
           <Mark kind="measured" /> {cur.readout}
         </p>
+      ) : (
+        cur.missing && <p className="readout readout-missing">{cur.missing}</p>
       )}
       <Paras lines={cur.lines} className="result-small" />
       <Paras lines={[T3.tryIt.grey]} />
@@ -1196,7 +1222,7 @@ function DipChart({ dial, stop }: { dial: NonNullable<TransitView['dial']>; stop
       const dd = dial.t14 !== null && dial.rprs !== null ? trapezoidDepth(h, dial.t14, dial.rprs) : 0
       return `${X(h)},${Y(100 - depthPct * dd)}`
     }).join(' ')
-  const dipText = cur.readout ?? ''
+  const dipText = cur.readout ?? cur.missing ?? ''
   return (
     <div ref={ref} className="dip-chart-wrap">
       <figure className="chart dip-chart" role="img" aria-label={T3.tryIt.chartSummary(cur.label.replace(' days', ''), String(points.length), dipText)}>
@@ -1248,9 +1274,14 @@ function DipChart({ dial, stop }: { dial: NonNullable<TransitView['dial']>; stop
             <Mark kind="measured" /> {T3.tryIt.keyAmber}
           </p>
           {cur.known && (
-            <p>
-              <Mark kind="line" /> {T3.tryIt.keyLines}
-            </p>
+            <>
+              <p>
+                <Mark kind="dashed" /> {T3.tryIt.keyLineKnown}
+              </p>
+              <p>
+                <Mark kind="mline" /> {T3.tryIt.keyLineMeasured}
+              </p>
+            </>
           )}
           <p>
             <Mark kind="greyband" /> {T3.tryIt.keyBand}
@@ -1289,7 +1320,10 @@ function SketchDips() {
   const dots = Array.from({ length: 36 }, (_, i) => {
     const wobble = ((i * 37) % 11) - 5
     const low = i % 6 === 2
-    return { t: 16 + i * 8.8, phase: (((i * 53) % 36) / 36) * 260 + 40, y: wobble * 1.6 + (low ? 12 : 0), low }
+    // Lined up: the low ones gather under the middle of the line, the others spread either side.
+    const phase = (((i * 53) % 36) / 36) * 280 + 30
+    const lined = low ? 170 + ((i - 2) / 6 - 2.5) * 10 : phase > 140 && phase < 200 ? phase + (phase < 170 ? -60 : 60) : phase
+    return { t: 16 + i * 8.8, lined, y: wobble * 1.6 + (low ? 12 : 0), wobble, low }
   })
   return (
     <Sketch label={PAGE.sketchLabelNotToScale} alt={s.alt}>
@@ -1313,10 +1347,9 @@ function SketchDips() {
           {s.lined}
         </text>
         <line className="sk-thin" x1="10" y1="218" x2="330" y2="218" />
-        {dots.map((d, i) => {
-          const x = d.low ? 150 + ((i % 5) - 2) * 9 : d.phase < 170 && d.phase > 130 ? d.phase - 50 : d.phase
-          return <circle key={`b${i}`} className="sk-fill" cx={x} cy={188 + d.y * 0.5 + (d.low ? 6 : 0)} r="2" />
-        })}
+        {dots.map((d, i) => (
+          <circle key={`b${i}`} className="sk-fill" cx={d.lined} cy={190 + d.wobble * 0.5 + (d.low ? 14 : 0)} r="2" />
+        ))}
         <text className="sk-text" x="170" y="238" textAnchor="middle">
           {s.hours}
         </text>

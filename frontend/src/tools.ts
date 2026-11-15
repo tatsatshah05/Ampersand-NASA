@@ -976,19 +976,32 @@ export function fold(readings: TransitReading[], periodD: number, t0: number, wi
   return out
 }
 
-/** Means in 45-minute slots from −window to +window hours (slot centres −8.625 … +8.625 for 9 h). */
+const median = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b)
+  const m = s.length >> 1
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
+}
+
+/**
+ * Means in 45-minute slots from −window to +window hours (slot centres −8.625 … +8.625 for 9 h),
+ * by the module's own rule (scripts/check_transit.py bin_curve): a slot needs at least 5 readings,
+ * and its error is the robust spread (1.4826 × the median absolute deviation) over √n. So on the
+ * known timetable these are the module's folded averages (transits.json d5.folded).
+ */
+export const MIN_PER_SLOT = 5
 export function binFolded(points: FoldedPoint[], widthH = 0.75, windowH = 9): Bin[] {
   const n = Math.round((2 * windowH) / widthH)
   const slots: number[][] = Array.from({ length: n }, () => [])
   for (const p of points) {
-    const i = Math.min(n - 1, Math.max(0, Math.floor((p.h + windowH) / widthH)))
-    slots[i].push(p.y)
+    const i = Math.floor((p.h + windowH) / widthH)
+    if (i >= 0 && i < n) slots[i].push(p.y)
   }
   return slots.flatMap((ys, i) => {
-    if (ys.length === 0) return []
+    if (ys.length < MIN_PER_SLOT) return []
     const mean = ys.reduce((a, b) => a + b, 0) / ys.length
-    const sd = ys.length > 1 ? Math.sqrt(ys.reduce((a, b) => a + sq(b - mean), 0) / (ys.length - 1)) : null
-    return [{ h: -windowH + (i + 0.5) * widthH, mean, err: sd === null ? null : sd / Math.sqrt(ys.length), n: ys.length }]
+    const mid = median(ys)
+    const robust = 1.4826 * median(ys.map((y) => Math.abs(y - mid)))
+    return [{ h: -windowH + (i + 0.5) * widthH, mean, err: robust / Math.sqrt(ys.length), n: ys.length }]
   })
 }
 
@@ -1011,7 +1024,10 @@ export interface DialStop {
   label: string
   spoken: string
   known: boolean
+  /** "Dip on this timetable: …", only where the module measured a dip. */
   readout: string | null
+  /** In the readout's place where the module refuses to fit: too few readings in a crossing. */
+  missing: string | null
   lines: string[]
 }
 
@@ -1160,9 +1176,11 @@ export function transitView(f: TransitFile): TransitView {
       const e = ok(s.err) ? fmt(s.err * factor * 100, 1) : undefined
       const lines = [known ? T3.tryIt.known : T3.tryIt.wrong]
       if (!known && ok(s.depth) && Math.abs(s.depth) < (chanceLimit ?? (ok(s.err) ? 2 * s.err * factor : 0))) lines.push(T3.tryIt.chance)
-      let readout: string | null = x && e ? T3.tryIt.readout(x, e) : null
-      if (!readout) readout = ok(s.n_in) && ok(f.min_in_transit) && s.n_in < f.min_in_transit ? T3.tryIt.tooFew : null
-      return { period: s.period_d, label: T3.tryIt.days(p), spoken: known ? T3.tryIt.spokenKnown(p) : T3.tryIt.spokenWrong(p), known, readout, lines }
+      const readout: string | null = x && e ? T3.tryIt.readout(x, e) : null
+      // No depth at this stop: say why in plain words (too few readings in a crossing, the module's
+      // own limit), or that it is not available, never a number.
+      const missing = readout ? null : ok(s.n_in) && ok(f.min_in_transit) && s.n_in < f.min_in_transit ? T3.tryIt.tooFew : T3.tryIt.noDip
+      return { period: s.period_d, label: T3.tryIt.days(p), spoken: known ? T3.tryIt.spokenKnown(p) : T3.tryIt.spokenWrong(p), known, readout, missing, lines }
     })
     dial = {
       stops: views,

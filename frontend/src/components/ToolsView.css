@@ -1,10 +1,15 @@
 /* The "Three tools" screen. Colour only through the page's tokens (index.css), so that the
    restyle of those tokens restyles this screen too. Amber (--measured) and cyan (--gaia) are only
    for marks inside charts and pictures and for the small key marks; every word is --text or
-   --muted. The main button and the chosen item use var(--ink, var(--text)) as their fill. */
+   --muted. The main button and the chosen item use var(--ink, var(--text)) as their fill.
+   Marks drawn on the page itself (keys, the ruler, the meter, the inset, the dip chart) use the
+   darker --measured-key and --gaia-key where the theme has them, as index.css asks for marks on
+   white; marks drawn on the dark SPHEREx pictures keep --measured and --gaia. */
 
 .tools {
   --tool-ink: var(--ink, var(--text));
+  --tl-measured: var(--measured-key, var(--measured));
+  --tl-known: var(--gaia-key, var(--gaia));
   max-width: calc(680px + 32px);
   margin: 0 auto;
   padding: 0 16px 24px;
@@ -98,6 +103,27 @@
   margin: 0 0 8px;
 }
 
+/* Key entries: the mark in its own column, so a long entry wraps under its words. */
+.tools .tools-key p,
+.tools .chart-key p:has(> .tl-mark, > .key-ring) {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  column-gap: 4px;
+  align-items: start;
+}
+
+.tools .tools-key p > .tl-mark,
+.tools .tools-key p > span,
+.tools .chart-key p > .tl-mark,
+.tools .chart-key p > span {
+  margin-top: 3px;
+  margin-right: 0;
+}
+
+.tools .tools-key .key-button {
+  margin-top: 5px;
+}
+
 .tools .key-button {
   display: inline-block;
   width: 16px;
@@ -123,7 +149,7 @@
   height: 12px;
   margin-right: 4px;
   vertical-align: -1px;
-  border: 1.5px solid var(--measured);
+  border: 1.5px solid var(--tl-measured);
   border-radius: 50%;
   opacity: 0.6;
 }
@@ -136,18 +162,18 @@
 }
 
 .tools .tl-mark-measured circle {
-  fill: var(--measured);
+  fill: var(--tl-measured);
 }
 
 .tools .tl-mark-known path {
-  stroke: var(--gaia);
+  stroke: var(--tl-known);
   stroke-width: 2.2;
   stroke-linecap: round;
   fill: none;
 }
 
 .tools .tl-mark-band rect {
-  fill: var(--measured);
+  fill: var(--tl-measured);
   opacity: 0.35;
 }
 
@@ -161,7 +187,19 @@
 }
 
 .tools .tl-mark-line path {
-  stroke: var(--gaia);
+  stroke: var(--tl-known);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.tools .tl-mark-dashed path {
+  stroke: var(--tl-known);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.tools .tl-mark-mline path {
+  stroke: var(--tl-measured);
   stroke-width: 2.2;
   fill: none;
 }
@@ -295,8 +333,9 @@
   }
 }
 
+/* The big figures: the spec's 20 px, which the restyled scale calls --size-result. */
 .tools .figure {
-  font-size: var(--size-title);
+  font-size: var(--size-result, var(--size-title));
   line-height: 1.3;
   font-weight: 700;
   margin: 0 0 8px;
@@ -306,13 +345,20 @@
   vertical-align: 2px;
 }
 
+/* The range sentences sit under their figure's words, so the figure's mark stands for the block. */
 .tools .figure-range {
   font-size: var(--size-body);
+  padding-left: 20px;
 }
 
 .tools .figure-readout {
   font-size: var(--size-read);
   font-weight: 700;
+}
+
+.tools .readout-missing {
+  font-size: var(--size-read);
+  color: var(--text);
 }
 
 /* ---- controls ---- */
@@ -347,17 +393,8 @@
   opacity: 0.78;
 }
 
-/* On/off buttons: a box before the words, filled with a tick when on. Not amber. */
-.tools button.toggle[aria-pressed='true']::before {
-  content: '\2713';
-  border-color: var(--tool-ink);
-  background: var(--tool-ink);
-  color: var(--bg);
-  font-size: 10px;
-  line-height: 9px;
-  text-align: center;
-  font-weight: 700;
-}
+/* On/off buttons keep the app's own toggle (index.css): a box before the words, a tick when on,
+   in the ink colour, never amber. */
 
 .tools .switch {
   display: flex;
@@ -543,7 +580,7 @@
   width: 2px;
   height: 22px;
   margin-left: -1px;
-  background: var(--gaia);
+  background: var(--tl-known);
   pointer-events: none;
 }
 
@@ -564,7 +601,7 @@
   height: 2px;
   margin-right: 4px;
   vertical-align: 3px;
-  background: var(--gaia);
+  background: var(--tl-known);
 }
 
 .tools .stops-track:has(.known-tick) {
@@ -630,15 +667,7 @@
   display: none;
 }
 
-.tools .tl-fold summary::after {
-  content: '\25B8';
-  margin-left: 8px;
-  color: var(--muted);
-}
-
-.tools .tl-fold[open] summary::after {
-  content: '\25BE';
-}
+/* The chevron that turns is index.css's (details > summary::before). */
 
 .tools .tl-fold-body {
   padding: 0 0 12px;
@@ -712,13 +741,13 @@
   color: var(--text);
   background: var(--bg);
   border: 1px solid var(--line-strong);
-  border-left: 3px solid var(--measured);
+  border-left: 3px solid var(--tl-measured);
   white-space: nowrap;
   transform: translateY(-50%);
 }
 
 .tools .tl-mark-label-known {
-  border-left-color: var(--gaia);
+  border-left-color: var(--tl-known);
 }
 
 .tools .tl-mark-label.side-left {
@@ -930,21 +959,21 @@
 }
 
 .tools .ch-dot {
-  fill: var(--measured);
+  fill: var(--tl-measured);
   stroke: var(--bg);
   stroke-width: 1;
 }
 
 .tools .ch-ring {
   fill: none;
-  stroke: var(--measured);
+  stroke: var(--tl-measured);
   stroke-width: 1.5;
   opacity: 0.55;
 }
 
 .tools .ch-known {
   fill: none;
-  stroke: var(--gaia);
+  stroke: var(--tl-known);
   stroke-width: 2;
 }
 
@@ -954,12 +983,12 @@
 
 .tools .ch-measured-line {
   fill: none;
-  stroke: var(--measured);
+  stroke: var(--tl-measured);
   stroke-width: 2;
 }
 
 .tools .ch-err {
-  stroke: var(--measured);
+  stroke: var(--tl-measured);
   stroke-width: 1.5;
 }
 
@@ -1019,12 +1048,19 @@
   position: absolute;
   top: 22px;
   height: 12px;
-  background: var(--measured);
+  background: var(--tl-measured);
   opacity: 0.3;
 }
 
-.tools .ruler-band.open {
-  border-right: none;
+/* A range with no far end runs off the ruler: an arrowhead at its edge. */
+.tools .ruler-band.open::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: -2px;
+  border-left: 8px solid var(--tl-measured);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
 }
 
 .tools .ruler-dot {
@@ -1034,7 +1070,7 @@
   height: 12px;
   margin-left: -6px;
   border-radius: 50%;
-  background: var(--measured);
+  background: var(--tl-measured);
   border: 1px solid var(--bg);
 }
 
@@ -1045,7 +1081,7 @@
 }
 
 .tools .ruler-cross path {
-  stroke: var(--gaia);
+  stroke: var(--tl-known);
   stroke-width: 2.2;
   stroke-linecap: round;
   fill: none;
@@ -1090,7 +1126,7 @@
   position: absolute;
   top: 0;
   height: 12px;
-  background: var(--measured);
+  background: var(--tl-measured);
 }
 
 .tools .meter-zero {

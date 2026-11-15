@@ -504,6 +504,27 @@ describe('folding the readings', () => {
     const slot = (h: number) => (h + 9) / 0.75 - 0.5
     expect(binFolded(pts).every((b) => Math.abs(slot(b.h) - Math.round(slot(b.h))) < 1e-9)).toBe(true)
   })
+  it("gives the module's own 45-minute averages on the known timetable (5 readings a slot at least)", () => {
+    const t = transitFile as unknown as TransitFile & { d5: { folded: { bin_hours: number[]; bin_mean: number[]; bin_err: number[] } } }
+    const known = (t.stops ?? []).find((s) => s.known)!
+    const bins = binFolded(fold(t.readings ?? [], known.period_d, t.planet!.t0_bjd_tdb as number, t.window_h as number))
+    const f = t.d5.folded
+    expect(bins.map((b) => b.h)).toEqual(f.bin_hours)
+    bins.forEach((b, i) => {
+      expect(b.mean).toBeCloseTo(f.bin_mean[i] * 100, 9)
+      expect(b.err as number).toBeCloseTo(f.bin_err[i] * 100, 9)
+      expect(b.n).toBeGreaterThanOrEqual(5)
+    })
+  })
+  it('says the dip is not available, with no number, where the module refuses to fit', () => {
+    const v = transitView(transitFile as TransitFile)
+    const empty = v.dial!.stops.filter((s) => s.readout === null)
+    expect(empty.length).toBe((transitFile.stops as { depth: number | null }[]).filter((s) => s.depth === null).length)
+    expect(empty.every((s) => s.missing === T3.tryIt.tooFew && !s.lines.includes(T3.tryIt.chance))).toBe(true)
+    const noCount = transitView({ ...(transitFile as TransitFile), stops: (transitFile as TransitFile).stops!.map((s) => (s.depth === null ? { ...s, n_in: null } : s)) })
+    expect(noCount.dial!.stops.filter((s) => s.readout === null).every((s) => s.missing === T3.tryIt.noDip)).toBe(true)
+    expect(v.dial!.stops.filter((s) => s.readout !== null).every((s) => s.missing === null)).toBe(true)
+  })
   it('fixes the y range from the known timetable, rounded out', () => {
     expect(yRange([{ h: 0, y: 98.6 }, { h: 1, y: 100.2 }, { h: 2, y: 101.4 }])).toEqual([98, 102])
   })

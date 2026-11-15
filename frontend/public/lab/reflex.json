@@ -12,8 +12,8 @@
   ],
   "code_commit": "09fc1b330bf107c9cc6738176f3f108c0d2df8c1",
   "export_script": "scripts/export_lab.py",
-  "export_commit": "fe54430d7a430bdbb6b8a61c5c44b2fb7a964fed",
-  "exported_utc": "2026-11-15T05:47:38+00:00"
+  "export_commit": "0e17375858e7f75cb5b4d2e07ea42123fca1d5e6",
+  "exported_utc": "2026-11-15T06:09:10+00:00"
  },
  "final": true,
  "final_evidence": "Searches made by the builder and the reviewers (not repeated in this finalisation):",

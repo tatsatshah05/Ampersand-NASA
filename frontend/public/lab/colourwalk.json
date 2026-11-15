@@ -12,8 +12,8 @@
   ],
   "code_commit": "af47e5f76b8b53e4cae5ae0a6ff6973bd4f05ed5",
   "export_script": "scripts/export_lab.py",
-  "export_commit": "fe54430d7a430bdbb6b8a61c5c44b2fb7a964fed",
-  "exported_utc": "2026-11-15T05:48:19+00:00"
+  "export_commit": "0e17375858e7f75cb5b4d2e07ea42123fca1d5e6",
+  "exported_utc": "2026-11-15T06:09:24+00:00"
  },
  "final": true,
  "final_evidence": "## What the review changed in the code",

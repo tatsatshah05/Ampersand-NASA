@@ -12,8 +12,8 @@
   ],
   "code_commit": "71963ab2f4dc5f0b8a0e3531bbfee0cad69f16a4",
   "export_script": "scripts/export_lab.py",
-  "export_commit": "fe54430d7a430bdbb6b8a61c5c44b2fb7a964fed",
-  "exported_utc": "2026-11-15T05:47:55+00:00"
+  "export_commit": "0e17375858e7f75cb5b4d2e07ea42123fca1d5e6",
+  "exported_utc": "2026-11-15T06:09:25+00:00"
  },
  "final": true,
  "final_evidence": "Built 2026-11-14, reviewed by three skeptics and corrected the same day. Code: `backend/transits.py`",
