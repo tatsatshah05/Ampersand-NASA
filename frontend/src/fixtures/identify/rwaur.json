@@ -43,18 +43,6 @@
    "dec": 30.401316149887936,
    "epoch": 2016.0
   },
-  "spectral_class": {
-   "text": "B",
-   "class": "B",
-   "luminosity_class": null,
-   "label": "B-type star",
-   "plain": "a very hot, blue-white star",
-   "pair": false,
-   "parts": [
-    "B"
-   ]
-  },
-  "spectral_class_column": "gaiadr3.astrophysical_parameters.spectraltype_esphs",
   "values": [
    {
     "key": "parallax",

@@ -43,18 +43,6 @@
    "dec": 4.762902502432067,
    "epoch": 2016.0
   },
-  "spectral_class": {
-   "text": "F",
-   "class": "F",
-   "luminosity_class": null,
-   "label": "F-type star",
-   "plain": "a white star a little hotter than the Sun",
-   "pair": false,
-   "parts": [
-    "F"
-   ]
-  },
-  "spectral_class_column": "gaiadr3.astrophysical_parameters.spectraltype_esphs",
   "values": [
    {
     "key": "parallax",

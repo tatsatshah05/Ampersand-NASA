@@ -93,7 +93,10 @@ GAIA_AP_COLUMNS = (
     "teff_esphs", "teff_esphs_uncertainty", "teff_gspspec", "teff_gspspec_lower", "teff_gspspec_upper",
     "radius_flame", "radius_flame_lower", "radius_flame_upper", "radius_gspphot", "radius_gspphot_lower",
     "radius_gspphot_upper", "lum_flame", "lum_flame_lower", "lum_flame_upper", "distance_gspphot",
-    "distance_gspphot_lower", "distance_gspphot_upper", "spectraltype_esphs")
+    "distance_gspphot_lower", "distance_gspphot_upper")
+# Not asked for: spectraltype_esphs, Gaia's one-letter class from the BP/RP spectra. It gives
+# "B" for RW Aur B (a K2 T Tauri star) and "F" for a 4,800 K star, so it cannot be put into
+# plain words without saying something false.
 SIMBAD_BASIC_COLUMNS = (
     "oid", "main_id", "ra", "dec", "pmra", "pmdec", "pm_err_maj", "pm_err_min", "pm_err_angle", "pm_bibcode",
     "plx_value", "plx_err", "plx_bibcode", "otype", "sp_type", "sp_bibcode", "nbref")
@@ -701,9 +704,6 @@ def _gaia_entry(row: dict[str, Any], epoch: float) -> dict[str, Any]:
             "north_arcsec": _r(row["_north"], 2),
             "position": {"ra": _r(row["_ra"], 7), "dec": _r(row["_dec"], 7), "epoch": epoch},
             "catalogue_position": {"ra": row["ra"], "dec": row["dec"], "epoch": row.get("ref_epoch")},
-            "spectral_class": spectral_words(row.get("spectraltype_esphs")) if row.get("spectraltype_esphs")
-            and row.get("spectraltype_esphs") not in ("UNKNOWN", "CSTAR") else None,
-            "spectral_class_column": f"{GAIA_AP}.spectraltype_esphs" if row.get("spectraltype_esphs") else None,
             "values": _gaia_values(row)}
 
 
