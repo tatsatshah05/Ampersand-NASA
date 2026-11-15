@@ -8,6 +8,7 @@ N small single-exposure pictures (<name>_strip.png): the body at its predicted p
 exposure of another day underneath. Needs the network the first time (JPL Horizons, IRSA, NASA's S3 bucket); every
 answer is kept under $SPHEREX_CACHE_DIR/follow, so a repeat asks nobody anything.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,53 +23,79 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
+from verify_plot import BLUE, GREY, ORANGE, Chart, caption_block, save, stack_horizontal, stack_vertical  # noqa: E402
+
 from backend import follow, pipeline, smallbodies  # noqa: E402
-from verify_plot import BLACK, BLUE, GREY, ORANGE, RED, Chart, caption_block, save, stack_horizontal, stack_vertical  # noqa: E402
 
 BAND_COLOURS = {"H2O": (200, 225, 245), "CO2": (245, 225, 200), "CO": (225, 245, 215)}
 METHANE_ICE_UM = (1.7, 2.3, 3.3)
 
 
-def spectrum_chart(res: dict, title: str, large: bool = False, xlim: tuple[float, float] | None = None,
-                   mark_methane: bool = False) -> Chart:
+def spectrum_chart(
+    res: dict, title: str, large: bool = False, xlim: tuple[float, float] | None = None, mark_methane: bool = False
+) -> Chart:
     key, ekey = ("flux_large_mjy", "err_large_mjy") if large else ("flux_mjy", "err_mjy")
     ok = [p for p in res["points"] if p["status"] == "ok" and p.get(key) is not None]
     other = [p for p in res["points"] if p["status"] == "star_in_the_way" and p.get(key) is not None]
     radius = res["radii"]["large_arcsec" if large else "small_arcsec"]
-    ch = Chart(title=title, xlabel="wavelength (micrometres)", ylabel=f"brightness in {radius:g} arcsec circle (mJy)",
-               width=1150, height=480, xlim=xlim or (0.7, 5.1))
+    ch = Chart(
+        title=title,
+        xlabel="wavelength (micrometres)",
+        ylabel=f"brightness in {radius:g} arcsec circle (mJy)",
+        width=1150,
+        height=480,
+        xlim=xlim or (0.7, 5.1),
+    )
     for k, b in follow.BANDS.items():
         ch.span(*b["window"], color=BAND_COLOURS[k])
     if mark_methane:
         for w in METHANE_ICE_UM:
             ch.vline(w, color=ORANGE)
     if other:
-        ch.scatter([p["wavelength_um"] for p in other], [p[key] for p in other], color=GREY, hollow=True,
-                   label="a fixed source is also there")
+        ch.scatter(
+            [p["wavelength_um"] for p in other],
+            [p[key] for p in other],
+            color=GREY,
+            hollow=True,
+            label="a fixed source is also there",
+        )
     if ok:
-        ch.scatter([p["wavelength_um"] for p in ok], [p[key] for p in ok], yerr=[p[ekey] for p in ok], color=BLUE,
-                   label=f"{len(ok)} exposures")
+        ch.scatter(
+            [p["wavelength_um"] for p in ok],
+            [p[key] for p in ok],
+            yerr=[p[ekey] for p in ok],
+            color=BLUE,
+            label=f"{len(ok)} exposures",
+        )
     ch.hline(0.0, color=GREY)
     return ch
 
 
 def table(res: dict) -> str:
-    lines = [f"{res['name']}: {res['n_in_footprint']} exposures contain it "
-             f"({res['n_near_edge']} too near an image edge), {res['n_followed']} measured; "
-             f"circles {res['radii']['small_arcsec']} and {res['radii']['large_arcsec']} arcsec; "
-             f"predicted magnitude {res['vmag_range']}",
-             "counts: " + ", ".join(f"{k} {v}" for k, v in res.get("counts", {}).items() if v)]
+    lines = [
+        f"{res['name']}: {res['n_in_footprint']} exposures contain it "
+        f"({res['n_near_edge']} too near an image edge), {res['n_followed']} measured; "
+        f"circles {res['radii']['small_arcsec']} and {res['radii']['large_arcsec']} arcsec; "
+        f"predicted magnitude {res['vmag_range']}",
+        "counts: " + ", ".join(f"{k} {v}" for k, v in res.get("counts", {}).items() if v),
+    ]
     for v in res.get("bands", []):
-        lines.append(f"visit {v['first'][:10]} to {v['last'][:10]} ({v['n_points']} points, r {v['r_au']:.2f} au, "
-                     f"delta {v['delta_au']:.2f} au, {v['circle']})")
+        lines.append(
+            f"visit {v['first'][:10]} to {v['last'][:10]} ({v['n_points']} points, r {v['r_au']:.2f} au, "
+            f"delta {v['delta_au']:.2f} au, {v['circle']})"
+        )
         for k, b in v["bands"].items():
             if b["ok"]:
-                lines.append(f"   {k}: excess {b['excess_mjy']:+.3f} +- {b['err_mjy']:.3f} mJy "
-                             f"({b['sigma']:+.1f} x error, {b['n_band']} in band, {b['n_left']}+{b['n_right']} continuum) "
-                             f"-> {b['verdict']}; controls {b['controls']}")
+                lines.append(
+                    f"   {k}: excess {b['excess_mjy']:+.3f} +- {b['err_mjy']:.3f} mJy "
+                    f"({b['sigma']:+.1f} x error, {b['n_band']} in band, {b['n_left']}+{b['n_right']} continuum) "
+                    f"-> {b['verdict']}; controls {b['controls']}"
+                )
             else:
-                lines.append(f"   {k}: not enough exposures in the band or beside it "
-                             f"({b['n_band']} in band, {b['n_left']}+{b['n_right']} continuum)")
+                lines.append(
+                    f"   {k}: not enough exposures in the band or beside it "
+                    f"({b['n_band']} in band, {b['n_left']}+{b['n_right']} continuum)"
+                )
     return "\n".join(lines)
 
 
@@ -104,12 +131,24 @@ def strip(res: dict, outdir: Path, slug: str, n: int) -> Path | None:
     tmp.mkdir(parents=True, exist_ok=True)
     for i, p in enumerate(chosen):
         try:
-            top = _panel(Path(p["file"]), p["ra"], p["dec"], tmp / f"a{i}.png",
-                         f"{p['time'][:10]}  {p['wavelength_um']:.2f} um", None)
+            top = _panel(
+                Path(p["file"]),
+                p["ra"],
+                p["dec"],
+                tmp / f"a{i}.png",
+                f"{p['time'][:10]}  {p['wavelength_um']:.2f} um",
+                None,
+            )
             of = next(f for f in p["other_files"] if Path(f).exists())
             # the same stretch for both: take the limits from the body's own picture's surroundings
-            bottom = _panel(Path(of), p["ra"], p["dec"], tmp / f"b{i}.png",
-                            f"same place, other day ({Path(of).name.split('_')[0][:8]})", None)
+            bottom = _panel(
+                Path(of),
+                p["ra"],
+                p["dec"],
+                tmp / f"b{i}.png",
+                f"same place, other day ({Path(of).name.split('_')[0][:8]})",
+                None,
+            )
         except Exception as e:  # noqa: BLE001
             print(f"  no picture for {p['time']}: {e}")
             continue
@@ -139,7 +178,10 @@ def main() -> None:
 
     def prog(stage: str, i: int = 0, n: int = 0) -> None:
         if stage != last[0] or (n and i == n):
-            print(f"[{time.time() - t0:5.0f}s] {stage} {i}/{n}" if n else f"[{time.time() - t0:5.0f}s] {stage}", flush=True)
+            print(
+                f"[{time.time() - t0:5.0f}s] {stage} {i}/{n}" if n else f"[{time.time() - t0:5.0f}s] {stage}",
+                flush=True,
+            )
         last[0] = stage
 
     res = follow.follow_body(a.name, stop=a.stop, progress=prog, max_exposures=a.max)
@@ -147,7 +189,9 @@ def main() -> None:
     (out / f"{slug}.json").write_text(json.dumps(res, indent=1))
     print(table(res))
     if res["n_followed"]:
-        spectrum_chart(res, f"{res['name']}: spectrum from SPHEREx exposures").render().save(out / f"{slug}_spectrum.png")
+        spectrum_chart(res, f"{res['name']}: spectrum from SPHEREx exposures").render().save(
+            out / f"{slug}_spectrum.png"
+        )
         if a.strip:
             print("strip:", strip(res, out, slug, a.strip))
     print(follow.CREDIT)

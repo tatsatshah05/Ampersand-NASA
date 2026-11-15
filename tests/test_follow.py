@@ -9,6 +9,7 @@
 
 The geometry tests move a real exposure's own footprint centre or corners; nothing is invented about the sky.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -19,7 +20,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from backend import follow, smallbodies, spherex
+from backend import follow, smallbodies
 
 DATA = Path(__file__).parent / "data"
 FOLLOW = DATA / "follow"
@@ -32,10 +33,19 @@ def sia_rows() -> list[dict]:
 
 # --- names and the Horizons reply -------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("name, command", [
-    ("Pluto", "999"), ("pluto", "999"), ("3I/ATLAS", "DES=3I;CAP"), ("4 Vesta", "4;"),
-    ("C/2025 R2 (SWAN)", "DES=C/2025 R2;CAP"), ("13P/Olbers", "DES=13P;CAP"), ("Makemake", "136472;"),
-])
+
+@pytest.mark.parametrize(
+    "name, command",
+    [
+        ("Pluto", "999"),
+        ("pluto", "999"),
+        ("3I/ATLAS", "DES=3I;CAP"),
+        ("4 Vesta", "4;"),
+        ("C/2025 R2 (SWAN)", "DES=C/2025 R2;CAP"),
+        ("13P/Olbers", "DES=13P;CAP"),
+        ("Makemake", "136472;"),
+    ],
+)
 def test_horizons_command(name: str, command: str) -> None:
     assert follow.horizons_command(name) == command
 
@@ -46,7 +56,7 @@ def test_parse_horizons_reads_the_real_reply() -> None:
     assert len(rows) == 4
     first = rows[0]
     assert (first["ra"], first["dec"]) == (223.02473, -11.99229)
-    assert first["vmag"] == 7.272                       # APmag for an asteroid
+    assert first["vmag"] == 7.272  # APmag for an asteroid
     assert first["r_au"] == pytest.approx(2.148884610981)
     assert first["delta_au"] == pytest.approx(1.86490575786135)
     assert first["elong"] == pytest.approx(91.6844)
@@ -74,6 +84,7 @@ def test_positions_at_asks_horizons_in_the_stored_way(cache_dir: Path, network: 
 
 # --- the path in chunks -------------------------------------------------------------------------------------------
 
+
 def _path() -> list[dict]:
     saved = json.loads((FOLLOW / "horizons_vesta_tlist.json").read_text())
     rows = follow.parse_horizons(json.loads(saved["text"])["result"])
@@ -83,8 +94,8 @@ def _path() -> list[dict]:
 
 
 def test_chunks_follow_the_elongation_and_the_distance_moved() -> None:
-    path = _path()                                   # 3 days apart at most, elongation about 91 degrees
-    assert follow.chunks(path, (0.0, 20.0)) == []     # nothing is in the range: no stretch
+    path = _path()  # 3 days apart at most, elongation about 91 degrees
+    assert follow.chunks(path, (0.0, 20.0)) == []  # nothing is in the range: no stretch
     every = follow.chunks(path, (70.0, 140.0))
     assert every[0]["t1"] == path[0]["mjd"]
     # the rows at 2460893.047815 are the same time twice: they are never split from each other
@@ -99,13 +110,14 @@ def test_chunks_follow_the_elongation_and_the_distance_moved() -> None:
 
 # --- the exposure list ------------------------------------------------------------------------------------------
 
+
 def test_parse_sia_reads_exposures_and_footprints(sia_rows: list[dict]) -> None:
     assert len(sia_rows) == 8
     first = sia_rows[0]
     assert first["obs_id"].startswith("2026W29_")
     assert 1 <= first["detector"] <= 6
     assert first["exptime"] == pytest.approx(113.58, abs=0.1)
-    assert len(first["region"]) == 4                  # the closing corner is dropped
+    assert len(first["region"]) == 4  # the closing corner is dropped
     assert 0.7 < first["wave_min"] < first["wave_max"] < 5.1
     assert first["url"].startswith("https://irsa.ipac.caltech.edu/")
 
@@ -120,7 +132,7 @@ def test_edge_distance_is_positive_inside_negative_outside(sia_rows: list[dict])
     ra = float(np.mean([c[0] for c in corners]))
     dec = float(np.mean([c[1] for c in corners]))
     inside = follow.edge_distance_deg(corners, ra, dec)
-    assert 1.0 < inside < 2.0                          # a 3.5 degree image: the centre is about 1.7 degrees from the edge
+    assert 1.0 < inside < 2.0  # a 3.5 degree image: the centre is about 1.7 degrees from the edge
     assert follow.edge_distance_deg(corners, ra + 5.0, dec) < 0
     assert follow.edge_distance_deg(corners, ra, dec + 3.0) == pytest.approx(-(3.0 - 1.74), abs=0.2)
 
@@ -132,18 +144,22 @@ def test_select_exposures_keeps_those_with_room_for_the_sky_ring(sia_rows: list[
     # a point 0.01 degree inside the first corner's edge (on the segment from corner 0 to corner 1)
     ra_e = (first[0][0] + first[1][0]) / 2 + 0.01 * np.sign(centres[0][0] - first[0][0])
     dec_e = (first[0][1] + first[1][1]) / 2
-    positions = [{"ra": centres[0][0], "dec": centres[0][1]}, {"ra": ra_e, "dec": dec_e},
-                 {"ra": centres[2][0] + 20.0, "dec": centres[2][1]}]
+    positions = [
+        {"ra": centres[0][0], "dec": centres[0][1]},
+        {"ra": ra_e, "dec": dec_e},
+        {"ra": centres[2][0] + 20.0, "dec": centres[2][1]},
+    ]
     usable, near = follow.select_exposures(exp, positions)
     assert [u["obs_id"] for u in usable] == [exp[0]["obs_id"]]
     assert usable[0]["edge_deg"] > follow.EDGE_MARGIN_DEG
-    assert near == [] or near[0]["obs_id"] == exp[1]["obs_id"]      # the edge point is near the edge, or just outside
-    assert all(e["obs_id"] != exp[2]["obs_id"] for e in usable + near)   # a position far outside is dropped
+    assert near == [] or near[0]["obs_id"] == exp[1]["obs_id"]  # the edge point is near the edge, or just outside
+    assert all(e["obs_id"] != exp[2]["obs_id"] for e in usable + near)  # a position far outside is dropped
 
 
 def test_clusters_group_nearby_positions() -> None:
     def e(ra: float, mjd: float) -> dict:
         return {"mjd": mjd, "pred": {"ra": ra, "dec": 0.0}}
+
     # positions are only labels for the grouping rule here: 0.01 deg is 36 arcsec, 0.1 deg is 360 arcsec
     groups = follow.clusters([e(10.0, 1.0), e(10.01, 1.1), e(10.1, 1.2), e(10.0, 100.0)])
     assert groups == [[0, 1], [2], [3]]
@@ -160,7 +176,7 @@ def test_measure_at_empty_place_and_noise_in_a_real_cutout() -> None:
     ra, dec = (float(v) for v in cut["wcs"].all_pix2world(nx / 2 + 8, ny / 2 - 6, 0))
     m = follow.measure_at(cut, ra, dec)
     assert m["status"] in ("ok", "saturated", "flagged", "no_sky")
-    assert m["wavelength_um"] is not None and 3.8 < m["wavelength_um"] < 5.1      # detector 5
+    assert m["wavelength_um"] is not None and 3.8 < m["wavelength_um"] < 5.1  # detector 5
     if m["status"] == "ok":
         assert m["err_mjy"] > 0 and m["err_large_mjy"] > 0
         noise = follow.local_noise(cut, ra, dec)
@@ -178,11 +194,12 @@ def test_the_circles_are_the_stated_size() -> None:
 def test_fixed_source_verdict() -> None:
     def o(flux: float, err: float) -> dict:
         return {"status": "ok", "flux_mjy": flux, "err_mjy": err}
+
     seen = follow.fixed_source_verdict(1.0, [o(0.9, 0.1), o(1.1, 0.1), o(0.2, 0.1), o(1.0, 0.1)])
     assert seen["fixed"] and seen["star_in_the_way"] and seen["n_with_source"] == 3
     faint = follow.fixed_source_verdict(100.0, [o(0.9, 0.1), o(1.1, 0.1), o(1.0, 0.1)])
-    assert faint["fixed"] and not faint["star_in_the_way"]          # there, but 1% of what was measured
+    assert faint["fixed"] and not faint["star_in_the_way"]  # there, but 1% of what was measured
     none = follow.fixed_source_verdict(1.0, [o(0.0, 0.1), o(-0.1, 0.1), o(0.1, 0.1)])
     assert not none["fixed"]
     few = follow.fixed_source_verdict(1.0, [o(1.0, 0.1), o(1.0, 0.1)])
-    assert not few["fixed"]                                          # fewer than three: no verdict
+    assert not few["fixed"]  # fewer than three: no verdict
