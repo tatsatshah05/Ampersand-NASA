@@ -1,0 +1,17 @@
+# Second hunt, 14 November evening: more young-star regions, where the first hunt found its candidates.
+# name, ra, dec, field of view (degrees). Centres are pointing positions only; every result is
+# checked against the catalogues by its own measured position.
+rho_oph_L1688, 246.79, -24.47, 0.2
+rho_oph_L1689, 248.02, -24.62, 0.2
+ic348, 56.14, 32.16, 0.2
+ngc2264_cone, 100.25, 9.88, 0.2
+corona_australis, 285.48, -36.96, 0.2
+lupus3, 242.40, -39.10, 0.2
+taurus_L1495, 64.60, 28.30, 0.2
+ngc7129, 325.77, 66.11, 0.2
+ic5146, 328.37, 47.27, 0.2
+orion_ngc1999, 84.11, -6.72, 0.2
+orion_ngc2068, 86.77, 0.37, 0.2
+w40_aquila, 277.86, -2.09, 0.2
+chamaeleon2, 193.5, -77.1, 0.2
+serpens_south_north, 277.51, -1.85, 0.2

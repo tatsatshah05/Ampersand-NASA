@@ -1,8 +1,13 @@
 # Deploying the viewer
 
-Status on 2026-11-14: **nothing is deployed.** No hosting account has been created and
+Status on 2026-11-15: **nothing is deployed.** No hosting account has been created and
 nothing has been paid for; choosing a host and paying for it is the team's decision.
-This page is what a teammate needs to do it in a few minutes once that is decided.
+This page is what a teammate needs to do it in a few minutes once that is decided. The
+settings for Fly.io are already in the repository as `fly.toml`.
+
+After deploying, run **every step of "After deploying: warm-up"** below. The page opens on
+Candidate B and links to screens and tools that read files and searches on the server's
+disk; without the warm-up, a judge's first clicks would wait for NASA's archive.
 
 Everything under "Tested" was run on a laptop with Docker. Everything about a hosting
 service is written from that service's documentation and has **not** been tried.
@@ -18,7 +23,8 @@ on one address:
 |---|---|
 | `/` | the web app (the build output of `frontend/`) |
 | `/viewer.html` | the earlier single-page viewer |
-| `/api/...` | the API: `resolve`, `frames`, `lightcurve`, `spectrum` |
+| `/api/...` | the API: `resolve`, `identify`, `frames`, `stars`, `lightcurve`, `spectrum`, `search`, `distant`, `smallbodies`, `training`, `watchlist` (README, "The API") |
+| `/lab/...` | the files of the "Three tools" screen, made by `scripts/export_lab.py` and built into the image from `frontend/public/lab/` |
 | `/frames/...` | the frame images the API names |
 
 What the host must provide:
@@ -29,7 +35,7 @@ What the host must provide:
 | `SPHEREX_CACHE_DIR` set to a folder on that disk | This tells the backend where to keep its cache. Without it the cache goes to `/app/backend/cache` inside the container and is lost on redeploy (unless the disk is mounted exactly there, which also works). |
 | No short request timeout (allow 5 minutes) | The first request for a new sky position downloads about 60 cutouts and takes about a minute, longer when the archive is having a bad spell. |
 | An always-on instance, exactly one | A host that puts the service to sleep adds a start-up wait, and the disk can only be attached to one instance. |
-| Outbound HTTPS | To `nasa-irsa-spherex.s3.amazonaws.com` (images, read directly from NASA's public bucket), `irsa.ipac.caltech.edu` (which images exist, and images as a fallback), `gea.esac.esa.int` (Gaia) and `simbad.harvard.edu` / `simbad.cds.unistra.fr` (name lookup). |
+| Outbound HTTPS | To `nasa-irsa-spherex.s3.amazonaws.com` (images, read directly from NASA's public bucket), `irsa.ipac.caltech.edu` (which images exist, images as a fallback, and the catalogues CatWISE2020, AllWISE, 2MASS, GLIMPSE and NEOWISE), `gea.esac.esa.int`, `gaia.ari.uni-heidelberg.de` and `vizier.cfa.harvard.edu` (Gaia and its copies), `simbad.harvard.edu` / `simbad.cds.unistra.fr` (names, What is it?), `vsx.aavso.org` / `www.aavso.org` (variable stars) and `ssd-api.jpl.nasa.gov` / `ssd.jpl.nasa.gov` (asteroids and comets). |
 | 1 GB of memory or more | Measured: the warm-up process peaked at 390 to 420 MB while building every demo view, on top of the server's own 115 to 150 MB. On 512 MB, warm one target at a time (see "Warm the cache"). |
 
 There is no database, no login, no secret. The only setting is `SPHEREX_CACHE_DIR`.
@@ -106,7 +112,8 @@ Check it worked:
 2. `docker exec spherex-viewer ls /data` lists `cutouts`, `frames`, `queries`.
 3. `docker restart spherex-viewer`, then load the same page again: it must be instant.
 
-Then warm the cache (next section):
+Then run the whole warm-up ("After deploying: warm-up", at the end of this page). Its
+first step is:
 
 ```
 docker exec spherex-viewer python scripts/warm_cache.py
@@ -122,15 +129,21 @@ between checkouts; otherwise it is `backend/cache`.
 
 ## Warm the cache
 
-`scripts/warm_cache.py` requests every view of the five test targets so that nothing
-is downloaded in front of the judges: six detectors, the default field of view (0.1
-degrees), normal, difference and sum modes with their options, and the brightness
-measurements behind the chart and the spectrum. Each is requested twice, with and
-without the target's motion values, because the backend caches the two separately.
-It is safe to run again: finished views are skipped, and a view whose download failed
-is retried (the backend does not keep incomplete results).
+`scripts/warm_cache.py` requests every view of every object the page has a button for,
+so that nothing is downloaded in front of the judges. Its list (`TARGETS` in the script):
+the five test targets (by name, as the page looks them up), the young star in Serpens
+South, the novae V462 Lupi and V572 Velorum, and Candidates A, B and C at their corrected
+positions. For each: six detectors, the default field of view (0.1 degrees), normal,
+difference and sum modes with their options, and the brightness measurements behind the
+chart and the spectrum. Each is requested twice, with and without the target's motion
+values, because the backend caches the two separately; the candidates' buttons ask with a
+motion of zero, and both are warmed. It is safe to run again: finished views are skipped,
+and a view whose download failed is retried (the backend does not keep incomplete
+results). `--only candidate_a candidate_b candidate_c` warms just the candidates (the
+slugs are listed by `--help`).
 
-Measured on a laptop on 2026-11-14:
+Measured on a laptop on 2026-11-14, for the five test targets only (the other six objects
+were added later and their time was not measured):
 
 - Downloading: 1,973 cutouts for the five targets. The four targets that were not
   already cached took 17.6 minutes; expect 20 to 30 minutes from nothing. Not one
@@ -150,7 +163,8 @@ Things to know:
   target: `python scripts/warm_cache.py --only barnard --fov 0.2`.
 - On a 512 MB instance, warm one target at a time:
   `python scripts/warm_cache.py --only barnard`, then `eps_indi_b`, `wise0855`,
-  `rw_aur`, `r_dra`. One target peaked at 250 MB in the container.
+  `rw_aur`, `r_dra`, `serpens_south`, `v462_lup`, `v572_vel`, `candidate_a`,
+  `candidate_b`, `candidate_c`. One target peaked at 250 MB in the container.
 - Run it again after a backend update. Cached results carry a code version, so results
   from older code are never served, but they are not rebuilt until asked for. A
   re-run takes about 15 minutes on a laptop because the cutouts are kept.
@@ -201,11 +215,12 @@ Steps:
    about a minute the first time. Then open `https://<name>.onrender.com/`.
 6. Warm the cache: open the service's **Shell** tab and run
    `python scripts/warm_cache.py`, then `python scripts/warm_cache.py --check`.
-   The shell shares the instance's memory with the running server.
+   The shell shares the instance's memory with the running server. Then the rest of
+   "After deploying: warm-up" below.
 7. Check it worked:
    - `--check` printed `RESULT: every view loaded from disk in under a second`.
    - In the shell, `ls /var/data` lists `cutouts`, `frames`, `photometry`, `queries`.
-   - From a phone, the site opens Barnard's Star at once.
+   - From a phone, the site opens Candidate B at once.
    - A position nobody has asked for works after about a minute. Look at the
      service's log for errors afterwards.
 
@@ -248,43 +263,27 @@ was not tested. Warming the cache avoids it for the five demo targets, but a jud
 brand-new position could be affected.
 
 1. Install the tool and sign in: https://fly.io/docs/flyctl/install/ then `fly auth login`.
-2. In the repo root create `fly.toml` (pick your own app name and nearest region):
-
-   ```toml
-   app = "ampersand-spherex"
-   primary_region = "sea"
-
-   [env]
-     SPHEREX_CACHE_DIR = "/data"
-
-   [http_service]
-     internal_port = 8000
-     force_https = true
-     auto_stop_machines = "off"
-     auto_start_machines = true
-     min_machines_running = 1
-
-   [mounts]
-     source = "spherex_cache"
-     destination = "/data"
-     initial_size = "3gb"
-
-   [[vm]]
-     cpu_kind = "shared"
-     cpus = 1
-     memory = "1gb"
-   ```
+2. `fly.toml` is already in the repo root; change the app name in it if that name is taken.
+   It sets one always-on machine (shared CPU, 1 GB of memory), `SPHEREX_CACHE_DIR=/data`,
+   a 5 GB volume `spherex_cache` mounted at `/data`, HTTPS, and a health check on
+   `/openapi.json`.
 
 3. `fly launch --copy-config --no-deploy` (answer no to databases), then `fly deploy`.
    Fly builds from the folder on your laptop, so what is deployed is what you have
    checked out.
 4. `fly ssh console -C "python scripts/warm_cache.py"`, then the same with `--check`.
+   Then the rest of "After deploying: warm-up" below.
 5. `fly scale count 1` if it created two machines: the volume belongs to one.
 
 ## Disk
 
 Measured on 2026-11-14 after warming the five targets (six detectors, field of view
-0.1 degrees):
+0.1 degrees). The six objects added to the warm-up since then were not measured. An
+estimate only: at about 260 kB per exposure (below), the three candidates' 327, 370 and
+425 exposures (`docs/sweep.md`, the rerun) come to about 85 to 110 MB each. The searches
+of the warm-up's step 4 keep their own cutouts (`search2/`), and the watchlist folder of
+step 6 is about 9 MB once every picture strip is made (8.7 MB, 143 pictures, on 15
+November). Choose 5 GB.
 
 | Target | Exposures (all detectors) | Cutouts on disk |
 |---|---|---|
@@ -309,7 +308,141 @@ about 140 MB. Nothing is ever deleted automatically. So:
   follows from how the cache is written; a full disk was not tested. To make room,
   delete folders under `cutouts/` on the disk other than the five demo targets'.
 
-## After deploying: the acceptance test from issue #15
+## After deploying: warm-up
 
-- The public link opens Barnard's Star instantly from a phone.
+The page opens on Candidate B, has a button for eleven objects, and links from the bar to
+six tools and three screens of their own. Each needs something on the server's disk. Do
+these steps in order. Steps 1 and 2 run in the checkout, before the image is built; the
+others on the server, or against it. Nothing here was run on a hosting service yet. On a
+laptop on 2026-11-15, against the shared cache: step 1 (`export_lab.py --check`: "lab
+files are up to date with the results files"), step 2 (on `Dev` before the Observe
+anomalies and finish-page branches are merged, the copies in `scripts/checks/` fail in
+known ways, and the layout check passed: see `scripts/checks/README.md`), step 3's
+`--check` (661 views of the eleven objects, every one from disk in under a second with
+the network blocked, 1.7 minutes), step 4's loop for Candidate B, step 5 (5 seconds, its
+search already on disk), step 6.1 on a copy of the list (0 new rows; one field, IC 5146,
+skipped because its search is not on disk) and step 6.2 for three rows.
+
+**1. Before building: the exported files are up to date (in the checkout, no network).**
+The "Three tools" screen reads files that are built into the image from
+`frontend/public/lab/`. Check them against the three methods' results:
+
+```
+python scripts/export_lab.py --check
+```
+
+It exits 1 if a file is out of date; then run `python scripts/export_lab.py` (it needs the
+cached cutouts of the three methods; see its docstring) and commit the new files. This
+check reads `docs/`, which is not in the image (`.dockerignore`), so it cannot run on the
+server. **Once the Observe anomalies screen is merged** (branch `agent/anomalies`, commit
+`674b595`, not in `Dev` when this was written), that screen reads
+`frontend/public/anomalies/sweep.json`, made from `docs/sweep/summary.json` and
+`docs/sweep.md` by `scripts/export_anomalies.py`; check it the same way before building:
+`python scripts/export_anomalies.py --check` (offline; it also compares the known objects'
+catalogue rows when the sweep's tile records are in the cache, and otherwise says they were
+not checked). Both scripts were written so that their `--check` mode catches a file that
+has drifted from the write-ups.
+
+**2. Before building, optionally: the browser checks.** Run `scripts/checks/` against a
+local server built from the same commit (`scripts/checks/README.md`).
+
+**3. The views (on the server).** Every view of every button, as described in "Warm the
+cache" above:
+
+```
+python scripts/warm_cache.py
+python scripts/warm_cache.py --check
+```
+
+**4. The tools the bar opens on those views (against the server).** Find changes, Far-off
+planet, Asteroids and What is it? work on the view on screen, starting with Candidate B.
+Each starts a search or asks an outside catalogue the first time, and keeps the answer on
+disk. Ask for them once for all eleven objects of the row of buttons. From any machine
+with `curl` and `python3`, in `bash` (not `zsh`), with `SITE` set to the public address:
+
+```
+SITE=https://<the public address>
+for v in "253.18038 -44.67697 6" "270.80408 -23.46818 6" "241.70906 -52.20564 6" \
+         "269.446267 4.768222 5" "331.096653 -56.800663 5" "133.759765 -7.242182 6" \
+         "76.956587 30.401291 5" "248.167233 66.755024 5" \
+         "277.50547 -2.06198 6" "227.01362 -40.14308 6" "156.30783 -53.522 2"; do
+  set -- $v
+  for q in "search?ra=$1&dec=$2&fov=0.1&detectors=123456" "distant?ra=$1&dec=$2&fov=0.2&detectors=56"; do
+    until curl -s "$SITE/api/$q" | python3 -c 'import json,sys; sys.exit(json.load(sys.stdin)["status"] not in ("done", "failed"))'; do
+      sleep 15
+    done
+    echo "done: $q"
+  done
+  curl -s -o /dev/null -w "identify %{http_code}\n" "$SITE/api/identify?ra=$1&dec=$2"
+  curl -s -o /dev/null -w "smallbodies %{http_code}\n" "$SITE/api/smallbodies?ra=$1&dec=$2&fov=0.1&detector=$3"
+done
+```
+
+These are the requests the page itself makes: the blind search on the view's field of
+view (0.1 degrees) in all six detectors, the distant-world search on 0.2 degrees in
+detectors 5 and 6, What is it? at the view's centre, and the small bodies in the view's
+detector. Each search runs in the background, one at a time; the loop asks again every 15
+seconds until it is done. A first search of a patch takes from under a minute (cutouts
+on disk) to a few minutes. The positions and detectors are the row's own
+(`frontend/src/components/SearchBar.tsx`; the last three are Serpens South, V462 Lupi and
+V572 Velorum). The loop was run on a laptop server for Candidate B; the other ten were not
+timed.
+
+**5. The distant-world check (on the server).** It runs the same distant-world search the
+Far-off planet panel shows, for WISE 0855, and prints its answer and its limit at every
+distance:
+
+```
+python scripts/check_distant.py --fields wise0855 --seeds 0
+```
+
+`--seeds 0` leaves out the planted-object counts, which take far longer; the counts in
+`docs/distant.md` come from a full run on a laptop. The script writes its answers to
+`docs/distant/results.json`: in the container that folder does not exist and is made
+afresh, which is harmless, but on a checkout it overwrites the committed results, so do
+not commit that change.
+
+**6. Observe anomalies (the watchlist) and its pictures.** The list is one SQLite file,
+`<cache>/watchlist/watchlist.sqlite3`, and its picture strips are in
+`<cache>/watchlist/pictures/`. Both are made from blind searches and cutouts that a new
+server does not have (on the laptop the searches' cutouts take about 5 GB), and the
+ingest script never starts a search. So build them where the searches are, and copy the
+folder:
+
+1. On the laptop, with the cache that holds the searches:
+   `python scripts/watchlist_ingest.py --fields docs/search/hunt2_fields.txt --neowise`.
+   It adds every search that is on disk (the five targets, the four fields of the first
+   hunt and the fourteen of the second, `docs/search.md`) and names each one it skips.
+2. Still on the laptop, with a server running there on that cache, make every picture
+   strip once (in `bash`):
+
+   ```
+   SITE=http://127.0.0.1:8000
+   curl -s "$SITE/api/watchlist/export.json" | python3 -c 'import json,sys; print("\n".join(c["id"] for c in json.load(sys.stdin)["candidates"]))' |
+     while read -r id; do curl -s -o /dev/null -w "$id %{http_code}\n" "$SITE/api/watchlist/$id/picture.png"; done
+   ```
+
+   A 404 means that candidate's cutouts are not on this machine either; the page then
+   says there is no picture.
+3. Stop the laptop server, and copy the folder `<cache>/watchlist/` to the same place on
+   the server's disk (`/data/watchlist/` with the settings above), while the server there
+   is stopped too: it is a database file. How to copy depends on the host (`docker cp`,
+   `fly ssh sftp shell`); this was not tried on any host.
+4. Check: `$SITE/api/watchlist?limit=1` gives `counts` and `patches_searched`, and
+   `$SITE/?watchlist=1` shows pictures.
+
+The first group of Observe anomalies, the three candidates, uses the candidates' views
+from step 3 (and, once merged, the file of step 1). Votes cast on the laptop's copy go
+with the file; to start the server with no votes, copy it before anyone votes.
+
+**7. Open each place once in a browser**, on the public address: `/` (Candidate B,
+blinking), the buttons Candidate A and Candidate C, the five targets, `/?tools=1`,
+`/?watchlist=1`, the practice round of the demo (`/?train=1&level=easy`, then choose
+Difference frames), and What is it? on Barnard's Star. `--check` in step 3 calls the
+backend directly, not through the web server, so this is the only test of the pages
+themselves.
+
+**8. The acceptance test from issue #15.**
+
+- The public link opens Candidate B at once from a phone.
 - A position that has never been requested works after a wait of about a minute.
