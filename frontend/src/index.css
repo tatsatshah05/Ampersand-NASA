@@ -1,56 +1,127 @@
+/* Atkinson Hyperlegible draws its zero with a slash. That is right for telling 0 from O, but it
+   makes dates and coordinates look busy ("2026-08-18", "1000 times"). So the ten digits alone come
+   from the system's own sans face, which sets them plainly and at equal widths; every letter stays
+   in the one family. Where no such face is installed the page falls back to Atkinson's digits. */
+@font-face {
+  font-family: 'Plain Digits';
+  font-weight: 400;
+  src: local('Helvetica Neue'), local('HelveticaNeue'), local('Segoe UI'), local('Roboto'), local('Arial');
+  unicode-range: U+0030-0039;
+}
+
+@font-face {
+  font-family: 'Plain Digits';
+  font-weight: 700;
+  src:
+    local('Helvetica Neue Bold'), local('HelveticaNeue-Bold'), local('Segoe UI Bold'), local('Roboto Bold'),
+    local('Arial Bold');
+  unicode-range: U+0030-0039;
+}
+
+/* The page's colours, type and controls.
+
+   Dark on purpose: a bright surround makes faint sources harder to see, so the page around
+   the picture is true black. Controls sit on a quiet graphite; text is off-white, secondary
+   text a mid grey, and sections are divided by hairlines.
+
+   Exactly two colours carry meaning, and nothing else uses them:
+   --measured (amber) is what was measured in the picture, the thing that moved; it is also
+   the one primary action (Play) and the "this one" state of a choice.
+   --gaia (cyan) is what the catalogue predicts.
+   They are the colours of the marks drawn on the picture, so the page and its legend agree.
+   --notice and --error keep their own jobs. */
 :root {
-  --bg: #0d0f14;
-  --panel: #171a22;
-  --text: #e7e9ee;
-  --muted: #9aa1ad;
-  --border: #2b303b;
-  --control: #232734;
-  --control-hover: #2d3242;
-  /* Colours that say where a position comes from. Each also has its own shape on the picture. */
+  --bg: #000;
+  --surface: #131417;
+  --surface-hover: #1c1d21;
+  --surface-press: #26272c;
+  --line: #222429;
+  --line-strong: #3a3c43;
+  --text: #ecebe6;
+  --muted: #9d9fa6;
+  --measured: #ff8a3d; /* measured in the picture; Play; the chosen one */
+  --measured-hover: #ff9d5c;
   --gaia: #38d6e8; /* predicted from a catalogued motion */
-  --measured: #ff8a3d; /* measured in the picture */
   --start: #ffffff; /* the first measured position */
   --notice: #f0c36a;
   --error: #ff7b7b;
-  --focus: #9cc2ff;
+  --focus: #ecebe6;
+
+  /* Older names, still used by the panels and the practice and watchlist screens. */
+  --panel: var(--surface);
+  --border: var(--line-strong);
+  --control: var(--surface);
+  --control-hover: var(--surface-hover);
+
+  /* Type: one family, four sizes. */
+  --font: 'Plain Digits', 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --size-small: 12px;
+  --size-body: 14px;
+  --size-read: 16px;
+  --size-title: 20px;
+
   color-scheme: dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font);
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* The root size stays the browser's, so the panels' rem sizes keep their meaning. */
 body {
   margin: 0;
+  font-size: var(--size-body);
   background: var(--bg);
+}
+
+a {
+  color: var(--text);
+  text-underline-offset: 3px;
+  text-decoration-color: var(--muted);
+}
+
+a:hover {
+  text-decoration-color: var(--text);
+}
+
+button,
+select,
+input {
+  font: inherit;
 }
 
 button,
 select {
-  font: inherit;
   color: var(--text);
-  background: var(--control);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
   padding: 6px 12px;
+  line-height: 1.3;
 }
 
 button {
   cursor: pointer;
+  transition: background-color 0.12s ease;
 }
 
 button:hover:not(:disabled),
 select:hover:not(:disabled) {
-  background: var(--control-hover);
+  background: var(--surface-hover);
+}
+
+button:active:not(:disabled) {
+  background: var(--surface-press);
 }
 
 button:disabled,
 select:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -64,21 +135,39 @@ select:disabled {
 button.toggle::before {
   content: '';
   display: inline-block;
-  width: 0.85em;
-  height: 0.85em;
-  margin-right: 0.5em;
-  vertical-align: -0.08em;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  vertical-align: -1px;
   border: 1.5px solid var(--muted);
   border-radius: 3px;
 }
 
-button.toggle[aria-pressed='true'] {
-  border-color: var(--muted);
+button.toggle[aria-pressed='true']::before {
+  border-color: var(--measured);
+  background: var(--measured)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.3l2.4 2.4 4.6-5.2' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 100% no-repeat;
 }
 
-button.toggle[aria-pressed='true']::before {
-  border-color: var(--text);
-  background: var(--text)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.3l2.4 2.4 4.6-5.2' fill='none' stroke='%230d0f14' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    center / 100% no-repeat;
+/* Read by screen readers, not shown. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

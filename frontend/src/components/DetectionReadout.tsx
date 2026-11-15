@@ -11,7 +11,7 @@ export function DetectionReadout({ frame, detectionOnly = false }: { frame: Fram
   if (!detection && lines.length === 0) return null
   return (
     <div className="detection-readout">
-      {detection && <p className={`detection detection-${frame.detection}`}>{detection}.</p>}
+      {detection && <p className={`detection detection-${frame.detection}`}>{`${detection}.`}</p>}
       {lines.map((l) => (
         <p key={l} className="detection-extra">
           {l}

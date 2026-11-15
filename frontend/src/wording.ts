@@ -41,6 +41,29 @@ export function frameTick(frame: Frame, data: FramesReady): string {
   return String(frame.epoch)
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** "2025-06-19" as "Jun 2025". Read from the text, so the time zone cannot shift the month. */
+export function monthYear(iso: string): string {
+  const m = /^(\d{4})-(\d{2})/.exec(iso)
+  const month = m ? MONTHS[Number(m[2]) - 1] : undefined
+  return m && month ? `${month} ${m[1]}` : iso
+}
+
+/**
+ * A frame's caption in the strip of visits: "Visit 2" over "Jun 2025" (the month of its
+ * middle date; the full dates are in its label), or for a sum, "All visits" over the
+ * years it spans.
+ */
+export function visitCaption(frame: Frame, data: FramesReady): { name: string; when: string } {
+  if (data.mode === 'sum') {
+    const a = frame.date_start.slice(0, 4)
+    const b = frame.date_end.slice(0, 4)
+    return { name: 'All visits', when: a === b ? a : `${a} to ${b}` }
+  }
+  return { name: `Visit ${frame.epoch}`, when: monthYear(frame.date_mean) }
+}
+
 /** How far the marked object in this frame is from where it started, in words. */
 export function motionSentence(frame: Frame, data: FramesReady): string {
   if (!frame.centroid) return 'No position could be measured in this frame.'
