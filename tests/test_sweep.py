@@ -228,6 +228,20 @@ def test_a_second_image_that_disagrees_kills_the_source(images, measured):
     assert out["tally"]["survivors"] == 0
 
 
+def test_a_source_whose_second_image_is_unusable_is_listed_apart(images, measured):
+    """The spring partner image is flagged at the source: nothing contradicts the anchor, but nothing confirms it."""
+    keep = [i for i, im in enumerate(images) if im.epoch in (0, 1)]
+    sources = [{"ra": NOVA[0], "dec": NOVA[1]}]
+    meas = [[dict(measured[i])] for i in keep]
+    meta = [{"obs_id": images[i].obs_id, "epoch": images[i].epoch, "role": images[i].role, "mjd": images[i].mjd,
+             "shape": images[i].shape} for i in keep]
+    partner = next(k for k, m in enumerate(meta) if m["epoch"] == 1 and m["role"] == "partner")
+    meas[partner] = [{**meas[partner][0], "status": "flagged", "flux": None, "err": None}]
+    out = sweep.evaluate(sources, meas, meta, [np.zeros((0, 2))] * len(keep), [0.0] * len(keep))
+    assert out["tally"]["single_image_only"] == 1 and out["tally"]["survivors_single_image"] == 1
+    assert out["tally"]["survivors"] == 0 and out["survivors"][0]["single_image_only"] is True
+
+
 def test_the_vetoes_in_order(images, measured):
     meta = [{"obs_id": im.obs_id, "epoch": im.epoch, "role": im.role, "mjd": im.mjd, "shape": im.shape}
             for im in images]

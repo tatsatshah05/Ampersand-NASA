@@ -634,8 +634,9 @@ def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float]
 
 # --- evaluating a tile --------------------------------------------------------------------------------------------
 
-STAGES = ("sources", "comparable", "changed_anchors", "killed_second_image", "changed_all_images", "killed_edge",
-          "killed_shape", "killed_neighbour", "killed_saturation_residue", "killed_ghost_risk", "survivors")
+STAGES = ("sources", "comparable", "changed_anchors", "killed_second_image", "single_image_only", "changed_all_images",
+          "killed_edge", "killed_shape", "killed_neighbour", "killed_saturation_residue", "killed_ghost_risk",
+          "survivors", "single_image_killed", "survivors_single_image")
 
 
 def _epoch_lists(meas: list[list[dict[str, Any]]], meta: list[dict[str, Any]], s: int,
@@ -665,7 +666,12 @@ def evaluate(sources: list[dict[str, Any]], meas: list[list[dict[str, Any]]], me
     their indices). "comparable" means usable measurements in at least two epochs;
     "changed_anchors" is the two-visit comparison that uses only the best centred image of each
     epoch (what a plain comparison of two visits would give); "changed_all_images" requires the
-    change in every image of the epochs.
+    change in every image of the epochs, at least two in the bright one. A source that passes the
+    two-visit comparison, whose second image in the bright epoch cannot be used (flagged, empty) and
+    whose single usable image passes, is counted as "single_image_only": it cannot be confirmed, but
+    nothing contradicts it, so it goes through the vetoes too; those that pass are listed as
+    "survivors_single_image" (and are kept apart from "survivors"), those that do not as
+    "single_image_killed".
     """
     n = len(sources)
     keep = np.ones(n, dtype=bool) if keep is None else keep
@@ -692,26 +698,35 @@ def evaluate(sources: list[dict[str, Any]], meas: list[list[dict[str, Any]]], me
             continue
         tally["changed_anchors"] += 1
         pair = best_pair(epochs, min_mjy, min_bright=2)
+        single = False
         if pair is None:
-            tally["killed_second_image"] += 1
-            killed["killed_second_image"].append(s)
-            continue
-        tally["changed_all_images"] += 1
+            pair = best_pair(epochs, min_mjy, min_bright=1)
+            if pair is None:
+                tally["killed_second_image"] += 1
+                killed["killed_second_image"].append(s)
+                continue
+            single = True
+            tally["single_image_only"] += 1
+        else:
+            tally["changed_all_images"] += 1
         a = pair["bright_epoch"]
         bright_images = [i for i, m in enumerate(meta)
                          if m["epoch"] == a and meas[i][s]["status"] in ("ok", "saturated")]
         why = veto(s, sources, meas, meta, bright_images, flux, strength, px, py, clumps, star_ratio, tree, r_nb)
         if why:
-            tally[f"killed_{why}"] += 1
-            killed[f"killed_{why}"].append(s)
+            if single:
+                tally["single_image_killed"] += 1
+            else:
+                tally[f"killed_{why}"] += 1
+                killed[f"killed_{why}"].append(s)
             continue
-        tally["survivors"] += 1
+        tally["survivors_single_image" if single else "survivors"] += 1
         gaps = sorted({round(abs(meta[i]["mjd"] - meta[j]["mjd"]), 2) for i in bright_images for j in bright_images
                        if i < j})
         survivors.append({"index": s, "ra": sources[s]["ra"], "dec": sources[s]["dec"], "l": sources[s].get("l"),
                           "b": sources[s].get("b"), "pair": pair,
                           "direction": "brightened" if pair["bright_epoch"] > pair["faint_epoch"] else "faded",
-                          "bright_images": bright_images,
+                          "bright_images": bright_images, "single_image_only": single,
                           "bright_gap_days": gaps, "same_day_only": not any(g >= 1.0 for g in gaps),
                           "saturated": any(meas[i][s]["status"] == "saturated" for i in bright_images),
                           "measurements": [{"obs_id": meta[i]["obs_id"], "epoch": meta[i]["epoch"],
@@ -1156,10 +1171,10 @@ def summarise(include_proof: bool = False) -> dict[str, Any]:
         for k, v in t["tally"].items():
             total[k] += v
         for sv in t.get("survivors", []):
-            k = sv["classification"]["kind"]
+            k = sv["classification"]["kind"] + ("_single_image" if sv.get("single_image_only") else "")
             kinds[k] = kinds.get(k, 0) + 1
             survivors.append({"tile": t["name"], "ra": round(sv["ra"], 5), "dec": round(sv["dec"], 5), "kind": k,
-                              "bright_mjy": round(sv["pair"]["bright_mjy"], 1)})
+                              "bright_mjy": round(sv["pair"]["bright_mjy"], 1), "direction": sv.get("direction")})
     return {"tiles_done": len(done), "tiles_skipped": len(tiles) - len(done),
             "area_sq_deg": round(sum(t["area_sq_deg"] for t in done), 2), "tally": total,
             "survivors_by_kind": kinds, "survivors": survivors}
