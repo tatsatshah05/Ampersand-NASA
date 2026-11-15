@@ -379,3 +379,215 @@
     font-size: 17px;
   }
 }
+
+/* ---- the bar of features, on every screen ------------------------------------------------ */
+/* Where you are is a black pill with white words: the same mark as the star on the picture in
+   the row below and the level in use in the dock. The other items are dark grey words that
+   take a grey pill under the pointer. An item that cannot be pressed yet keeps the same grey,
+   so nothing changes colour by itself when the first pictures arrive. All ten stay on one line
+   at 1280 px and wider: the pills use the padding the items already had. */
+.feature-bar {
+  --feature-rest: #424245;
+}
+
+.topbar {
+  column-gap: 18px;
+}
+
+.feature-list {
+  gap: 0;
+  align-items: center;
+}
+
+.feature-li {
+  align-items: center;
+}
+
+.feature-item {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: var(--feature-rest);
+}
+
+.feature-item[aria-disabled='true'] {
+  color: var(--feature-rest);
+}
+
+.feature-item:hover:not([aria-disabled='true']) {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.feature-item:active:not([aria-disabled='true']) {
+  background: var(--surface-hover);
+}
+
+.feature-item[aria-current='page'],
+.feature-item[aria-current='page']:hover:not([aria-disabled='true']),
+.feature-item[aria-current='page']:active:not([aria-disabled='true']) {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.feature-item[aria-current='page']::after {
+  content: none;
+}
+
+.feature-item:focus-visible {
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .feature-item {
+    transition:
+      background-color var(--quick) var(--ease),
+      color var(--quick) var(--ease);
+  }
+}
+
+/* Stacked windows: the bar's own line, with room for the pill. */
+@media (max-width: 999px) {
+  .topbar .feature-bar {
+    height: 42px;
+  }
+}
+
+/* ---- the star row: all eleven in view --------------------------------------------------- */
+/* Closer pills and a shorter search field, so the row fits a 1440 px window; in a laptop-width
+   window the names step down one size and still all fit, instead of the last three being off
+   the right edge. A phone keeps App.css's own row. */
+@media (min-width: 1000px) {
+  .targets {
+    gap: 12px;
+  }
+
+  .targets .searchbar {
+    flex: 0 1 220px;
+  }
+
+  .target {
+    padding: 0 10px;
+  }
+
+  .target-divider {
+    margin: 0 6px;
+  }
+}
+
+@media (min-width: 1000px) and (max-width: 1419px) {
+  .targets .searchbar {
+    flex-basis: 172px;
+    min-width: 150px;
+  }
+
+  .target {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  .target-group {
+    gap: 0;
+  }
+
+  .target-divider {
+    margin: 0 4px;
+  }
+}
+
+/* The magnifier leads the field, as in every Apple search field; a long hint ends in dots. */
+.searchbar-row {
+  flex-direction: row-reverse;
+}
+
+.searchbar-input {
+  padding: 0 14px 0 2px;
+  border-radius: 0 999px 999px 0;
+  text-overflow: ellipsis;
+}
+
+.searchbar-submit {
+  margin: 0 0 0 4px;
+}
+
+/* ---- the Beginner | Expert dock ---------------------------------------------------------- */
+/* A small white capsule that floats over the corner: a hairline and a soft shadow, so it reads
+   as lying on top of the page where words pass under it. Drawn with rings round the dock, so
+   the switch sits exactly where LevelDock.css put it. */
+.level-dock {
+  gap: 6px;
+  box-shadow:
+    0 0 0 5px var(--bg),
+    0 0 0 6px var(--line),
+    0 8px 22px 5px rgb(0 0 0 / 0.1);
+}
+
+.level-dock .level-switch,
+.level-dock .level-switch .segment {
+  border-radius: 999px;
+}
+
+.level-dock .level-switch {
+  background: var(--surface);
+}
+
+.level-dock .info-button {
+  margin-left: 4px;
+}
+
+/* ---- Beginner's tool panels -------------------------------------------------------------- */
+/* The answer leads: a size up, in black. What the chart shows stays small and grey above it,
+   and a caution is a soft grey card, not a bar down the left. */
+.plain-intro {
+  max-width: 68ch;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.plain-result {
+  max-width: 64ch;
+  margin: 10px 0 14px;
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+.plain-caution {
+  max-width: 68ch;
+  margin: 8px 0;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font-size: 15px;
+}
+
+.plain-list .plain-number {
+  font-weight: 600;
+}
+
+/* The object card inside its panel: the panel is the card, so the inner frame goes, and so
+   does the small label that repeats the panel's own title. A hairline under it parts it from
+   the older pictures that follow. */
+.tool-slot .oc {
+  margin-bottom: 24px;
+  padding: 0 0 24px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.tool-slot .oc-eyebrow {
+  display: none;
+}
+
+/* ---- the side column's block of words ---------------------------------------------------- */
+/* The edge that says "there is more below": a lighter grey, so it reads as a shadow and not as
+   a bar across the words. The two covers over it are App.css's own. */
+.readout-block {
+  background:
+    linear-gradient(var(--bg) 40%, transparent) top / 100% 28px no-repeat local,
+    linear-gradient(transparent, var(--bg) 60%) bottom / 100% 28px no-repeat local,
+    linear-gradient(transparent, var(--surface-hover)) bottom / 100% 16px no-repeat scroll;
+}
