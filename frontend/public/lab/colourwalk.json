@@ -1,0 +1,436 @@
+{
+ "schema": 1,
+ "tool": "colourwalk",
+ "source": {
+  "results_file": "docs/colourwalk/results.json",
+  "results_sha256": "0b3db48700fafb49b15e3efd0c24f9e293bc89179e5c3acec6d0612904b7db13",
+  "results_commit": "af47e5f76b8b53e4cae5ae0a6ff6973bd4f05ed5",
+  "writeup": "docs/colourwalk.md",
+  "code_files": [
+   "backend/colourwalk.py",
+   "scripts/check_colourwalk.py"
+  ],
+  "code_commit": "af47e5f76b8b53e4cae5ae0a6ff6973bd4f05ed5",
+  "export_script": "scripts/export_lab.py",
+  "export_commit": "b5756e67505c9bb455367d8bccb53580eb7e71aa",
+  "exported_utc": "2026-11-15T07:08:18+00:00"
+ },
+ "final": true,
+ "final_evidence": "## What the review changed in the code",
+ "status": {
+  "chip_key": "not_proven",
+  "method_proven": false,
+  "verdict": "nothing_found",
+  "chip": "Not proven yet",
+  "source": "results.json: the blind verdict, the 7 pre-set checks and the null test; docs/colourwalk.md status 'method not proven'"
+ },
+ "walk": {
+  "sigma_guessed_floor": 2.68823522796,
+  "guessed_floor_arcsec": 0.04,
+  "measured_floor_arcsec": {
+   "east": 0.049,
+   "north": 0.066
+  },
+  "detector_fixed_arcsec": {
+   "available": true,
+   "x": 0.0287056451671,
+   "y": 0.0032770672412,
+   "size": 0.0288920963961,
+   "rule": "half the sum of the mean detector-frame walks of the two spacecraft orientations (visits grouped by detector-frame angle)"
+  },
+  "all": {
+   "east": -0.11325758751914916,
+   "north": -0.1426990730091563,
+   "pa": 218.43837430488728,
+   "size": 0.18218206983216062,
+   "sigma": 2.0478116584660517,
+   "p_false": 0.1228530572512254,
+   "pa_error_deg": 27.024418816793442,
+   "err_east": 0.0754797480591614,
+   "err_north": 0.10239857805460886,
+   "n_short": 119,
+   "n_long": 147
+  },
+  "per_detector": {
+   "D4": {
+    "pa": 223.2165742925898,
+    "size": 0.16529686918592018,
+    "sigma": 1.7943379629362135
+   },
+   "D5": {
+    "pa": 205.11331096022425,
+    "size": 0.2093560272516157,
+    "sigma": 2.1370983691852907
+   },
+   "D6": {
+    "pa": 225.27357762472212,
+    "size": 0.21321054621733682,
+    "sigma": 2.349695575786238
+   }
+  }
+ },
+ "known": {
+  "ref": "Gauza et al. 2015",
+  "sep_arcsec": 8.06,
+  "pa_deg": 218.1
+ },
+ "known_place": {
+  "control_max": 0.0250431057541,
+  "net_ratio": [
+   {
+    "lo": 0.75,
+    "hi": 0.95,
+    "net": -0.003682799452935318,
+    "net_err": 0.0075031151106847655,
+    "control": 0.012763491192582134,
+    "control_max": 0.01581206942985259
+   },
+   {
+    "lo": 0.95,
+    "hi": 1.12,
+    "net": -0.015801281864612413,
+    "net_err": 0.007249068442335203,
+    "control": 0.014917202484059078,
+    "control_max": 0.01609380130654683
+   },
+   {
+    "lo": 1.12,
+    "hi": 1.4,
+    "net": 0.001270956103117376,
+    "net_err": 0.0020370563431922886,
+    "control": 0.0087324961687122,
+    "control_max": 0.009398803351030409
+   },
+   {
+    "lo": 1.4,
+    "hi": 1.65,
+    "net": 0.0015068980125034648,
+    "net_err": 0.006096573759862365,
+    "control": 0.010887783422030431,
+    "control_max": 0.016245911944469706
+   },
+   {
+    "lo": 1.65,
+    "hi": 2.0,
+    "net": 0.01022961319263363,
+    "net_err": 0.004368284849840994,
+    "control": 0.008487956723527597,
+    "control_max": 0.012830429972554291
+   },
+   {
+    "lo": 2.0,
+    "hi": 2.43,
+    "net": 0.020693026429378803,
+    "net_err": 0.0029878115655165892,
+    "control": 0.008680092591324184,
+    "control_max": 0.010561335360474218
+   },
+   {
+    "lo": 2.43,
+    "hi": 2.9,
+    "net": 0.03371781409259619,
+    "net_err": 0.002555019154304883,
+    "control": 0.010344054143296495,
+    "control_max": 0.011627182104440994
+   },
+   {
+    "lo": 2.9,
+    "hi": 3.4,
+    "net": 0.04363226347959143,
+    "net_err": 0.007013232583841356,
+    "control": 0.008788992806562756,
+    "control_max": 0.018263466109809286
+   },
+   {
+    "lo": 3.4,
+    "hi": 3.85,
+    "net": 0.05169728363364465,
+    "net_err": 0.005060126773115777,
+    "control": 0.011372198595896374,
+    "control_max": 0.01287280204460186
+   },
+   {
+    "lo": 3.85,
+    "hi": 4.15,
+    "net": 0.05839950863774136,
+    "net_err": 0.006463453678561811,
+    "control": 0.01242418025535226,
+    "control_max": 0.013375833047032215
+   },
+   {
+    "lo": 4.15,
+    "hi": 4.43,
+    "net": 0.062901178737749,
+    "net_err": 0.006819956878219789,
+    "control": 0.010480986367399834,
+    "control_max": 0.012800763668401315
+   },
+   {
+    "lo": 4.43,
+    "hi": 4.7,
+    "net": 0.06265547540612534,
+    "net_err": 0.014258703065878831,
+    "control": 0.003977710609366417,
+    "control_max": 0.025043105754113625
+   },
+   {
+    "lo": 4.7,
+    "hi": 5.02,
+    "net": 0.07185948583940152,
+    "net_err": 0.006991732645156527,
+    "control": 0.00886339735776051,
+    "control_max": 0.008997712197668786
+   }
+  ]
+ },
+ "rule_sigma": 4.0,
+ "groups": [
+  {
+   "name": "Bluer",
+   "lo_um": 0.75,
+   "hi_um": 1.65,
+   "png": "colourwalk_vhs1256_bluer.png",
+   "east": -0.0389154635417,
+   "north": -0.056933087674,
+   "err_east": 0.0541424206625,
+   "err_north": 0.0757841823748,
+   "n": 119,
+   "n_in_picture": 119
+  },
+  {
+   "name": "Middle",
+   "lo_um": 1.65,
+   "hi_um": 2.9,
+   "png": "colourwalk_vhs1256_middle.png",
+   "east": -0.0931411559204,
+   "north": -0.0597070417386,
+   "err_east": 0.055236868144,
+   "err_north": 0.0754093153563,
+   "n": 83,
+   "n_in_picture": 83
+  },
+  {
+   "name": "Redder",
+   "lo_um": 2.9,
+   "hi_um": 5.02,
+   "png": "colourwalk_vhs1256_redder.png",
+   "east": -0.152173051061,
+   "north": -0.199632160683,
+   "err_east": 0.052590784857,
+   "err_north": 0.0688638256952,
+   "n": 147,
+   "n_in_picture": 147
+  }
+ ],
+ "picture": {
+  "crop_px": 9,
+  "pixel_arcsec": 6.15,
+  "north_up_east_left": true,
+  "host_px": [
+   4.5,
+   4.5
+  ],
+  "partner_px": [
+   5.30866815506,
+   5.53133272797
+  ],
+  "partner_offset_arcsec": [
+   -4.97330915363,
+   -6.34269627701
+  ],
+  "made_from": "each clean exposure of the group, resampled bilinearly onto a north-up grid centred on the host's Gaia-predicted place at that exposure's date, divided by the host's fitted flux in that exposure; the picture is the per-pixel median",
+  "stretch": {
+   "kind": "asinh",
+   "unit": "share of the host's fitted light in one square",
+   "lo": 0.0,
+   "hi": 0.387511802856,
+   "soft": 0.0193755901428,
+   "formula": "grey = 255 * clip(asinh((v - lo) / soft) / asinh((hi - lo) / soft), 0, 1)",
+   "rule": "lo = 0; hi = the brightest pixel of the three medians; soft = hi / 20; the same for the three groups"
+  },
+  "units": "picture pixels, x right and y down from the top-left corner"
+ },
+ "magnification": 40,
+ "magnification_rule": {
+  "choices": [
+   10,
+   20,
+   25,
+   40,
+   50
+  ],
+  "min_px": 40.0,
+  "px_per_square": 39.7777777778,
+  "rule": "smallest choice that puts the Redder dot at least min_px from the Bluer cross"
+ },
+ "lone_star": {
+  "available": true,
+  "rule": "Barnard field: the brightest isolated star (G 11.5 to 15, no Gaia star brighter than G + 3 within 12 arcsec, colourwalk.isolated_mask at the field's median date) with at least one clean fit in each of the six detectors, measured as VHS 1256 (colourwalk.measure_host, raw offsets from Gaia); shown whatever it looks like",
+  "gaia_id": "4472837942025804800",
+  "gmag": 11.8211421967,
+  "n_clean_fits": 307,
+  "walk": {
+   "east": 0.0109415527621,
+   "north": 0.0326445226801,
+   "pa": 18.5297455081,
+   "size": 0.03442938335,
+   "sigma": 0.36250361885,
+   "p_false": 0.936407590981,
+   "err_east": 0.0739880654757,
+   "err_north": 0.0986335737097
+  },
+  "walk_size": 0.03442938335,
+  "ratio_to_vhs_walk": 0.188983380097,
+  "groups": [
+   {
+    "name": "Bluer",
+    "lo_um": 0.75,
+    "hi_um": 1.65,
+    "png": "colourwalk_lone_bluer.png",
+    "east": -0.0620209618763,
+    "north": -0.0466519157014,
+    "err_east": 0.0528499157039,
+    "err_north": 0.0710673691926,
+    "n": 105,
+    "n_in_picture": 105
+   },
+   {
+    "name": "Middle",
+    "lo_um": 1.65,
+    "hi_um": 2.9,
+    "png": "colourwalk_lone_middle.png",
+    "east": -0.0382192627133,
+    "north": -0.00495427929317,
+    "err_east": 0.05423513799,
+    "err_north": 0.0778195465693,
+    "n": 67,
+    "n_in_picture": 67
+   },
+   {
+    "name": "Redder",
+    "lo_um": 2.9,
+    "hi_um": 5.02,
+    "png": "colourwalk_lone_redder.png",
+    "east": -0.0510794091142,
+    "north": -0.0140073930213,
+    "err_east": 0.0517795349817,
+    "err_north": 0.0683959859845,
+    "n": 131,
+    "n_in_picture": 131
+   }
+  ],
+  "picture_note": "same crop, resampling and stretch as VHS 1256's pictures"
+ },
+ "checks": {
+  "walk_reproduced": {
+   "east": -0.1133,
+   "north": -0.1427,
+   "pa": 218.4384,
+   "size": 0.1822,
+   "sigma": 2.0478
+  },
+  "n_clean_fits_reproduced": 351
+ },
+ "development_object_note": "VHS 1256 was seen by the inventor's probe first: a calibration object, not a blind test",
+ "verdict": "nothing_found",
+ "host": {
+  "gaia_id": "3526198184723289472",
+  "ra": 194.00764786266586,
+  "dec": -12.956935593723335,
+  "pm": [
+   -272.4615398226702,
+   -190.23873707184504
+  ],
+  "parallax": 47.2733194934019,
+  "gmag": 15.11142635345459
+ },
+ "n_exposures": 404,
+ "n_clean_fits": 351,
+ "visit_walks": [
+  {
+   "visit": 0,
+   "mjd": 60829.369067948,
+   "sky_angle": 194.20413738895218,
+   "sky_size": 0.24335253939409007,
+   "detector_angle": 354.6363585792113,
+   "detector_size": 0.2290564823141785,
+   "detector_x": -0.021411406004054348,
+   "detector_y": 0.22805355463810492
+  },
+  {
+   "visit": 1,
+   "mjd": 61044.302429372,
+   "sky_angle": 234.00237727066155,
+   "sky_size": 0.22330494339358442,
+   "detector_angle": 159.4395975180899,
+   "detector_size": 0.22626415030551372,
+   "detector_x": 0.07946275841152418,
+   "detector_y": -0.211851683352075
+  },
+  {
+   "visit": 2,
+   "mjd": 61200.348056414994,
+   "sky_angle": 217.307158653553,
+   "sky_size": 0.1620770583317522,
+   "detector_angle": 353.79643426864953,
+   "detector_size": 0.20998771853675083,
+   "detector_x": -0.022691530150787904,
+   "detector_y": 0.20875808103085633
+  }
+ ],
+ "acceptance": {
+  "checks": {
+   "pa_within_15_of_218": true,
+   "along_walk_at_least_0p15": true,
+   "ratio_2p0_2p43_in_0p010_0p030": true,
+   "ratio_3p4_5p0_in_0p04_0p10": true,
+   "ratio_0p75_1p4_consistent_with_0_within_0p01": false,
+   "every_individual_control_at_most_0p02": false,
+   "control_median_at_most_0p02": true
+  },
+  "passed": false
+ },
+ "null": {
+  "scatter_east": 0.04901758775676231,
+  "scatter_north": 0.06645159625015443,
+  "n_within": 2,
+  "n_isolated": 19,
+  "n_exposures": 364,
+  "n_star_fits": 58897,
+  "walkers_over_4sigma": [
+   {
+    "gaia_id": "4472835846082110464",
+    "gmag": 14.440083503723145,
+    "sigma": 6.283311744587838,
+    "walk_arcsec": 0.488867289159329,
+    "pa": 125.35732701308984,
+    "neighbour_kind": "opposite_bluer"
+   },
+   {
+    "gaia_id": "4472835292027113216",
+    "gmag": 14.81843376159668,
+    "sigma": 4.529671184706666,
+    "walk_arcsec": 0.3390075911500514,
+    "pa": 4.339920258494313,
+    "neighbour_kind": "along"
+   }
+  ],
+  "acceptance": {
+   "checks": {
+    "at_least_10_isolated_stars_within_0p06": false,
+    "90_percent_walk_below_3sigma": true,
+    "blended_median_cos_at_least_0p9_at_calibrated_width": false
+   },
+   "passed": false
+  }
+ },
+ "blind_ratio_best_separation_arcsec": 9.0,
+ "files": {
+  "colourwalk_lone_bluer.png": "16e0e8e923c3f87825783840725af4de009617d27d6f3995862cb2fd3c62a41c",
+  "colourwalk_lone_middle.png": "60197fb81dc7afdf058265128c653687c5f2650b280dab664d7ba13d0235e2de",
+  "colourwalk_lone_redder.png": "36a2eabd92b3dcc31583c851eeb09cd17547cd94cc715d5956b1fb78ef47959e",
+  "colourwalk_vhs1256_bluer.png": "6f1e520ba7aaa107930e81e9a9668775ad010f8f53f9927b81c38def5507eaf2",
+  "colourwalk_vhs1256_middle.png": "c56458bc3bdc372dbd92a25845e13a8ef4fc3848c4f9443a9a8d3d8ce03d6105",
+  "colourwalk_vhs1256_redder.png": "b8a28da70b648423f928801c9051f7bddf7214e53fb72dd89002d488284dbb19"
+ }
+}
