@@ -835,6 +835,7 @@ def follow_body(
         say("measuring", n + 1, len(usable))
     result["counts"] = {s: sum(pt["status"] == s for pt in result["points"]) for s in STATUSES}
     result["bands"] = all_bands(result["points"])
+    result["bands_large"] = all_bands(result["points"], "flux_large_mjy")
     spherex.write_json(cache, result, indent=1)
     return result
 
@@ -907,21 +908,23 @@ def band_excess(
     return out
 
 
-def control_sigmas(wave, flux, err, window, left, right, lo=1.0, hi=4.99) -> list[float]:
-    """The same arithmetic with the three windows slid along the spectrum, away from the real band.
+def control_sigmas(wave, flux, err, window, left, right, lo=0.75, hi=5.0) -> list[float]:
+    """The same arithmetic with the three windows (continuum, band, continuum) slid along the spectrum.
 
-    The set of three windows (continuum, band, continuum) is moved by whole multiples of its own width, so none of
-    the controls overlaps the real band, and only the places where the arithmetic works are kept. A calibration
-    feature, a star or just noisy channels show up here.
+    The set is moved in steps of half its own width, and a place is used only when none of its three windows touches
+    the real band window (0.02 micrometre of margin), and the arithmetic works there (a point in the band window and
+    some on each side). A calibration feature, a star in the way or just noisy channels show up in these numbers.
     """
     total = right[1] - left[0]
     out = []
-    for k in [i for i in range(-CONTROL_MAX, CONTROL_MAX + 1) if i != 0]:
-        s = k * total
-        lf, rt = (left[0] + s, left[1] + s), (right[0] + s, right[1] + s)
-        if lf[0] < lo or rt[1] > hi:
+    for k in [i for i in range(-2 * CONTROL_MAX, 2 * CONTROL_MAX + 1) if i != 0]:
+        s = k * total / 2.0
+        wins = [(window[0] + s, window[1] + s), (left[0] + s, left[1] + s), (right[0] + s, right[1] + s)]
+        if min(w[0] for w in wins) < lo or max(w[1] for w in wins) > hi:
             continue
-        r = band_excess(wave, flux, err, (window[0] + s, window[1] + s), lf, rt)
+        if any(w[0] < window[1] + 0.02 and w[1] > window[0] - 0.02 for w in wins):
+            continue
+        r = band_excess(wave, flux, err, wins[0], wins[1], wins[2])
         if r["ok"]:
             out.append(r["sigma"])
     return out
@@ -982,3 +985,43 @@ def flux_ratio(a: dict, b: dict) -> dict | None:
     ratio = a["integral_mjy_um"] / b["integral_mjy_um"]
     rel = float(np.hypot(a["err_mjy"] / a["excess_mjy"], b["err_mjy"] / b["excess_mjy"]))
     return {"ratio": ratio, "err": abs(ratio) * rel}
+
+
+# --- absorption (a body that reflects light, such as Pluto, shows ice as dips, not gas as bumps) -------------------
+
+ICE_BANDS: dict[str, dict] = {
+    "CH4 1.7": {"window": (1.64, 1.74), "left": (1.52, 1.61), "right": (1.78, 1.88)},
+    "CH4 2.3": {"window": (2.26, 2.36), "left": (2.12, 2.22), "right": (2.42, 2.54)},
+    "CH4 3.3": {"window": (3.20, 3.40), "left": (2.98, 3.14), "right": (3.45, 3.62)},
+}
+
+
+def band_dip(
+    points: list[dict],
+    window: tuple[float, float],
+    left: tuple[float, float],
+    right: tuple[float, float],
+    which: str = "flux_mjy",
+) -> dict:
+    """How far below a straight line through the neighbouring channels the channels inside `window` lie.
+
+    Uses the ok points. The result is `band_excess` with the sign turned round: `depth_mjy` and `depth_sigma` are
+    positive for a dip. `controls` is the same measurement at other places of the spectrum (see `control_sigmas`),
+    turned round too, and `verdict` is "dip seen", "marginal" or "no dip seen" by the same rules as for a gas band.
+    """
+    errkey = "err_mjy" if which == "flux_mjy" else "err_large_mjy"
+    ok = [p for p in points if p["status"] == "ok" and p.get(which) is not None and p.get(errkey)]
+    w = np.array([p["wavelength_um"] for p in ok])
+    f = np.array([p[which] for p in ok])
+    e = np.array([p[errkey] for p in ok])
+    res = band_excess(w, f, e, window, left, right)
+    res["controls"] = [round(-c, 2) for c in control_sigmas(w, f, e, window, left, right)]
+    if not res["ok"]:
+        res.update(depth_mjy=None, depth_sigma=None, verdict="no measurement", mean_flux_mjy=None)
+        return res
+    res["depth_mjy"] = -res["excess_mjy"]
+    res["depth_sigma"] = -res["sigma"]
+    verdict = classify(res["depth_sigma"], res["controls"])
+    res["verdict"] = {"detected": "dip seen", "marginal": "marginal", "not seen": "no dip seen"}.get(verdict, verdict)
+    res["mean_flux_mjy"] = float(np.mean(f[(w >= window[0]) & (w <= window[1])]))
+    return res

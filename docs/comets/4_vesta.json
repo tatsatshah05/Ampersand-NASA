@@ -11856,7 +11856,9 @@
      "sigma": null,
      "reduced_chi2": null,
      "controls": [
-      -2.75
+      -2.75,
+      -0.5,
+      -3.45
      ],
      "verdict": "no measurement",
      "integral_mjy_um": null
@@ -11885,6 +11887,63 @@
      "reduced_chi2": null,
      "controls": [
       1.66
+     ],
+     "verdict": "no measurement",
+     "integral_mjy_um": null
+    }
+   }
+  }
+ ],
+ "bands_large": [
+  {
+   "first": "2026-07-11T18:17:19Z",
+   "last": "2026-07-20T00:59:01Z",
+   "n_points": 33,
+   "circle": "flux_large_mjy",
+   "r_au": 2.3848865323201514,
+   "delta_au": 2.1380581046077456,
+   "bands": {
+    "H2O": {
+     "ok": false,
+     "n_band": 0,
+     "n_left": 0,
+     "n_right": 0,
+     "excess_mjy": null,
+     "err_mjy": null,
+     "sigma": null,
+     "reduced_chi2": null,
+     "controls": [
+      -2.57,
+      -0.6,
+      -2.75
+     ],
+     "verdict": "no measurement",
+     "integral_mjy_um": null
+    },
+    "CO2": {
+     "ok": true,
+     "n_band": 5,
+     "n_left": 8,
+     "n_right": 5,
+     "excess_mjy": 140.45103073884508,
+     "err_mjy": 31.9068461409984,
+     "sigma": 4.401908923187925,
+     "reduced_chi2": 2.988012222934286,
+     "controls": [],
+     "verdict": "marginal",
+     "integral_mjy_um": 15.44961338127288
+    },
+    "CO": {
+     "ok": false,
+     "n_band": 0,
+     "n_left": 3,
+     "n_right": 0,
+     "excess_mjy": null,
+     "err_mjy": null,
+     "sigma": null,
+     "reduced_chi2": null,
+     "controls": [
+      1.67
      ],
      "verdict": "no measurement",
      "integral_mjy_um": null
