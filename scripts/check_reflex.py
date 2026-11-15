@@ -115,8 +115,6 @@ def run_eris(shift: bool = False) -> bool:
     for k, v in checks.items():
         print(("PASS  " if v else "FAIL  ") + k)
     c0 = dict(cands[0]) if cands else None
-    if c0:
-        c0.pop("profile", None)
     _save(
         "eris_shift" if shift else "eris",
         {
