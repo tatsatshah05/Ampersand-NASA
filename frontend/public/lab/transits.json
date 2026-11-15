@@ -12,8 +12,8 @@
   ],
   "code_commit": "71963ab2f4dc5f0b8a0e3531bbfee0cad69f16a4",
   "export_script": "scripts/export_lab.py",
-  "export_commit": "0e17375858e7f75cb5b4d2e07ea42123fca1d5e6",
-  "exported_utc": "2026-11-15T06:09:25+00:00"
+  "export_commit": "b5756e67505c9bb455367d8bccb53580eb7e71aa",
+  "exported_utc": "2026-11-15T07:08:20+00:00"
  },
  "final": true,
  "final_evidence": "Built 2026-11-14, reviewed by three skeptics and corrected the same day. Code: `backend/transits.py`",
@@ -160,6 +160,12 @@
    "template of 60 neighbours": 0.011776910573779229,
    "clip at 4 sigma": 0.011878680445678833,
    "no clipping": 0.011754789954147414
+  },
+  "fakes_independent": {
+   "share_of_pairs_sharing_a_reading": 0.88,
+   "n_independent_about": 140,
+   "p_below": 0.007,
+   "source": "docs/transits.md (the reviewer's count, not re-run by the module)"
   }
  },
  "readings": [
@@ -3135,6 +3141,7 @@
  ],
  "stops_note": "depth and err: the module's analyse_detector rerun at that period with the published T0 (null, with why, where it refuses); depth_fixed_model: the module's model on the same kept readings with only the trapezoid's period changed, a reference only",
  "min_in_transit": 15,
+ "aperture_px": 2.5,
  "window_h": 9.0,
  "wasp100": {
   "n_clear": 1,
@@ -3273,7 +3280,11 @@
   "t0_bjd_tdb": 2458851.099338,
   "t14_h": 3.79,
   "rprs": 0.1109,
-  "expected_depth": 0.01229881
+  "expected_depth": 0.01229881,
+  "published_depth_range_pct": [
+   1.13,
+   1.47
+  ]
  },
  "coverage": {
   "exposures": 8326,

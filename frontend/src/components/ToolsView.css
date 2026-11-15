@@ -21,14 +21,24 @@
 }
 
 .tools p {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
 }
 
+/* h1 and h2 at the spec's 20 px, which the restyled scale calls --size-result (behaviour review). */
 .tools h1,
 .tools h2 {
-  font-size: var(--size-title);
+  font-size: var(--size-result);
   line-height: 1.3;
   margin: 0 0 12px;
+}
+
+/* A jump to a tool shows its "Tool n of 3" line and its verdict, and the heading's focus ring whole. */
+.tools .tool {
+  scroll-margin-top: 8px;
+}
+
+.tools h2 {
+  scroll-margin-top: 48px;
 }
 
 .tools h3 {
@@ -84,8 +94,9 @@
   font-size: var(--size-body);
 }
 
-.tools .tools-small.hint {
-  color: var(--muted);
+/* The small print in the text colour (newcomer review: the grey read as faint). */
+.tools .tools-smallprint {
+  color: var(--text);
   margin: 0 0 8px;
 }
 
@@ -93,21 +104,30 @@
   color: var(--notice);
 }
 
+/* The key: 14 px, two columns on a wide screen (newcomer review). */
 .tools .tools-key {
+  display: grid;
+  gap: 8px 24px;
   margin: 16px 0;
-  font-size: var(--size-small);
+  font-size: var(--size-body);
   color: var(--text);
 }
 
+@media (min-width: 600px) {
+  .tools .tools-key {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .tools .tools-key p {
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 /* Key entries: the mark in its own column, so a long entry wraps under its words. */
 .tools .tools-key p,
 .tools .chart-key p:has(> .tl-mark, > .key-ring) {
   display: grid;
-  grid-template-columns: 16px 1fr;
+  grid-template-columns: 22px 1fr;
   column-gap: 4px;
   align-items: start;
 }
@@ -120,18 +140,16 @@
   margin-right: 0;
 }
 
-.tools .tools-key .key-button {
-  margin-top: 5px;
+.tools .tl-mark-button rect {
+  fill: var(--tool-ink);
 }
 
-.tools .key-button {
-  display: inline-block;
-  width: 16px;
-  height: 10px;
-  margin-right: 4px;
-  vertical-align: 0;
-  border-radius: 3px;
-  background: var(--tool-ink);
+.tools .tl-mark-button path {
+  fill: none;
+  stroke: var(--bg);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tools .key-sketch {
@@ -143,15 +161,19 @@
   border: 1px dashed var(--line-strong);
 }
 
-.tools .key-ring {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  margin-right: 4px;
-  vertical-align: -1px;
-  border: 1.5px solid var(--tl-measured);
-  border-radius: 50%;
-  opacity: 0.6;
+/* Rings: the usual error (faint amber, still 3:1 on white) and the rule's dashed grey ring. */
+.tools .tl-mark-ring circle {
+  fill: none;
+  stroke: var(--tl-measured);
+  stroke-width: 1.5;
+  opacity: 0.8;
+}
+
+.tools .tl-mark-rule circle {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
 }
 
 .tools .tl-mark {
@@ -174,7 +196,9 @@
 
 .tools .tl-mark-band rect {
   fill: var(--tl-measured);
-  opacity: 0.35;
+  fill-opacity: 0.3;
+  stroke: var(--tl-measured);
+  stroke-width: 1.5;
 }
 
 .tools .tl-mark-greydot circle {
@@ -196,6 +220,13 @@
   stroke: var(--tl-known);
   stroke-width: 2.2;
   fill: none;
+}
+
+.tools .tl-mark-ring,
+.tools .tl-mark-rule,
+.tools .tl-mark-button,
+.tools .tl-mark-band {
+  overflow: visible;
 }
 
 .tools .tl-mark-mline path {
@@ -261,19 +292,44 @@
   color: var(--muted);
 }
 
-.tools .tl-chip {
-  display: inline-block;
-  padding: 4px 8px;
-  border: 1px solid var(--line-strong);
-  border-radius: 6px;
-  font-size: var(--size-small);
-  line-height: 1.3;
-  color: var(--text);
+/* The verdict, at once under the tool's name, with the number that matters (newcomer review). */
+.tools .tl-verdict {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-left: 2px solid var(--text);
+  background: var(--surface);
 }
 
-.tools .tl-chip-notice {
+.tools .tl-verdict-words {
+  margin: 0 0 8px;
+  font-size: var(--size-read);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.tools .tl-verdict-notice {
+  border-left-color: var(--notice);
+}
+
+.tools .tl-verdict-notice .tl-verdict-words {
   color: var(--notice);
-  border-color: var(--notice);
+}
+
+.tools .tl-verdict-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 0;
+  font-size: var(--size-body);
+}
+
+.tools .tl-verdict-item {
+  white-space: nowrap;
+}
+
+.tools .tl-verdict-unit {
+  flex-basis: 100%;
+  color: var(--text);
 }
 
 .tools .tools-fixture {
@@ -300,13 +356,15 @@
   font-size: var(--size-body);
 }
 
+/* Captions at body size; hints stay 14 px, in the text colour (newcomer review). */
 .tools .caption {
+  font-size: var(--size-read);
   color: var(--text);
 }
 
 .tools .hint {
   font-size: var(--size-body);
-  color: var(--muted);
+  color: var(--text);
 }
 
 .tools .tools-missing {
@@ -316,6 +374,12 @@
 .tools .tools-missing button,
 .tools .picture-missing button {
   margin-left: 8px;
+}
+
+/* On the grey picture box the button needs its own edge, or it reads as words (behaviour review). */
+.tools .picture-missing button {
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
 }
 
 /* ---- numbers ---- */
@@ -398,6 +462,20 @@
 
 .tools button.primary:active:not(:disabled) {
   opacity: 0.78;
+}
+
+/* The arrow that marks the main thing to try. */
+.tools .main-arrow {
+  margin-left: 8px;
+  vertical-align: -1px;
+}
+
+.tools .main-arrow path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* On/off buttons keep the app's own toggle (index.css): a box before the words, a tick when on,
@@ -531,15 +609,16 @@
   cursor: pointer;
 }
 
+/* A 6 px track (newcomer review: the thin one was hard to see). */
 .tools .stops input[type='range']::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--line-strong);
 }
 
 .tools .stops input[type='range']::-moz-range-track {
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--line-strong);
 }
 
@@ -548,7 +627,7 @@
   appearance: none;
   width: 22px;
   height: 22px;
-  margin-top: -9px;
+  margin-top: -8px;
   border-radius: 50%;
   background: var(--text);
   border: 2px solid var(--bg);
@@ -581,35 +660,36 @@
   background: var(--muted);
 }
 
-/* The known tick and its label sit in their own band above the track, clear of the value. */
+/* The known tick: a cyan cross, as in the key, and its label, in their own band above the track. */
 .tools .known-tick {
   position: absolute;
-  top: 24px;
-  width: 2px;
-  height: 22px;
-  margin-left: -1px;
-  background: var(--tl-known);
+  top: 8px;
+  width: 0;
+  height: 40px;
   pointer-events: none;
+}
+
+.tools .known-tick-cross {
+  position: absolute;
+  top: 24px;
+  left: -6px;
+}
+
+.tools .known-tick-cross path {
+  fill: none;
+  stroke: var(--tl-known);
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 
 .tools .known-tick-label {
   position: absolute;
-  bottom: 22px;
-  left: 50%;
+  top: 2px;
+  left: 0;
   transform: translateX(-50%);
   white-space: nowrap;
   font-size: var(--size-small);
   color: var(--text);
-}
-
-.tools .known-tick-label::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 2px;
-  margin-right: 4px;
-  vertical-align: 3px;
-  background: var(--tl-known);
 }
 
 .tools .stops-track:has(.known-tick) {
@@ -709,6 +789,14 @@
   background: var(--surface);
 }
 
+.tools .picture-small {
+  max-width: 260px;
+}
+
+.tools .picture-title {
+  margin-top: 16px;
+}
+
 .tools .picture img {
   display: block;
   width: 100%;
@@ -739,6 +827,35 @@
 
 .tools .mk-known.dotted {
   stroke-dasharray: 2 4;
+}
+
+.tools .mk-known.dashed {
+  stroke-dasharray: 5 3;
+}
+
+/* The "1 square" bar on a picture: the text colour on a page-colour halo, so it reads on any picture. */
+.tools .mk-bar-halo {
+  stroke: var(--bg);
+  stroke-width: 6;
+  stroke-linecap: butt;
+}
+
+.tools .mk-bar {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: butt;
+}
+
+.tools .tl-square-label {
+  position: absolute;
+  padding: 1px 4px;
+  font-size: var(--size-small);
+  line-height: 1.2;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  white-space: nowrap;
+  transform: translateY(-50%);
 }
 
 .tools .tl-mark-label {
@@ -908,6 +1025,26 @@
   fill: var(--text);
 }
 
+/* The bend sketch's key: its two lines named under the drawing, so no label sits on a path. */
+.tools .sk-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0 0;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.tools .sk-key svg {
+  flex: none;
+}
+
+.tools .sk-key-gap {
+  display: inline-block;
+  width: 16px;
+}
+
 /* ---- charts (real numbers): solid axes, a key or caption ---- */
 
 .tools .chart {
@@ -960,6 +1097,15 @@
   fill: var(--muted);
 }
 
+/* Labels drawn on a chart's own marks: the text colour, on a halo of the page colour. */
+.tools .ch-text-strong {
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
 .tools .ch-cross {
   fill: none;
   stroke: var(--muted);
@@ -969,14 +1115,50 @@
 .tools .ch-dot {
   fill: var(--tl-measured);
   stroke: var(--bg);
-  stroke-width: 1;
+  stroke-width: 1.5;
 }
 
+/* The usual-error ring: faint, but 3:1 against the page (behaviour review). */
 .tools .ch-ring {
   fill: none;
   stroke: var(--tl-measured);
   stroke-width: 1.5;
-  opacity: 0.55;
+  opacity: 0.8;
+}
+
+/* The rule (4 times the usual error): a dashed grey ring round the starting cross. */
+.tools .ch-rule {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.tools .ch-arrow {
+  stroke: var(--tl-measured);
+  stroke-width: 2;
+}
+
+.tools .ch-arrowhead {
+  fill: var(--tl-measured);
+}
+
+.tools .ch-zero {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.tools .ch-bar {
+  fill: var(--tl-measured);
+  fill-opacity: 0.35;
+  stroke: var(--tl-measured);
+  stroke-width: 1.5;
+}
+
+.tools .ch-whisker {
+  fill: none;
+  stroke: var(--tl-measured);
+  stroke-width: 2;
 }
 
 .tools .ch-known {
@@ -997,12 +1179,13 @@
 
 .tools .ch-err {
   stroke: var(--tl-measured);
-  stroke-width: 1.5;
+  stroke-width: 2;
 }
 
+/* Single readings: small, but still 3:1 against the page (behaviour review). */
 .tools .ch-grey-dot {
   fill: var(--muted);
-  opacity: 0.6;
+  opacity: 0.85;
 }
 
 .tools .ch-band {
@@ -1017,7 +1200,7 @@
 /* The ruler (chart 1-b), laid out in HTML so its labels stay 12 px at every width. */
 .tools .ruler-body {
   position: relative;
-  height: 64px;
+  height: 72px;
   margin: 0 8px;
   font-size: var(--size-small);
   color: var(--muted);
@@ -1027,16 +1210,28 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 28px;
+  top: 34px;
   height: 0;
   border-top: 1px solid var(--muted);
 }
 
+/* Names at 14 px (newcomer review: Neptune's label was small), each starting at its own tick so
+   Earth's and Neptune's stay apart on a phone. */
 .tools .ruler-name {
   position: absolute;
   top: 0;
-  transform: translateX(-50%);
+  transform: translateX(-4px);
   white-space: nowrap;
+  font-size: var(--size-body);
+  color: var(--text);
+}
+
+/* The band names itself on the ruler (newcomer review). */
+.tools .ruler-band-label {
+  position: absolute;
+  top: 2px;
+  white-space: nowrap;
+  font-size: var(--size-small);
   color: var(--text);
 }
 
@@ -1046,18 +1241,31 @@
 
 .tools .ruler-planet {
   position: absolute;
-  top: 24px;
+  top: 30px;
   width: 1px;
   height: 9px;
   background: var(--text);
 }
 
+/* The band: a faint fill with a solid amber edge, so it holds 3:1 on white (behaviour review). */
 .tools .ruler-band {
   position: absolute;
-  top: 22px;
-  height: 12px;
+  top: 27px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--tl-measured);
+}
+
+.tools .ruler-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: var(--tl-measured);
-  opacity: 0.3;
+  opacity: 0.25;
+}
+
+.tools .ruler-band.open {
+  border-right: none;
 }
 
 /* A range with no far end runs off the ruler: an arrowhead at its edge. */
@@ -1065,15 +1273,15 @@
   content: '';
   position: absolute;
   right: -8px;
-  top: -2px;
+  top: -3.5px;
   border-left: 8px solid var(--tl-measured);
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
 }
 
 .tools .ruler-dot {
   position: absolute;
-  top: 22px;
+  top: 28px;
   width: 12px;
   height: 12px;
   margin-left: -6px;
@@ -1084,7 +1292,7 @@
 
 .tools .ruler-cross {
   position: absolute;
-  top: 21px;
+  top: 27px;
   margin-left: -7px;
 }
 
@@ -1097,7 +1305,7 @@
 
 .tools .ruler-tick {
   position: absolute;
-  top: 40px;
+  top: 50px;
   transform: translateX(-50%);
 }
 
@@ -1172,11 +1380,33 @@
 }
 
 /* Inset 2-d and chart 3-c. */
+/* The drawn shift is the main picture of tool 2's try-it (newcomer review). */
 .tools .inset-svg {
   display: block;
   width: 100%;
-  max-width: 358px;
+  max-width: 480px;
   height: auto;
+}
+
+.tools .chart-key-top {
+  margin: 0 0 8px;
+}
+
+.tools .dip-bar > svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.tools .ruler-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 4px;
+}
+
+.tools .ruler-key p {
+  margin: 0;
 }
 
 .tools .dip-chart > svg {

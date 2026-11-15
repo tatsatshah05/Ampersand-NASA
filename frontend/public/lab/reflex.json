@@ -12,8 +12,8 @@
   ],
   "code_commit": "09fc1b330bf107c9cc6738176f3f108c0d2df8c1",
   "export_script": "scripts/export_lab.py",
-  "export_commit": "0e17375858e7f75cb5b4d2e07ea42123fca1d5e6",
-  "exported_utc": "2026-11-15T06:09:10+00:00"
+  "export_commit": "b5756e67505c9bb455367d8bccb53580eb7e71aa",
+  "exported_utc": "2026-11-15T07:31:50+00:00"
  },
  "final": true,
  "final_evidence": "Searches made by the builder and the reviewers (not repeated in this finalisation):",
@@ -203,7 +203,14 @@
     "vmag": 18.655
    }
   ],
-  "verdict": "known distant body (136199 Eris, JPL Horizons within 60 arcsec): known-answer, not a candidate"
+  "verdict": "known distant body (136199 Eris, JPL Horizons within 60 arcsec): known-answer, not a candidate",
+  "first_day": {
+   "info_share": 0.63,
+   "n_exposures": 3,
+   "neighbour_arcsec": 3.7,
+   "neighbour_as_bright": true,
+   "source": "docs/reflex.md (a review measurement, not re-run by the module)"
+  }
  },
  "jpl": {
   "observer": "SPHEREx (JPL Horizons -163182)",
@@ -2861,7 +2868,7 @@
   "keep_control": true,
   "rule": "kept while delta(wrong way) < 0 and S^2(best) - S^2(no bend) >= MEASURED_DELTA_S2 (9)"
  },
- "sketch_exaggeration": 5,
+ "sketch_exaggeration": 2,
  "sketch_bend_at_best_arcsec": 10.7498252404,
  "sketch_drift_length_arcsec": 81.1651033015,
  "foldout": {
@@ -2967,6 +2974,8 @@
   }
  ],
  "passed": false,
+ "development_object": true,
+ "development_object_evidence": "The analysis choices (3 and 1.5 arcsec grids, drift step, template of two exposures, 0.5 mJy mask, the drift box, the noise calibration and the acceptance lines) were made after a probe had already found Eris; they are not blind to the answer.",
  "files": {
   "reflex_plain_mean.png": "13108b0067c4ce2253419f5737b5e7f40830025bf1f921f67aab335a4c82cdf0",
   "reflex_single.png": "8b6a76a32d34438d400ba903fd53d1780c01e45f0d749d20a9292d230bfc0cd7",

@@ -183,35 +183,48 @@ describe('every slot is filled from the shipped files', () => {
       expect(t).not.toMatch(/times as far|per cent|SPHEREx pictures\.|readings of/)
     }
   })
-  it('tool 1 numbers come from the file: about 111, more than 77, NASA 95.6, 13 hours, then 118', () => {
+  it('tool 1 numbers come from the file: about 111, more than 76, NASA 95.6, 13 hours, then 118', () => {
     const v = reflexView(reflex)
     expect(v.numbers?.ours).toBe('Our tool: about 111 times as far from the Sun as the Earth is')
-    expect(v.numbers?.range[0]).toBe('The true answer is very likely more than 77 (about 19 chances in 20).')
+    // A lower bound is rounded down (76.5 → 76), so "more than" never claims more than the data.
+    expect(v.numbers?.range[0]).toBe('The true answer is very likely more than 76 (about 19 chances in 20).')
     expect(v.numbers?.nasa).toBe("NASA's figure: 95.6")
-    expect(v.sunlight).toContain('about 13 hours')
-    expect(v.howSure.join(' ')).toContain('put it at 118 times')
+    expect(v.after.flat().join(' ')).toContain('about 13 hours')
+    expect(v.howSure.flat().join(' ')).toContain('put it at 118 times')
+    expect(v.howSure.flat().join(' ')).toContain("NASA's figure is inside that run's range too: more than 52.")
     expect(v.chip).toBe(T1.chipFoundRough)
+    expect(v.glance).toEqual({ ours: 'Our tool: about 111', known: 'NASA: 95.6', unit: T1.glance.unit })
   })
-  it('tool 2 numbers come from the file, and its verdict is "not proven"', () => {
+  it('tool 2 numbers come from the file, and its verdict is "not proven", first', () => {
     const v = colourView(colour)
     expect(v.chip).toBe('Not proven yet')
-    expect(v.result).toEqual([T2.resultRight, T2.resultSmall])
-    const t = v.test.join(' ')
-    for (const s of ['351 SPHEREx pictures', 'toward the lower right', 'about 3 centimetres', 'about 2 times our usual error', 'one time in 8', 'asks for 4 times', 'one and a third squares'])
+    expect(v.result).toEqual([T2.resultNotProven, T2.resultRight, T2.resultSmall])
+    const t = [...v.test, ...v.howSure].flat().join(' ')
+    for (const s of ['351 SPHEREx pictures', 'toward the lower right', 'about 3 centimetres', 'about 2 times our usual error', 'one time in 8', 'asks for 4 times', 'one and a third squares', 'not 2.7'])
       expect(t).toContain(s)
     expect(v.answerLine).toBe(T2.answerNothing)
+    expect(v.glance).toEqual({ ours: 'The shift: about 2 times our usual error', known: 'Needed by our rule: 4 times', unit: null })
   })
-  it('tool 3 numbers come from the file: 1.2 per cent, 0.6 to 1.7, published 1.23', () => {
+  it('tool 3 numbers come from the file: 1.2 per cent, 0.6 to 1.7, published 1.23 (1.13 to 1.47)', () => {
     const v = transitView(transit)
-    expect(v.numbers).toEqual({ ours: 'Our tool: about 1.2 per cent', range: 'The true answer is very likely between 0.6 and 1.7 (about 19 chances in 20).', published: 'Published figure: 1.23 per cent' })
-    const t = v.test.join(' ')
+    expect(v.numbers).toEqual({
+      ours: 'Our tool: about 1.2 per cent',
+      range: 'The true answer is very likely between 0.6 and 1.7 (about 19 chances in 20).',
+      published: 'Published figure: 1.23 per cent',
+      publishedRange: 'Published figures for this dip range from 1.13 to 1.47 per cent.',
+    })
+    const t = v.test.flat().join(' ')
     for (const s of ['every 4.4 days', 'almost 4 hours', 'about 8,300 pictures', '484 readings', 'Of these, 65', '29 different crossings', 'about 1.4 per cent']) expect(t).toContain(s)
     expect(v.chip).toBe(T3.chipOneMixed)
-    expect(v.howSure).toContain(T3.howSure.noneDid)
+    expect(v.dialNote.flat()).toContain(T3.howSure.noneDid)
+    expect(v.lead).toEqual([T3.oneOfBands('six'), T3.bigPlanet])
+    // The depth is never shown without its give-or-take (docs/transits.md), the verdict row included.
+    expect(v.glance?.ours).toBe('Our tool: about 1.2 per cent, give or take 0.5')
   })
-  it('tools 1 and 3 use the same range sentence, fed about-95% ranges', () => {
+  it('tools 1 and 3 use the same range sentence, fed about-95% ranges; a lower bound is rounded down', () => {
     expect(rangeSentence({ lo: 0.6, hi: 1.7 }, 1)).toBe(PAGE.rangeBetween('0.6', '1.7'))
-    expect(rangeSentence({ lo: 76.5, hi: null })).toBe(PAGE.rangeAbove('77'))
+    expect(rangeSentence({ lo: 76.5, hi: null })).toBe(PAGE.rangeAbove('76'))
+    expect(rangeSentence({ lo: 76.99, hi: null })).toBe(PAGE.rangeAbove('76'))
   })
   it('never shows a backend answer or verdict sentence', () => {
     const f = clone(reflex) as ReflexFile & Record<string, unknown>
@@ -230,26 +243,38 @@ describe('every slot is filled from the shipped files', () => {
 
 describe('tool 1 verdicts', () => {
   const base = () => clone(reflex)
+  const testOf = (f: ReflexFile) => reflexView(f).test.flat()
+  const afterOf = (f: ReflexFile) => reflexView(f).after.flat()
   it('places the dot by its distance from NASA in squares', () => {
     const f = base()
     f.candidate!.separation_arcsec = 6
-    expect(reflexView(f).place).toBe(T1.placeVeryClose)
+    expect(testOf(f)).toContain(T1.placeVeryClose)
     f.candidate!.separation_arcsec = 30
     const v = reflexView(f)
-    expect(v.place).toBe(T1.placeMissed)
+    expect(v.test.flat()).toContain(T1.placeMissed)
     expect(v.answerLine).toBe(T1.answerNotFound)
     expect(v.chip).toBe(T1.chipNotFound)
+  })
+  it('says the check is weak when the range has no far end, and "worked" only for a closed range', () => {
+    const open = afterOf(base())
+    expect(open).toEqual(expect.arrayContaining([T1.insideOpen, ...T1.openWeak]))
+    expect(open).not.toContain(T1.inside)
+    const f = base()
+    f.candidate!.range_95_au = [80, 150]
+    const closed = afterOf(f)
+    expect(closed).toEqual(expect.arrayContaining([T1.inside, T1.wide]))
+    expect(closed).not.toContain(T1.insideOpen)
   })
   it('says outside and missed when NASA is outside the range', () => {
     const f = base()
     f.candidate!.range_95_au = [100, 140]
-    expect(reflexView(f).verdicts).toContain(T1.outside)
+    expect(afterOf(f)).toContain(T1.outside)
   })
   it('says narrow and fairly exact when the range is narrow', () => {
     const f = base()
     f.candidate!.range_95_au = [100, 120]
     const v = reflexView(f)
-    expect(v.verdicts).toContain(T1.narrow)
+    expect(v.after.flat()).toContain(T1.narrow)
     expect(v.chip).toBe(T1.chipFoundDistance)
     expect(v.numbers?.range).toEqual([PAGE.rangeBetween('100', '120')])
   })
@@ -257,19 +282,42 @@ describe('tool 1 verdicts', () => {
     const f = base()
     f.candidate!.distance_au = 90
     f.shifted!.distance_au = 85
-    expect(reflexView(f).verdicts).toEqual(expect.arrayContaining([T1.twiceNear, T1.alwaysDoes]))
+    expect(afterOf(f)).toEqual(expect.arrayContaining([T1.twiceNear, T1.alwaysDoes]))
     f.shifted!.distance_au = 120
-    const v = reflexView(f)
-    expect(v.verdicts).toContain(T1.eitherSide)
-    expect(v.verdicts).not.toContain(T1.alwaysDoes)
+    const t = afterOf(f)
+    expect(t).toContain(T1.eitherSide)
+    expect(t).not.toContain(T1.alwaysDoes)
   })
   it('says the second run missed NASA, and that the answer hardly moved', () => {
     const f = base()
     f.shifted!.range_95_au = [100, 140]
     f.shifted!.distance_au = 113
-    const t = reflexView(f).howSure.join(' ')
+    const t = reflexView(f).howSure.flat().join(' ')
     expect(t).toContain("NASA's figure is outside that run's range: 100 to 140.")
     expect(t).toContain('The answer hardly moved: 111 and 113.')
+  })
+  it('says it can also find Eris away from the middle, never "wherever it sits"', () => {
+    const t = reflexView(base()).howSure.flat()
+    expect(t).toContain(T1.howSure.wherever)
+    expect(t.join(' ')).not.toContain('wherever')
+  })
+  it('says it was partly a practice test while the write-up says the choices came after the answer was seen', () => {
+    const f = base()
+    expect(testOf(f)).toEqual(expect.arrayContaining(T1.practice))
+    expect(testOf(f)).toContain(T1.testWas)
+    f.development_object = false
+    expect(testOf(f)).not.toContain(T1.practice[0])
+  })
+  it('names the bright neighbour of the earliest day only while the file gives it', () => {
+    const f = base()
+    expect(reflexView(f).howSure.flat()).toEqual(expect.arrayContaining([T1.howSure.earliestDay, T1.howSure.neighbour]))
+    f.candidate!.first_day = { available: false }
+    const t = reflexView(f).howSure.flat()
+    expect(t).toContain(T1.howSure.earliestDay)
+    expect(t).not.toContain(T1.howSure.neighbour)
+  })
+  it('says which pictures hold blanked-out patches', () => {
+    expect(reflexView(base()).appear.blanks).toEqual([true, true, false])
   })
   it('drops "probably" once an injection test exists, and picks the {half} word', () => {
     const f = base()
@@ -294,58 +342,91 @@ describe('tool 1 verdicts', () => {
   it('says how the patch was chosen from the file', () => {
     const f = base()
     f.field = { ...f.field, centred_on_known: true }
-    expect(reflexView(f).blindness).toEqual([...T1.centred, T1.notGiven])
+    expect(reflexView(f).test[1]).toEqual([...T1.centred, T1.notGiven])
     f.field = { ...f.field, centred_on_known: false }
-    expect(reflexView(f).blindness).toEqual(T1.notCentred)
+    expect(reflexView(f).test[1]).toEqual(T1.notCentred)
   })
-  it('chooses the slider lines by the rule in 5.1', () => {
+  it('chooses the slider lines: sharpest, nearly (in the 68% range), less sharp (still sharper than no bend), blurrier', () => {
     const d = reflexView(base()).distance!
     const lines = d.stops.map((s) => s.line)
     expect(lines[d.bestIndex]).toBe(T1.distance.sharpest('111'))
-    expect(lines[0]).toBe(T1.distance.blurrierNearer)
-    expect(lines[lines.length - 1]).toBe(T1.distance.blurrierFarther)
-    expect(lines).toContain(T1.distance.nearly)
+    // No bend (0), 500 and 200 are sharper than or as sharp as no bend: never "blurrier" there.
+    expect(lines.slice(0, 3)).toEqual([T1.distance.lessNearer, T1.distance.lessNearer, T1.distance.lessNearer])
+    expect(lines[3]).toBe(T1.distance.nearly)
+    expect(lines[5]).toBe(T1.distance.lessFarther)
+    expect(lines[6]).toBe(T1.distance.blurrierFarther)
+    d.stops.forEach((s) => {
+      if (s.line?.startsWith('Blurrier')) expect(s.delta as number).toBeLessThan(0)
+      if (s.line?.startsWith('Less sharp')) expect(s.delta as number).toBeGreaterThanOrEqual(0)
+    })
+    // The opposite case: with no 68% range, no stop is "nearly as sharp".
+    const f = base()
+    f.candidate!.range_68_au = null
+    expect(reflexView(f).distance!.stops.map((s) => s.line)).not.toContain(T1.distance.nearly)
   })
 })
 
 describe('tool 2 verdicts', () => {
   const base = () => clone(colour)
+  const all = (f: ColourFile) => {
+    const v = colourView(f)
+    return [...v.test, ...v.howSure].flat()
+  }
   it('says it did not point the right way, and how far off, when the angle misses', () => {
     const f = base()
     f.walk!.all!.pa = 120
     const v = colourView(f)
-    expect(v.result[0]).toBe(T2.resultWrong)
-    expect(v.test.some((s) => /lies about \d+ degrees away/.test(s))).toBe(true)
+    expect(v.result).toEqual([T2.resultNotProven, T2.resultWrong, T2.resultSmallAnd])
+    expect(v.test.flat().some((s) => /lies about \d+ degrees away/.test(s))).toBe(true)
   })
   it('says the shift counts, and "clearly", at 4 times the usual error', () => {
     const f = base()
     f.walk!.all!.sigma = 4.5
     const v = colourView(f)
-    expect(v.result[1]).toBe(T2.resultBig)
+    expect(v.result[2]).toBe(T2.resultBig)
     const red = v.groups.find((g) => g.name === 'Redder')
     if (red?.caption) expect(red.caption).toContain(T2.tryIt.redderClearly)
   })
+  it('puts the verdict first: "not proven", or "passed" only when every check passed', () => {
+    expect(colourView(base()).result[0]).toBe(T2.resultNotProven)
+    const f = base()
+    f.verdict = 'found'
+    f.acceptance!.passed = true
+    f.null!.acceptance!.passed = true
+    f.development_object_note = null
+    expect(colourView(f).result[0]).toBe(T2.resultPassed)
+  })
   it('drops the turned-round sentence when a visit points elsewhere', () => {
     const f = base()
-    expect(colourView(f).test).toContain(T2.turned)
+    expect(all(f)).toContain(T2.turned)
     f.visit_walks![0].sky_angle = 30
-    expect(colourView(f).test).not.toContain(T2.turned)
+    expect(all(f)).not.toContain(T2.turned)
   })
-  it('drops the review sentences when the floor was never changed', () => {
+  it('tells the review in "How sure", with the rule unchanged, and drops it when the floor was never changed', () => {
     const f = base()
+    expect(colourView(f).howSure.flat()).toEqual(expect.arrayContaining([T2.guessed, T2.guessedNow('2', '2.7'), T2.ruleKept('4')]))
     f.walk!.sigma_guessed_floor = 1
-    expect(colourView(f).test).not.toContain(T2.guessed[0])
+    const t = all(f)
+    expect(t).not.toContain(T2.guessed)
+    expect(t).not.toContain(T2.ruleKept('4'))
+  })
+  it('says "if our usual error were right" with the rule', () => {
+    expect(colourView(base()).test.flat()).toContain(T2.rule('4'))
+    expect(T2.rule('4')).toContain('If our usual error were right')
   })
   it('counts the failed checks, and drops "not clean" when none failed', () => {
     const f = base()
     const names = Object.keys(f.acceptance!.checks!)
     f.acceptance!.checks = Object.fromEntries(names.map((k, i) => [k, i !== 0]))
-    expect(colourView(f).test).toContain(T2.checksOne)
+    expect(all(f)).toContain(T2.checksOne)
     f.acceptance!.checks = Object.fromEntries(names.map((k) => [k, true]))
     f.null!.acceptance!.passed = true
-    const t = colourView(f).test
+    const t = all(f)
     expect(t).not.toContain(T2.notClean)
     expect(t).not.toContain(T2.nullFailed)
+  })
+  it('never says it was not told where the partner is (close to "works blind")', () => {
+    expect(all(base()).join(' ')).not.toMatch(/not told/)
   })
   it('drops the practice-test sentence without the development note, and answers "found" on a found verdict', () => {
     const f = base()
@@ -354,9 +435,22 @@ describe('tool 2 verdicts', () => {
     f.acceptance!.passed = true
     f.null!.acceptance!.passed = true
     const v = colourView(f)
-    expect(v.test).not.toContain(T2.practice)
+    expect(v.test.flat()).not.toContain(T2.practice)
     expect(v.answerLine).toBe(T2.answerFound)
     expect(v.chip).toBe(T2.chipPassed)
+  })
+  it('says other stars walked as far, from the null field, in "How sure" and beside the lone star', () => {
+    const v = colourView(base())
+    expect(v.howSure.flat()).toContain(T2.othersFar)
+    expect(v.lone?.line).toEqual([T2.tryIt.lone, T2.tryIt.loneLittle, T2.othersFar, T2.tryIt.loneRule])
+    const f = base()
+    f.null!.walkers_over_4sigma = [{ walk_arcsec: 0.14, sigma: 4.2, neighbour_kind: 'along' }]
+    expect(colourView(f).howSure.flat()).toContain(T2.othersAbout)
+    f.null!.walkers_over_4sigma = [{ walk_arcsec: 0.05, sigma: 4.2, neighbour_kind: 'along' }]
+    const t = colourView(f)
+    expect(t.howSure.flat()).not.toContain(T2.othersFar)
+    expect(t.howSure.flat()).not.toContain(T2.othersAbout)
+    expect(t.lone?.line).toEqual([T2.tryIt.lone, T2.tryIt.loneLittle, T2.tryIt.loneRule])
   })
   it('chooses the Middle and Redder captions from the groups', () => {
     const f = base()
@@ -392,44 +486,63 @@ describe('tool 3 verdicts', () => {
     const f = base()
     f.planet!.expected_depth = 0.025
     const v = transitView(f)
-    expect(v.after).toContain(T3.publishedOutside)
+    expect(v.after.flat()).toContain(T3.publishedOutside)
     expect(v.asPublished).toBe(T3.shallower)
   })
   it('compares the single-reading scatter with the dip', () => {
     const f = base()
     f.d5!.scatter = f.d5!.depth
-    expect(transitView(f).test).toContain(T3.aboutAs)
+    expect(transitView(f).test.flat()).toContain(T3.aboutAs)
     f.d5!.scatter = 0.5 * (f.d5!.depth as number)
-    expect(transitView(f).test).toContain(T3.almostAs)
+    expect(transitView(f).test.flat()).toContain(T3.almostAs)
   })
-  it('drops the practice-test sentence when the method was not built on these readings', () => {
+  it('calls it a practice test, not a fair one, and drops that when the method was not built on these readings', () => {
+    expect(transitView(base()).after.flat()).toContain(T3.practice)
+    expect(T3.practice).toContain('a practice test, not a fair one')
     const f = base()
     f.development_object = false
-    expect(transitView(f).after).not.toContain(T3.practice)
+    expect(transitView(f).after.flat()).not.toContain(T3.practice)
   })
   it('reports the second planet by its bands', () => {
     const f = base()
     f.wasp100!.per_detector = { '3': { depth: 0.0075, empirical_err: 0.002, empirical_sigma: 3.7 }, '5': { depth: 0.0076, empirical_err: 0.002, empirical_sigma: 3.8 } }
     let v = transitView(f)
-    expect(v.after).toContain(T3.secondAll)
+    expect(v.after.flat()).toContain(T3.secondAll)
     expect(v.chip).toBe(T3.chipTwo)
     f.wasp100!.per_detector = { '3': { depth: 0.001, empirical_err: 0.003, empirical_sigma: 0.3 } }
     v = transitView(f)
-    expect(v.after).toContain(T3.secondNone)
+    expect(v.after.flat()).toContain(T3.secondNone)
     f.wasp100!.combined = { depth: 0.02, error: 0.002 }
-    expect(transitView(f).after).toContain(T3.secondDeeper)
+    expect(transitView(f).after.flat()).toContain(T3.secondDeeper)
   })
   it('says "both years together" when a year alone is not clear', () => {
     const f = base()
     f.d5!.years = { '2025': { depth: 0.002, formal_err: 0.003 }, '2026': { depth: 0.011, formal_err: 0.002 } }
-    expect(transitView(f).howSure).toContain(T3.howSure.yearsTogether)
+    expect(transitView(f).howSure.flat()).toContain(T3.howSure.yearsTogether)
   })
-  it('says how many wrong timetables were as deep', () => {
+  it('says how many wrong timetables were as deep, under the dial', () => {
     const f = base()
     const d5 = f.d5 as Record<string, unknown>
     delete d5.n_fake_as_deep
     d5.fake_share_as_deep = 3 / (f.d5!.n_fake as number)
-    expect(transitView(f).howSure).toContain(T3.howSure.someDid('3'))
+    expect(transitView(f).dialNote.flat()).toContain(T3.howSure.someDid('3'))
+  })
+  it('says the fakes are not that many separate tries ("if chance often"), and their overlap in For scientists', () => {
+    const v = transitView(base())
+    expect(v.dialNote.flat()).toContain(T3.howSure.wouldShow)
+    expect(T3.howSure.wouldShow).toMatch(/^If chance often/)
+    expect(v.sci.join(' ')).toContain('0 of 598 fakes as deep (they overlap: 88% of pairs share a reading, about 140 independent')
+  })
+  it('gives each year its scaled errors, and the WASP-100 b mismatch, in For scientists', () => {
+    const t = transitView(base()).sci.join(' ')
+    expect(t).toContain('the errors are ± 0.40 and ± 0.35 (3.3σ and 3.1σ)')
+    expect(t).toContain('No single detector matches the published depth (D3 1.9σ shallower, D5 1.4σ deeper, D6 0.3σ shallower)')
+  })
+  it('names the one band of colours only while there are several', () => {
+    const f = base()
+    f.detectors = { '5': {} }
+    f.coverage = { ...f.coverage, per_detector: null }
+    expect(transitView(f).lead).toEqual([T3.bigPlanet])
   })
   it('says no clear dip when the known-answer check failed', () => {
     const f = base()
@@ -521,9 +634,20 @@ describe('folding the readings', () => {
     const empty = v.dial!.stops.filter((s) => s.readout === null)
     expect(empty.length).toBe((transitFile.stops as { depth: number | null }[]).filter((s) => s.depth === null).length)
     expect(empty.every((s) => s.missing === T3.tryIt.tooFew && !s.lines.includes(T3.tryIt.chance))).toBe(true)
+    // Where nothing was measured, the screen does not say the dip "blurs away".
+    expect(empty.every((s) => s.lines.length === 1 && s.lines[0] === T3.tryIt.wrongFew && s.bar === null)).toBe(true)
     const noCount = transitView({ ...(transitFile as TransitFile), stops: (transitFile as TransitFile).stops!.map((s) => (s.depth === null ? { ...s, n_in: null } : s)) })
     expect(noCount.dial!.stops.filter((s) => s.readout === null).every((s) => s.missing === T3.tryIt.noDip)).toBe(true)
     expect(v.dial!.stops.filter((s) => s.readout !== null).every((s) => s.missing === null)).toBe(true)
+  })
+  it('gives the dial\'s "give or take" at about 95%, as the range above: 1.2 give or take 0.5 on the known timetable', () => {
+    const v = transitView(transitFile as TransitFile)
+    const known = v.dial!.stops[v.dial!.knownIndex]
+    expect(known.readout).toBe(T3.tryIt.readout('1.2', '0.5'))
+    expect(v.numbers?.range).toBe(PAGE.rangeBetween('0.6', '1.7'))
+    const four = v.dial!.stops[0]
+    expect(four.readout).toBe(T3.tryIt.readout('−0.3', '1.0'))
+    expect(four.lines).toEqual([T3.tryIt.wrong, T3.tryIt.chance])
   })
   it('fixes the y range from the known timetable, rounded out', () => {
     expect(yRange([{ h: 0, y: 98.6 }, { h: 1, y: 100.2 }, { h: 2, y: 101.4 }])).toEqual([98, 102])

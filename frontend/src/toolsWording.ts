@@ -1,12 +1,16 @@
 // Every visible string of the "Three tools" screen (?tools=1), in one place so that a test can
 // scan them all (tools.test.ts). The build spec is revision 3 of the screen's design; the words
 // were tested on four non-scientist readers twice, so they are kept as written, except where the
-// final checked results or the methods' "do not say" lists made a sentence untrue (see the notes
-// marked CHANGED) and where the black-and-white theme made a colour word false (the key).
+// final checked results, the methods' "do not say" lists or the reviews of the built screen made a
+// sentence untrue or unclear (see the notes marked CHANGED) and where the black-and-white theme
+// made a colour word false (the key).
 //
 // Slots are functions. Every argument is a string that tools.ts has already rounded and formatted,
 // so a function here never does arithmetic, and a missing value never reaches a sentence: tools.ts
 // leaves the sentence out instead (see `fill` in tools.ts).
+//
+// A nested array is one paragraph: its sentences run on in one block, so the page does not read as
+// a list of one-sentence lines (newcomer review).
 //
 // Words kept out of the main screen (allowed only in the "For scientists" text, SCI below):
 // sigma, signal to noise, S/N, flux, photometry, astrometry, ephemeris, epoch, detector, parallax,
@@ -38,11 +42,12 @@ export const PAGE = {
   keyHeading: 'What the marks mean',
   // CHANGED (theme): the spec's "Amber numbers and marks…" and "Amber button…" lines are false on
   // the black-and-white page. Numbers are printed in the text colour with a small mark before them,
-  // and the main button is filled with the ink colour, so the key describes those marks.
+  // and the main button is filled with the ink colour and carries an arrow (a chosen option and a
+  // pressed toggle are filled too, so the arrow is what marks the main thing to try).
   key: {
     measured: 'Amber dot, ring or line: what our tool measured.',
     known: 'Cyan cross or line: the known answer, from NASA or other astronomers.',
-    button: 'Filled button: the main thing to try.',
+    button: 'Filled button with an arrow: the main thing to try.',
     sketch: 'Thin outline drawing: a sketch of the idea. Everything else shows real data.',
   },
   jumpLabel: 'The three tools',
@@ -52,17 +57,21 @@ export const PAGE = {
   fileMissing: 'The pictures and numbers for this tool could not be loaded.',
   pictureMissing: 'This picture could not be loaded.',
   pictureNotReady: 'This picture is not ready yet.',
-  notReady: (why: Str) => `Not ready yet: ${why}`,
-  notInFile: 'this part is not in the data file yet.',
+  // CHANGED (behaviour review): one plain line where a part's numbers are missing from its file,
+  // in place of the file's own developer wording.
+  partMissing: 'This part is not available right now.',
   tryAgain: 'Try again',
   // Shown whenever a data file says "fixture": true, so that nobody takes a stand-in for a result.
   fixture: 'Test file: this tool is reading stand-in data, not the final results. Do not quote anything here.',
   compassNorth: 'N',
   compassEast: 'E',
   compassLabel: 'North is up, east is on the left.',
+  squareBar: '1 square',
   // The one range sentence, for tools 1 and 3. Both are fed about-95% ranges.
   rangeBetween: (lo: Str, hi: Str) => `The true answer is very likely between ${lo} and ${hi} (about 19 chances in 20).`,
   rangeAbove: (lo: Str) => `The true answer is very likely more than ${lo} (about 19 chances in 20).`,
+  // ADDED (newcomer review): neither reader could say what "19 chances in 20" means.
+  explain19: 'About 19 chances in 20: if we made 20 ranges like this, about 19 would hold the true answer.',
   foldHowSure: 'How sure are we?',
   foldAnswers: 'The three answers it can give',
   foldScientists: 'For scientists',
@@ -94,20 +103,23 @@ export const T1 = {
   chipFoundRough: 'Found its test world. Distance only rough.',
   chipFoundDistance: 'Found its test world and its distance.',
   chipNotFound: 'Did not find its test world.',
+  // ADDED (newcomer review): the number that matters, under the verdict at the top of the tool.
+  glance: {
+    ours: (d: Str) => `Our tool: about ${d}`,
+    known: (r: Str) => `NASA: ${r}`,
+    unit: 'Times as far from the Sun as the Earth is.',
+  },
   likeThis: 'Like this',
   likeThisText: [
-    'Turn a camera to follow a runner. The runner comes out sharp, and the background blurs.',
-    'The tool does the same with a world too faint to see in any one picture.',
-    'For the distance, hold up a finger and move your head from side to side.',
-    'The finger seems to move against the far wall.',
-    'Hold it twice as far away, and it moves half as much.',
-    'The Earth carries SPHEREx round the Sun, so we watch the sky from a moving place.',
-    'That makes a far-off world seem to move against the stars, like your finger.',
-    "The Earth's path is curved, so the world's path across the stars is not quite straight.",
-    'We call this the bend: how far the world is from where a straight, steady path would put it.',
-    'A world twice as far away bends half as much. Measure the bend, and you know the distance.',
-    'The world circles the Sun too, but over two weeks its own path is almost straight.',
-    'So the bend comes almost all from the Earth.',
+    ['Turn a camera to follow a runner. The runner comes out sharp, and the background blurs.', 'The tool does the same with a world too faint to see in any one picture.'],
+    ['For the distance, hold up a finger and move your head from side to side.', 'The finger seems to move against the far wall.', 'Hold it twice as far away, and it moves half as much.'],
+    ['The Earth carries SPHEREx round the Sun, so we watch the sky from a moving place.', 'That makes a far-off world seem to move against the stars, like your finger.'],
+    [
+      "The Earth's path is curved, so the world's path across the stars is not quite straight.",
+      'We call this the bend: how far the world is from where a straight, steady path would put it.',
+      'A world twice as far away bends half as much. Measure the bend, and you know the distance.',
+    ],
+    ['The world circles the Sun too, but over two weeks its own path is almost straight.', 'So the bend comes almost all from the Earth.'],
   ],
   sketchA: {
     finger: 'Your finger',
@@ -117,7 +129,7 @@ export const T1 = {
     far: 'finger twice as far: half the shift',
     earth: 'From the Earth',
     sun: 'Sun',
-    piece: "two weeks of the Earth's curved path",
+    piece: ['two weeks of the', "Earth's curved path"],
     stars: 'Against the stars',
     straight: 'a straight, steady path',
     bend: 'the bend',
@@ -135,7 +147,11 @@ export const T1 = {
   centred: ['We centred this patch of sky on where NASA says Eris was.', 'So this was not a search of unknown sky.'],
   notCentred: ['We picked this patch of sky because Eris is in it.', 'But we did not tell the tool where in the patch to look.'],
   notGiven: "The tool was not given NASA's path for Eris, or its distance.",
-  testWas: 'The test was whether it would pick out Eris from everything else there, on its own.',
+  // ADDED (truth review): docs/reflex.md says the analysis choices were made after a probe had
+  // already found Eris, as tools 2 and 3 say of theirs.
+  practice: ["We also set the tool's choices after an earlier look had found Eris.", 'So this was partly a practice test.'],
+  // CHANGED (truth review): "on its own" dropped.
+  testWas: 'The test was whether it would pick out Eris from everything else there.',
   placeAlmost: 'It did. Its dot sat almost exactly where NASA says Eris was.',
   placeVeryClose: 'It did. Its dot sat very close to where NASA says Eris was.',
   placeMissed: 'It did not. Its strongest dot was not where NASA says Eris was.',
@@ -144,13 +160,14 @@ export const T1 = {
   // CHANGED (final results): the far end of the about-95% range is open in docs/reflex/results.json.
   rangeOpenNote: 'It could be much farther. Our tests cannot rule that out yet.',
   nasa: (r: Str) => `NASA's figure: ${r}`,
-  rulerCaption: 'Distance from the Sun. 1 = the Earth\'s distance. Neptune, the farthest big planet, is at 30.',
+  rulerTitle: "Distance from the Sun. 1 = the Earth's distance.",
+  rulerCaption: 'Neptune, the farthest big planet, is at 30.',
   rulerEarth: 'Earth',
   rulerNeptune: 'Neptune',
   rulerNasa: 'NASA',
   rulerOurs: 'our tool',
-  rulerBand: 'very likely',
-  rulerOpen: 'no far limit yet',
+  rulerBand: 'very likely in here',
+  rulerOpen: 'could be farther',
   rulerSummary: (best: Str, range: Str, r: Str) =>
     `Ruler of distance from the Sun. Earth at 1, Neptune at 30. Our tool's dot at ${best}, on a band ${range}. NASA's cross at ${r}.`,
   rulerRangeBetween: (lo: Str, hi: Str) => `from ${lo} to ${hi}`,
@@ -158,6 +175,10 @@ export const T1 = {
   sunlight: (h: Str) => `Sunlight takes about 8 minutes to reach the Earth, and about ${h} hours to reach Eris.`,
   inside: "NASA's figure is inside our range, so the method worked here.",
   outside: "NASA's figure is outside our range, so the method missed here.",
+  // CHANGED (truth review): with no far end, any distance beyond the near end is "inside", so the
+  // check says little, and the results file marks this run as failed (check A4).
+  insideOpen: "NASA's figure is inside our range.",
+  openWeak: ['But the range has no far end.', 'So this check is weak, and the answer is rough.'],
   wide: 'But the range is wide, so the answer is rough.',
   narrow: 'The range is narrow, so the answer is fairly exact.',
   twiceFar: 'We ran the tool twice on these pictures, and both times it put Eris too far away.',
@@ -173,12 +194,15 @@ export const T1 = {
     rangeBetween: (lo: Str, hi: Str) => `${lo} to ${hi}`,
     rangeAbove: (lo: Str) => `more than ${lo}`,
     notFresh: 'This was not a fresh test, because the pictures were the same.',
-    wherever: 'It shows that the tool finds Eris wherever it sits in the patch.',
+    // CHANGED (truth review): one moved place shows only that it can, not that it always does.
+    wherever: 'It shows the tool can also find Eris away from the middle of the patch.',
     moved: (a: Str, b: Str) => `But the answer moved from ${a} to ${b}: one more sign that it is rough.`,
     hardlyMoved: (a: Str, b: Str) => `The answer hardly moved: ${a} and ${b}.`,
     // ADDED (final results): docs/reflex.md asks that the all-pictures result is never given
     // without the result with the earliest day left out.
     earliestDay: 'Much of the bend comes from the pictures taken on the earliest day.',
+    // ADDED (truth review): on that day Eris sat beside a fixed star as bright as itself.
+    neighbour: 'On that day Eris sat right next to a star as bright as itself.',
     withoutStill: 'Without them the bend still shows, but less clearly.',
     withoutNot: 'Without them the bend does not show clearly.',
     again2: (when: Str) => `SPHEREx photographed this patch again ${when}.`,
@@ -203,6 +227,13 @@ export const T1 = {
     squares: 'Its pictures are made of tiny squares, like tiles.',
     moon: 'About 300 squares side by side would span the full Moon.',
     choose: 'Choose how to add up the pictures.',
+    // ADDED (newcomer review): a drawing of what "slid to follow" means.
+    slideSketch: {
+      frames: 'Three pictures: the world moves, the stars stay',
+      asTaken: 'Added as taken: a faint smear',
+      slid: 'Slid to follow it, then added: one bright dot',
+      alt: 'Drawing: three pictures, with a faint world in a different place in each and the stars in the same places. Added as they are, the world smears out. Slid so the world lines up, then added, it makes one bright dot.',
+    },
     legend: 'How to add up the pictures',
     options: ['One picture', 'All, as taken', 'All, slid to follow Eris'],
     slide: 'Slide and stack',
@@ -216,8 +247,12 @@ export const T1 = {
     toolDot: "Tool's dot",
     nasaMark: 'NASA: Eris',
     nasaCaption: 'Cyan: where NASA says Eris was. You cannot pick it out here.',
+    // ADDED (newcomer review): the cross is not something the tool was given.
+    nasaAfter: "We added this mark afterwards, to check the tool's answer.",
     starsNote: ['These pictures still show the stars, so you can watch them smear.', 'The search itself removes the stars beforehand, using pictures of this place from other months.'],
     starsNoteDiff: 'These pictures have the stars removed, using pictures of this place from other months.',
+    // ADDED (truth review): bright stars were blanked out, not subtracted, and are drawn flat grey.
+    blanks: 'Smooth grey patches: places where bright stars were blanked out. They hold no data.',
     alt1: 'One SPHEREx picture of the patch: many stars, Eris too faint to see.',
     alt2: 'All the pictures added as taken: sharp stars, and Eris smeared too thin to see.',
     alt3: 'All the pictures slid to follow Eris and added: stars smeared into short streaks, one small sharp dot.',
@@ -244,20 +279,27 @@ export const T1 = {
     sketchAlt: (what: Str) => `Drawing: the dot's path for a world ${what}. A dashed line beside it shows a straight, steady path.`,
     sketchAltWrong: "Drawing: the dot's path bent the wrong way. A dashed line beside it shows a straight, steady path.",
     sketchAltNoBend: "Drawing: with no bend, the dot's path lies on the dashed straight, steady path.",
+    sketchKeyTrack: "the dot's path",
     meterLabel: "How sharp Eris's dot comes out",
     meterLeft: 'Blurrier',
     meterRight: 'Sharper',
-    meterTick: 'No bend',
+    // CHANGED (newcomer review): "sharper than what?" The zero is the straight path's sharpness.
+    meterTick: 'Same as no bend',
     meterSharper: (how: Str) => `Meter: with this bend Eris's dot comes out sharper than with no bend, ${how}.`,
     meterBlurrier: "Meter: with this bend Eris's dot comes out blurrier than with no bend.",
-    meterSame: "Meter: with no bend, the starting point.",
+    meterSame: 'Meter: with no bend, the starting point.',
     meterBest: 'the sharpest of all',
     meterNearly: 'nearly as sharp as the best',
     meterLess: 'but less sharp than the best',
     sharpest: (d: Str) => `Sharpest: about ${d} times as far from the Sun as the Earth is.`,
-    nearly: 'Nearly as sharp. This distance is still inside the likely range.',
-    blurrierNearer: 'Blurrier. Eris is probably nearer than this.',
-    blurrierFarther: 'Blurrier. Eris is probably farther than this.',
+    // CHANGED (truth review): "the likely range" was never defined on the screen; the stop is
+    // chosen by the bootstrap 68% range (For scientists says so).
+    nearly: 'Nearly as sharp. Eris could well be this far away.',
+    // CHANGED (truth review): a stop sharper than no bend is not "blurrier"; it is less sharp than the best.
+    lessNearer: 'Less sharp than the best. Eris is probably nearer than this.',
+    lessFarther: 'Less sharp than the best. Eris is probably farther than this.',
+    blurrierNearer: 'Blurrier than no bend. Eris is probably nearer than this.',
+    blurrierFarther: 'Blurrier than no bend. Eris is probably farther than this.',
     wrongButton: 'Bend it the wrong way',
     wrongLine: 'The wrong-way bend: blurrier than no bend at all.',
     why: ['Why try it? If the wrong bend made the dot sharper too, the bend would prove nothing.', 'Only the right bend helps, so the bend is real.'],
@@ -281,13 +323,17 @@ export const T1 = {
   notMean: {
     heading: 'What this does not mean',
     text: [
-      'This is not a new planet: Eris has been known since 2005.',
-      'The test shows only that the method worked on one known world, in one patch of sky.',
-      'Some astronomers think an unseen planet, several times heavier than the Earth, may circle far beyond Neptune.',
-      'It is often called Planet X or Planet Nine. Nobody has found it.',
-      'We have not searched for it with this tool. So the tool has not found it, or shown it is not there.',
-      'If it exists, astronomers expect it to look several times fainter than the faintest thing this tool can see.',
-      'That is a prediction: nobody knows exactly how bright it would be.',
+      [
+        'This is not a new planet: Eris has been known since 2005.',
+        // CHANGED (truth review): "worked" overstated a check with an open range.
+        'The test shows only that the method found one known world, in one patch of sky.',
+      ],
+      [
+        'Some astronomers think an unseen planet, several times heavier than the Earth, may circle far beyond Neptune.',
+        'It is often called Planet X or Planet Nine. Nobody has found it.',
+        'We have not searched for it with this tool. So the tool has not found it, or shown it is not there.',
+      ],
+      ['If it exists, astronomers expect it to look several times fainter than the faintest thing this tool can see.', 'That is a prediction: nobody knows exactly how bright it would be.'],
     ],
     sedna: 'Even Sedna, another small icy world beyond Neptune, was too faint for the tool to find on its own.',
   },
@@ -303,13 +349,18 @@ export const T2 = {
   chipNotProven: 'Not proven yet',
   chipPractice: 'Passed on its practice star only',
   chipPassed: 'Passed its test',
+  glance: {
+    shift: (n: Str) => `The shift: about ${n} times our usual error`,
+    needed: (n: Str) => `Needed by our rule: ${n} times`,
+  },
   likeThis: 'Like this',
   likeThisA: [
-    'Picture two torches far away, so close together that they look like one light.',
-    'One torch is white, and one is red.',
-    'Look at them through blue glass, and then through red glass.',
-    'Through red glass, the red torch gives a bigger share of the light. So the middle slides toward it.',
-    'Nothing really moves. Only the middle of the blurry light shifts.',
+    ['Picture two torches far away, so close together that they look like one light.', 'One torch is white, and one is red.'],
+    [
+      'Look at them through blue glass, and then through red glass.',
+      'Through red glass, the red torch gives a bigger share of the light. So the middle slides toward it.',
+      'Nothing really moves. Only the middle of the blurry light shifts.',
+    ],
   ],
   sketch: {
     blue: 'Through blue glass',
@@ -320,17 +371,23 @@ export const T2 = {
     alt: 'Drawing: two overlapping lights. Through blue glass the white torch is bright, the red torch faint, and the middle sits on the white torch. Through red glass both are bright, and the middle has slid toward the red torch.',
   },
   likeThisB: [
-    'Past the red end of the rainbow are colours our eyes cannot see, called infrared.',
-    'SPHEREx photographs every star in about a hundred of them. Here, "redder" means further past red.',
-    'A cool partner is like a dull red coal beside a hotter bulb.',
-    'The coal gives out a bigger share of its light in the redder colours.',
-    'So in those colours, the partner gives a bigger share of the blurry light.',
-    'The middle shifts toward it. If there is a partner, the shift points toward it.',
+    ['Past the red end of the rainbow are colours our eyes cannot see, called infrared.', 'SPHEREx photographs every star in about a hundred of them. Here, "redder" means further past red.'],
+    [
+      'A cool partner is like a dull red coal beside a hotter bulb.',
+      'The coal gives out a bigger share of its light in the redder colours.',
+      'So in those colours, the partner gives a bigger share of the blurry light.',
+      'The middle shifts toward it. If there is a partner, the shift points toward it.',
+    ],
   ],
   testHeading: 'The test: the star VHS 1256',
-  resultRight: 'Result: the tool pointed the right way, toward the known partner of the star VHS 1256.',
-  resultWrong: 'Result: the tool did not point toward the known partner of the star VHS 1256.',
-  resultSmall: 'But the shift was too small to count, so the method is not proven.',
+  // CHANGED (newcomer review): the verdict first, then what happened, so the line cannot read as a win.
+  resultNotProven: 'Result: not proven.',
+  resultPractice: 'Result: passed on its practice star only.',
+  resultPassed: 'Result: passed its test.',
+  resultRight: 'The tool pointed the right way, toward the known partner of the star VHS 1256.',
+  resultWrong: 'The tool did not point toward the known partner of the star VHS 1256.',
+  resultSmall: 'But the shift was too small to count.',
+  resultSmallAnd: 'And the shift was too small to count.',
   resultBig: 'The shift was big enough to count by our rule.',
   anyway: 'We show it anyway. The idea may still work, and an honest report shows its misses too.',
   known: 'The partner has been known since 2015.',
@@ -341,7 +398,9 @@ export const T2 = {
   squares: 'SPHEREx pictures are made of tiny squares, like tiles.',
   sits: (n: Str) => `The partner sits only about ${n} squares from its star.`,
   blob: 'So SPHEREx sees the two as one blob of light.',
-  measured: (n: Str) => `The tool measured the star in ${n} SPHEREx pictures. It was not told where the partner is.`,
+  // CHANGED (truth review): "It was not told where the partner is" came close to "works blind",
+  // which docs/colourwalk.md forbids: the tool was built while looking at this star.
+  measured: (n: Str) => `The tool measured the star in ${n} SPHEREx pictures.`,
   moved: (dir: Str) => `In the redder colours, the centre of the blob moved a little toward the ${dir}.`,
   direction: { lr: 'lower right', ll: 'lower left', ul: 'upper left', ur: 'upper right' },
   liesThatWay: 'The partner lies that way too.',
@@ -352,9 +411,16 @@ export const T2 = {
   usualError: 'Our usual error is how far a centre is typically off, just by chance.',
   times: (n: Str) => `This shift was only about ${n} times our usual error.`,
   chance: (n: Str) => `By our measure, chance alone gives a shift that big about one time in ${n}.`,
-  rule: (n: Str) => `Our rule, set before the test, asks for ${n} times. Chance alone should almost never give that.`,
-  guessed: ['Before the test, we guessed our usual error. After a review, we measured it on stars with no partner.', 'It came out bigger, so this shift counts for less than we had thought.'],
+  // CHANGED (truth review): "almost never" holds only if the error model is right, and the null test failed.
+  rule: (n: Str) => `Our rule, set before the test, asks for ${n} times. If our usual error were right, chance alone should almost never give that.`,
+  // CHANGED (newcomer review): one reader took these to mean the rule was changed after the test.
+  guessed: 'Before the test, we guessed our usual error. After a review, we measured it on stars with no partner.',
+  guessedNow: (a: Str, b: Str) => `It came out bigger, so the shift is about ${a} times our usual error, not ${b}.`,
+  ruleKept: (n: Str) => `The rule of ${n} times did not change.`,
   nullFailed: 'Those stars also moved more than our checks allow.',
+  // ADDED (truth review): lone stars can walk as far as VHS 1256's centre did.
+  othersFar: "Other stars, measured the same way, moved as far as VHS 1256's did, or farther.",
+  othersAbout: "Other stars, measured the same way, moved about as far as VHS 1256's did.",
   checksTwo: 'Two other checks on VHS 1256 failed too.',
   checksOne: 'One other check on VHS 1256 failed too.',
   checksMany: (n: Str) => `${n} other checks on VHS 1256 failed too.`,
@@ -369,12 +435,16 @@ export const T2 = {
     walk: 'Walk through the colours',
     stop: 'Stop',
     partner: "Partner, hidden in the star's light",
+    pictureTitle: 'The real SPHEREx picture of the star, in these colours',
     pictureAlt: (colour: Str) => `The star VHS 1256 in ${colour}: one blob of light. Small cyan circle: where its partner is.`,
     insetTitle: (m: Str) => `The shift, drawn ${m} times bigger`,
     keyCross: 'Grey cross: centre in bluer light',
-    keyDot: 'Amber dot: centre in these colours',
+    keyDot: 'Amber dot and arrow: the centre in these colours, and how far it moved',
     keyRing: 'Faint amber ring: our usual error, how far chance typically moves the dot',
-    keyLine: 'Cyan line: toward the known partner',
+    // ADDED (newcomer review): the rule drawn, so "4 times" can be seen.
+    keyRule: (n: Str) => `Grey dashed ring: ${n} times our usual error. To count, the centre had to move outside it.`,
+    keyLine: 'Cyan dashed line: toward the known partner',
+    lineLabel: 'toward the partner',
     scale: '0.1 of a square',
     insetStart: 'Shift inset: in bluer light the centre sits on the grey cross, where it starts.',
     insetLoneStart: 'Shift inset: a star with no partner. In bluer light its centre sits on the grey cross.',
@@ -382,6 +452,7 @@ export const T2 = {
     loneAlt: (colour: Str) => `A star with no partner, in ${colour}: one round blob of light.`,
     insetColours: ['bluer light', 'the middle colours', 'redder light'],
     insetSummary: (colours: Str, dir: Str, toward: Str, far: Str) => `Shift inset: in ${colours} the centre sits a little toward the ${dir}, ${toward}. It is ${far} from the grey cross.`,
+    insetMore: (m: Str, rule: Str) => `Drawn ${m} times bigger, with a scale bar of 0.1 of a square. The dashed ring is ${rule} times our usual error.`,
     insetLess: 'less than one usual error',
     insetAbout: (n: Str) => `about ${n} usual errors`,
     insetToward: "the partner's direction",
@@ -395,12 +466,14 @@ export const T2 = {
     redderClearly: 'The centre sits clearly toward it.',
     redderHardly: 'The centre has hardly moved.',
     compare: 'Compare: a star on its own',
+    // ADDED (newcomer review): why the comparison is there.
+    compareWhy: 'Why compare? A star with no partner shows how far a centre moves just by chance.',
     lone: 'A star with no partner, measured the same way.',
     loneFar: "Its centre moved about as far as VHS 1256's did.",
     loneLittle: 'Its centre moved a little too, just by chance.',
     loneRule: 'A real shift must be clearly bigger than chance.',
   },
-  answerNothing: 'Its answer in this test, by its own rule: it found nothing. Yet the partner is real.',
+  answerNothing: 'Its answer in this test, by its own rule: it found nothing. The partner is really there, so this time the tool missed it.',
   answerFound: 'Its answer in this test: it found a shift toward the known partner.',
   answers: {
     something: 'a big enough shift that points one way in all the reddest colours, however SPHEREx is turned. It is a hint that something cool sits that way, never proof of a planet. To confirm it, a sharper telescope must see the partner itself.',
@@ -410,13 +483,9 @@ export const T2 = {
   notMean: {
     heading: 'What this does not mean',
     text: [
-      "This is not a new planet: VHS 1256's partner has been known since 2015.",
-      'A shift alone never proves a planet.',
-      'An unrelated red star or galaxy far behind, in the same direction, makes the same shift.',
-      'So can a bluer star on the opposite side.',
-      'SPHEREx itself can also make small false shifts. We have not yet measured how often.',
-      'We have not searched any other star for an unknown partner.',
-      'By our own rule, we will not until the tool passes a fair test, on another star.',
+      ["This is not a new planet: VHS 1256's partner has been known since 2015.", 'A shift alone never proves a planet.'],
+      ['An unrelated red star or galaxy far behind, in the same direction, makes the same shift.', 'So can a bluer star on the opposite side.', 'SPHEREx itself can also make small false shifts. We have not yet measured how often.'],
+      ['We have not searched any other star for an unknown partner.', 'By our own rule, we will not until the tool passes a fair test, on another star.'],
     ],
   },
   next: 'Next: Line up the dips ↓',
@@ -441,16 +510,22 @@ export const T3 = {
   chipOneNot: "Showed one known planet's dip. Not on a second.",
   chipTwo: "Showed two known planets' dips.",
   chipNone: 'Did not show the known dip.',
+  // docs/transits.md forbids a depth for WASP-62 b without its range, so it carries its give-or-take.
+  glance: {
+    ours: (p: Str, e: Str) => `Our tool: about ${p} per cent, give or take ${e}`,
+    known: (p: Str) => `Published: ${p} per cent`,
+    unit: "How much the star's light dips when the planet crosses it.",
+  },
   likeThis: 'Like this',
   likeThisText: [
-    'When a planet passes in front of its star, it blocks a little of the star\'s light.',
-    "It is like a moth crossing a far-off street lamp.",
-    'Each crossing makes the star look slightly dimmer, for a few hours.',
-    'Now think of a very soft knock, once every few seconds, in a noisy room.',
-    'One knock is lost in the noise.',
-    'But if you know exactly when the knocks come, you can listen at just those moments.',
-    'Added together, the knocks become clear.',
-    "The planet's timetable tells us when to listen: it lists the times when the planet crosses its star.",
+    ["When a planet passes in front of its star, it blocks a little of the star's light.", 'It is like a moth crossing a far-off street lamp.', 'Each crossing makes the star look slightly dimmer, for a few hours.'],
+    [
+      'Now think of a very soft knock, once every few seconds, in a noisy room.',
+      'One knock is lost in the noise.',
+      'But if you know exactly when the knocks come, you can listen at just those moments.',
+      'Added together, the knocks become clear.',
+    ],
+    ["The planet's timetable tells us when to listen: it lists the times when the planet crosses its star."],
   ],
   sketch: {
     jumble: 'In date order: a jumble',
@@ -466,8 +541,17 @@ export const T3 = {
   asDeep: 'The dip came out about as deep as published.',
   deeper: 'The dip came out deeper than published.',
   shallower: 'The dip came out shallower than published.',
-  pictureCaption: 'WASP-62 in one SPHEREx picture. The planet is far too small, and too close to its star, to see. We can only measure the star\'s light.',
-  pictureAlt: 'The star WASP-62 in one SPHEREx picture: one round blob of light.',
+  // ADDED (newcomer review): one of six bands, said at once.
+  oneOfBands: (n: Str) => `These readings come from one of SPHEREx's ${n} bands of colours.`,
+  // MOVED (newcomer review) from "What this does not mean", to say early what a 1 per cent dip is.
+  bigPlanet: "A big planet like this one blocks about one per cent of its star's light.",
+  // CHANGED (newcomer review): "too small to see" first, and what the ring is.
+  pictureCaption: [
+    'The planet is far too small, and too close to its star, to see here.',
+    'This is its star, WASP-62, in one SPHEREx picture.',
+    "The tool measures the star's light inside the amber ring. Each grey dot in the chart below is one such reading.",
+  ],
+  pictureAlt: 'The star WASP-62 in one SPHEREx picture: one round blob of light inside an amber ring.',
   giant: 'WASP-62 b is a giant planet, known since 2012.',
   goesRound: (p: Str, t: Str) => `It goes round its star every ${p} days. Each crossing lasts ${t} hours.`,
   about: (n: Str) => `about ${n}`,
@@ -486,9 +570,12 @@ export const T3 = {
   linedUp: (p: Str) => `Lined up on the timetable, the readings show the star dimming by about ${p} per cent.`,
   ours: (p: Str) => `Our tool: about ${p} per cent`,
   published: (p: Str) => `Published figure: ${p} per cent`,
+  // ADDED (truth review): 1.18 against 1.23 is agreement within the spread of the references.
+  publishedRange: (lo: Str, hi: Str) => `Published figures for this dip range from ${lo} to ${hi} per cent.`,
   publishedInside: 'The published figure is inside our range.',
   publishedOutside: 'The published figure is outside our range.',
-  practice: 'But we built the tool while looking at these same readings. So this was partly a practice test, not a fully fair one.',
+  // CHANGED (truth review): as strong as tool 2's line; docs/transits.md says "not a blind test".
+  practice: 'But we built the tool while looking at these same readings. So this was a practice test, not a fair one.',
   second: 'We also tried a second known planet, WASP-100 b, without changing the tool.',
   secondClose: 'All its readings together gave a dip close to the published one.',
   secondDeeper: 'All its readings together gave a dip deeper than published.',
@@ -501,13 +588,16 @@ export const T3 = {
     yearsTogether: 'The dip is clearest when both years are put together.',
     steady: 'Steady stars nearby, lined up the same way, show no dip.',
     wrong: (n: Str) => `We also tried ${n} wrong timetables on purpose.`,
-    wouldShow: 'If chance alone could make a dip this deep, some of them would show one.',
+    // CHANGED (truth review): the fakes overlap, so they are not that many separate tries.
+    wouldShow: 'If chance often made a dip this deep, some of them would show one.',
     noneDid: 'None did.',
     someDid: (n: Str) => `${n} did, so chance cannot be ruled out.`,
   },
   tryIt: {
     heading: 'Try it: change the timetable',
     intro: 'Turn the dial to change how long one trip round the star takes. Watch for the dip.',
+    // ADDED (newcomer review): why turn the dial at all.
+    purpose: 'Try a wrong timetable. A real dip shows up only on the right one.',
     label: 'One trip round the star takes:',
     days: (p: Str) => `${p} days`,
     knownTick: 'the known timetable',
@@ -523,16 +613,32 @@ export const T3 = {
     keyLineMeasured: 'Amber line: the dip our tool measured.',
     keyBand: 'Pale band: when a crossing should happen.',
     keyEdge: 'Triangles at the edge: readings beyond the zoomed-in range.',
+    bandLabel: 'crossing',
+    // The lines are named on the chart; their numbers, with the range, are in the readout above.
+    lineOurs: 'ours',
+    linePublished: 'published',
     // CHANGED (do-not-say list): docs/transits.md forbids a single depth for WASP-62 b without its
-    // uncertainty, so the readout carries "give or take".
+    // uncertainty, so the readout carries "give or take". CHANGED (truth review): about 95%, as
+    // every other range on the page.
     readout: (x: Str, e: Str) => `Dip on this timetable: ${x} per cent, give or take ${e}`,
     known: 'The known timetable: every crossing lands on top of the others, and the dip shows.',
     wrong: 'A wrong timetable: the crossings land in different places, and the dip blurs away.',
+    // CHANGED (truth review): where the tool measured nothing, it does not say the dip blurs away.
+    wrongFew: 'A wrong timetable: few readings fall where it says a crossing should be.',
     chance: 'A dip this small comes and goes by chance.',
     tooFew: 'Too few readings land inside a crossing on this timetable, so the tool cannot measure a dip here.',
     noDip: 'The dip on this timetable is not available.',
     grey: 'The grey dots stay scattered on every timetable. Only the amber averages show the dip.',
+    bar: {
+      title: 'The dip on this timetable',
+      none: 'no dip',
+      notMeasured: 'Not measured on this timetable.',
+      caption: 'Bar: the dip. Whiskers: give or take. Where they reach the no-dip line, the dip could be chance.',
+      summary: (x: Str, e: Str) => `Bar chart: a dip of ${x} per cent, give or take ${e}.`,
+      unit: 'per cent',
+    },
     chartSummary: (p: Str, n: Str, dip: Str) => `Chart: ${n} single readings lined up on a ${p}-day timetable. ${dip}`,
+    chartLines: (pub: Str, ours: Str, e: Str) => `Cyan dashed line: the published dip, ${pub} per cent. Amber line: our tool's dip, ${ours} per cent, give or take ${e}.`,
     tableCaption: (p: Str) => `Averages in 45-minute slots, on the ${p}-day timetable`,
     tableHours: 'Hours from the expected crossing',
     tableBrightness: 'Average brightness (100 = normal)',
@@ -540,8 +646,9 @@ export const T3 = {
     staticCaption: 'Every reading lined up on the known timetable, with 45-minute averages.',
     staticAlt: "Chart: the star's brightness lined up on the known timetable, with a dip at the crossing.",
   },
-  answerFound: 'Its answer in this test: it found the dip, on the known timetable.',
-  answerNot: 'Its answer in this test: no clear dip, even on the known timetable.',
+  // CHANGED (newcomer review): the timetable was given to it, so "found" said too much.
+  answerFound: 'Its answer in this test: on the timetable we gave it, the dip showed up.',
+  answerNot: 'Its answer in this test: no clear dip, even on the timetable we gave it.',
   answers: {
     intro: '(for another planet whose timetable is known)',
     something: 'a dip shows on the timetable, and wrong timetables show none. For a planet nobody has confirmed, that is only a hint.',
@@ -551,20 +658,17 @@ export const T3 = {
   notMean: {
     heading: 'What this does not mean',
     text: [
-      'This is not a new planet: WASP-62 b has been known since 2012.',
-      'The tool cannot find planets nobody knows about.',
-      'It only works once other telescopes have found the planet and its timetable.',
-      'It works only for stars in those two small patches, and only for big planets.',
-      "A big planet like this one blocks about one per cent of its star's light.",
-      "Another kind of dip can look like a planet's.",
-      'Two faint stars that look right next to our star may take turns hiding each other.',
-      'Each time, their light drops a lot.',
-      "Mixed with our bright star's light, that big drop shrinks to a small, planet-sized dip.",
-      'It is like a candle going out beside a floodlight: all the light together dims only a little.',
-      'A small, dim star crossing our star can make a planet-sized dip too.',
-      'Other telescopes can tell these apart, with sharper pictures or by weighing what crosses the star.',
-      'Measuring the dip in several colours can help too. We cannot do that well enough yet.',
-      "So we do not yet use the tool to judge NASA's unconfirmed planet candidates.",
+      ['This is not a new planet: WASP-62 b has been known since 2012.', 'The tool cannot find planets nobody knows about.', 'It only works once other telescopes have found the planet and its timetable.'],
+      ['It works only for stars in those two small patches, and only for big planets.'],
+      ["Another kind of dip can look like a planet's.", 'Our tool cannot tell such dips apart yet.', "So we do not yet use the tool to judge NASA's unconfirmed planet candidates."],
+    ],
+    // MOVED (newcomer review): the details, in a fold, so the reader is not lost before the point.
+    otherDips: 'Other things that make dips',
+    otherDipsText: [
+      ['Two faint stars that look right next to our star may take turns hiding each other.', 'Each time, their light drops a lot.', "Mixed with our bright star's light, that big drop shrinks to a small, planet-sized dip."],
+      ['It is like a candle going out beside a floodlight: all the light together dims only a little.'],
+      ['A small, dim star crossing our star can make a planet-sized dip too.'],
+      ['Other telescopes can tell these apart, with sharper pictures or by weighing what crosses the star.', 'Measuring the dip in several colours can help too. We cannot do that well enough yet.'],
     ],
   },
 }
@@ -589,7 +693,7 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
       (v) => `For this visit F spans ${v.levE}″ E and ${v.levN}″ N per AU⁻¹.`,
       (v) =>
         `Coarse grid: 1/d from −0.02 to +0.02 AU⁻¹ (negative values reverse the reflex, an unphysical control); the drift box is centred on the linear reflex rate at each 1/d: ${v.trials} trials over ${v.area} deg².`,
-      () => 'No ephemeris enters the search; JPL Horizons is used only to score it. The analysis choices were made after a probe had already found Eris, so they were not fixed before the answer was known.',
+      () => 'No ephemeris enters the search; JPL Horizons is used only to score it. The analysis choices were made after a probe had already found Eris, so they were not fixed before the answer was known; the main screen calls it "partly a practice test".',
     ],
     [
       (v) =>
@@ -597,8 +701,11 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
       (v) => `Recovered ${v.sep}″ from JPL (observer SPHEREx) at the reference time, S/N ${v.snr}; drift (${v.ve}, ${v.vn})″/day against JPL's linear (${v.je}, ${v.jn}).`,
       (v) => `Best distance ${v.best} AU against JPL's ${v.delta} AU from SPHEREx.`,
       (v) => `Epoch bootstrap (${v.nboot} resamples, so the 95% range is crude): 68% range ${v.b68}, 95% range ${v.b95}.`,
+      (v) => `${v.a4}`,
       (v) => `The profile's statistical-only 2σ interval (${v.p2}) is about 2 to 3 times too narrow, so the main screen does not use it.`,
       (v) => `Straight track with free drift: S/N ${v.sinf}, ΔS² = ${v.ds2} with all exposures; with any one of ${v.nep} epochs left out, at least ${v.ds2min}, the lowest when the earliest epoch is dropped.`,
+      (v) =>
+        `About ${v.fdShare}% of the 1/d information is in ${v.fdN} exposures of that earliest epoch, when Eris was ${v.fdSep}″ from a fixed star as bright as itself (a review measurement, not re-run); ${v.a5}.`,
       (v) => `Mirrored reflex at the best distance: S/N ${v.mirror}. Highest reversed-reflex peak away from Eris: ${v.revAway}.`,
       (v) => `Flux at Eris's place in the two other visits: ${v.st1} and ${v.st2} mJy (absent).`,
     ],
@@ -625,12 +732,14 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
     ],
     [
       (v) => `Notes on the main screen: distances there are from the Sun, but the method measures distance from the observer. NASA's figure is JPL's heliocentric r (${v.r} AU); JPL's distance from SPHEREx is ${v.delta} AU. The tool's ${v.best} is the same either way.`,
-      (v) => `"Very likely … (about 19 chances in 20)" is the epoch-bootstrap 95% range, ${v.b95}.`,
+      (v) => `"Very likely … (about 19 chances in 20)" is the epoch-bootstrap 95% range, ${v.b95}; a "more than" bound is rounded down.`,
       (v) => `"Almost exactly where NASA says": ${v.sep}″, ${v.sepPx} of a pixel. "About 300 squares would span the full Moon": 31′ / 6.15″. "Sunlight takes about ${v.hours} hours": r × 499 s.`,
-      () => '"How sharp Eris\'s dot comes out" is S²(1/d) − S²(0) from the S/N of each stop in the data file, S(0) being the straight track with free drift.',
+      (v) =>
+        `"How sharp Eris's dot comes out" is S²(1/d) − S²(0), each S/N with place and drift free, S(0) being the straight track; on this basis the mirrored reflex gives S/N ${v.wrongFree}, against ${v.mirror} on the module's bounded-drift profile.`,
+      (v) => `The slider calls a stop "nearly as sharp" when it lies inside the bootstrap 68% range (${v.b68}).`,
       (v) =>
         v.demoDiff === 'yes'
-          ? 'The three pictures in "Make Eris appear" are made from the search\'s difference images, because a star trail crosses Eris\'s place in the raw stack.'
+          ? `The three pictures in "Make Eris appear" are made from the search's difference images, because a star trail crosses Eris's place in the raw stack; pixels the search blanked (bright fixed stars) are drawn flat grey (${v.blanks}).`
           : 'The three pictures in "Make Eris appear" add up raw exposures, to show the star trails; the search itself stacks difference images.',
     ],
     [
@@ -665,6 +774,8 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
     [
       (v) => `Null test (Barnard's Star field, b = +14°): the star-to-star scatter of per-detector medians is ${v.floorE}″ E and ${v.floorN}″ N. Only ${v.nWithin} of ${v.nIso} isolated stars stay within ±0.06″ in every detector, where 10 were needed.`,
       (v) => `${v.nullPassed} of ${v.nullChecks} null checks pass, so the null test fails. The false-walk rate in a clean field has not been measured.`,
+      (v) => `Stars in the null field that walk as far as VHS 1256 or farther: ${v.walkers}; each has a Gaia neighbour that may explain it, under a rule written after seeing them.`,
+      (v) => `The lone star in "Compare" (Gaia DR3 ${v.loneId}, G ${v.loneG}, chosen by a rule written before it was measured) walks ${v.loneSize}″ at ${v.loneSigma}σ.`,
     ],
     [
       () =>
@@ -673,7 +784,8 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
     [
       (v) => `Main-screen conversions: 1 SPHEREx pixel = 6.15″, so ${v.sep}″ = ${v.sepPx} squares and ${v.size}″ = ${v.sizePx} of a square (${v.cm} cm on a 1 m tile).`,
       (v) => `"Our usual error" is the 1σ error per axis, measured floor included. "About ${v.timesWord} times" is r = ${v.sigma}. "One time in ${v.oneIn}" is P(false) = ${v.pFalse}.`,
-      () => '"A shift this small cannot give an exact direction" stands for the PA error. The inset\'s error rings use the measured floors.',
+      (v) => `"If our usual error were right, chance alone should almost never give" ${v.rule} times: P = ${v.pRule} per host under the error model, which the failed null test shows is incomplete.`,
+      () => '"A shift this small cannot give an exact direction" stands for the PA error. The inset\'s error rings use the measured floors, and its dashed ring is the rule (4σ in each axis).',
     ],
     [() => 'Prior art: Wielen 1996; Pourbaix et al. 2004 and 2016 (SDSS); spectro-astrometry (Bailey 1998; Brannigan et al. 2006); Agol et al. 2015. We found no application to SPHEREx data.'],
     [() => 'Write-up: docs/colourwalk.md · Code: backend/colourwalk.py (colour_walk) · Repeat: python scripts/check_colourwalk.py null vhs · Numbers: docs/colourwalk/results.json'],
@@ -681,15 +793,15 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
   t3: [
     [
       () => 'Method: relative photometry of SPHEREx exposures (spherex_dr1, spherex_qr3, spherex_dr1_deep, spherex_qr3_deep), folded on the published ephemeris and held fixed.',
-      (v) => `P = ${v.period} d and T0 = BJD_TDB ${v.t0} (Kokori et al. 2023); T14 = ${v.t14} h; Rp/R* = ${v.rprs}, so the expected depth (Rp/R*)² = ${v.expected}%. Published depths range from 1.13 to 1.47%.`,
-      () => 'The aperture is 2.5 px, with a sky annulus of 6–10 px. Each reading is divided by the median of its 30 nearest-wavelength out-of-transit readings.',
+      (v) => `P = ${v.period} d and T0 = BJD_TDB ${v.t0} (Kokori et al. 2023); T14 = ${v.t14} h; Rp/R* = ${v.rprs}, so the expected depth (Rp/R*)² = ${v.expected}%. Published depths range from ${v.pubLo} to ${v.pubHi}%.`,
+      (v) => `The aperture is ${v.aperture} px, with a sky annulus of 6–10 px. Each reading is divided by the median of its 30 nearest-wavelength out-of-transit readings.`,
       () => 'The fit is a constant, plus a quadratic in detector position, plus sub-pixel terms, minus a trapezoid with the depth free; readings are clipped once at 5σ.',
       (v) => `The errors are empirical, from ${v.nFake} fake ephemerides (P from 1.5 to 9 d in 0.005 d steps, four phases, real transits removed, periods within 2% of 1/2, 1, 3/2, 2 or 3 × P skipped): ${v.factor} × the formal error.`,
     ],
     [
       () =>
         'Development: this is a re-measurement on data that had been seen, not a test fixed before looking. The method was developed on the same WASP-62 D5 readings in an exploratory probe; the choice of D5, the detector-position correction and the HALO policy were made there.',
-      () => 'The main screen calls it "partly a practice test".',
+      () => 'The main screen calls it "a practice test, not a fair one".',
     ],
     [
       (v) => `WASP-62 (RA ${v.ra}, Dec ${v.dec}): ${v.exposures} exposures. Only D5 (${v.wl} µm) is usable: D2 saturates, and the other detectors have too few in-transit readings.`,
@@ -698,10 +810,10 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
     [
       (v) => `Depth ${v.depth} ± ${v.emp}% (empirical; formal error ${v.formal}), ${v.empSigma}σ empirical.`,
       (v) => `With HALO pixels accepted: ${v.halo} ± ${v.haloErr}% (${v.haloN} readings in transit, ${v.haloSigma}σ). Quote both, never one number alone.`,
-      (v) => `The main screen's range is the default depth ± 2 empirical errors, ${v.lo2}–${v.hi2}% (about 95%).`,
-      (v) => `${v.asDeep} of ${v.nFake} fakes as deep. The time slide peaks at ${v.slide} h.`,
+      (v) => `The main screen's range is the default depth ± 2 empirical errors, ${v.lo2}–${v.hi2}% (about 95%); the dial's "give or take" is 2 empirical errors too (the module's formal error at that period × ${v.factor} × 2).`,
+      (v) => `${v.asDeep} of ${v.nFake} fakes as deep (they overlap: ${v.overlap}% of pairs share a reading, about ${v.nInd} independent by the reviewer's count, so p below about ${v.pBelow}%). The time slide peaks at ${v.slide} h.`,
       (v) => `The deepest fake is ${v.deepestFake}%.`,
-      (v) => `By year, formal errors: ${v.years}; scaled by the empirical factor ${v.factor}.`,
+      (v) => `By year, with formal errors: ${v.years}; scaled by the empirical factor ${v.factor}, the errors are ${v.yearsEmp}.`,
       (v) => `Leaving out one transit at a time: ${v.jack}%.`,
       (v) => `Other analysis choices, aperture radii and the HALO flag included: ${v.choicesRange}%.`,
       (v) => `${v.signBelow} of ${v.signN} flat-bottom transits dip below their baseline (sign test p = ${v.signP}).`,
@@ -710,6 +822,7 @@ export const SCI: Record<'t1' | 't2' | 't3', ((v: V) => Str)[][]> = {
     ],
     [
       (v) => `Second known planet, WASP-100 b, reported without tuning: ${v.w100each}. Combined over D${v.w100dets}: ${v.w100comb}% against ${v.w100exp}%.`,
+      (v) => `No single detector matches the published depth (${v.w100match}); stage A3 passes only on averaging. Detectors of different pairs saw different transits, so the D3 against D5 difference is not a colour result.`,
       () => 'It is a D5 recovery of a known planet, not a second confirmation of the method; the main screen calls the second test "mixed".',
     ],
     [

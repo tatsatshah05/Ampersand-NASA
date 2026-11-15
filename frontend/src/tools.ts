@@ -51,9 +51,15 @@ export interface ReflexStop extends Whys {
   linear_north?: number[] | null
 }
 
+/** One paragraph: sentences that run on in one block. */
+export type Para = string[]
+
 export interface ReflexFile extends Whys {
   fixture?: boolean
   final?: boolean
+  /** The analysis choices were made after an earlier look had found the answer (docs/reflex.md). */
+  development_object?: boolean | null
+  checks?: Record<string, unknown> | null
   pixel_arcsec?: Num
   visit?: { n_used?: Num; duration_days?: Num; mjd_first?: Num; mjd_last?: Num; mjd_t0?: Num; distance_leverage_arcsec_per_inv_au?: number[] | null } & Whys
   field?: { ra?: Num; dec?: Num; size_deg?: Num; centred_on_known?: boolean | null } & Whys
@@ -75,9 +81,11 @@ export interface ReflexFile extends Whys {
     reversed_best_away?: Num
     drift_arcsec_day?: number[] | null
     mean_flux_mjy?: Num
+    /** The review's measurement of the earliest day (docs/reflex.md): its share of the bend, and its bright neighbour. */
+    first_day?: { info_share?: Num; n_exposures?: Num; neighbour_arcsec?: Num; neighbour_as_bright?: boolean | null; available?: boolean | null } | null
   } & Whys
   jpl?: { observer_distance_au?: Num; helio_distance_au?: Num; linear_drift?: number[] | null; linear_drift_arcsec_day?: number[] | null; mid?: { ra?: Num; dec?: Num } | null } & Whys
-  shifted?: { distance_au?: Num; range_95_au?: Pair; range_68_au?: Pair; separation_arcsec?: Num; snr?: Num; edge_reversed_peak?: Num } & Whys
+  shifted?: { distance_au?: Num; range_95_au?: Pair; range_68_au?: Pair; separation_arcsec?: Num; snr?: Num; edge_reversed_peak?: Num; checks?: Record<string, unknown> | null } & Whys
   still_there?: { mjd_first: number; mjd_last: number; flux_mjy?: Num; error_mjy?: Num }[] | null
   limit?: {
     faintest_mean_flux_mjy?: Num
@@ -109,6 +117,8 @@ export interface ReflexFile extends Whys {
     single?: { png?: string | null; mjd?: Num } | null
     plain_mean?: { png?: string | null } | null
     slid?: { png?: string | null } | null
+    /** Pixels with no data, or blanked by the search's own mask (bright fixed stars), drawn flat grey. */
+    blank_pixels?: { single?: Num; plain_mean?: Num; slid?: Num } | null
     marks?: { tool_dot_px?: number[] | null; nasa_single_px?: number[] | null; nasa_mid_px?: number[] | null; nasa_path_px?: number[][] | null } | null
   } & Whys
   stops?: ReflexStop[] | null
@@ -147,10 +157,18 @@ export interface ColourFile extends Whys {
   } & Whys
   visit_walks?: { sky_angle?: Num; detector_angle?: Num; size?: Num }[] | null
   acceptance?: { checks?: Record<string, boolean> | null; passed?: boolean | null } & Whys
-  null?: { acceptance?: { checks?: Record<string, boolean> | null; passed?: boolean | null } | null; scatter_east?: Num; scatter_north?: Num; n_within?: Num; n_isolated?: Num } & Whys
+  null?: {
+    acceptance?: { checks?: Record<string, boolean> | null; passed?: boolean | null } | null
+    scatter_east?: Num
+    scatter_north?: Num
+    n_within?: Num
+    n_isolated?: Num
+    /** Null-field stars whose centres walked over 4 times their usual error, with what may explain each. */
+    walkers_over_4sigma?: { walk_arcsec?: Num; sigma?: Num; neighbour_kind?: string | null }[] | null
+  } & Whys
   picture?: { crop_px?: Num; host_px?: number[] | null; pixel_arcsec?: Num } & Whys
   groups?: ColourGroup[] | null
-  lone_star?: { available?: boolean | null; walk_size?: Num; groups?: ColourGroup[] | null } | null
+  lone_star?: { available?: boolean | null; walk_size?: Num; gaia_id?: string | null; gmag?: Num; walk?: { sigma?: Num } | null; groups?: ColourGroup[] | null } | null
 }
 
 export interface TransitReading {
@@ -173,8 +191,12 @@ export interface TransitFile extends Whys {
   fixture?: boolean
   final?: boolean
   development_object?: boolean | null
-  planet?: { period_d?: Num; t0_bjd_tdb?: Num; t14_h?: Num; rprs?: Num; expected_depth?: Num; ra?: Num; dec?: Num } & Whys
-  coverage?: { exposures?: Num } & Whys
+  planet?: { period_d?: Num; t0_bjd_tdb?: Num; t14_h?: Num; rprs?: Num; expected_depth?: Num; ra?: Num; dec?: Num; published_depth_range_pct?: number[] | { available?: boolean | null } | null } & Whys
+  coverage?: { exposures?: Num; per_detector?: Record<string, Num> | null } & Whys
+  /** SPHEREx's detectors, each one band of colours. */
+  detectors?: Record<string, unknown> | null
+  /** Radius of the measuring circle, in squares (the module's APERTURE_PX). */
+  aperture_px?: Num
   d5?: {
     n?: Num
     n_in?: Num
@@ -196,6 +218,8 @@ export interface TransitFile extends Whys {
     years?: Record<string, { depth?: Num; formal_err?: Num }> | null
     n_fake_as_deep?: Num
     deepest_fake_depth?: Num
+    /** The reviewer's count of independent fakes (they overlap), from docs/transits.md. */
+    fakes_independent?: { share_of_pairs_sharing_a_reading?: Num; n_independent_about?: Num; p_below?: Num; available?: boolean | null } | null
     sign_test?: { n_transits?: Num; n_below_baseline?: Num; p_value?: Num } | null
     choices?: Record<string, Num> | null
   } & Whys
@@ -213,7 +237,7 @@ export interface TransitFile extends Whys {
   } & Whys
   readings?: TransitReading[] | null
   stops?: TransitStop[] | null
-  picture?: { png?: string | null; crop_px?: Num } & Whys
+  picture?: { png?: string | null; crop_px?: Num; star_px?: number[] | null } & Whys
   fallback_png?: string | null
 }
 
@@ -287,6 +311,8 @@ export function fmt(x: Num, d = 0, trim = false): string | undefined {
   return r < 0 && Number(s.replace(/,/g, '')) !== 0 ? `${MINUS}${s}` : s
 }
 const fmtInt = (x: Num) => fmt(x, 0)
+/** A lower bound, rounded down, so that "more than {x}" never claims more than the data. */
+export const fmtDown = (x: Num, d = 0) => (ok(x) ? fmt(Math.floor(x * 10 ** d + 1e-9) / 10 ** d, d) : undefined)
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const mjdDate = (mjd: number) => new Date((mjd - 40587) * 86_400_000)
@@ -307,6 +333,8 @@ export const dayMonth = (mjd: Num) => (ok(mjd) ? `${mjdDate(mjd).getUTCDate()} $
 const isoDate = (mjd: Num) => (ok(mjd) ? mjdDate(mjd).toISOString().slice(0, 10) : undefined)
 
 const nonEmpty = (xs: (string | null | undefined)[]) => xs.filter((x): x is string => typeof x === 'string' && x.length > 0)
+/** Paragraphs from groups of sentences: missing sentences dropped, then empty paragraphs. */
+const paras = (...groups: (string | null | undefined)[][]): Para[] => groups.map(nonEmpty).filter((p) => p.length > 0)
 
 /** A fold-out's entries: each one filled, those missing a value left out, empty paragraphs dropped. */
 function sciParagraphs(paras: ((v: Record<string, string>) => string)[][], values: Record<string, string | undefined>): string[] {
@@ -327,8 +355,7 @@ const inside = (x: number, r: Range) => x >= r.lo && (r.hi === null || x <= r.hi
 
 /** The one range sentence (about 95%), with tools 1 and 3 feeding it the same way. */
 export function rangeSentence(r: Range, d = 0): string {
-  const lo = fmt(r.lo, d) as string
-  return r.hi === null ? PAGE.rangeAbove(lo) : PAGE.rangeBetween(lo, fmt(r.hi, d) as string)
+  return r.hi === null ? PAGE.rangeAbove(fmtDown(r.lo, d) as string) : PAGE.rangeBetween(fmt(r.lo, d) as string, fmt(r.hi, d) as string)
 }
 
 // ---------------------------------------------------------------------------------- tool 1
@@ -344,23 +371,33 @@ export interface StopView {
   meterText: string | null
 }
 
+/** The number that matters, beside the verdict at the top of a tool: our value, and the known one. */
+export interface Glance {
+  ours: string
+  known: string | null
+  unit: string | null
+}
+
 export interface ReflexView {
   fixture: boolean
   final: boolean
   chip: string | null
+  glance: Glance | null
   headline: string | null
-  blindness: string[]
-  place: string | null
+  /** The test's text before the numbers row, as paragraphs. */
+  test: Para[]
   numbers: { ours: string; range: string[]; nasa: string | null } | null
   ruler: { max: number; best: number; range: Range; r: number | null; summary: string | null } | null
-  sunlight: string | null
-  verdicts: string[]
-  howSure: string[]
+  /** The sunlight line and the verdict sentences, as paragraphs. */
+  after: Para[]
+  howSure: Para[]
   appear: {
     count: string | null
     captions: [string, string | null, string]
     differenceImages: boolean
     pictures: ({ src: string } | { why: string })[]
+    /** Whether each picture holds flat grey patches where bright stars were blanked out. */
+    blanks: [boolean, boolean, boolean]
     cropPx: number | null
     marks: { tool: number[] | null; nasaSingle: number[] | null; nasaMid: number[] | null; nasaPath: number[][] | null }
   }
@@ -374,7 +411,6 @@ export interface ReflexView {
     startLabel: string | null
     endLabel: string | null
   } | null
-  distanceWhy: string
   answerLine: string | null
   answers: { something: string; nothing: string | null; cannot: string | null; near: string | null; far: string | null; fainter: string | null }
   sedna: boolean
@@ -414,6 +450,20 @@ function stopSketch(s: ReflexStop, k: number): StopView['sketch'] {
   return { track, linear }
 }
 
+/** A pass or fail from a file's `checks`, found by the check's name (A4, A5…), or null when absent. */
+function checkPassed(checks: Record<string, unknown> | null | undefined, name: string): boolean | null {
+  if (!checks) return null
+  const k = Object.keys(checks).find((key) => key.startsWith(`${name} `))
+  const v = k ? checks[k] : undefined
+  return typeof v === 'boolean' ? v : null
+}
+
+/** Range words for the For scientists text: "100.0–142.9 AU", or "76.5 AU to unbounded". */
+function rangeAu(p: Pair): string | undefined {
+  const x = asRange(p)
+  return x ? (x.hi === null ? `${fmt(x.lo, 1)} AU to unbounded` : `${fmt(x.lo, 1)}–${fmt(x.hi, 1)} AU`) : undefined
+}
+
 export function reflexView(f: ReflexFile): ReflexView {
   const pix = ok(f.pixel_arcsec) ? f.pixel_arcsec : ok(f.demo?.pixel_arcsec) ? (f.demo?.pixel_arcsec as number) : NATIVE_PIXEL_ARCSEC
   const c = f.candidate ?? {}
@@ -421,6 +471,7 @@ export function reflexView(f: ReflexFile): ReflexView {
   const recovered = ok(sep) ? sep / pix < 2 : null
   const best = c.distance_au
   const range = asRange(c.range_95_au)
+  const range68 = asRange(c.range_68_au)
   const r = f.jpl?.helio_distance_au
   const wide = range && ok(best) ? range.hi === null || (range.hi - range.lo) / best > 0.3 : null
 
@@ -441,6 +492,7 @@ export function reflexView(f: ReflexFile): ReflexView {
 
   // Within 2 squares counts as found (the answer line's rule), so beyond that the place sentence says it missed.
   const place = !ok(sep) ? null : sep / pix < 0.5 ? T1.placeAlmost : sep / pix < 2 ? T1.placeVeryClose : T1.placeMissed
+  const test = paras([T1.eris], blindness, f.development_object === true ? T1.practice : [], [T1.testWas, place, place ? T1.thenBend : null])
 
   const bestTxt = fmtInt(best)
   const numbers =
@@ -451,50 +503,59 @@ export function reflexView(f: ReflexFile): ReflexView {
           nasa: ok(r) ? T1.nasa(fmt(r, 1) as string) : null,
         }
       : null
+  const glance: Glance | null = bestTxt && recovered ? { ours: T1.glance.ours(bestTxt), known: ok(r) ? T1.glance.known(fmt(r, 1) as string) : null, unit: T1.glance.unit } : null
 
   let ruler: ReflexView['ruler'] = null
   if (ok(best) && range) {
     const top = range.hi ?? 1.5 * best
     const max = (Math.floor(top / 20) + 1) * 20
-    const rangeWords = range.hi === null ? T1.rulerRangeAbove(fmtInt(range.lo) as string) : T1.rulerRangeBetween(fmtInt(range.lo) as string, fmtInt(range.hi) as string)
+    const rangeWords = range.hi === null ? T1.rulerRangeAbove(fmtDown(range.lo) as string) : T1.rulerRangeBetween(fmtInt(range.lo) as string, fmtInt(range.hi) as string)
     ruler = { max, best, range, r: ok(r) ? r : null, summary: ok(r) ? T1.rulerSummary(bestTxt as string, rangeWords, fmt(r, 1) as string) : null }
   }
 
   const sunlight = ok(r) ? T1.sunlight(fmtInt((r * 499.0) / 3600) as string) : null
 
+  // Verdicts. With no far end to the range, "inside" says little: the screen says the check is weak.
   const verdicts: string[] = []
   const sh = f.shifted ?? {}
   const shRange = asRange(sh.range_95_au)
   const firstInside = ok(r) && range ? inside(r, range) : null
-  if (firstInside !== null) verdicts.push(firstInside ? T1.inside : T1.outside)
-  if (wide !== null) verdicts.push(wide ? T1.wide : T1.narrow)
-  if (ok(r) && ok(best) && ok(sh.distance_au)) {
-    if (best > r && sh.distance_au > r) verdicts.push(T1.twiceFar, T1.alwaysDoes)
-    else if (best < r && sh.distance_au < r) verdicts.push(T1.twiceNear, T1.alwaysDoes)
-    else verdicts.push(T1.eitherSide)
+  if (firstInside === true && range?.hi === null) verdicts.push(T1.insideOpen, ...T1.openWeak)
+  else {
+    if (firstInside !== null) verdicts.push(firstInside ? T1.inside : T1.outside)
+    if (wide !== null) verdicts.push(wide ? T1.wide : T1.narrow)
   }
+  const runs: string[] = []
+  if (ok(r) && ok(best) && ok(sh.distance_au)) {
+    if (best > r && sh.distance_au > r) runs.push(T1.twiceFar, T1.alwaysDoes)
+    else if (best < r && sh.distance_au < r) runs.push(T1.twiceNear, T1.alwaysDoes)
+    else runs.push(T1.eitherSide)
+  }
+  const after = paras([sunlight], verdicts, runs)
 
   // How sure are we?
   const hs = T1.howSure
-  const howSure: string[] = []
+  const secondRun: (string | null)[] = []
   if (ok(sh.distance_au)) {
-    howSure.push(hs.second, hs.again(fmtInt(sh.distance_au) as string))
+    secondRun.push(hs.second, hs.again(fmtInt(sh.distance_au) as string))
     if (ok(r) && shRange) {
-      const words = shRange.hi === null ? hs.rangeAbove(fmtInt(shRange.lo) as string) : hs.rangeBetween(fmtInt(shRange.lo) as string, fmtInt(shRange.hi) as string)
-      howSure.push(inside(r, shRange) ? (firstInside ? hs.insideToo(words) : hs.insideAlso(words)) : hs.outside(words))
+      const words = shRange.hi === null ? hs.rangeAbove(fmtDown(shRange.lo) as string) : hs.rangeBetween(fmtInt(shRange.lo) as string, fmtInt(shRange.hi) as string)
+      secondRun.push(inside(r, shRange) ? (firstInside ? hs.insideToo(words) : hs.insideAlso(words)) : hs.outside(words))
     }
-    howSure.push(hs.notFresh, hs.wherever)
+    secondRun.push(hs.notFresh, hs.wherever)
     if (ok(best)) {
       const a = fmtInt(best) as string
       const b = fmtInt(sh.distance_au) as string
-      howSure.push(Math.abs(sh.distance_au - best) >= 0.05 * best ? hs.moved(a, b) : hs.hardlyMoved(a, b))
+      secondRun.push(Math.abs(sh.distance_au - best) >= 0.05 * best ? hs.moved(a, b) : hs.hardlyMoved(a, b))
     }
   }
+  const earliest: (string | null)[] = []
   const minOut = c.leave_one_epoch_out_min_delta_s2
-  if (ok(minOut) && ok(c.delta_s2_infinite) && minOut < c.delta_s2_infinite / 2) howSure.push(hs.earliestDay, minOut >= 9 ? hs.withoutStill : hs.withoutNot)
+  const fd = c.first_day
+  const neighbour = fd && fd.available !== false && fd.neighbour_as_bright === true && ok(fd.neighbour_arcsec) && fd.neighbour_arcsec < pix
+  if (ok(minOut) && ok(c.delta_s2_infinite) && minOut < c.delta_s2_infinite / 2) earliest.push(hs.earliestDay, neighbour ? hs.neighbour : null, minOut >= 9 ? hs.withoutStill : hs.withoutNot)
   const later = otherVisitsPhrase(f.visit?.mjd_first, f.visit?.mjd_last, f.still_there)
-  if (later) howSure.push(hs.again2(later), hs.gone)
-  howSure.push(hs.matters, hs.subtracts, hs.leftover, hs.months)
+  const howSure = paras(secondRun, earliest, later ? [hs.again2(later), hs.gone] : [], [hs.matters, hs.subtracts, hs.leftover, hs.months])
 
   // Try it: make Eris appear
   const v = f.visit ?? {}
@@ -508,11 +569,13 @@ export function reflexView(f: ReflexFile): ReflexView {
     if (typeof png === 'string' && png) return { src: labUrl(png) }
     return { why: whyOf(demo, key) ?? whyOf(demo[key], 'png') ?? PAGE.pictureNotReady }
   }
+  const bl = demo.blank_pixels ?? {}
   const appear: ReflexView['appear'] = {
     count: n && ok(v.duration_days) && monthsOf(v.mjd_first, v.mjd_last) ? T1.appear.count(n, fmtInt(v.duration_days) as string, monthsOf(v.mjd_first, v.mjd_last) as string) : null,
     captions: [T1.appear.caption1, n && squares ? (diff ? T1.appear.caption2Diff(n, squares) : T1.appear.caption2(n, squares)) : null, diff ? T1.appear.caption3Diff : T1.appear.caption3],
     differenceImages: diff,
     pictures: [picture('single'), picture('plain_mean'), picture('slid')],
+    blanks: [ok(bl.single) && bl.single > 0, ok(bl.plain_mean) && bl.plain_mean > 0, ok(bl.slid) && bl.slid > 0],
     cropPx: ok(demo.crop_px) ? demo.crop_px : null,
     marks: {
       tool: demo.marks?.tool_dot_px ?? null,
@@ -530,27 +593,32 @@ export function reflexView(f: ReflexFile): ReflexView {
     const k = ok(f.sketch_exaggeration) ? f.sketch_exaggeration : 1
     const bestInv = 1 / best
     const bestIndex = stops.reduce((bi, s, i) => (Math.abs(s.inv_d - bestInv) < Math.abs(stops[bi].inv_d - bestInv) ? i : bi), 0)
-    const bestS2 = sq(c.snr)
     const zero = s0 && ok(s0.snr) ? sq(s0.snr) : null
     const delta = (s: ReflexStop) => (zero !== null && ok(s.snr) ? sq(s.snr) - zero : null)
     const deltaBest = delta(stops[bestIndex])
+    // "Nearly as sharp": a stop inside the bootstrap 68% range (the statistical-only interval is too narrow).
+    const near = (d: number | null) => d !== null && range68 !== null && inside(d, range68)
+    const stopDistance = (s: ReflexStop) => (s.inv_d === 0 ? null : ok(s.distance_au) ? s.distance_au : 1 / s.inv_d)
     const meterText = (d: number | null, i: number) => {
       if (d === null) return null
       if (d === 0) return T1.distance.meterSame
       if (d < 0) return T1.distance.meterBlurrier
-      const s = stops[i]
-      const how = i === bestIndex ? T1.distance.meterBest : ok(s.snr) && bestS2 - sq(s.snr) <= 4 ? T1.distance.meterNearly : T1.distance.meterLess
+      const how = i === bestIndex ? T1.distance.meterBest : near(stopDistance(stops[i])) ? T1.distance.meterNearly : T1.distance.meterLess
       return T1.distance.meterSharper(how)
     }
     const views: StopView[] = stops.map((s, i) => {
-      const d = s.inv_d === 0 ? null : ok(s.distance_au) ? s.distance_au : 1 / s.inv_d
+      const d = stopDistance(s)
       const label = d === null ? T1.distance.noBend : T1.distance.value(fmtInt(d) as string)
       const spoken = d === null ? T1.distance.noBendSpoken : label
+      const dl = delta(s)
       let line: string | null = null
       if (i === bestIndex) line = T1.distance.sharpest(bestTxt as string)
-      else if (ok(s.snr) && bestS2 - sq(s.snr) <= 4 && (!range || d === null || inside(d, range))) line = T1.distance.nearly
-      else if (ok(s.snr)) line = s.inv_d < stops[bestIndex].inv_d ? T1.distance.blurrierNearer : T1.distance.blurrierFarther
-      return { inv_d: s.inv_d, label, spoken, delta: delta(s), line, sketch: stopSketch(s, k), meterText: meterText(delta(s), i) }
+      else if (near(d)) line = T1.distance.nearly
+      else if (dl !== null) {
+        const nearer = s.inv_d < stops[bestIndex].inv_d
+        line = dl >= 0 ? (nearer ? T1.distance.lessNearer : T1.distance.lessFarther) : nearer ? T1.distance.blurrierNearer : T1.distance.blurrierFarther
+      }
+      return { inv_d: s.inv_d, label, spoken, delta: dl, line, sketch: stopSketch(s, k), meterText: meterText(dl, i) }
     })
     const w = f.wrong_way
     const wDelta = w ? delta(w) : null
@@ -601,11 +669,17 @@ export function reflexView(f: ReflexFile): ReflexView {
   const fo = f.foldout ?? {}
   const lev = v.distance_leverage_arcsec_per_inv_au ?? fo.leverage_arcsec_per_inv_au
   const nNull = f.null_runs?.n_field_visits ?? fo.blank_field_raw_peaks?.n_field_visits
-  const rng = (p: Pair) => {
-    const x = asRange(p)
-    return x ? (x.hi === null ? `${fmtInt(x.lo)} AU to unbounded` : `${fmtInt(x.lo)}–${fmtInt(x.hi)} AU`) : undefined
-  }
   const st = f.still_there ?? []
+  const a4 = checkPassed(f.checks, 'A4')
+  const a4moved = checkPassed(sh.checks, 'A4')
+  const a4Text =
+    a4 === false && range68 && ok(r) && !inside(r, range68)
+      ? `JPL's distance lies outside this run's bootstrap 68% range, so its check A4 fails${a4moved === true ? '; the moved run passes it' : ''}.`
+      : undefined
+  const blanks =
+    [bl.single, bl.plain_mean, bl.slid].every(ok) && ok(demo.crop_px)
+      ? `${fmtInt(bl.single)}, ${fmtInt(bl.plain_mean)} and ${fmtInt(bl.slid)} of ${fmtInt(demo.crop_px * demo.crop_px)} pixels in the three pictures`
+      : undefined
   const sci = sciParagraphs(SCI.t1, {
     levE: lev && ok(lev[0]) ? fmtInt(lev[0]) : undefined,
     levN: lev && ok(lev[1]) ? fmtInt(lev[1]) : undefined,
@@ -627,14 +701,20 @@ export function reflexView(f: ReflexFile): ReflexView {
     delta: fmt(f.jpl?.observer_distance_au, 2),
     r: fmt(r, 2),
     nboot: fmtInt(c.n_bootstrap),
-    b68: rng(c.range_68_au),
-    b95: rng(c.range_95_au),
-    p2: rng(c.interval_2sigma_au_statistical_only),
+    b68: rangeAu(c.range_68_au),
+    b95: rangeAu(c.range_95_au),
+    a4: a4Text,
+    p2: rangeAu(c.interval_2sigma_au_statistical_only),
     sinf: fmt(c.snr_at_infinity, 2),
     ds2: fmt(c.delta_s2_infinite, 1),
     nep: fmtInt(c.n_epochs),
     ds2min: fmt(minOut, 1),
+    fdShare: fd && ok(fd.info_share) ? fmtInt(fd.info_share * 100) : undefined,
+    fdN: fd && ok(fd.n_exposures) ? fmtInt(fd.n_exposures) : undefined,
+    fdSep: fd && ok(fd.neighbour_arcsec) ? fmt(fd.neighbour_arcsec, 1) : undefined,
+    a5: ok(minOut) ? (minOut < 25 ? 'check A5 (ΔS² ≥ 25) fails without that epoch, and A5b (ΔS² ≥ 9 with any epoch left out) passes' : 'check A5 (ΔS² ≥ 25) still passes without it') : undefined,
     mirror: fmt(c.reversed_earth_snr_mirror_distance, 2),
+    wrongFree: fmt(f.wrong_way?.snr, 2),
     revAway: fmt(c.reversed_best_away ?? fo.reversed_best_away_snr, 1),
     nextSource: fmt(fo.next_source_snr, 1),
     st1: st[0] && ok(st[0].flux_mjy) ? `${fmt(st[0].flux_mjy, 4)}${ok(st[0].error_mjy) ? ` ± ${fmt(st[0].error_mjy, 4)}` : ''}` : undefined,
@@ -642,8 +722,8 @@ export function reflexView(f: ReflexFile): ReflexView {
     sep2: fmt(sh.separation_arcsec, 2),
     snr2: fmt(sh.snr, 1),
     best2: fmtInt(sh.distance_au),
-    s68: rng(sh.range_68_au),
-    s95: rng(sh.range_95_au),
+    s68: rangeAu(sh.range_68_au),
+    s95: rangeAu(sh.range_95_au),
     edge: fmt(sh.edge_reversed_peak, 2),
     lim: fmt(lim.faintest_mean_flux_mjy, 4),
     erisFlux: fmt(c.mean_flux_mjy, 4),
@@ -659,23 +739,22 @@ export function reflexView(f: ReflexFile): ReflexView {
     near: nearAu,
     hours: ok(r) ? fmtInt((r * 499) / 3600) : undefined,
     demoDiff: diff ? 'yes' : 'no',
+    blanks,
   })
 
   return {
     fixture: f.fixture === true,
     final: f.final === true,
     chip,
+    glance,
     headline,
-    blindness,
-    place,
+    test,
     numbers,
     ruler,
-    sunlight,
-    verdicts,
+    after,
     howSure,
     appear,
     distance,
-    distanceWhy: whyOf(f, 'stops') ?? whyOf(f.candidate, 'snr') ?? PAGE.notInFile,
     answerLine: recovered === null ? null : recovered ? T1.answerFound : T1.answerNotFound,
     answers,
     sedna: f.sedna?.found_blind === false,
@@ -702,11 +781,14 @@ export interface ColourView {
   fixture: boolean
   final: boolean
   chip: string | null
+  glance: Glance | null
   result: string[]
-  test: string[]
+  test: Para[]
+  howSure: Para[]
   groups: GroupView[]
-  groupsWhy: string
   magnification: number | null
+  /** The pre-set rule, in usual errors: the inset's dashed ring. */
+  rule: number | null
   partner: { east: number; north: number } | null
   partnerPa: number | null
   pixel: number
@@ -836,39 +918,57 @@ export function colourView(f: ColourFile, insetPx = 358): ColourView {
 
   const notProven = f.verdict === 'nothing_found' || f.acceptance?.passed === false || f.null?.acceptance?.passed === false
   const chip = f.verdict == null && f.acceptance?.passed == null ? null : notProven ? T2.chipNotProven : f.development_object_note ? T2.chipPractice : T2.chipPassed
+  const glance: Glance | null = ok(w.sigma) ? { ours: T2.glance.shift(fmt(w.sigma, 1, true) as string), known: ok(rule) ? T2.glance.needed(fmtInt(rule) as string) : null, unit: null } : null
 
+  // The verdict first, then what happened (newcomer review: the good news first read as a win).
+  const small = ok(w.sigma) && ok(rule) ? w.sigma < rule : null
   const result = nonEmpty([
+    chip === null ? null : notProven ? T2.resultNotProven : f.development_object_note ? T2.resultPractice : T2.resultPassed,
     pointed === null ? null : pointed ? T2.resultRight : T2.resultWrong,
-    ok(w.sigma) && ok(rule) ? (w.sigma < rule ? T2.resultSmall : T2.resultBig) : null,
+    small === null ? null : small ? (pointed === false ? T2.resultSmallAnd : T2.resultSmall) : T2.resultBig,
   ])
 
-  const test: string[] = []
-  test.push(T2.anyway, T2.known, T2.mass, T2.border, T2.brownDwarf, T2.squares)
   const parts = ok(knownSep) ? fractionWords(knownSep / pix) : undefined
-  if (parts) test.push(T2.sits(parts))
-  test.push(T2.blob)
-  if (ok(f.n_clean_fits)) test.push(T2.measured(fmtInt(f.n_clean_fits) as string))
   const dir = screenDirection(w.pa)
-  if (dir) test.push(T2.moved(dir))
-  if (ok(w.pa) && ok(knownPa) && ok(w.pa_error_deg)) test.push(pointed ? T2.liesThatWay : T2.liesAway(fmtInt(angleGap(w.pa, knownPa)) as string))
-  if (ok(w.size)) test.push(T2.tiny(fmtInt((w.size / pix) * 100) as string))
-  test.push(T2.inexact)
   const visits = f.visit_walks ?? []
   const fixedRaw = f.walk?.detector_fixed_arcsec
   const fixed = ok(fixedRaw) ? fixedRaw : fixedRaw && typeof fixedRaw === 'object' ? (ok(fixedRaw.size) ? fixedRaw.size : ok(fixedRaw.x) && ok(fixedRaw.y) ? Math.max(Math.abs(fixedRaw.x), Math.abs(fixedRaw.y)) : null) : null
-  if (ok(w.pa) && visits.length > 0 && visits.every((x) => ok(x.sky_angle) && angleGap(x.sky_angle, w.pa as number) <= 45) && ok(fixed) && fixed < 0.05) test.push(T2.turned)
-  test.push(T2.usualError)
-  if (ok(w.sigma)) test.push(T2.times(fmt(w.sigma, 1, true) as string))
-  if (ok(w.p_false) && w.p_false > 0) test.push(T2.chance(fmtInt(1 / w.p_false) as string))
-  if (ok(rule)) test.push(T2.rule(fmtInt(rule) as string))
-  if (ok(f.walk?.sigma_guessed_floor) && ok(w.sigma) && (f.walk?.sigma_guessed_floor as number) > w.sigma) test.push(...T2.guessed)
+  const turned = ok(w.pa) && visits.length > 0 && visits.every((x) => ok(x.sky_angle) && angleGap(x.sky_angle, w.pa as number) <= 45) && ok(fixed) && fixed < 0.05
   const nullFailed = f.null?.acceptance?.passed === false
-  if (nullFailed) test.push(T2.nullFailed)
   const checks = f.acceptance?.checks
   const nFailed = checks ? Object.values(checks).filter((x) => x === false).length : 0
-  if (checks && nFailed > 0) test.push(nFailed === 1 ? T2.checksOne : nFailed === 2 ? T2.checksTwo : T2.checksMany(fmtInt(nFailed) as string))
-  if (nullFailed || (checks && nFailed > 0)) test.push(T2.notClean)
-  if (f.development_object_note) test.push(T2.practice)
+  const test = paras(
+    [T2.anyway],
+    [T2.known, T2.squares, parts ? T2.sits(parts) : null, T2.blob],
+    [
+      dir ? T2.moved(dir) : null,
+      ok(w.pa) && ok(knownPa) && ok(w.pa_error_deg) ? (pointed ? T2.liesThatWay : T2.liesAway(fmtInt(angleGap(w.pa, knownPa)) as string)) : null,
+      ok(w.size) ? T2.tiny(fmtInt((w.size / pix) * 100) as string) : null,
+    ],
+    [T2.inexact, turned ? T2.turned : null],
+    [T2.usualError, ok(w.sigma) ? T2.times(fmt(w.sigma, 1, true) as string) : null, ok(rule) ? T2.rule(fmtInt(rule) as string) : null],
+    [
+      checks && nFailed > 0 ? (nFailed === 1 ? T2.checksOne : nFailed === 2 ? T2.checksTwo : T2.checksMany(fmtInt(nFailed) as string)) : null,
+      nullFailed || (checks && nFailed > 0) ? T2.notClean : null,
+    ],
+    [f.development_object_note ? T2.practice : null],
+  )
+
+  // Other stars measured the same way (the null field's walkers): as far as VHS 1256's centre, or farther.
+  const walkers = (f.null?.walkers_over_4sigma ?? []).filter((x) => ok(x.walk_arcsec))
+  const farthest = walkers.length ? Math.max(...walkers.map((x) => x.walk_arcsec as number)) : null
+  const others = farthest !== null && ok(w.size) ? (farthest >= w.size ? T2.othersFar : farthest >= 0.7 * w.size ? T2.othersAbout : null) : null
+
+  // How sure are we? (newcomer review: the counts and the review's story, folded, the verdict left in view)
+  const guessed = ok(f.walk?.sigma_guessed_floor) && ok(w.sigma) && (f.walk?.sigma_guessed_floor as number) > w.sigma
+  const howSure = paras(
+    [ok(f.n_clean_fits) ? T2.measured(fmtInt(f.n_clean_fits) as string) : null, ok(w.p_false) && w.p_false > 0 ? T2.chance(fmtInt(1 / w.p_false) as string) : null],
+    guessed
+      ? [T2.guessed, T2.guessedNow(fmt(w.sigma, 1, true) as string, fmt(f.walk?.sigma_guessed_floor, 1, true) as string), ok(rule) ? T2.ruleKept(fmtInt(rule) as string) : null]
+      : [],
+    [nullFailed ? T2.nullFailed : null, others],
+    [T2.mass, T2.border, T2.brownDwarf],
+  )
 
   const pa = ok(knownPa) ? knownPa : null
   const groups = groupViews(f.groups, { pa, sigma: w.sigma, rule, lone: false })
@@ -879,11 +979,12 @@ export function colourView(f: ColourFile, insetPx = 358): ColourView {
     ok(knownSep) && ok(knownPa) ? { east: knownSep * Math.sin((knownPa * Math.PI) / 180), north: knownSep * Math.cos((knownPa * Math.PI) / 180) } : null
 
   // "Compare: a star on its own": only when the lone-star export exists, with all three groups.
+  // Its one star's small walk is never left alone on the screen: other stars walked as far (truth review).
   let lone: ColourView['lone'] = null
   const ls = f.lone_star
   if (ls && ls.available !== false && ok(ls.walk_size) && ok(w.size)) {
     const lg = groupViews(ls.groups, { pa: null, sigma: null, rule: null, lone: true })
-    if (lg.length === groups.length && lg.length > 1) lone = { line: [T2.tryIt.lone, ls.walk_size >= 0.7 * w.size ? T2.tryIt.loneFar : T2.tryIt.loneLittle, T2.tryIt.loneRule], groups: lg }
+    if (lg.length === groups.length && lg.length > 1) lone = { line: nonEmpty([T2.tryIt.lone, ls.walk_size >= 0.7 * w.size ? T2.tryIt.loneFar : T2.tryIt.loneLittle, others, T2.tryIt.loneRule]), groups: lg }
   }
 
   const answerLine = f.verdict === 'nothing_found' ? T2.answerNothing : typeof f.verdict === 'string' && /found|shift|candidate/.test(f.verdict) ? T2.answerFound : null
@@ -897,6 +998,7 @@ export function colourView(f: ColourFile, insetPx = 358): ColourView {
         .map(([k]) => checkWords(k))
     : []
   const nullChecks = f.null?.acceptance?.checks
+  const farWalkers = walkers.filter((x) => ok(w.size) && (x.walk_arcsec as number) >= w.size).sort((a, b) => (b.walk_arcsec as number) - (a.walk_arcsec as number))
   const sci = sciParagraphs(SCI.t2, {
     floorE: fmt(f.null?.scatter_east, 3),
     floorN: fmt(f.null?.scatter_north, 3),
@@ -911,6 +1013,7 @@ export function colourView(f: ColourFile, insetPx = 358): ColourView {
     pFalse: fmt(w.p_false, 2),
     sigmaOld: fmt(f.walk?.sigma_guessed_floor, 1),
     rule: fmtInt(rule),
+    pRule: ok(rule) ? powerOfTen(Math.exp(-(rule * rule) / 2)) : undefined,
     verdict: f.verdict ?? undefined,
     visitPas: list(visits.map((x) => (ok(x.sky_angle) ? `${fmtInt(x.sky_angle)}°` : undefined))),
     fixed: fmt(fixed, 3),
@@ -924,6 +1027,14 @@ export function colourView(f: ColourFile, insetPx = 358): ColourView {
     nIso: fmtInt(f.null?.n_isolated),
     nullPassed: nullChecks ? fmtInt(Object.values(nullChecks).filter((x) => x === true).length) : undefined,
     nullChecks: nullChecks ? fmtInt(Object.keys(nullChecks).length) : undefined,
+    walkers:
+      farWalkers.length && farWalkers.every((x) => x.neighbour_kind)
+        ? list(farWalkers.map((x) => (ok(x.sigma) ? `${fmt(x.walk_arcsec, 2)}″ (${fmt(x.sigma, 1)}σ)` : undefined)))
+        : undefined,
+    loneId: ls?.gaia_id ?? undefined,
+    loneG: fmt(ls?.gmag, 1),
+    loneSize: fmt(ls?.walk_size, 3),
+    loneSigma: fmt(ls?.walk?.sigma, 2),
     sepPx: ok(knownSep) ? fmt(knownSep / pix, 2) : undefined,
     sizePx: ok(w.size) ? fmt(w.size / pix, 2) : undefined,
     cm: ok(w.size) ? fmtInt((w.size / pix) * 100) : undefined,
@@ -935,11 +1046,13 @@ export function colourView(f: ColourFile, insetPx = 358): ColourView {
     fixture: f.fixture === true,
     final: f.final === true,
     chip,
+    glance,
     result,
     test,
+    howSure,
     groups,
-    groupsWhy: whyOf(f, 'groups') ?? PAGE.notInFile,
     magnification,
+    rule: ok(rule) ? rule : null,
     partner,
     partnerPa: ok(knownPa) ? knownPa : null,
     pixel: pix,
@@ -1029,19 +1142,29 @@ export interface DialStop {
   /** In the readout's place where the module refuses to fit: too few readings in a crossing. */
   missing: string | null
   lines: string[]
+  /** The dip and its about-95% give-or-take, in per cent, for the bar; null where nothing was measured. */
+  bar: { depth: number; err: number } | null
+  barSummary: string | null
 }
 
 export interface TransitView {
   fixture: boolean
   final: boolean
   chip: string | null
+  glance: Glance | null
   headline: string | null
   asPublished: string | null
+  /** Said at once after the result: one band of colours, and what a 1 per cent dip is. */
+  lead: string[]
   picture: { src: string } | { why: string }
-  test: string[]
-  numbers: { ours: string; range: string; published: string | null } | null
-  after: string[]
-  howSure: string[]
+  /** The measuring circle on the picture, in picture squares. */
+  ring: { crop: number; x: number; y: number; r: number } | null
+  test: Para[]
+  numbers: { ours: string; range: string; published: string | null; publishedRange: string | null } | null
+  after: Para[]
+  howSure: Para[]
+  /** Under the dial: the wrong timetables tried on purpose. */
+  dialNote: Para[]
   dial: {
     stops: DialStop[]
     knownIndex: number
@@ -1050,11 +1173,15 @@ export interface TransitView {
     rprs: number | null
     expected: number | null
     measured: number | null
+    expectedText: string | null
+    /** The chart's two lines in words, with the published dip and ours with its give-or-take. */
+    measuredText: string | null
     readings: TransitReading[]
     y: [number, number] | null
     window: number
+    /** The dip bar's scale, in per cent, the same at every stop. */
+    barRange: [number, number] | null
   } | null
-  dialWhy: string | null
   fallback: string | null
   answerLine: string | null
   sci: string[]
@@ -1109,102 +1236,135 @@ export function transitView(f: TransitFile): TransitView {
     a1 === true ? (nClear === null ? null : nClear === 1 ? T3.chipOneMixed : nClear === 0 ? T3.chipOneNot : allWithin ? T3.chipTwo : T3.chipOneMixed) : a1 === false ? T3.chipNone : null
   const headline = a1 === true ? T3.headline : a1 === false ? T3.headlineNot : null
   const asPublished = pubInside === null ? null : pubInside ? T3.asDeep : expPct !== null && range && expPct > (range.hi as number) ? T3.shallower : T3.deeper
+  // The depth never without its give-or-take (docs/transits.md): 2 empirical errors, about 95%.
+  const glance: Glance | null =
+    ok(depth) && ok(emp) && a1 !== undefined
+      ? { ours: T3.glance.ours(fmt(depth * 100, 1) as string, fmt(2 * emp * 100, 1) as string), known: expPct !== null ? T3.glance.known(fmt(expPct, 2) as string) : null, unit: T3.glance.unit }
+      : null
 
-  const test: string[] = [T3.giant]
+  // One of SPHEREx's bands of colours (its detectors), said at once.
+  const nBands = Object.keys(f.detectors ?? f.coverage?.per_detector ?? {}).length
+  const bandsWord = T2.fractions.numbers[nBands]
+  const lead = nonEmpty([ok(d5.n) && nBands > 1 && bandsWord ? T3.oneOfBands(bandsWord) : null, ok(depth) ? T3.bigPlanet : null])
+
   const period = pl.period_d
   const t14 = pl.t14_h
   const t14Words = ok(t14) ? (Math.abs(t14 - Math.round(t14)) <= 0.1 ? T3.about(fmtInt(t14) as string) : t14 - Math.floor(t14) >= 0.5 ? T3.almost(fmtInt(Math.ceil(t14)) as string) : T3.justOver(fmtInt(Math.floor(t14)) as string)) : undefined
-  if (ok(period) && t14Words) test.push(T3.goesRound(fmt(period, 1) as string, t14Words))
-  test.push(T3.patches)
-  if (ok(f.coverage?.exposures)) test.push(T3.again(fmtInt(Math.round((f.coverage?.exposures as number) / 100) * 100) as string))
-  test.push(T3.tooBright)
-  if (ok(d5.n)) test.push(T3.oneBand(fmtInt(d5.n) as string))
-  if (ok(d5.n_in) && ok(d5.n_transits)) test.push(T3.during(fmtInt(d5.n_in) as string, fmtInt(d5.n_transits) as string))
-  if (ok(d5.scatter)) {
-    test.push(T3.typical(fmt(d5.scatter * 100, 1) as string))
-    if (ok(depth) && depth > 0) {
-      const ratio = d5.scatter / depth
-      test.push(ratio >= 1.15 ? T3.moreThan : ratio >= 0.85 ? T3.aboutAs : T3.almostAs)
-    }
-  }
-  test.push(T3.noSingle)
-  if (ok(depth)) test.push(T3.linedUp(fmt(depth * 100, 1) as string))
+  const scatterWords = ok(d5.scatter) && ok(depth) && depth > 0 ? (d5.scatter / depth >= 1.15 ? T3.moreThan : d5.scatter / depth >= 0.85 ? T3.aboutAs : T3.almostAs) : null
+  const test = paras(
+    [T3.giant, ok(period) && t14Words ? T3.goesRound(fmt(period, 1) as string, t14Words) : null],
+    [T3.patches, ok(f.coverage?.exposures) ? T3.again(fmtInt(Math.round((f.coverage?.exposures as number) / 100) * 100) as string) : null],
+    [
+      T3.tooBright,
+      ok(d5.n) ? T3.oneBand(fmtInt(d5.n) as string) : null,
+      ok(d5.n_in) && ok(d5.n_transits) ? T3.during(fmtInt(d5.n_in) as string, fmtInt(d5.n_transits) as string) : null,
+    ],
+    [ok(d5.scatter) ? T3.typical(fmt(d5.scatter * 100, 1) as string) : null, scatterWords, T3.noSingle],
+    [ok(depth) ? T3.linedUp(fmt(depth * 100, 1) as string) : null],
+  )
 
-  const numbers = ok(depth) && range ? { ours: T3.ours(fmt(depth * 100, 1) as string), range: rangeSentence(range, 1), published: expPct !== null ? T3.published(fmt(expPct, 2) as string) : null } : null
+  const pr = pl.published_depth_range_pct
+  const pubRange = Array.isArray(pr) && pr.length === 2 && ok(pr[0]) && ok(pr[1]) ? T3.publishedRange(fmt(pr[0], 2) as string, fmt(pr[1], 2) as string) : null
+  const numbers =
+    ok(depth) && range ? { ours: T3.ours(fmt(depth * 100, 1) as string), range: rangeSentence(range, 1), published: expPct !== null ? T3.published(fmt(expPct, 2) as string) : null, publishedRange: pubRange } : null
 
-  const after = nonEmpty([
-    pubInside === null ? null : pubInside ? T3.publishedInside : T3.publishedOutside,
-    f.development_object === true ? T3.practice : null,
-    comb ? T3.second : null,
-    combClose === null ? null : combClose ? T3.secondClose : ok(comb?.depth) && ok(w100.expected_depth) && (comb?.depth as number) > (w100.expected_depth as number) ? T3.secondDeeper : T3.secondShallower,
-    nClear === null ? null : nClear === 1 ? T3.secondOne : nClear === 0 ? T3.secondNone : allWithin ? T3.secondAll : T3.secondOne,
-  ])
+  const after = paras(
+    [pubInside === null ? null : pubInside ? T3.publishedInside : T3.publishedOutside],
+    [f.development_object === true ? T3.practice : null],
+    [
+      comb ? T3.second : null,
+      combClose === null ? null : combClose ? T3.secondClose : ok(comb?.depth) && ok(w100.expected_depth) && (comb?.depth as number) > (w100.expected_depth as number) ? T3.secondDeeper : T3.secondShallower,
+      nClear === null ? null : nClear === 1 ? T3.secondOne : nClear === 0 ? T3.secondNone : allWithin ? T3.secondAll : T3.secondOne,
+    ],
+  )
 
-  const howSure: string[] = []
   const years = d5.years ? Object.entries(d5.years).sort(([a], [b]) => a.localeCompare(b)) : []
+  let yearLine: string | null = null
   if (years.length === 2 && ok(d5.noise_factor)) {
     const clear = years.every(([, y]) => ok(y.depth) && ok(y.formal_err) && (y.depth as number) > 3 * (y.formal_err as number) * (d5.noise_factor as number))
-    howSure.push(clear ? T3.howSure.years(years[0][0], years[1][0]) : T3.howSure.yearsTogether)
+    yearLine = clear ? T3.howSure.years(years[0][0], years[1][0]) : T3.howSure.yearsTogether
   }
   const comp = f.comparison
-  if (comp && ok(comp.depth) && ok(comp.err) && Math.abs(comp.depth) <= 2 * comp.err) howSure.push(T3.howSure.steady)
-  if (ok(d5.n_fake)) {
-    howSure.push(T3.howSure.wrong(fmtInt(d5.n_fake) as string), T3.howSure.wouldShow)
-    const nDeep = ok(d5.n_fake_as_deep) ? d5.n_fake_as_deep : ok(d5.fake_share_as_deep) ? Math.round(d5.fake_share_as_deep * d5.n_fake) : null
-    if (nDeep !== null) howSure.push(nDeep === 0 ? T3.howSure.noneDid : T3.howSure.someDid(fmtInt(nDeep) as string))
-  }
+  const howSure = paras([yearLine, comp && ok(comp.depth) && ok(comp.err) && Math.abs(comp.depth) <= 2 * comp.err ? T3.howSure.steady : null])
+  const nDeep = ok(d5.n_fake_as_deep) ? d5.n_fake_as_deep : ok(d5.fake_share_as_deep) && ok(d5.n_fake) ? Math.round(d5.fake_share_as_deep * d5.n_fake) : null
+  const dialNote = ok(d5.n_fake)
+    ? paras([T3.howSure.wrong(fmtInt(d5.n_fake) as string), T3.howSure.wouldShow, nDeep === null ? null : nDeep === 0 ? T3.howSure.noneDid : T3.howSure.someDid(fmtInt(nDeep) as string)])
+    : []
 
   // The dial: the file's own fit at each period, and the readings folded in the browser.
   let dial: TransitView['dial'] = null
-  let dialWhy: string | null = null
   const readings = f.readings
   const stops = f.stops
-  if (!readings || readings.length === 0) dialWhy = whyOf(f, 'readings')
-  else if (!stops || stops.length < 2) dialWhy = whyOf(f, 'stops')
-  else if (!ok(period) || !ok(pl.t0_bjd_tdb)) dialWhy = whyOf(f, 'planet')
-  else {
+  if (readings && readings.length > 0 && stops && stops.length >= 2 && ok(period) && ok(pl.t0_bjd_tdb)) {
     const flagged = stops.findIndex((s) => s.known === true)
     const knownIndex =
       flagged >= 0 ? flagged : stops.reduce((bi, s, i) => (Math.abs(s.period_d - (period as number)) < Math.abs(stops[bi].period_d - (period as number)) ? i : bi), 0)
-    // The module's errors at each period are formal; its empirical factor makes them the same kind as the range above.
+    // The module's errors at each period are formal; its empirical factor makes them the same kind as
+    // the range above, and 2 of them make the "give or take" about 95%, as every range on the page.
     const factor = ok(d5.noise_factor) ? d5.noise_factor : 1
     const chanceLimit = ok(d5.empirical_err) ? 2 * d5.empirical_err : null
     const views: DialStop[] = stops.map((s, i) => {
       const p = fmt(s.period_d, 2) as string
       const known = i === knownIndex
+      const e2 = ok(s.err) ? 2 * s.err * factor : null
       const x = ok(s.depth) ? fmt(s.depth * 100, 1) : undefined
-      const e = ok(s.err) ? fmt(s.err * factor * 100, 1) : undefined
-      const lines = [known ? T3.tryIt.known : T3.tryIt.wrong]
-      if (!known && ok(s.depth) && Math.abs(s.depth) < (chanceLimit ?? (ok(s.err) ? 2 * s.err * factor : 0))) lines.push(T3.tryIt.chance)
+      const e = e2 !== null ? fmt(e2 * 100, 1) : undefined
       const readout: string | null = x && e ? T3.tryIt.readout(x, e) : null
+      const lines = known ? [T3.tryIt.known] : readout ? [T3.tryIt.wrong] : [T3.tryIt.wrongFew]
+      if (!known && readout && ok(s.depth) && Math.abs(s.depth) < (chanceLimit ?? (e2 ?? 0))) lines.push(T3.tryIt.chance)
       // No depth at this stop: say why in plain words (too few readings in a crossing, the module's
       // own limit), or that it is not available, never a number.
       const missing = readout ? null : ok(s.n_in) && ok(f.min_in_transit) && s.n_in < f.min_in_transit ? T3.tryIt.tooFew : T3.tryIt.noDip
-      return { period: s.period_d, label: T3.tryIt.days(p), spoken: known ? T3.tryIt.spokenKnown(p) : T3.tryIt.spokenWrong(p), known, readout, missing, lines }
+      const bar = readout && ok(s.depth) && e2 !== null ? { depth: s.depth * 100, err: e2 * 100 } : null
+      const barSummary = bar && x && e ? T3.tryIt.bar.summary(x, e) : null
+      return { period: s.period_d, label: T3.tryIt.days(p), spoken: known ? T3.tryIt.spokenKnown(p) : T3.tryIt.spokenWrong(p), known, readout, missing, lines, bar, barSummary }
     })
+    const bars = views.flatMap((v) => (v.bar ? [v.bar.depth - v.bar.err, v.bar.depth + v.bar.err] : []))
+    const barRange: [number, number] | null = bars.length ? [Math.floor(Math.min(0, ...bars) * 2) / 2, Math.ceil(Math.max(0, ...bars, expPct ?? 0) * 2) / 2] : null
     dial = {
       stops: views,
       knownIndex,
       t0: pl.t0_bjd_tdb as number,
       t14: ok(t14) ? t14 : null,
       rprs: ok(pl.rprs) ? pl.rprs : null,
-      expected: ok(exp) ? exp * 100 : null,
+      expected: expPct,
       measured: ok(depth) ? depth * 100 : null,
+      expectedText: expPct !== null ? (fmt(expPct, 2) as string) : null,
+      measuredText: ok(depth) && ok(emp) && expPct !== null ? T3.tryIt.chartLines(fmt(expPct, 2) as string, fmt(depth * 100, 2) as string, fmt(2 * emp * 100, 2) as string) : null,
       readings,
       y: yRange(fold(readings, stops[knownIndex].period_d, pl.t0_bjd_tdb as number, ok(f.window_h) ? f.window_h : 9)),
       window: ok(f.window_h) ? f.window_h : 9,
+      barRange,
     }
   }
 
   const png = f.picture?.png
   const fb = f.fallback_png
+  const star = f.picture?.star_px
+  const ring = ok(f.picture?.crop_px) && star && ok(star[0]) && ok(star[1]) && ok(f.aperture_px) ? { crop: f.picture?.crop_px as number, x: star[0], y: star[1], r: f.aperture_px } : null
+  const factor = d5.noise_factor
   const yearsSci = years.length ? years.map(([y, v]) => `${y} ${fmt((v.depth ?? NaN) * 100, 2)} ± ${fmt((v.formal_err ?? NaN) * 100, 2)}%`).join(', ') : undefined
+  const yearsEmp =
+    years.length && ok(factor)
+      ? `${years.map(([, v]) => `± ${fmt((v.formal_err ?? NaN) * factor * 100, 2)}`).join(' and ')} (${years.map(([, v]) => `${fmt((v.depth ?? NaN) / ((v.formal_err ?? NaN) * factor), 1)}σ`).join(' and ')})`
+      : undefined
   const w100each = per
     ? Object.entries(w100.per_detector ?? {})
         .filter(([, d]) => !d.excluded)
         .map(([k, d]) => `D${k} ${fmt((d.depth ?? NaN) * 100, 2)} ± ${fmt((d.empirical_err ?? NaN) * 100, 2)}% (${fmt(d.empirical_sigma, 1)}σ)`)
         .join(', ')
     : undefined
+  const w100match =
+    per && ok(w100.expected_depth)
+      ? Object.entries(w100.per_detector ?? {})
+          .filter(([, d]) => !d.excluded && ok(d.depth) && ok(d.empirical_err))
+          .map(([k, d]) => {
+            const z = ((d.depth as number) - (w100.expected_depth as number)) / (d.empirical_err as number)
+            return `D${k} ${fmt(Math.abs(z), 1)}σ ${z > 0 ? 'deeper' : 'shallower'}`
+          })
+          .join(', ')
+      : undefined
+  const fi = d5.fakes_independent
   const sci = sciParagraphs(SCI.t3, {
     period: ok(period) ? period.toFixed(8) : undefined,
     t0: ok(pl.t0_bjd_tdb) ? pl.t0_bjd_tdb.toFixed(6) : undefined,
@@ -1213,6 +1373,9 @@ export function transitView(f: TransitFile): TransitView {
     t14: fmt(t14, 2),
     rprs: fmt(pl.rprs, 4),
     expected: expPct !== null ? fmt(expPct, 2) : undefined,
+    pubLo: Array.isArray(pr) && ok(pr[0]) ? fmt(pr[0], 2) : undefined,
+    pubHi: Array.isArray(pr) && ok(pr[1]) ? fmt(pr[1], 2) : undefined,
+    aperture: fmt(f.aperture_px, 1),
     nFake: fmtInt(d5.n_fake),
     factor: fmt(d5.noise_factor, 2),
     exposures: fmtInt(f.coverage?.exposures),
@@ -1231,7 +1394,10 @@ export function transitView(f: TransitFile): TransitView {
     haloSigma: fmt(f.halo?.empirical_sigma, 1),
     lo2: ok(depth) && ok(emp) ? fmt((depth - 2 * emp) * 100, 2) : undefined,
     hi2: ok(depth) && ok(emp) ? fmt((depth + 2 * emp) * 100, 2) : undefined,
-    asDeep: ok(d5.n_fake_as_deep) ? fmtInt(d5.n_fake_as_deep) : ok(d5.fake_share_as_deep) && ok(d5.n_fake) ? fmtInt(Math.round(d5.fake_share_as_deep * d5.n_fake)) : undefined,
+    asDeep: nDeep !== null ? fmtInt(nDeep) : undefined,
+    overlap: fi && ok(fi.share_of_pairs_sharing_a_reading) ? fmtInt(fi.share_of_pairs_sharing_a_reading * 100) : undefined,
+    nInd: fi ? fmtInt(fi.n_independent_about) : undefined,
+    pBelow: fi && ok(fi.p_below) ? fmt(fi.p_below * 100, 1) : undefined,
     deepestFake: ok(d5.deepest_fake_depth) ? fmt(d5.deepest_fake_depth * 100, 2) : undefined,
     signBelow: fmtInt(d5.sign_test?.n_below_baseline),
     signN: fmtInt(d5.sign_test?.n_transits),
@@ -1239,6 +1405,7 @@ export function transitView(f: TransitFile): TransitView {
     choicesRange: choiceRange(d5.choices, f.aperture_radius_px, f.halo?.depth),
     slide: fmt(d5.slide_peak_h, 1),
     years: yearsSci && !yearsSci.includes('undefined') ? yearsSci : undefined,
+    yearsEmp: yearsEmp && !/undefined|NaN/.test(yearsEmp) ? yearsEmp : undefined,
     jack: ok(d5.jackknife_min) && ok(d5.jackknife_max) ? `${fmt(d5.jackknife_min * 100, 2)}–${fmt(d5.jackknife_max * 100, 2)}` : undefined,
     compG: fmt(comp?.gmag, 1),
     compDist: fmtInt(comp?.distance_arcsec),
@@ -1246,6 +1413,7 @@ export function transitView(f: TransitFile): TransitView {
     compErr: ok(comp?.err) ? fmt((comp?.err as number) * 100, 2) : undefined,
     scatter: ok(d5.scatter) ? fmt(d5.scatter * 100, 2) : undefined,
     w100each: w100each && !w100each.includes('undefined') ? w100each : undefined,
+    w100match: w100match && !/undefined|NaN/.test(w100match) ? w100match : undefined,
     w100dets: comb?.detectors?.length ? comb.detectors.join(', D') : undefined,
     w100comb: comb && ok(comb.depth) && ok(comb.error) ? `${fmt(comb.depth * 100, 2)} ± ${fmt(comb.error * 100, 2)}` : undefined,
     w100exp: ok(w100.expected_depth) ? fmt(w100.expected_depth * 100, 3) : undefined,
@@ -1255,15 +1423,18 @@ export function transitView(f: TransitFile): TransitView {
     fixture: f.fixture === true,
     final: f.final === true,
     chip,
+    glance,
     headline,
     asPublished,
+    lead,
     picture: typeof png === 'string' && png ? { src: labUrl(png) } : { why: whyOf(f.picture, 'png') ?? whyOf(f, 'picture') ?? PAGE.pictureNotReady },
+    ring,
     test,
     numbers,
     after,
     howSure,
+    dialNote,
     dial,
-    dialWhy,
     fallback: dial ? null : typeof fb === 'string' && fb ? labUrl(fb) : null,
     answerLine: a1 === true ? T3.answerFound : a1 === false ? T3.answerNot : null,
     sci,

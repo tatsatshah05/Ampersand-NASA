@@ -58,7 +58,10 @@ PIXEL_ARCSEC = 6.15  # one SPHEREx pixel ("square" on the screen)
 REFLEX_STOP_DISTANCES = (500.0, 200.0, 140.0, None, 70.0, 50.0)  # None: the method's best distance
 REFLEX_STOP_INV_D = (0.0, 0.002, 0.005, 1 / 140, None, 1 / 70, 0.02)  # spec 5.1; None: 1 / best
 REFLEX_DEMO_PX = 48
-SKETCH_EXAGGERATION = 5  # spec 7.1: the bend drawn this many times bigger in sketch 1-d
+# The bend drawn this many times bigger in sketch 1-d. The spec (7.1) chose 5 for the provisional
+# 105 AU; at the final 111 AU, 5 (and 3) turn the path into a hook whose ends leave the straight line,
+# which the behaviour review found hard to read. At 2 the path stays a bent line beside the straight one.
+SKETCH_EXAGGERATION = 2
 TRANSIT_STOPS_D = (4.00, 4.30, None, 4.55, 4.80)  # None: the published period
 TRANSIT_WINDOW_H = 9.0
 COLOUR_CROP_PX = 9

@@ -74,9 +74,12 @@ describe('while the files load', () => {
     expect(text).toContain('like a moth crossing')
     expect(html).toContain('loading-box')
   })
-  it('shows no number from a file and no chip', () => {
+  it('shows no number from a file and no verdict', () => {
     expect(text).not.toMatch(/about \d+ times as far|\d per cent|351|Not proven/)
-    expect(html).not.toContain('tl-chip')
+    expect(html).not.toContain('tl-verdict')
+  })
+  it('says "loading" once per tool, not once per part', () => {
+    expect(text.split(PAGE.loading).length - 1).toBe(3)
   })
 })
 
@@ -91,6 +94,33 @@ describe('when a file is missing', () => {
   })
   it('hides that tool’s numbers, verdicts, try-it and fold-outs', () => {
     expect(tool2).not.toMatch(/351|about 2 times|Walk through the colours|For scientists|Not proven/)
+    expect(tool2).not.toContain(T2.tryIt.heading)
+  })
+  it('says so once per tool, not once per part', () => {
+    const all = decode(page({ state: 'missing' }, { state: 'missing' }, { state: 'missing' }))
+    expect(all.split(PAGE.fileMissing).length - 1).toBe(3)
+    expect(all).not.toMatch(/Try it:/)
+  })
+})
+
+describe('when a part of a file is missing', () => {
+  it('tool 3 says so in plain words in place of the dial, with no orphaned instructions', () => {
+    for (const cut of ['readings', 'stops', 'planet'] as const) {
+      const t = clone(transit)
+      ;(t as Record<string, unknown>)[cut] = null
+      const tool3 = decode(page(ready(reflex), ready(colour), ready(t)).split('id="line-up-the-dips"')[1])
+      expect(tool3).toContain(T3.tryIt.heading)
+      expect(tool3).toContain(PAGE.partMissing)
+      expect(tool3).not.toContain(T3.tryIt.intro)
+      expect(tool3).not.toMatch(/Not ready yet|data file/)
+    }
+  })
+  it('tool 1 says so in place of the distance slider', () => {
+    const r = clone(reflex)
+    r.stops = null
+    const tool1 = decode(page(ready(r), ready(colour), ready(transit)).split('id="follow-the-bend"')[1].split('id="off-centre-in-red"')[0])
+    expect(tool1).toContain(PAGE.partMissing)
+    expect(tool1).not.toContain(T1.distance.intro[0])
   })
 })
 
@@ -152,8 +182,18 @@ describe('with the shipped files', () => {
     const oneNot = page(ready({ ...reflex, final: false }), ready({ ...colour, final: true }), ready({ ...transit, final: true }))
     expect(decode(oneNot)).toContain(PAGE.notFinal)
   })
-  it('gives tool 2 the notice-coloured "Not proven yet" chip', () => {
-    expect(html).toContain('<span class="tl-chip tl-chip-notice">Not proven yet</span>')
+  it('gives each tool its verdict under its name, with the number that matters; tool 2 in the notice colour', () => {
+    expect(html).toContain('<div class="tl-verdict tl-verdict-notice"><p class="tl-verdict-words">Not proven yet</p>')
+    const verdicts = [...html.matchAll(/<div class="tl-verdict[^"]*">(.*?)<\/div>/g)].map((m) => decode(m[1]).trim())
+    expect(verdicts).toHaveLength(3)
+    expect(verdicts[0]).toMatch(/^Found its test world\. Distance only rough\. Our tool: about 111 NASA: 95\.6/)
+    expect(verdicts[1]).toMatch(/^Not proven yet The shift: about 2 times our usual error Needed by our rule: 4 times/)
+    // The depth never without its give-or-take (docs/transits.md).
+    expect(verdicts[2]).toMatch(/^Showed one known planet's dip\. Mixed on a second\. Our tool: about 1\.2 per cent, give or take 0\.5 Published: 1\.23 per cent/)
+  })
+  it('marks the main button of each try-it with the arrow the key names, and no other button', () => {
+    const arrows = [...html.matchAll(/<button[^>]*>([^<]*)<svg class="main-arrow"/g)].map((m) => m[1])
+    expect(arrows).toEqual([T1.appear.slide, T2.tryIt.walk, T3.tryIt.useKnown])
   })
   it('has no entry link and no "your patch" search on this screen', () => {
     expect(text).not.toContain('Try our three tools')
@@ -166,7 +206,7 @@ describe('the try-its, with their parts present', () => {
   const { r, c, t } = withTryIts()
   const html = page(ready(r), ready(c), ready(t))
   it('tool 1: a radio group with a legend, the slider with words for its value, the wrong-way toggle', () => {
-    expect(html).toContain(`<legend>${T1.appear.legend}</legend>`)
+    expect(html).toContain(`<legend class="sr-only">${T1.appear.legend}</legend>`)
     expect(html.match(/type="radio" name="t1-add"/g)?.length).toBe(3)
     expect(html).toContain('id="t1-distance" type="range" min="0" max="6" step="1" aria-valuetext="No bend, a straight, steady path" value="0"')
     expect(html).toContain(`aria-pressed="false">${T1.appear.showNasa}`)

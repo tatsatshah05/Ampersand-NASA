@@ -127,6 +127,34 @@ def test_transits_shapes():
     assert doc["wasp100"]["n_clear"] == 1
 
 
+def test_writeup_parts_read_the_review_facts():
+    r = X.writeup_reflex((ROOT / X.WRITEUPS["reflex"]).read_text())
+    assert r["development_object"] is True
+    assert "after a probe had already found Eris" in r["development_object_evidence"]
+    fd = r["candidate"]["first_day"]
+    assert (fd["info_share"], fd["n_exposures"], fd["neighbour_arcsec"]) == (0.63, 3, 3.7)
+    t = X.writeup_transits((ROOT / X.WRITEUPS["transits"]).read_text())
+    fi = t["d5"]["fakes_independent"]
+    assert (fi["n_independent_about"], fi["share_of_pairs_sharing_a_reading"], fi["p_below"]) == (140, 0.88, 0.007)
+    assert t["planet"]["published_depth_range_pct"] == [1.13, 1.47]
+    # A write-up that no longer states a fact gives "unavailable", never a guess.
+    assert X.writeup_reflex("Nothing here.")["candidate"]["first_day"]["available"] is False
+    assert X.writeup_reflex("Nothing here.")["development_object"] is False
+    assert X.writeup_transits("Nothing here.")["d5"]["fakes_independent"]["available"] is False
+    for tool in X.TOOLS:
+        doc = lab(tool)
+        for path, value in X.leaves(X.WRITEUP_PARTS[tool]((ROOT / X.WRITEUPS[tool]).read_text())):
+            assert json.dumps(X.get_path(doc, path), sort_keys=True) == json.dumps(value, sort_keys=True), path
+
+
+def test_check_fails_when_a_writeups_review_fact_changes(tmp_path):
+    root, lab_dir = _copy_checkout(tmp_path)
+    f = root / X.WRITEUPS["transits"]
+    f.write_text(f.read_text().replace("about **140 independent**", "about **150 independent**"))
+    out = _run_check(root, lab_dir)
+    assert out.returncode != 0 and "fakes_independent" in out.stdout
+
+
 def test_transport_sizes():
     json_bytes = sum((LAB / f"{t}.json").stat().st_size for t in X.TOOLS)
     png_bytes = sum(p.stat().st_size for p in LAB.glob("*.png"))
