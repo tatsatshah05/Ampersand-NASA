@@ -34,7 +34,7 @@ import re
 import threading
 import time
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
 import numpy as np
@@ -574,6 +574,7 @@ def other_days(
 
 _reader: s3fetch.S3Reader | None = None
 _reader_lock = threading.Lock()
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _shared_reader() -> s3fetch.S3Reader:
@@ -585,15 +586,25 @@ def _shared_reader() -> s3fetch.S3Reader:
         return _reader
 
 
+def _note_failure(exp: dict, file: Path, err: Exception, seconds: float) -> None:
+    """Keep a line about each cutout S3 could not give (the reason, and how long it took to find out)."""
+    with _reader_lock, (CACHE_DIR / "s3_failures.log").open("a") as f:
+        f.write(
+            f"{seconds:6.1f}s {exp['obs_id']} D{exp['detector']} {file.name}: {type(err).__name__}: {str(err)[:160]}\n"
+        )
+
+
 def _fetch(exp: dict, ra: float, dec: float, file: Path, quick: bool = False) -> Path | None:
     """The cutout, or None. Read from NASA's S3 copy; `quick` gives up there (an image whose edge cuts the cutout
     short is not asked of IRSA's slower service: for exposures of other days there are always others), otherwise
     IRSA's cutout service is the fallback."""
+    started = time.monotonic()
     try:
         if spherex.use_s3():
             try:
                 return s3fetch.fetch_cutout(exp, ra, dec, CUTOUT_DEG, file, reader=_shared_reader())
-            except Exception:  # noqa: BLE001
+            except Exception as err:  # noqa: BLE001
+                _note_failure(exp, file, err, time.monotonic() - started)
                 if quick:
                     return None
         return spherex.fetch_cutout(exp, ra, dec, CUTOUT_DEG, path=file)
@@ -601,18 +612,32 @@ def _fetch(exp: dict, ra: float, dec: float, file: Path, quick: bool = False) ->
         return None
 
 
+STALL_S = 90.0  # cutouts still unread this long after the last one arrived are given up
+
+
 def _fetch_all(
     jobs: list[tuple[dict, float, float, Path]], quick: bool, say: Callable[..., None], stage: str
 ) -> list[Path | None]:
-    """Fetch the jobs MAX_THREADS at a time, reporting progress as each finishes. Results are in the order given."""
+    """Fetch the jobs MAX_THREADS at a time, reporting progress as each finishes. Results are in the order given.
+
+    A few reads now and then hang on a half-dead connection; when nothing has arrived for STALL_S seconds the ones
+    still outstanding are given up (they come back as None, and the point says `not_fetched`).
+    """
     out: list[Path | None] = [None] * len(jobs)
+    pool = ThreadPoolExecutor(MAX_THREADS)
+    futures = {pool.submit(_fetch, e, ra, dec, f, quick): i for i, (e, ra, dec, f) in enumerate(jobs)}
+    pending = set(futures)
     done = 0
-    with ThreadPoolExecutor(MAX_THREADS) as pool:
-        futures = {pool.submit(_fetch, e, ra, dec, f, quick): i for i, (e, ra, dec, f) in enumerate(jobs)}
-        for fut in as_completed(futures):
+    while pending:
+        finished, pending = wait(pending, timeout=STALL_S, return_when=FIRST_COMPLETED)
+        if not finished:
+            say(stage + ": giving up on", len(pending), len(jobs))
+            break
+        for fut in finished:
             out[futures[fut]] = fut.result()
             done += 1
-            say(stage, done, len(jobs))
+        say(stage, done, len(jobs))
+    pool.shutdown(wait=False, cancel_futures=True)
     return out
 
 
