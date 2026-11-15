@@ -177,7 +177,7 @@ def main() -> None:
     last = [""]
 
     def prog(stage: str, i: int = 0, n: int = 0) -> None:
-        if stage != last[0] or (n and i == n):
+        if stage != last[0] or (n and (i == n or i % 50 == 0)):
             print(
                 f"[{time.time() - t0:5.0f}s] {stage} {i}/{n}" if n else f"[{time.time() - t0:5.0f}s] {stage}",
                 flush=True,

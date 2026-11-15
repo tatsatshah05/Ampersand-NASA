@@ -31,9 +31,10 @@ import hashlib
 import io
 import json
 import re
+import threading
 import time
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
@@ -571,16 +572,48 @@ def other_days(
     return [eligible[i] for i in sorted(set(idx.tolist()))]
 
 
+_reader: s3fetch.S3Reader | None = None
+_reader_lock = threading.Lock()
+
+
+def _shared_reader() -> s3fetch.S3Reader:
+    """One connection pool to NASA's S3 copy for every cutout this module reads."""
+    global _reader
+    with _reader_lock:
+        if _reader is None:
+            _reader = s3fetch.S3Reader(s3fetch.DEFAULT_CONCURRENCY)
+        return _reader
+
+
 def _fetch(exp: dict, ra: float, dec: float, file: Path, quick: bool = False) -> Path | None:
-    """The cutout, or None. `quick` reads from NASA's S3 copy only: an image whose edge cuts the cutout short is
-    given up at once instead of being asked of IRSA's slower service (used for exposures of other days, of which
-    there are always others)."""
+    """The cutout, or None. Read from NASA's S3 copy; `quick` gives up there (an image whose edge cuts the cutout
+    short is not asked of IRSA's slower service: for exposures of other days there are always others), otherwise
+    IRSA's cutout service is the fallback."""
     try:
-        if quick and spherex.use_s3():
-            return s3fetch.fetch_cutout(exp, ra, dec, CUTOUT_DEG, file)
+        if spherex.use_s3():
+            try:
+                return s3fetch.fetch_cutout(exp, ra, dec, CUTOUT_DEG, file, reader=_shared_reader())
+            except Exception:  # noqa: BLE001
+                if quick:
+                    return None
         return spherex.fetch_cutout(exp, ra, dec, CUTOUT_DEG, path=file)
     except Exception:  # noqa: BLE001 - a cutout that cannot be had is reported as not_fetched, never replaced
         return None
+
+
+def _fetch_all(
+    jobs: list[tuple[dict, float, float, Path]], quick: bool, say: Callable[..., None], stage: str
+) -> list[Path | None]:
+    """Fetch the jobs MAX_THREADS at a time, reporting progress as each finishes. Results are in the order given."""
+    out: list[Path | None] = [None] * len(jobs)
+    done = 0
+    with ThreadPoolExecutor(MAX_THREADS) as pool:
+        futures = {pool.submit(_fetch, e, ra, dec, f, quick): i for i, (e, ra, dec, f) in enumerate(jobs)}
+        for fut in as_completed(futures):
+            out[futures[fut]] = fut.result()
+            done += 1
+            say(stage, done, len(jobs))
+    return out
 
 
 def follow_body(
@@ -653,13 +686,12 @@ def follow_body(
     # cutouts of the exposures themselves
     say("reading the images", 0, len(usable))
     own_files = [_cutout_file(slug, "own", e, e["pred"]["ra"], e["pred"]["dec"]) for e in usable]
-    with ThreadPoolExecutor(MAX_THREADS) as pool:
-        got = list(
-            pool.map(
-                lambda a: _fetch(a[0], a[0]["pred"]["ra"], a[0]["pred"]["dec"], a[1]),
-                zip(usable, own_files, strict=True),
-            )
-        )
+    got = _fetch_all(
+        [(e, e["pred"]["ra"], e["pred"]["dec"], f) for e, f in zip(usable, own_files, strict=True)],
+        False,
+        say,
+        "reading the images",
+    )
 
     # the same sky place in exposures of other days
     groups = clusters(usable)
@@ -692,15 +724,11 @@ def follow_body(
             for o, f in others_for[i]:
                 fetch_jobs.append((o, centre[0], centre[1], f))
     unique = {f: (o, ra, dec) for o, ra, dec, f in fetch_jobs}
-    say("reading images of other days", 0, len(unique))
-    with ThreadPoolExecutor(MAX_THREADS) as pool:
-        fetched = dict(
-            zip(
-                unique,
-                pool.map(lambda f: _fetch(unique[f][0], unique[f][1], unique[f][2], f, quick=True), unique),
-                strict=True,
-            )
-        )
+    keys = list(unique)
+    results = _fetch_all(
+        [(unique[f][0], unique[f][1], unique[f][2], f) for f in keys], True, say, "reading images of other days"
+    )
+    fetched = dict(zip(keys, results, strict=True))
 
     say("measuring", 0, len(usable))
     for n, (e, f, ok) in enumerate(zip(usable, own_files, got, strict=True)):
