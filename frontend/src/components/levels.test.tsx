@@ -133,7 +133,7 @@ describe('the page at each level', () => {
   it('Beginner has the steps; Expert has neither the steps nor any i button', () => {
     const beginner = viewerAt('')
     expect(beginner).toContain('class="guide-steps"')
-    expect(beginner).toContain('Pick any star')
+    expect(beginner).toContain('Pick a star above')
     expect(beginner).toContain('Press Play or Blink')
     expect(beginner).toContain('Read what changed')
     const expert = viewerAt('?ui=expert')

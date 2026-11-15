@@ -179,6 +179,9 @@ export function Viewer() {
   // Loading for longer than a moment (or with nothing to show meanwhile): the picture is
   // dimmed with a message over it, and the player waits.
   const busy = load.state === 'loading' && (load.slow || load.previous === null)
+  // The view still on screen while another loads is of ANOTHER object when its centre is elsewhere
+  // (the same place asked for again, in another detector or mode, is the same object).
+  const otherObject = busy && data !== null && (Math.abs(data.ra - selection.ra) > 3e-5 || Math.abs(data.dec - selection.dec) > 3e-5)
   // The picture's box: while it is out of the window (or the tab is hidden) the player's timer rests.
   const plate = useRef<HTMLDivElement>(null)
   const resting = useResting(plate)
@@ -793,9 +796,13 @@ export function Viewer() {
 
             {/* The table of every visit, with Beginner's sentence about the whole run over it, in a
                 block whose height never changes. Nothing in it depends on the visit on screen: only
-                the mark of that visit's row moves. While another star loads, the last one's table
-                stays, dimmed. */}
-            <div className={busy ? 'readout-block busy' : 'readout-block'} aria-busy={busy || undefined}>
+                the mark of that visit's row moves. While the same object loads again (another detector
+                or mode), its last table stays, dimmed. While ANOTHER object loads, the block keeps its
+                height but the last object's words are hidden behind one loading line: they would stand
+                under the new object's name (a reviewer read Barnard's Star's shift under a field star's
+                name for over a minute). */}
+            <div className={otherObject ? 'readout-block busy other-object' : busy ? 'readout-block busy' : 'readout-block'} aria-busy={busy || undefined}>
+              {otherObject && <p className="readout-loading">Loading the pictures of {whereInWords}…</p>}
               {data && result && (
                 <>
                   <p className="result-sentence">

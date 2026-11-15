@@ -125,11 +125,20 @@ describe('the page while a view loads', () => {
     const strip = html.slice(html.indexOf('class="visit-strip"'), html.indexOf('</aside>'))
     expect(strip.match(/class="visit"/g)).toHaveLength(3)
     expect(html).toMatch(/class="visit"[^>]*disabled=""/)
-    // The last star's table stays, dimmed, with its rows' buttons switched off until the new one arrives.
-    expect(html).toContain('class="readout-block busy"')
+    // The view on screen (RA 10, Dec 20) is of another object than the one loading (Candidate B): its
+    // table keeps the block's height, with its rows' buttons switched off, but its words are hidden
+    // behind one loading line (App.css, .other-object), so they never stand under the new name.
+    expect(html).toContain('class="readout-block busy other-object"')
     const block = html.slice(html.indexOf('class="readout-block'), html.indexOf('<p class="sr-only" aria-live="polite">'))
+    expect(block).toContain('<p class="readout-loading">Loading the pictures of Candidate B…</p>')
     expect(block.match(/aria-label="Show visit \d"/g)).toHaveLength(3)
     expect(block).toMatch(/class="visit-row-button"[^>]*disabled=""/)
+  })
+
+  it('the same place loading again (another detector or mode) keeps its last table, dimmed', () => {
+    const html = pageWith({ state: 'loading', previous: view('old'), slow: true }, '?ra=10&dec=20&det=6')
+    expect(html).toContain('class="readout-block busy"')
+    expect(html).not.toContain('readout-loading')
   })
 
   it('a quick answer leaves the pictures as they are: no dimming, no message', () => {

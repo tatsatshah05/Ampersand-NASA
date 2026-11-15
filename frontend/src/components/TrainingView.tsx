@@ -5,7 +5,7 @@
 // a detection or a discovery: the object is "made-up" or "planted". The bar of features is
 // at the top, as on every screen, with Practise as the current one, and the level switch
 // in its dock at the bottom right.
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   addressOf,
   LEVELS,
@@ -38,6 +38,7 @@ import {
   triesText,
   useTraining,
   type TrainingFrame,
+  realMoverNote,
 } from '../training'
 import { usePlayer } from '../usePlayer'
 import { listVisits } from '../wording'
@@ -92,6 +93,8 @@ export function TrainingView() {
   const player = usePlayer(data?.key ?? '', data?.frames.length ?? 0)
   const frame = data?.frames[player.current] ?? null
   const difference = selection.mode === 'difference'
+  const viewer = useRef<HTMLDivElement>(null)
+  const realMover = realMoverNote(selection.ra, selection.dec)
 
   // The address holds the round, so that it can be shared; Back and Forward follow it.
   const change = useCallback((next: Selection, how: 'push' | 'replace') => {
@@ -192,6 +195,8 @@ export function TrainingView() {
             Real SPHEREx images of this patch of sky, with one made-up object added to them. Find it by the way it moves
             between visits.
           </p>
+          {/* A patch centred on a real fast mover (the default round is on Barnard's Star): say that it is not the object to find. */}
+          {realMover && <p className="real-mover">{realMover}</p>}
           {/* Folded, so the picture comes sooner; one press opens it. */}
           <details className="how-to-look-fold">
             <summary>How to look</summary>
@@ -250,7 +255,7 @@ export function TrainingView() {
           )}
         </header>
 
-        <div className="viewer">
+        <div className="viewer" ref={viewer}>
           {load.state === 'loading' && <LoadingCard key={url} />}
           {load.state === 'error' && (
             <StatusCard title="This practice round could not be made" tone="error">
@@ -347,6 +352,8 @@ export function TrainingView() {
                 onClick={(e) => {
                   setProgress({ ...progress, revealed: true })
                   releaseFocusAfterPointer(e.currentTarget)
+                  // The answer is drawn on the picture, whose lower part is below a laptop's window: bring the whole picture into view.
+                  viewer.current?.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
                 }}
               >
                 Show me

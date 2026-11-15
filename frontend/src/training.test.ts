@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addressOf, DEFAULT_SELECTION, readAddress } from './address'
-import { arcsecondsText, hintSentence, judgeClick, quarterOf, realSkyAddress, trainingAddress, trainingUrl, triesText } from './training'
+import { arcsecondsText, hintSentence, judgeClick, quarterOf, realMoverNote, realSkyAddress, trainingAddress, trainingUrl, triesText } from './training'
 
 describe('click distance', () => {
   const planted = { ra: 100, dec: 10 }
@@ -105,5 +105,17 @@ describe('the practice address', () => {
     expect(url).toContain('level=medium')
     expect(url).toContain('mode=difference')
     expect(url).toContain('detector=5')
+  })
+})
+
+describe('a practice patch centred on a real moving object', () => {
+  it("names Barnard's Star in the default round, and says it is not the made-up object", () => {
+    expect(realMoverNote(DEFAULT_SELECTION.ra, DEFAULT_SELECTION.dec)).toBe(
+      "This patch holds Barnard's Star, a real star that moves fast: the bright one in the middle. It is not the made-up object.",
+    )
+  })
+  it('says nothing for a patch with none of them', () => {
+    expect(realMoverNote(253.18038, -44.67697)).toBeNull()
+    expect(realMoverNote(269.446267, 4.768222 + 0.05)).toBeNull()
   })
 })

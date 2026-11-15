@@ -766,6 +766,28 @@
   opacity: 0.4;
 }
 
+/* Another object is loading: the block keeps its height, the last object's words are not shown
+   (they would stand under the new name), and one line says what is coming. */
+.readout-block.busy.other-object {
+  position: relative;
+  opacity: 1;
+}
+
+.readout-block.other-object > :not(.readout-loading) {
+  visibility: hidden;
+}
+
+.readout-loading {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-body);
+  line-height: 1.4;
+}
+
 /* Beginner: the sentence, the lines under it and a two-column table. */
 .inspector.beginner .readout-block {
   height: clamp(300px, calc(100vh - 384px), 480px);

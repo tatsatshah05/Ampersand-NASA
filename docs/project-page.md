@@ -124,7 +124,7 @@ can see what moves or changes. It names five test targets, and Planet X.
 and Barnard's Star checked again with separate code, `docs/verification.md`):
 
 - **Barnard's Star**, the fastest-moving star. Three visits, August 2025 to August 2026. The page says: "It moved
-  10.4 arcseconds north between August 2025 and August 2026. Its catalogue motion predicted 10.3 arcseconds:
+  10.4 arcseconds north between August 2025 and August 2026. Gaia's star map predicted 10.3 arcseconds:
   they agree." In detector 5 the measured and predicted places differ by 1.4 arcseconds, under a quarter of one
   SPHEREx pixel. The star's centre is overexposed, so its place is good to about 1 arcsecond.
 - **Epsilon Indi B**, a pair of brown dwarfs seen as one point. It shows in all six detectors and moves 6.3

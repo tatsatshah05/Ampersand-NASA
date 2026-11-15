@@ -38,9 +38,8 @@ Words: a **visit** is one pass of SPHEREx over a patch of sky; a **detector** is
 - [ ] The practice round: open its address (shot 4) once, so the round is built before recording. The same
       `train=1` gives the same made-up object every time, so you can rehearse it. The bar's **Practise** link
       does not: it starts a new round, with a random made-up object at the position on screen.
-- [ ] Open shots 2, 3 and 7 from their addresses, not from the row of buttons. A button keeps some of the last
-      view's settings: pressed straight after shot 1, **Barnard's Star** opens already blinking, and pressed
-      after Barnard's Star, **RW Aurigae** opens in detector 6 instead of 5 (seen on 15 November).
+- [ ] Shots 2, 3 and 7 can be opened from their addresses or from the row of buttons: after the opening view,
+      every button opens paused and in its usual detector (checked on the finished page, 15 November).
 - [ ] Browser zoom 100%, window 1280 x 720 or 1440 x 900, no bookmarks bar, notifications off.
 - [ ] The operating system's "reduce motion" setting is off. With it on, a candidate's view opens still on its
       "before" picture instead of blinking.
@@ -58,13 +57,13 @@ name service is down, these addresses do the same without it.
 | Shot | What | Address |
 |---|---|---|
 | 1 | Candidate B (the page's own opening) | `/?ui=beginner` |
-| 2 | Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&name=Barnard%27s+star&ui=beginner` |
+| 2 | Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&src=gaia&name=Barnard%27s+Star&ui=beginner` |
 | 3 | RW Aurigae, Brightness open | `/?ra=76.956587&dec=30.401291&fov=0.1&det=5&mode=normal&pmra=7.23&pmdec=-20.33&parallax=15.42&name=RW+Aur&ui=beginner&tool=brightness` |
 | 4 | Practice round | `/?train=1&level=easy&ui=beginner` |
 | 5 | Observe anomalies | `/?watchlist=1&ui=beginner` |
 | 5 | Candidate A (what "Watch it appear" opens) | `/?ra=270.80408&dec=-23.46818&fov=0.1&det=6&mode=normal&pmra=0&pmdec=0&name=Candidate+A&ui=beginner` |
 | 6 | Three tools | `/?tools=1&ui=beginner` |
-| 7 | What is it? on Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&name=Barnard%27s+star&ui=beginner&tool=context` |
+| 7 | What is it? on Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&src=gaia&name=Barnard%27s+Star&ui=beginner&tool=context` |
 
 ## Shots
 
@@ -75,8 +74,9 @@ name service is down, these addresses do the same without it.
   column reads "Candidate B", then "Not seen in August 2025. Clearly there by March 2026.", a table (Visit 1 Aug
   2025 not seen; Visit 2 Mar 2026 seen clearly; Visit 3 Aug 2026 seen clearly, brighter), then the short line
   "A candidate: we found it in no catalogue or report we checked, and nobody has confirmed it yet." with the
-  candidate's full sentence behind its "i", and the link "See all three in Observe anomalies". Press the "i" to
-  show the sentence, and keep it in the picture.
+  candidate's full sentence behind its "i", and the link "See all three in Observe anomalies". Let it blink two
+  or three times first. Then press the "i" to show the sentence: pressing an "i" stops the blink on purpose, so
+  the picture holds still while you read.
 - **Say:** "For ten years NASA's NEOWISE telescope looked at the whole sky in infrared light, twice a year. It
   stopped in August 2024. NASA's SPHEREx telescope now photographs the whole infrared sky, again and again. Our
   tool searches those pictures for change, and shows anyone the before and the after. This is a source in
@@ -89,13 +89,11 @@ name service is down, these addresses do the same without it.
 
 ### 2. The page's own steps: a star that moves (0:25 to 0:55)
 
-- **Show:** the three numbered steps under the table: "1 Pick any star", "2 Press Play or Blink", "3 Read what
-  changed". Then open the shot-2 address: Barnard's Star opens paused, so press **Play**. (If you press the
-  **Barnard's Star** button straight after shot 1 instead, it opens already blinking, with **Blink first and
-  last** pressed: press it once to stop the blink, then press **Play**.) Let the three visits play; then press
-  **Blink first and last**.
-- **On screen, the side column reads:** "It moved 10.4 arcseconds north between August 2025 and August 2026. Its
-  catalogue motion predicted 10.3 arcseconds: they agree." and "Seen clearly in all 3 visits." Keep it in the
+- **Show:** the three numbered steps under the table: "1 Pick a star above", "2 Press Play or Blink", "3 Read
+  what changed". Then press the **Barnard's Star** button (or open the shot-2 address): it opens paused, so
+  press **Play**. Let the three visits play; then press **Blink first and last**.
+- **On screen, the side column reads:** "It moved 10.4 arcseconds north between August 2025 and August 2026.
+  Gaia's star map predicted 10.3 arcseconds: they agree." and "Seen clearly in all 3 visits." Keep it in the
   picture while the visits play: the words do not change, only the mark of the visit on screen moves.
 - **Say:** "This is Barnard's Star, the fastest-moving star in the sky. Each picture is one SPHEREx visit: about
   twenty photos, added up. Watch it step north while the stars around it stay still. The page measured 10.4

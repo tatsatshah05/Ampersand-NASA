@@ -38,7 +38,8 @@ export interface Step {
 
 // Every view opens still (usePlayer.ts), so step 2 is to press Play or Blink. Step 1 says "any" (of the row at the top):
 // a star is already on screen when the page opens, and any other one in the row will do.
-const STEP_LABELS = ['Pick any star', 'Press Play or Blink', 'Read what changed'] as const
+// "A star above": the row of buttons. "Any star" sent a first-time visitor to the picture, where a press does nothing on Watch.
+const STEP_LABELS = ['Pick a star above', 'Press Play or Blink', 'Read what changed'] as const
 
 /** The three steps. Done ones are those the visitor did; "now" is the first one not done. */
 export function guideSteps(progress: Progress): Step[] {

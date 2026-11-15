@@ -19,6 +19,18 @@
   letter-spacing: 0;
 }
 
+/* The real moving object in this patch, named so that it is not taken for the made-up one. */
+.real-mover {
+  margin: 12px 0 0;
+  max-width: 72ch;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
 .how-to-look {
   margin: 12px 0 0;
   max-width: 72ch;
@@ -102,4 +114,9 @@
   .training .stage-buttons {
     flex-direction: row;
   }
+}
+
+/* "Show me" brings the picture into view: it stops below the banner that is stuck to the top. */
+.training .viewer {
+  scroll-margin-top: 60px;
 }

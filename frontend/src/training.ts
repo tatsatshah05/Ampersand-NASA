@@ -211,3 +211,21 @@ export function useTraining(url: string, attempt: number): TrainingLoad {
 
   return settled?.key === key ? settled.load : { state: 'loading' }
 }
+
+/**
+ * Real objects among the page's buttons that move visibly between SPHEREx's visits (their places
+ * on 2026.0, as /api/resolve gives them). A practice patch centred on one shows it moving, and in
+ * the difference frames it looks exactly as the made-up object is described (a bright dot with a
+ * dark ghost): the screen must say that it is real, and not the object to find.
+ */
+const REAL_MOVERS = [
+  { name: "Barnard's Star", ra: 269.446267, dec: 4.768222, what: 'a real star that moves fast: the bright one in the middle' },
+  { name: 'Epsilon Indi B', ra: 331.096653, dec: -56.800663, what: 'a real object that moves: the one in the middle' },
+  { name: 'WISE 0855', ra: 133.759765, dec: -7.242182, what: 'a real object that moves: a faint one in the middle' },
+]
+
+/** The line for a practice patch centred within an arcminute of one of them, or null. */
+export function realMoverNote(ra: number, dec: number): string | null {
+  const near = REAL_MOVERS.find((m) => Math.hypot((ra - m.ra) * Math.cos((m.dec * Math.PI) / 180), dec - m.dec) * 3600 < 60)
+  return near ? `This patch holds ${near.name}, ${near.what}. It is not the made-up object.` : null
+}
