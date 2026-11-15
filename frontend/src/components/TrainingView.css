@@ -1,41 +1,53 @@
-/* Practice mode. The banner is stuck to the top of the window and cannot be closed. */
+/* Practice mode. The banner is stuck to the top of the window and cannot be closed: solid
+   black with white words, so it cannot be missed on the white page. */
 .sim-banner {
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 8px 16px;
-  background: #3a2200;
-  color: #ffd9a0;
-  border-bottom: 2px solid #ff9626;
-  font-size: 0.95rem;
-  line-height: 1.35;
+  padding: 12px 24px;
+  background: var(--ink);
+  color: var(--on-ink);
+  border-bottom: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .sim-banner strong {
-  color: #ffb347;
-  letter-spacing: 0.05em;
+  color: var(--on-ink);
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .how-to-look {
-  margin: 8px 0 0;
-  max-width: 88ch;
+  margin: 12px 0 0;
+  max-width: 72ch;
+  line-height: 1.47;
 }
 
-.training-controls {
-  align-items: end;
+.selectors.training-controls {
+  align-items: center;
+  margin-top: 20px;
 }
 
+/* A link that does a button's job: a grey pill. */
 .button-link {
-  display: inline-block;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--size-body);
   text-decoration: none;
+  transition: background-color var(--quick) var(--ease);
 }
 
 .button-link:hover {
-  background: #1c2029;
+  background: var(--surface-hover);
+  text-decoration: none;
 }
 
 .status-actions {
@@ -46,29 +58,36 @@
 }
 
 .game-result {
-  margin-top: 8px;
+  margin-top: 12px;
   max-width: 60ch;
+  font-size: 15px;
+  line-height: 1.47;
+}
+
+.game-result .found,
+.game-result .missed,
+.game-result .hintline,
+.game-result .revealed {
+  margin: 8px 0;
+  padding: 12px 16px;
+  border-left: 0;
+  border-radius: 12px;
 }
 
 .game-result .found {
-  padding: 6px 12px;
-  border-left: 3px solid #4cc38a;
-  background: #11231a;
-  color: #9be8c0;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .game-result .missed,
 .game-result .hintline {
-  padding: 6px 12px;
-  border-left: 3px solid var(--notice);
-  background: #1d1b14;
+  background: var(--notice-bg);
   color: var(--notice);
 }
 
 .game-result .revealed {
-  padding: 6px 12px;
-  border-left: 3px solid #6aa7ff;
-  background: #111a2a;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .your-click path {

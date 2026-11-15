@@ -5,46 +5,61 @@
 }
 
 .brightness-verdict {
-  margin: 8px 0;
-  font-size: 1.05rem;
+  margin: 12px 0;
+  max-width: 64ch;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
 }
 
+/* What to plot: the chosen one is a black pill. */
 .brightness-measure {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 6px 0;
+  gap: 8px;
+  margin: 12px 0;
 }
 
 .brightness-measure button {
-  font-size: 0.88rem;
-  padding: 4px 10px;
-  opacity: 0.55;
+  height: 32px;
+  padding: 0 14px;
+  font-size: var(--size-body);
+  color: var(--muted);
+}
+
+.brightness-measure button:hover:not(:disabled) {
+  color: var(--text);
 }
 
 .brightness-measure button[aria-checked='true'] {
-  opacity: 1;
-  border-color: var(--muted);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.brightness-measure button[aria-checked='true']:hover:not(:disabled) {
+  background: var(--ink-hover);
+  color: var(--on-ink);
 }
 
 .brightness-visit {
   display: inline-flex;
   align-items: center;
-  font-size: 0.88rem;
+  font-size: var(--size-body);
   color: var(--muted);
-  margin-right: 6px;
+  margin-right: 12px;
 }
 
 .brightness-axis {
-  margin: 8px 0 2px;
-  font-size: 0.85rem;
+  margin: 16px 0 4px;
+  font-size: var(--size-body);
   color: var(--muted);
 }
 
 .brightness-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 8px 16px;
+  gap: 16px 24px;
 }
 
 .brightness-chart {
@@ -53,47 +68,50 @@
 }
 
 .brightness-chart figcaption {
-  font-size: 0.9rem;
+  font-size: var(--size-body);
   color: var(--muted);
 }
 
 .brightness-chart figcaption b {
   color: var(--text);
+  font-weight: 600;
 }
 
 .brightness-line {
   stroke: var(--muted);
-  stroke-opacity: 0.3;
+  stroke-opacity: 0.35;
   stroke-width: 1;
 }
 
 .brightness-line.on {
-  stroke: var(--text);
+  stroke: var(--ink);
   stroke-opacity: 1;
   stroke-width: 2;
 }
 
 .brightness-table {
-  margin: 12px 0 4px;
+  margin: 20px 0 4px;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 15px;
 }
 
 .brightness-table caption {
   text-align: left;
+  font-size: var(--size-body);
   color: var(--muted);
-  padding-bottom: 6px;
+  padding-bottom: 8px;
 }
 
 .brightness-table th,
 .brightness-table td {
   text-align: left;
-  padding: 3px 14px 3px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 20px 8px 0;
+  border-bottom: 1px solid var(--line);
   font-variant-numeric: tabular-nums;
 }
 
 .brightness-table thead th {
+  font-size: var(--size-body);
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 600;
 }

@@ -4,32 +4,37 @@
 }
 
 .smallbodies-none {
-  margin: 8px 0;
-  font-size: 1.05rem;
+  margin: 12px 0;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
 }
 
 .smallbody {
-  margin: 14px 0;
-  padding-top: 10px;
-  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+  margin: 20px 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
 }
 
 .smallbody h3 {
-  margin: 0 0 4px;
-  font-size: 1.05rem;
+  margin: 0 0 6px;
+  font-size: var(--size-read);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .smallbody-kind {
   margin-left: 8px;
-  font-size: 0.85rem;
-  font-weight: normal;
+  font-size: var(--size-body);
+  font-weight: 400;
   color: var(--muted);
 }
 
 .smallbody-exposures {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
 }
 
 .smallbody-exposure {
@@ -38,15 +43,19 @@
 }
 
 .smallbody-exposure figcaption {
-  font-size: 0.88rem;
+  font-size: var(--size-body);
+  line-height: 1.43;
   color: var(--muted);
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
+/* A dark picture in a black tile with soft corners, like the visits under the plate. */
 .smallbody-picture {
   position: relative;
   width: 240px;
   height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
   background: #000;
 }
 
@@ -74,6 +83,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  text-align: center;
+  background: var(--surface);
   color: var(--muted);
 }
 
