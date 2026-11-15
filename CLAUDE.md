@@ -941,14 +941,16 @@ Distant-world search (2026-11-14, `scripts/check_distant.py`, `docs/distant.md`,
 - Within a visit a near body smears: rms 0.001 to 0.28 arcsec per arcsec of parallax over a
   visit's exposures. The densest 3 days of a visit usually hold 50 to 90 per cent of its exposures
   with a spread 5 to 60 times smaller, hence the second pass (`densest_days`). WISE 0855 field,
-  0.5 degrees, limit at 500 AU: 2.1 mJy whole visits, 0.23 mJy densest days.
+  0.5 degrees, limit at 500 AU: 1.7 mJy whole visits, 0.23 mJy densest days (over 26 per cent of
+  the picture).
 - Matched-filter flux scale: WISE 0855 comes out at 0.39 to 0.47 mJy in detector 5 (0.43 from the
   photometry). One visit reaches 0.18 to 0.21 mJy (5 times the noise) there, 0.5 to 4 mJy in
   crowded or nebulous fields.
 - No link in any real field, none with the Earth's motion reversed, none besides the planted
-  object in @@NPLANT@@ planted runs. Planted objects bright enough in three visits (5, 5 and 4 times
-  the noise): @@BF@@ of @@BRIGHT@@ found; the rest sat on a catalogued source (CatWISE2020 within
-  5 arcsec, a quarter as bright), which sets a source aside. The practice levels "medium" and
+  object in 539 planted runs. Planted objects bright enough in three visits (5, 5 and 4 times
+  the noise): 177 of 205 found; the rest sat, in one visit, on a catalogued source
+  (CatWISE2020 within 5 arcsec, a quarter as bright), which sets a source aside, or on a star that
+  is there in every visit. The practice levels "medium" and
   "hard" are usually below what the search accepts.
 - `address.ts` accepts a parallax up to 3,000,000 mas (it was 10,000) so that a view can follow
   a body a few hundred AU away.

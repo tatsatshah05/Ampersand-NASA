@@ -129,7 +129,7 @@ def main() -> None:
             "name": name, "ra": ra, "dec": dec, "fov": args.fov, "status": answer["status"],
             "answer": answer["answer"], "candidates": answer["candidates"], "limit": answer["limit"],
             "chance_links": answer["chance"]["links_with_earth_reversed"],
-            "per_detector": [{k: d[k] for k in ("detector", "come_and_go", "set_aside_catalogued",
+            "per_detector": [{k: d[k] for k in ("detector", "exposures", "come_and_go", "set_aside_catalogued",
                                                 "set_aside_not_point_like", "linked_from", "links", "chance_links",
                                                 "clear_share", "visits")} for d in answer["per_detector"]],
             "catalogue_answered": answer["catalogue"]["answered"], "failures": len(answer["failures"]),

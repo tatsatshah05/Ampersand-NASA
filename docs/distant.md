@@ -14,9 +14,9 @@ distant world (Planet X)", in Expert view. Numbers on this page were measured on
   answer. What it gives for every field is a limit: how bright an object at each distance would
   have had to be for the search to find it.
 - It does find made-up objects planted in real images, and gets their distance right to about a
-  per cent. @@RECOVERY_SENTENCE@@
+  per cent. Of 205 planted objects that were bright enough in three visits, it found 177.
 - It has made no false link: none in the real fields, none with the Earth's motion reversed (the
-  control described below), and none besides the planted object in @@N_PLANTS@@ planted runs.
+  control described below), and none besides the planted object in 539 planted runs.
 
 ## Why a distant object jumps
 
@@ -84,7 +84,7 @@ Most of a visit's exposures usually come within a few days, though: 18 of 25 wit
 the second visit of WISE 0855, with a spread 60 times smaller than the whole visit's. So the second
 pass stacks only the densest window (3, 6 or 10 days, the shortest that holds at least half the
 exposures and at least five). It is a little shallower and far sharper for a near object. In the
-0.5 degree field around WISE 0855 it took the limit at 500 AU from 2.1 mJy to 0.23 mJy. The limit
+0.5 degree field around WISE 0855 it took the limit at 500 AU from 1.7 mJy to 0.23 mJy. The limit
 table uses the better pass at each distance and says which.
 
 ## Testing it
@@ -106,30 +106,118 @@ level and seed (a test checks the positions agree to a billionth of a degree). T
 only use of planted objects. They are kept in their own files, marked `simulation`, and never
 reach a real answer or the watchlist.
 
-@@RECOVERY_TABLE@@
+| Field (0.2 degrees, detector 5) | Level | Brightness (mJy) | Planted | Bright enough | Found | Bright enough and found |
+|---|---|---|---|---|---|---|
+| WISE 0855-0714 | easy | 0.289 | 20 | 18 | 17 | 17 |
+| WISE 0855-0714 | medium | 0.168 | 20 | 0 | 0 | 0 |
+| WISE 0855-0714 | hard | 0.108 | 20 | 0 | 0 | 0 |
+| Barnard's Star | easy | 1.031 | 20 | 15 | 11 | 11 |
+| Barnard's Star | medium | 0.601 | 20 | 3 | 2 | 2 |
+| Barnard's Star | hard | 0.387 | 20 | 0 | 0 | 0 |
+| Epsilon Indi B | easy | 0.55 | 20 | 20 | 20 | 20 |
+| Epsilon Indi B | medium | 0.321 | 20 | 20 | 20 | 20 |
+| Epsilon Indi B | hard | 0.206 | 20 | 16 | 12 | 12 |
+| RW Aurigae | easy | 0.776 | 20 | 12 | 12 | 12 |
+| RW Aurigae | medium | 0.453 | 20 | 2 | 0 | 0 |
+| RW Aurigae | hard | 0.291 | 20 | 0 | 0 | 0 |
+| R Draconis | easy | 3.813 | 20 | 15 | 13 | 13 |
+| R Draconis | medium | 2.224 | 20 | 13 | 10 | 10 |
+| R Draconis | hard | 1.43 | 20 | 13 | 10 | 9 |
+| NGC 1333 | easy | 4.84 | 20 | 5 | 5 | 5 |
+| NGC 1333 | medium | 2.823 | 20 | 0 | 0 | 0 |
+| NGC 1333 | hard | 1.815 | 20 | 0 | 0 | 0 |
+| Serpens Main | easy | 5.509 | 20 | 7 | 7 | 7 |
+| Serpens Main | medium | 3.213 | 20 | 3 | 2 | 2 |
+| Serpens Main | hard | 2.066 | 20 | 0 | 0 | 0 |
+| Serpens South | easy | 7.036 | 20 | 15 | 14 | 14 |
+| Serpens South | medium | 4.104 | 20 | 9 | 8 | 8 |
+| Serpens South | hard | 2.638 | 19 | 7 | 7 | 7 |
+| Chamaeleon I | easy | 0.508 | 20 | 12 | 8 | 8 |
+| Chamaeleon I | medium | 0.296 | 20 | 0 | 0 | 0 |
+| Chamaeleon I | hard | 0.191 | 20 | 0 | 0 | 0 |
+| **All** | | | **539** | **205** | **178** | **177** |
 
 "Bright enough" means the object stands 5 times above the noise in two visits and 4 times in a
-third, at its true places. Of those, @@BRIGHT_FOUND@@ of @@BRIGHT@@ were found. The rest landed on
-a catalogued source and were set aside with it: in the field around Barnard's Star, which has
-3,639 catalogued sources in 0.2 degrees, that happened to 4 of 15. Objects that were not bright
-enough were not found, and should not be: the practice levels are set by eye, and "medium" and
-"hard" are usually below what this search accepts. In all @@N_PLANTS@@ runs the search linked
-nothing except the planted object.
+third, at its true places. Of those, 177 of 205 were found. Every one of the 28
+that were missed was traced. Twelve had a catalogued source at one of their three places and were
+set aside with it (5 of them in the field of Barnard's Star, which has 3,639 catalogued sources in
+0.2 degrees). Fifteen lay on top of something that is there in every visit, a faint star or the
+glow of a bright one (8 of them around R Draconis), and could not be told from it. One came out
+too wide to count as a point of light. None was lost by the linking itself.
+
+Objects that were not bright enough were not found, with one exception that sat at the limit, and
+they should not be. The practice levels are set against the scatter of the whole picture, not
+against what this search needs: in NGC 1333 only 5 of 20 "easy" objects were bright enough, and
+around Epsilon Indi B 16 of 20 "hard" ones were. In all 539 runs the search linked nothing
+except the planted object.
 
 ## What it found in real fields
 
 Nothing: no link in any field, in either detector or either pass, and none with the Earth's motion
 reversed.
 
-@@COUNTS_TABLE@@
+| Field | Width | Visits | Detector, pass | Sources per visit | Come and go | On a catalogued source | Tried for linking | Links | Links, Earth reversed |
+|---|---|---|---|---|---|---|---|---|---|
+| WISE 0855-0714 | 0.2 | 3 | D5, every exposure | 100 to 111 | 0 | 0 | 0 | 0 | 0 |
+| WISE 0855-0714 | 0.2 | 3 | D5, densest days | 100 to 109 | 0 | 0 | 0 | 0 | 0 |
+| WISE 0855-0714 | 0.2 | 3 | D6, every exposure | 36 to 90 | 8 | 5 | 3 | 0 | 0 |
+| WISE 0855-0714 | 0.2 | 3 | D6, densest days | 36 to 87 | 10 | 9 | 1 | 0 | 0 |
+| Barnard's Star | 0.2 | 3 | D5, every exposure | 115 to 119 | 0 | 0 | 0 | 0 | 0 |
+| Barnard's Star | 0.2 | 3 | D5, densest days | 115 to 118 | 0 | 0 | 0 | 0 | 0 |
+| Barnard's Star | 0.2 | 3 | D6, every exposure | 104 to 106 | 0 | 0 | 0 | 0 | 0 |
+| Barnard's Star | 0.2 | 3 | D6, densest days | 102 to 106 | 0 | 0 | 0 | 0 | 0 |
+| Epsilon Indi B | 0.2 | 4 | D5, every exposure | 73 to 89 | 4 | 3 | 1 | 0 | 0 |
+| Epsilon Indi B | 0.2 | 4 | D5, densest days | 73 to 86 | 4 | 2 | 2 | 0 | 0 |
+| Epsilon Indi B | 0.2 | 4 | D6, every exposure | 54 to 75 | 10 | 2 | 8 | 0 | 0 |
+| Epsilon Indi B | 0.2 | 4 | D6, densest days | 54 to 69 | 10 | 2 | 7 | 0 | 0 |
+| RW Aurigae | 0.2 | 3 | D5, every exposure | 117 to 122 | 0 | 0 | 0 | 0 | 0 |
+| RW Aurigae | 0.2 | 3 | D5, densest days | 116 to 118 | 0 | 0 | 0 | 0 | 0 |
+| RW Aurigae | 0.2 | 3 | D6, every exposure | 101 to 103 | 0 | 0 | 0 | 0 | 0 |
+| RW Aurigae | 0.2 | 3 | D6, densest days | 97 to 102 | 0 | 0 | 0 | 0 | 0 |
+| R Draconis | 0.2 | 3 | D5, every exposure | 42 to 50 | 0 | 0 | 0 | 0 | 0 |
+| R Draconis | 0.2 | 3 | D5, densest days | 42 to 46 | 3 | 0 | 3 | 0 | 0 |
+| R Draconis | 0.2 | 3 | D6, every exposure | 28 to 49 | 4 | 1 | 2 | 0 | 0 |
+| R Draconis | 0.2 | 3 | D6, densest days | 25 to 49 | 4 | 1 | 3 | 0 | 0 |
+| NGC 1333 | 0.2 | 3 | D5, every exposure | 85 to 86 | 0 | 0 | 0 | 0 | 0 |
+| NGC 1333 | 0.2 | 3 | D5, densest days | 83 to 86 | 0 | 0 | 0 | 0 | 0 |
+| NGC 1333 | 0.2 | 3 | D6, every exposure | 73 to 76 | 0 | 0 | 0 | 0 | 0 |
+| NGC 1333 | 0.2 | 3 | D6, densest days | 74 to 76 | 0 | 0 | 0 | 0 | 0 |
+| Serpens Main | 0.2 | 3 | D5, every exposure | 124 to 127 | 0 | 0 | 0 | 0 | 0 |
+| Serpens Main | 0.2 | 3 | D5, densest days | 125 to 129 | 0 | 0 | 0 | 0 | 0 |
+| Serpens Main | 0.2 | 3 | D6, every exposure | 108 to 114 | 0 | 0 | 0 | 0 | 0 |
+| Serpens Main | 0.2 | 3 | D6, densest days | 107 to 111 | 0 | 0 | 0 | 0 | 0 |
+| Serpens South | 0.2 | 4 | D5, every exposure | 112 to 113 | 0 | 0 | 0 | 0 | 0 |
+| Serpens South | 0.2 | 4 | D5, densest days | 108 to 114 | 0 | 0 | 0 | 0 | 0 |
+| Serpens South | 0.2 | 4 | D6, every exposure | 95 to 105 | 0 | 0 | 0 | 0 | 0 |
+| Serpens South | 0.2 | 4 | D6, densest days | 95 to 107 | 1 | 0 | 1 | 0 | 0 |
+| Chamaeleon I | 0.2 | 3 | D5, every exposure | 121 to 128 | 0 | 0 | 0 | 0 | 0 |
+| Chamaeleon I | 0.2 | 3 | D5, densest days | 121 to 125 | 0 | 0 | 0 | 0 | 0 |
+| Chamaeleon I | 0.2 | 3 | D6, every exposure | 97 to 98 | 5 | 1 | 4 | 0 | 0 |
+| Chamaeleon I | 0.2 | 3 | D6, densest days | 92 to 101 | 3 | 0 | 3 | 0 | 0 |
+| WISE 0855-0714 | 0.5 | 3 | D5, every exposure | 556 to 677 | 3 | 3 | 0 | 0 | 0 |
+| WISE 0855-0714 | 0.5 | 3 | D5, densest days | 556 to 661 | 4 | 4 | 0 | 0 | 0 |
+| WISE 0855-0714 | 0.5 | 3 | D6, every exposure | 255 to 494 | 58 | 39 | 19 | 0 | 0 |
+| WISE 0855-0714 | 0.5 | 3 | D6, densest days | 255 to 482 | 53 | 43 | 10 | 0 | 0 |
 
 The limits, at 0.2 degrees (an object at 500 AU does not fit in a picture this small):
 
-@@LIMITS_02@@
+| Field | 1,000 AU | 2,000 AU | 5,000 AU | 10,000 AU | 30,000 AU |
+|---|---|---|---|---|---|
+| WISE 0855-0714 | 0.20 mJy, 20% | 0.20 mJy, 42% | 0.20 mJy, 57% | 0.20 mJy, 62% | 0.18 mJy, 64% |
+| Barnard's Star | 0.69 mJy, 18% | 0.60 mJy, 37% | 0.57 mJy, 48% | 0.56 mJy, 52% | 0.54 mJy, 54% |
+| Epsilon Indi B | 0.23 mJy, 16% | 0.20 mJy, 35% | 0.19 mJy, 50% | 0.19 mJy, 55% | 0.18 mJy, 56% |
+| RW Aurigae | 0.53 mJy, 18% | 0.53 mJy, 38% | 0.52 mJy, 50% | 0.51 mJy, 54% | 0.51 mJy, 56% |
+| R Draconis | 1.79 mJy, 17% | 0.92 mJy, 35% | 0.43 mJy, 46% | 0.31 mJy, 50% | 0.28 mJy, 54% |
+| NGC 1333 | 1.91 mJy, 15% | 1.89 mJy, 31% | 1.89 mJy, 42% | 1.88 mJy, 46% | 1.87 mJy, 48% |
+| Serpens Main | 4.25 mJy, 20% | 3.70 mJy, 38% | 3.53 mJy, 49% | 3.49 mJy, 52% | 3.49 mJy, 55% |
+| Serpens South | 3.85 mJy, 19% | 3.73 mJy, 37% | 3.70 mJy, 48% | 3.69 mJy, 52% | 3.69 mJy, 54% |
+| Chamaeleon I | 0.45 mJy, 16% | 0.41 mJy, 34% | 0.39 mJy, 47% | 0.38 mJy, 52% | 0.38 mJy, 55% |
 
 And at 0.5 degrees, which holds the jump of an object from about 500 AU:
 
-@@LIMITS_05@@
+| Field | 500 AU | 700 AU | 1,000 AU | 2,000 AU | 10,000 AU | 30,000 AU |
+|---|---|---|---|---|---|---|
+| WISE 0855-0714 | 0.23 mJy, 26% | 0.23 mJy, 37% | 0.22 mJy, 46% | 0.22 mJy, 56% | 0.21 mJy, 65% | 0.20 mJy, 64% |
 
 "Share of the picture" is where an object at that distance would stay in view in every visit,
 clear of the glow of bright stars, with no catalogued source at any of its three places. A limit
@@ -200,3 +288,11 @@ again every few seconds until `status` is `done` or `failed`. With `plant=easy|m
 `seed=` and `plant_detector=` the answer is a simulation and says so. A first search of a new
 patch reads its cutouts from NASA's archive (one to four minutes); after that the answer is kept
 in `backend/cache/distant/`.
+
+## Pictures
+
+- [docs/distant/panel_real.png](distant/panel_real.png): the panel after a real search of the
+  0.2 degree patch around WISE 0855. Nothing found, the limit at each distance, the control.
+- [docs/distant/panel_simulation.png](distant/panel_simulation.png): the same patch with the
+  practice round's object planted (easy level, seed 1). The banner cannot be closed; the search
+  puts the object at 2,558 AU and it was planted at 2,559.

@@ -102,7 +102,7 @@ Measured 2026-11-14 on real data; independently re-measured by a second session.
   Around WISE 0855 an object between 1,000 and 30,000 times the Earth-Sun distance brighter
   than about 0.2 mJy at 3.8 to 5 micrometres would have been found; a 0.5 degree picture
   reaches in to 500 times the Earth-Sun distance at 0.23 mJy. Made-up objects planted in the
-  real images were found @@BF@@ times out of the @@BRIGHT@@ that were bright enough in three
+  real images were found 177 times out of the 205 that were bright enough in three
   visits, with the distance right to about a per cent, and nothing else was ever linked.
   This is not deeper than existing searches of WISE data and is no new limit on Planet Nine.
   [docs/distant.md](docs/distant.md).
@@ -178,13 +178,13 @@ The earlier single-file viewer is still served at `/viewer.html`
 
 ```
 pip install -r backend/requirements.txt -r backend/requirements-dev.txt
-pytest                    # 192 tests, about 10 seconds, no network
+pytest                    # 264 tests, about 30 seconds, no network
 ruff check .
 mypy
 cd frontend
 npm run lint
 npm run typecheck
-npm test                  # 240 tests
+npm test                  # 350 tests
 ```
 
 The Python tests use real SPHEREx images kept in `tests/data/` and block every outgoing
