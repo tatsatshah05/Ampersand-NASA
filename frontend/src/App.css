@@ -683,6 +683,18 @@
   font-size: var(--size-small);
 }
 
+/* Beginner: the one sentence that matters, how far it moved, is the largest type in the
+   column; which visit it is is secondary. Sentence case. */
+.inspector.beginner .motion-readout {
+  font-size: var(--size-title);
+  line-height: 1.35;
+}
+
+.inspector.beginner .readout-block .frame-label {
+  font-size: var(--size-small);
+  font-weight: 400;
+}
+
 /* Beginner: where to start. Three steps and a line on where to go next. The step the
    visitor is on is told by the badge's hairline and the text colour, never by size or
    weight, and every badge is the same size, so nothing moves when a step is done. */

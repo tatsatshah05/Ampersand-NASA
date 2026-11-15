@@ -61,7 +61,7 @@ describe('the page at each level', () => {
     const beginner = viewerAt('')
     expect(beginner).toContain('class="guide-steps"')
     expect(beginner).toContain('Choose a star above')
-    expect(beginner).toContain('Flip through the visits')
+    expect(beginner).toContain('Watch the visits flip')
     expect(beginner).toContain('Read what changed')
     const expert = viewerAt('?ui=expert')
     expect(expert).not.toContain('class="guide')

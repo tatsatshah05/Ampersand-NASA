@@ -39,11 +39,11 @@ export function LevelSwitch({ level, onChange }: { level: UiLevel; onChange: (le
  * is marked by the hairline and the text colour only, inside badges of one fixed size, so
  * nothing moves when a step is done. It is a list, not a set of buttons: it never gets in the way.
  */
-export function StepGuide({ progress }: { progress: Progress }) {
+export function StepGuide({ progress, still = false }: { progress: Progress; still?: boolean }) {
   return (
     <section className="guide" aria-label="Where to start">
       <ol className="guide-steps">
-        {guideSteps(progress).map((step) => (
+        {guideSteps(progress, still).map((step) => (
           <li key={step.n} data-state={step.state} aria-current={step.state === 'now' ? 'step' : undefined}>
             <span className="guide-n" role="img" aria-label={stepName(step)}>
               {step.n}

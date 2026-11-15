@@ -116,6 +116,8 @@ export function Viewer() {
   // Beginner's step guide: what the visitor has actually done. The player starts playing by
   // itself, so only a press of theirs counts as flipping through the visits.
   const [progress, setProgress] = useState<Progress>(NO_PROGRESS)
+  // The player opens playing, so the visits flip by themselves; with reduced motion asked for it opens still and the guide says to press Play.
+  const [startedStill] = useState(prefersStillness)
   const mark = useCallback((what: keyof Progress) => setProgress((was) => (was[what] ? was : { ...was, [what]: true })), [])
   const { togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
   const togglePlay = useCallback(() => {
@@ -437,11 +439,11 @@ export function Viewer() {
                         {expert && showGaia && starsData && starsFrame >= 0 && (
                           <FieldStars data={starsData} current={starsFrame} sizePx={data.size_px} pixelArcsec={data.pixel_arcsec} />
                         )}
-                        {expert && showMotion && (
+                        {(expert ? showMotion : true) && (
                           <MotionLayer
                             sizePx={grid.sizePx}
                             scale={scale}
-                            start={start && path.length > 1 ? toPicture(start) : null}
+                            start={expert && start && path.length > 1 ? toPicture(start) : null}
                             path={path.map(toPicture)}
                             here={frame.centroid && toPicture(frame.centroid)}
                             hereMarginal={isMarginal(frame)}
@@ -749,7 +751,7 @@ export function Viewer() {
                 </details>
               </>
             ) : (
-              <StepGuide progress={progress} />
+              <StepGuide progress={progress} still={startedStill} />
             )}
 
             <footer className="credits">
