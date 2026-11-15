@@ -945,13 +945,23 @@ def control_sigmas(wave, flux, err, window, left, right, lo=0.75, hi=5.0) -> lis
 
 
 def classify(sigma: float | None, controls: list[float]) -> str:
-    """ "detected", "marginal" or "not seen" (see DETECT_SIGMA, MARGINAL_SIGMA, CONTROL_FACTOR)."""
+    """ "detected", "marginal" or "not seen".
+
+    Detected: at least DETECT_SIGMA times the error, at least CONTROL_FACTOR times the (robust) scatter of the
+    controls, and larger than every control, with at least four controls to compare with. Marginal: at least
+    MARGINAL_SIGMA times the error but not detected. Otherwise not seen.
+    """
     if sigma is None:
         return "no measurement"
     scatter = (
         1.4826 * float(np.median(np.abs(np.asarray(controls) - np.median(controls)))) if len(controls) >= 4 else None
     )
-    if sigma >= DETECT_SIGMA and scatter is not None and sigma >= CONTROL_FACTOR * max(scatter, 1.0):
+    if (
+        sigma >= DETECT_SIGMA
+        and scatter is not None
+        and sigma >= CONTROL_FACTOR * max(scatter, 1.0)
+        and sigma > max(controls)
+    ):
         return "detected"
     if sigma >= MARGINAL_SIGMA:
         return "marginal"

@@ -262,7 +262,8 @@ def test_three_bands_of_3i_in_august() -> None:
     bands = follow.all_bands(_points("points_3i_2025-08.json"))
     assert len(bands) == 1 and bands[0]["first"].startswith("2025-08-06")
     h2o, co2, co = (bands[0]["bands"][k] for k in ("H2O", "CO2", "CO"))
-    assert (h2o["verdict"], co2["verdict"], co["verdict"]) == ("detected", "detected", "marginal")
+    assert (h2o["verdict"], co2["verdict"], co["verdict"]) == ("marginal", "detected", "marginal")
+    assert max(h2o["controls"]) > h2o["sigma"]  # another place in the spectrum gives a larger number: not detected
     assert h2o["excess_mjy"] == pytest.approx(0.592, abs=0.005) and h2o["sigma"] == pytest.approx(11.6, abs=0.1)
     assert co2["sigma"] == pytest.approx(43.6, abs=0.1) and len(co2["controls"]) == 9
     assert co["sigma"] == pytest.approx(3.5, abs=0.1)
@@ -275,6 +276,7 @@ def test_classify_follows_its_rules() -> None:
     assert follow.classify(43.6, wide) == "detected"
     assert follow.classify(43.6, []) == "marginal"  # no controls: never "detected"
     assert follow.classify(43.6, [30.0, -35.0, 31.0, -29.0]) == "marginal"  # the controls are just as large
+    assert follow.classify(11.6, [-0.3, 11.8, -2.1, 3.8, 36.0]) == "marginal"  # one control is larger
     assert follow.classify(4.9, wide) == "marginal"
     assert follow.classify(2.0, wide) == "not seen"
     assert follow.classify(None, wide) == "no measurement"
