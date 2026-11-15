@@ -30,6 +30,7 @@ import {
 import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
 import { BrightnessPanel } from './components/BrightnessPanel'
 import { ContextView } from './components/ContextView'
+import { ObjectCard } from './components/ObjectCard'
 import { FeatureBar, type FeatureLinks } from './components/FeatureBar'
 import { FieldStars } from './components/FieldStars'
 import { isMarginal } from './detection'
@@ -928,7 +929,10 @@ export function Viewer() {
               onClose={() => setShowContext(false)}
               target={data?.target ?? null}
               name={shownName}
-            />
+            >
+              {/* What the catalogues know about the object at the centre (Dev's ObjectCard), then the same patch in older surveys. */}
+              <ObjectCard ra={selection.ra} dec={selection.dec} name={shownName ?? undefined} level={selection.ui} />
+            </ContextView>
           </div>
         )}
       </div>

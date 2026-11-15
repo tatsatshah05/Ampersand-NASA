@@ -169,6 +169,7 @@ describe('What is it? in Beginner', () => {
     const html = renderToStaticMarkup(<ContextView ra={269.446267} dec={4.768222} fov={0.1} level="beginner" onClose={noop} />)
     expectPlain(html)
     expect(html).toContain('<h2>What is it?</h2>')
+    expect(html).toContain('aria-label="What is it?"')
     expect(html).toContain('WISE, infrared (2010 and 2011)')
     expect(html).toContain('class="aladin"')
     expect(html).not.toContain('Gaia DR3 stars')

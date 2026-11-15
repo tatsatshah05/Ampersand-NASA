@@ -1,7 +1,7 @@
 // Issue #12, part 3: Aladin Lite v3 context view centred on the search position, with
 // WISE / 2MASS / optical sky images, Gaia DR3 stars, and a box showing the SPHEREx field.
 // Aladin's terms ask that its logo and link stay visible at the bottom right of the view.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Aladin, Layer } from 'aladin-lite'
 import type { UiLevel } from '../address'
 import type { Target } from '../api'
@@ -76,11 +76,13 @@ interface Props {
   target?: Target | null
   /** Its name on the page. */
   name?: string | null
+  /** What goes first under the title: the object card (what the catalogues know about it). */
+  children?: ReactNode
 }
 
 type AladinModule = typeof import('aladin-lite').default
 
-export function ContextView({ ra, dec, fov, level = 'expert', onClose, target = null, name = null }: Props) {
+export function ContextView({ ra, dec, fov, level = 'expert', onClose, target = null, name = null, children }: Props) {
   const plain = level === 'beginner'
   const divRef = useRef<HTMLDivElement>(null)
   const [viewer, setViewer] = useState<{
@@ -263,7 +265,8 @@ export function ContextView({ ra, dec, fov, level = 'expert', onClose, target = 
     }
   }, [showGaia, gaiaNote])
 
-  const title = plain ? CONTEXT_TITLE : 'Sky context'
+  // With the object card in it (the bar's "Object card"), Expert's panel is called that too.
+  const title = plain ? CONTEXT_TITLE : children ? 'Object card' : 'Sky context'
   const surveyPicker = (
     <label>
       {plain ? CONTEXT_PICK : 'Sky image'}{' '}
@@ -287,7 +290,7 @@ export function ContextView({ ra, dec, fov, level = 'expert', onClose, target = 
   // The sky atlas keeps its place among the section's children at both levels, so a change of
   // level never takes its element away from it.
   return (
-    <section className={plain ? 'panel context plain-panel' : 'panel context'} aria-label="Sky context">
+    <section className={plain ? 'panel context plain-panel' : 'panel context'} aria-label={title}>
       {onClose ? (
         <div className="spectrum-head">
           <h2>{title}</h2>
@@ -298,6 +301,7 @@ export function ContextView({ ra, dec, fov, level = 'expert', onClose, target = 
       ) : (
         <h2>{title}</h2>
       )}
+      {children}
       {plain ? (
         <>
           <p className="plain-intro">{CONTEXT_INTRO}</p>
