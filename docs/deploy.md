@@ -3,7 +3,7 @@
 Status on 2026-11-15: the team chose **Render**; its short path is
 [deploy-render.md](deploy-render.md) (a blueprint, `render.yaml`, and the pre-built demo
 results that the `Dockerfile` unpacks into the image). **The site is up at
-https://spherex-sky-change-viewer.onrender.com** (deployed on 2026-11-15, free plan). This page is the general account: what any host must provide, what was tested,
+https://spherex-sky-change-viewer.onrender.com** (deployed on 2026-11-15; on the Standard plan, always on, since that afternoon). This page is the general account: what any host must provide, what was tested,
 and the warm-up. The settings for Fly.io are also in the repository as `fly.toml`.
 
 After deploying, run **every step of "After deploying: warm-up"** below. The page opens on

@@ -1266,8 +1266,10 @@ behaves):
 How to run them: `scripts/checks/README.md`. After deploying, the warm-up of every place the page opens or links to:
 `docs/deploy.md`, "After deploying: warm-up".
 
-Deploying (2026-11-15): the team chose Render, and the site is up at https://spherex-sky-change-viewer.onrender.com (free plan).
-`render.yaml` is its blueprint (one free web service from the
+Deploying (2026-11-15): the team chose Render, and the site is up at https://spherex-sky-change-viewer.onrender.com. It began
+on the free plan; Tatsat moved it to Standard (1 CPU, 2 GB, always on, US$25 a month) that afternoon for the judging, and
+`plan:` in `render.yaml` says so (the service is managed by the blueprint, so the file must agree with the dashboard).
+`render.yaml` is its blueprint (one web service from the
 `Dockerfile`, redeployed on every push to the branch it was made from, `main`). The `Dockerfile` downloads the
 pre-built demo results (release file `demo-cache-2` of this repository: about 240 MB of finished views and answers
 for the eleven buttons, no cutouts) and unpacks them into the cache folder, so the site opens at once on a host
@@ -1276,4 +1278,4 @@ with a slow processor and no disk; `scripts/seed_cache.py` packs, fetches and co
 release, and change `SEED_URL` in the `Dockerfile`. A patch search (`/api/search`) whose catalogue lookup failed is never
 kept on disk (`search.py`, "cached only when complete"): the five patches first searched on 2026-11-15 (Candidates A, B,
 C, V462 Lup, V572 Vel), with ESA's Gaia server down, are worked out again by every new server process until they are
-searched once with Gaia answering. Steps, limits of the free plan and what was tested: `docs/deploy-render.md`.
+searched once with Gaia answering. Steps, what each plan means and what was tested: `docs/deploy-render.md`.

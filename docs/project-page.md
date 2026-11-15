@@ -307,8 +307,7 @@ a search for change, checks against catalogues, and plain words for every result
   guard the page (`scripts/checks/`): the words hold still while the pictures play, and the bar and the switch
   work at both levels.
 - Code: https://github.com/tatsatshah05/Ampersand-NASA
-- Public web address: https://spherex-sky-change-viewer.onrender.com (deployed on 2026-11-15 on Render's free plan: after 15 minutes without a
-  visitor it sleeps, and the next visitor waits about a minute while it starts).
+- Public web address: https://spherex-sky-change-viewer.onrender.com (deployed on 2026-11-15 on Render; always on).
 
 ### Use of AI tools
 

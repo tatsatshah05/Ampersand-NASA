@@ -3,14 +3,18 @@
 The general notes on hosting are in `docs/deploy.md`. This page is the short path for
 Render (render.com), chosen by the team on 2026-11-15.
 
-**Status: deployed on 2026-11-15 at https://spherex-sky-change-viewer.onrender.com** (free plan, from the branch `main`; every push
-to `main` builds and goes live by itself).
+**Status: deployed on 2026-11-15 at https://spherex-sky-change-viewer.onrender.com** (from the branch `main`; every push
+to `main` builds and goes live by itself). It began on the free plan and was moved to the **Standard** plan (1 CPU, 2 GB,
+always on, US$25 a month) that afternoon, for the days of judging; "The plan" below says what each means.
 
 ## What is in the repository for it
 
-- `render.yaml`: a Render blueprint. One web service, built from the `Dockerfile`, on the
-  free plan, in Oregon (next to NASA's public copy of the archive on Amazon), health check
-  `/openapi.json`, redeployed on every push to the branch it was made from.
+- `render.yaml`: a Render blueprint. One web service, built from the `Dockerfile`, in
+  Oregon (next to NASA's public copy of the archive on Amazon), health check
+  `/openapi.json`, redeployed on every push to the branch it was made from. Its `plan:`
+  line names the instance: `standard` now, `free` for the one that costs nothing. Render
+  manages the service from this file, so change the plan here (and push), not only in the
+  dashboard.
 - The `Dockerfile` downloads the **pre-built demo results** and unpacks them into the cache
   folder while the image is built (`scripts/seed_cache.py fetch`). They are a release file
   of this repository, `demo-cache-2` (82 MB packed; about 240 MB and 8,365 files unpacked):
@@ -18,9 +22,9 @@ to `main` builds and goes live by itself).
   tables, the answers of their tools (below), and the list behind Observe anomalies with
   its pictures and no votes. Results only, no cutouts.
 
-Why they are needed: the free plan has a tenth of a processor and no disk. Without them
-the first visitor would wait minutes while the opening view was built from the archive,
-and again after every restart.
+Why they are needed: the service has no disk, and the free plan it began on has a tenth
+of a processor. Without them the first visitor would wait while the opening view was
+built from the archive, and again after every restart.
 
 ## Steps (in a browser, about five minutes of clicking, then the build)
 
@@ -47,25 +51,49 @@ R Draconis and Serpens South. It is **not** for Candidates A, B and C, V462 Lupi
 V572 Velorum: those patches were first searched on 2026-11-15, when ESA's Gaia server
 took no connections all day. The search then ends with "Gaia DR3 did not answer", and an
 answer with a catalogue missing is never kept on disk, so each new server process works
-it out again from cutouts (one to four minutes on a laptop; far longer on the free plan).
+it out again from cutouts (one to four minutes on a laptop; not timed on Render).
 When Gaia answers again: run those five searches once on the laptop (the loop in
 `docs/deploy.md`, "After deploying: warm-up", step 4), then pack and publish again (last
 section below).
 
-## What the free plan means
+## The plan
+
+Since the afternoon of 2026-11-15 the service is on **Standard**: 1 CPU, 2 GB of memory,
+always on, US$25 a month (Render's price list in the dashboard that day; Starter, with
+half a CPU and 512 MB, was US$7). Tatsat chose it for the days of judging. Standard
+rather than Starter because of the memory: the server holds about 130 MB, building the
+largest view measured on a laptop peaked at about 320 MB, and a search of a patch on top
+of that was never measured, so 512 MB left little room.
+
+To go back afterwards: set `plan: free` in `render.yaml`, push to `main`, and check that
+the dashboard shows it.
+
+What Standard means:
+
+- **It does not sleep.**
+- **The pre-built views open at once**, as on any plan (0.3 seconds for the opening
+  view's data, measured).
+- **A position nobody has asked for** is fetched from NASA's archive and built on one
+  processor. Measured once, on the build before the Gaia fix below was deployed: Proxima
+  Centauri, detector 5, 0.1 degrees, 63 exposures, 153 seconds (a laptop: about 15);
+  asked again, 0.3 seconds. On that build the name of a star not yet looked up (Wolf 359)
+  had not answered after 90 seconds: ESA's Gaia server took no connections that day and
+  the build lacked the short connection limit (`astrometry._gaia_archive`, on `main`
+  since the push that set the plan).
+- **A new search of a patch** (Find changes, Far-off planet): not tried on Render.
+- **No disk.** Everything fetched after the build, and every vote, is lost when the
+  service restarts or is deployed again. The pre-built results come back with every
+  build. (A paid plan can have a disk; none is set up.)
+
+What the free plan meant, and would mean again:
 
 - **It sleeps.** After 15 minutes without a visitor the service stops, and the next visitor
   waits about a minute while it starts (our server alone needs 37 seconds on a tenth of a
-  processor). For the days of judging, change **Instance type**
-  to Starter in the service's Settings (always on; it needs a card; we believe about US$7
-  a month, charged for the time used: check Render's price list) and change it back
-  afterwards.
+  processor).
 - **512 MB of memory and a tenth of a processor.** The pre-built views open at once. A
-  position nobody has asked for is fetched from NASA's archive and built on that small
-  processor: expect minutes where a laptop takes 15 seconds. A new search of a patch
-  (Find changes, Far-off planet) may be slower still or run out of memory: not tried.
-- **No disk.** Everything fetched after the build, and every vote, is lost when the
-  service restarts or is deployed again. The pre-built results come back with every build.
+  position nobody has asked for was never tried on it: expect many minutes. A new search
+  of a patch may be slower still or run out of memory: not tried.
+- **No disk**, as above.
 
 ## Tested, and not tested
 
@@ -93,8 +121,11 @@ second after the page; the buttons Barnard's Star, Candidate A and WISE 0855 eac
 their result within the five seconds waited; Observe anomalies (142 rows), Three tools and
 the practice round opened in under two seconds each; no failed request and no page error.
 
-Not tested on Render: a position nobody has asked for, a new search of a patch, waking
-from sleep, and the phone.
+On the Standard plan, the same afternoon: a position nobody had asked for ("The plan"
+above has the figures).
+
+Not tested on Render: a new search of a patch, waking from sleep (free plan only), and
+the phone.
 
 ## Refreshing the pre-built demo results
 

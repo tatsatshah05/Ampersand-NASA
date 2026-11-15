@@ -79,7 +79,7 @@ archive on Amazon S3, with IRSA's cutout service as the automatic fallback. They
 (`SPHEREX_CACHE_DIR` moves it), so a repeat is instant. Deploying, and the warm-up that prepares every view the
 page opens or links to, are in [docs/deploy.md](docs/deploy.md); the short path for Render is
 [docs/deploy-render.md](docs/deploy-render.md). The public copy is at https://spherex-sky-change-viewer.onrender.com
-(Render's free plan: it sleeps after 15 minutes without a visitor and takes about a minute to wake).
+(Render's Standard plan since 2026-11-15, which is always on).
 
 ## Run the checks
 

@@ -1,5 +1,5 @@
 # Render blueprint for the SPHEREx sky-change viewer: one web service built from the Dockerfile.
-# How to use it, what the free plan means and how to refresh the pre-built demo views:
+# How to use it, what the plan means and how to refresh the pre-built demo views:
 # docs/deploy-render.md.
 services:
   - type: web
@@ -7,7 +7,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    plan: free                      # no card needed; sleeps after 15 minutes without visitors (see the doc)
+    plan: standard                  # 1 CPU, 2 GB, always on (US$25 a month; chosen 2026-11-15 for the judging). "free" costs nothing but sleeps: see the doc
     region: oregon                  # next to NASA's public copy of the archive on Amazon (us-west-2)
     healthCheckPath: /openapi.json
     autoDeploy: true                # every push to the deployed branch builds and goes live
