@@ -30,9 +30,13 @@ Method, in the order the code runs
    steady, and the source is missing wherever the fit says it should be.
 5. The same linking with the Earth's motion reversed, which nothing real can follow.
    What that finds is the number of links chance alone makes in this picture.
-6. The limit: 5 times each visit's noise, raised for the smearing of a near object
-   within a visit (it moves while the visit lasts), and the share of the picture in
-   which an object at each distance stays in view in every visit.
+6. Twice over: once with every exposure of each visit, which is deepest for a far
+   object, and once with only the densest few days of each visit (`densest_days`). A
+   near object moves while a visit lasts, up to tens of arcsec in a visit of five
+   weeks, and is a faint streak in the whole stack but a point in a few days' worth.
+7. The limit: the noise of each visit, raised for whatever smearing is left, and the
+   share of the picture in which an object at each distance stays in view in every
+   visit and the sky is clear. At each distance the better of the two passes counts.
 
 Limits
 - At least three visits are needed, on both sides of the Earth's orbit.
@@ -67,7 +71,7 @@ from scipy.stats import chi2 as chi2_dist
 
 from . import astrometry, pipeline, search, spherex, training
 
-VERSION = 3
+VERSION = 4
 DISTANT_DIR = spherex.CACHE / "distant"
 ARCSEC_PER_RADIAN = 206264.806
 
@@ -103,6 +107,9 @@ MATCH_ARCSEC = 5.0          # a catalogue source this close is "at that place"
 CATALOGUE_SHARE = 0.25      # ... if it is at least this bright next to the SPHEREx source
 SUPPORT_SIGMA = 3.5         # the other detector "sees it too" at this strength, in at least two visits
 MIN_IN_VIEW = 0.1           # a distance is quoted only if this share of the picture is searched for it
+TIGHT_WINDOWS_DAYS = (3.0, 6.0, 10.0)   # the "densest days" of a visit: the shortest of these windows that holds ...
+TIGHT_MIN_EXPOSURES = 5                 # ... this many exposures (the stack drops glitches from 5 up) ...
+TIGHT_MIN_SHARE = 0.5                   # ... and this share of the visit's exposures
 DISTANCES_AU = (300, 500, 700, 1000, 1500, 2000, 3000, 5000, 10000, 20000, 30000)
 
 WISE_ZERO_JY = {"w1": 309.54, "w2": 171.787}    # WISE Explanatory Supplement, flux of magnitude zero
@@ -641,6 +648,77 @@ def limit_table(visits: list[dict], noise_mjy: dict[int, float], ra: float, dec:
 
 
 # ---------------------------------------------------------------------------
+# The stacks: every visit whole, and every visit from its densest few days
+# ---------------------------------------------------------------------------
+
+def densest_days(mjds: np.ndarray) -> np.ndarray | None:
+    """Which exposures of a visit fall in its densest few days, or None when trimming gains nothing.
+
+    A body 500 AU away moves about 7 arcsec a day across the sky at the worst of times, and a
+    visit can last five weeks: stacked whole, the body is a streak too faint to find. Most of
+    a visit's exposures usually come within a few days, though (18 of 25 within 3 days in one
+    visit of WISE 0855), and those alone show a near body as a point.
+    """
+    if len(mjds) < TIGHT_MIN_EXPOSURES or float(mjds.max() - mjds.min()) <= TIGHT_WINDOWS_DAYS[0]:
+        return None
+    needed = max(TIGHT_MIN_EXPOSURES, int(math.ceil(TIGHT_MIN_SHARE * len(mjds))))
+    for days in TIGHT_WINDOWS_DAYS:
+        counts = [int(((mjds >= start) & (mjds <= start + days)).sum()) for start in mjds]
+        best = int(np.argmax(counts))
+        if counts[best] >= needed:
+            keep = (mjds >= mjds[best]) & (mjds <= mjds[best] + days)
+            return None if keep.all() else keep
+    return None
+
+
+def visit_stacks(ra: float, dec: float, fov: float, detector: int) -> dict:
+    """The real stacked image of each visit, twice: from all its exposures, exactly as
+    `training.epoch_stacks` builds it, and from its densest few days only (`densest_days`).
+
+    Returns `grid`, `n`, `failures`, and `all` and `tight`, each {"images", "items"} keyed by
+    visit number; `tight` is None when no visit of this detector had anything to trim.
+    One visit is built at a time, so memory is two stacks whatever the number of visits.
+    """
+    exposures = spherex.find_exposures(ra, dec)
+    epoch_of = pipeline.assign_epochs(exposures)
+    chosen = [(e, ep) for e, ep in zip(exposures, epoch_of, strict=True) if e["detector"] == detector]
+    fetched = spherex.fetch_cutouts([e for e, _ in chosen], ra, dec, round(fov * 1.5, 4))
+    failures = [f"{e['obs_id']} D{e['detector']}: {err}" for e, p, err in fetched if p is None]
+    grid, n = pipeline.make_grid(ra, dec, fov)
+    whole: dict[str, dict] = {"images": {}, "items": {}}
+    tight: dict[str, dict] = {"images": {}, "items": {}}
+    trimmed = False
+    with pipeline._BUILD_LOCK:               # one memory-heavy build at a time, shared with /api/frames
+        for ep in sorted({ep for _, ep in chosen}):
+            paths = [path for (_, path, _), (_, p) in zip(fetched, chosen, strict=True) if p == ep and path is not None]
+            prepared = []
+            stack_all = pipeline.Stacker(n)
+            for path in paths:
+                item = pipeline.prepare_cutout(path, grid, n, ra, dec)
+                if item is None:
+                    continue
+                data, saturated = item.pop("data"), item.pop("saturated")
+                stack_all.add(data, saturated, item["weight"])
+                prepared.append((item, data, saturated))
+            if not prepared:
+                continue
+            items = [p[0] for p in prepared]
+            whole["images"][ep], whole["items"][ep] = stack_all.result()["image"], items
+            keep = densest_days(np.array([it["mjd"] for it in items], dtype=float))
+            if keep is None:
+                tight["images"][ep], tight["items"][ep] = whole["images"][ep], items
+                continue
+            trimmed = True
+            stack_tight = pipeline.Stacker(n)
+            for (item, data, saturated), wanted in zip(prepared, keep, strict=True):
+                if wanted:
+                    stack_tight.add(data, saturated, item["weight"])
+            tight["images"][ep] = stack_tight.result()["image"]
+            tight["items"][ep] = [it for it, wanted in zip(items, keep, strict=True) if wanted]
+    return {"grid": grid, "n": n, "failures": failures, "all": whole, "tight": tight if trimmed else None}
+
+
+# ---------------------------------------------------------------------------
 # One detector
 # ---------------------------------------------------------------------------
 
@@ -760,7 +838,7 @@ def _candidate(verdict: dict, field: dict, others: list[dict], truth: dict | Non
     if verdict["skipped"]:
         cautions.append("Not every visit shows it: " + "; ".join(
             f"visit {field['epochs'][s['visit']] + 1}, {s['reason']}" for s in verdict["skipped"]) + ".")
-    out = {"detector": field["detector"], "distance_au": round(distance),
+    out = {"detector": field["detector"], "exposures": field.get("exposures", "all"), "distance_au": round(distance),
            "distance_range_au": [round(low), round(high) if high else None],
            "parallax_arcsec": round(plx, 2), "jump_arcsec": round(verdict["jump_arcsec"], 1),
            "drift_arcsec_per_year": round(verdict["drift_arcsec_per_year"], 2),
@@ -850,6 +928,19 @@ def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int
     for det in detectors:
         if progress:
             progress(det)
+        if not simulated:
+            # The real search: each visit whole, and each visit from its densest few days.
+            built = visit_stacks(ra, dec, fov, det)
+            failures += built["failures"]
+            for label, part in (("all", built["all"]), ("densest_days", built["tight"])):
+                if part is None or not part["images"]:
+                    continue
+                field = search_stacks(built["grid"], built["n"], part["images"], part["items"], det, ra, dec, fov,
+                                      catalogue=catalogue)
+                field["exposures"] = label
+                fields.append(field)
+            continue
+        # A practice round: the stacks the practice screen shows, with its object added to one detector.
         grid, n, stacks, items, failed = training.epoch_stacks(ra, dec, fov, det)
         failures += failed
         if not stacks:
@@ -863,6 +954,7 @@ def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int
                                             int(planted["seed"]))
         fields.append(search_stacks(grid, n, images, items, det, ra, dec, fov, catalogue=catalogue,
                                     as_planted=simulated))
+        fields[-1]["exposures"] = "all"
         if truth is not None and truth["detector"] == det:
             # How strongly each visit shows the planted object at its true place: why it was or was not found.
             for k, spot in enumerate(truth["positions"]):
@@ -872,29 +964,34 @@ def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int
     if not fields:
         raise spherex.BadRequest("SPHEREx has no images of this position in the detectors asked for.")
 
-    candidates = [_candidate(v, f, [o for o in fields if o is not f], truth) for f in fields for v in f["links"]]
-    # The same object found in two detectors is one candidate: keep the stronger, name both.
+    # Another detector confirms a candidate; the other pass of the same detector is the same light.
+    candidates = [_candidate(v, f, [o for o in fields if o["detector"] != f["detector"]
+                                    and o["exposures"] == f["exposures"]] or
+                             [o for o in fields if o["detector"] != f["detector"]], truth)
+                  for f in fields for v in f["links"]]
+    # The same object found twice (two detectors, or both passes) is one candidate: keep the stronger.
     merged: list[dict] = []
     for c in sorted(candidates, key=lambda c: -sum(p["times_noise"] for p in c["positions"])):
-        twin = next((m for m in merged if m["detector"] != c["detector"] and any(
+        twin = next((m for m in merged if any(
             _separation(p["ra"], p["dec"], q["ra"], q["dec"]) <= 8.0 and p["epoch"] == q["epoch"]
             for p in c["positions"] for q in m["positions"])), None)
-        if twin is not None:
-            twin["also_found_in_detectors"] = sorted({*twin.get("also_found_in_detectors", []), c["detector"]})
-        else:
+        if twin is None:
             merged.append(c)
+        elif twin["detector"] != c["detector"]:
+            twin["also_found_in_detectors"] = sorted({*twin.get("also_found_in_detectors", []), c["detector"]})
     merged.sort(key=lambda c: (c["verdict"] != "clean", -sum(p["times_noise"] for p in c["positions"])))
 
-    # The limit at each distance: the better of the detectors searched.
+    # The limit at each distance: the best of the detectors and passes searched.
     best: dict[int, dict] = {}
     for f in fields:
         for row in f["limit"]:
             if row["distance_au"] not in best or row["faintest_mjy"] < best[row["distance_au"]]["faintest_mjy"]:
-                best[row["distance_au"]] = {**row, "detector": f["detector"]}
+                best[row["distance_au"]] = {**row, "detector": f["detector"], "exposures": f["exposures"]}
     best_limit = [best[d] for d in sorted(best)]
 
     result: dict[str, Any] = {
-        "simulation": simulated, "ra": ra, "dec": dec, "fov": fov, "detectors": [f["detector"] for f in fields],
+        "simulation": simulated, "ra": ra, "dec": dec, "fov": fov,
+        "detectors": sorted({f["detector"] for f in fields}),
         "status": ("cannot_search" if not any(f["can_search"] for f in fields)
                    else "candidates" if merged else "nothing_found"),
         "answer": _answer(merged, fields, best_limit, truth),
@@ -903,7 +1000,7 @@ def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int
                    "note": "Links found by the same search with the Earth's motion reversed. Nothing real can "
                            "follow that, so this is how many links chance alone makes in this picture."},
         "per_detector": [{
-            "detector": f["detector"], "can_search": f["can_search"],
+            "detector": f["detector"], "exposures": f["exposures"], "can_search": f["can_search"],
             "visits": [{"epoch": f["epochs"][k] + 1, "date": Time(v["mjd"], format="mjd").iso[:10],
                         "date_start": Time(v["mjd_start"], format="mjd").iso[:10],
                         "date_end": Time(v["mjd_end"], format="mjd").iso[:10], "n_exposures": v["n_exposures"],

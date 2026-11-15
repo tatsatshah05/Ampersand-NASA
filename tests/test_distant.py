@@ -271,3 +271,30 @@ def test_a_bad_plant_level_is_explained(client):
     response = client.get("/api/distant", params={"ra": 10.0, "dec": 10.0, "plant": "impossible"})
     assert response.status_code == 400
     assert "easy" in response.json()["detail"]
+
+
+def test_densest_days_keeps_the_bulk_of_a_long_visit():
+    # 18 exposures within two days, then 7 stragglers over the next five weeks (WISE 0855, visit 2, is like this).
+    mjds = np.concatenate([61000.0 + np.linspace(0.0, 2.0, 18), 61000.0 + np.linspace(8.0, 36.0, 7)])
+    keep = distant.densest_days(mjds)
+    assert keep is not None and keep.sum() == 18 and keep[:18].all()
+    # A visit that is already short, or has too few exposures to trim, is left whole.
+    assert distant.densest_days(61000.0 + np.linspace(0.0, 2.5, 20)) is None
+    assert distant.densest_days(61000.0 + np.array([0.0, 10.0, 20.0, 30.0])) is None
+    # Evenly spread over a month: no few days hold half of it, so nothing is gained by trimming.
+    assert distant.densest_days(61000.0 + np.linspace(0.0, 30.0, 20)) is None
+
+
+def test_trimming_a_visit_cuts_the_smear_of_a_near_object():
+    start = Time("2025-11-07").mjd
+    mjds = np.concatenate([start + np.linspace(0.0, 2.0, 18), start + np.linspace(8.0, 36.0, 7)])
+    whole = {0: [{"mjd": float(m), "weight": 1.0} for m in mjds]}
+    keep = distant.densest_days(mjds)
+    tight = {0: [it for it, wanted in zip(whole[0], keep, strict=True) if wanted]}
+    smear_whole = distant.visits_from(whole, 133.76, -7.24)[0]["smear"]
+    smear_tight = distant.visits_from(tight, 133.76, -7.24)[0]["smear"]
+    assert smear_whole > 0.08 and smear_tight < 0.01
+    psf = training.PSF_SIGMA_PX[5] * pipeline.GRID_ARCSEC
+    plx = distant.ARCSEC_PER_RADIAN / 500.0                 # a body at 500 AU
+    assert distant._loss(plx, {"smear": smear_whole}, psf) < 0.15     # a streak: under a sixth of its peak is left
+    assert distant._loss(plx, {"smear": smear_tight}, psf) > 0.75     # a point

@@ -83,3 +83,12 @@ describe('remembering the choice', () => {
     expect(() => storeLevel('expert')).not.toThrow()
   })
 })
+
+describe('the parallax of a far-off body', () => {
+  it('keeps a parallax of 687,549 mas (a body 300 times the Earth-Sun distance away) and drops an absurd one', () => {
+    const kept = readAddress('?ra=10&dec=5&pmra=100&pmdec=200&parallax=687549').selection
+    expect(kept.parallax).toBe(687549)
+    const dropped = readAddress('?ra=10&dec=5&pmra=100&pmdec=200&parallax=5000000').selection
+    expect(dropped.parallax).toBeNull()
+  })
+})

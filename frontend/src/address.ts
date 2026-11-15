@@ -94,7 +94,8 @@ const validDec = (v: number | null): v is number => v !== null && v >= -90 && v 
 const validFov = (v: number | null): v is number => v !== null && v > FOV_ABOVE && v <= FOV_MAX
 const validDetector = (v: number | null): v is number => v !== null && Number.isInteger(v) && v >= 1 && v <= 6
 const validMotion = (v: number | null): v is number => v !== null && Math.abs(v) <= 1e5
-const validParallax = (v: number | null): v is number => v !== null && Math.abs(v) <= 1e4
+// A body 300 times the Earth-Sun distance away has a parallax of about 690,000 mas, so the limit is generous.
+const validParallax = (v: number | null): v is number => v !== null && Math.abs(v) <= 3e6
 
 function cleanName(raw: string | null | undefined): string | null {
   if (!raw) return null

@@ -8,7 +8,7 @@
   5,
   6
  ],
- "seconds": 7.6,
+ "seconds": 7.8,
  "detector_now": null,
  "detectors_done": 2,
  "detectors_total": 2,
@@ -26,6 +26,7 @@
   "candidates": [
    {
     "detector": 5,
+    "exposures": "all",
     "distance_au": 2558,
     "distance_range_au": [
      2534,
@@ -117,7 +118,8 @@
     "share_of_picture": 0.25,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    },
    {
     "distance_au": 1500,
@@ -125,7 +127,8 @@
     "share_of_picture": 0.43,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    },
    {
     "distance_au": 2000,
@@ -133,7 +136,8 @@
     "share_of_picture": 0.53,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    },
    {
     "distance_au": 3000,
@@ -141,7 +145,8 @@
     "share_of_picture": 0.63,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    },
    {
     "distance_au": 5000,
@@ -149,7 +154,8 @@
     "share_of_picture": 0.72,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    },
    {
     "distance_au": 10000,
@@ -157,7 +163,8 @@
     "share_of_picture": 0.79,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    },
    {
     "distance_au": 20000,
@@ -165,7 +172,8 @@
     "share_of_picture": 0.82,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    },
    {
     "distance_au": 30000,
@@ -173,7 +181,8 @@
     "share_of_picture": 0.83,
     "faintest_mjy": 0.185,
     "smear_arcsec": 0.0,
-    "detector": 5
+    "detector": 5,
+    "exposures": "all"
    }
   ],
   "chance": {
@@ -183,6 +192,7 @@
   "per_detector": [
    {
     "detector": 5,
+    "exposures": "all",
     "can_search": true,
     "visits": [
      {
@@ -287,6 +297,7 @@
    },
    {
     "detector": 6,
+    "exposures": "all",
     "can_search": true,
     "visits": [
      {
