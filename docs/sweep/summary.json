@@ -1,0 +1,190 @@
+{
+ "tiles_done": 42,
+ "tiles_skipped": 0,
+ "area_sq_deg": 301.43,
+ "tally": {
+  "sources": 818618,
+  "comparable": 810220,
+  "changed_anchors": 3706,
+  "killed_second_image": 3104,
+  "single_image_only": 535,
+  "changed_all_images": 67,
+  "killed_edge": 0,
+  "killed_shape": 29,
+  "killed_neighbour": 3,
+  "killed_saturation_residue": 16,
+  "killed_ghost_risk": 1,
+  "survivors": 18,
+  "single_image_killed": 535,
+  "survivors_single_image": 0
+ },
+ "survivors_by_kind": {
+  "known_variable": 8,
+  "known_eruption": 2,
+  "candidate": 8
+ },
+ "survivors": [
+  {
+   "tile": "l000.0_b+0.0",
+   "ra": 265.9055,
+   "dec": -28.41522,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 112.2,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l000.0_b+0.0",
+   "ra": 266.19368,
+   "dec": -29.26382,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 73.8,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l000.0_b-2.5",
+   "ra": 270.96968,
+   "dec": -31.45726,
+   "kind": "known_eruption",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 1611.6,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l003.0_b+0.0",
+   "ra": 267.7888,
+   "dec": -26.61809,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 31.8,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l003.0_b+0.0",
+   "ra": 267.49549,
+   "dec": -27.56803,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": false,
+   "bright_mjy": 125.5,
+   "direction": "faded"
+  },
+  {
+   "tile": "l006.0_b+0.0",
+   "ra": 270.80362,
+   "dec": -23.46745,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": true,
+   "bright_mjy": 2575.6,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l009.0_b+0.0",
+   "ra": 272.10809,
+   "dec": -22.28134,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": false,
+   "bright_mjy": 862.8,
+   "direction": "faded"
+  },
+  {
+   "tile": "l015.0_b+0.0",
+   "ra": 274.29409,
+   "dec": -16.214,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 70.0,
+   "direction": "faded"
+  },
+  {
+   "tile": "l018.0_b+0.0",
+   "ra": 276.47076,
+   "dec": -12.06769,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 102.6,
+   "direction": "faded"
+  },
+  {
+   "tile": "l024.0_b+0.0",
+   "ra": 278.36433,
+   "dec": -8.93742,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 3222.4,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l024.0_b+0.0",
+   "ra": 278.0644,
+   "dec": -8.02252,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 36.5,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l027.0_b+0.0",
+   "ra": 279.74438,
+   "dec": -3.86389,
+   "kind": "known_eruption",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 11766.2,
+   "direction": "faded"
+  },
+  {
+   "tile": "l027.0_b+0.0",
+   "ra": 279.73756,
+   "dec": -3.86269,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": false,
+   "bright_mjy": 1300.6,
+   "direction": "faded"
+  },
+  {
+   "tile": "l330.0_b+0.0",
+   "ra": 241.70931,
+   "dec": -52.20484,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": true,
+   "bright_mjy": 178.1,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l333.0_b+0.0",
+   "ra": 244.5625,
+   "dec": -50.72343,
+   "kind": "known_variable",
+   "confirmed_in_all_exposures": null,
+   "bright_mjy": 38.9,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l339.0_b+0.0",
+   "ra": 250.48507,
+   "dec": -46.02356,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": true,
+   "bright_mjy": 54.1,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l342.0_b+0.0",
+   "ra": 253.18044,
+   "dec": -44.67687,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": true,
+   "bright_mjy": 976.2,
+   "direction": "brightened"
+  },
+  {
+   "tile": "l354.0_b+0.0",
+   "ra": 261.92881,
+   "dec": -35.29494,
+   "kind": "candidate",
+   "confirmed_in_all_exposures": false,
+   "bright_mjy": 38.9,
+   "direction": "brightened"
+  }
+ ]
+}

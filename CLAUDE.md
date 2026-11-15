@@ -917,3 +917,17 @@ Second hunt and the watchlist (2026-11-14 evening; `docs/search.md`, `docs/watch
 - Strongest new candidate: W40 young star at RA 277.82381, Dec -2.14663, halved between September
   2025 and March 2026 in five detectors; NEOWISE factor 3.7 at 3.4 microns over 21 visits. A
   candidate, with the same limits as the Serpens South star.
+
+Sweep of the Milky Way's plane for newly appeared infrared sources (2026-11-14; `backend/sweep.py`, `scripts/sweep_plane.py`, `docs/sweep.md`)
+- Detector 6 whole images (about 100 MB read from S3 in 6 to 20 s each; an image is 2040 x 2040, aperture 2.5 pixels, noise about
+  4 mJy per measurement) compared between three epochs (Aug to Sep 2025, Feb to Apr 2026, Aug to Sep 2026), ten times brighter or
+  absent in every image of both epochs. Proof: V7994 Sgr found blind in a tile 0.4 degrees off it (1,289 mJy, VSX type NA; 29,424
+  sources, 113 naive two-visit changes, 98 killed by the second image, 2 survivors: the nova and a catalogued variable).
+- 42 tiles, 301 square degrees, 818,618 sources compared down to 30 mJy at 4.4 to 5.0 micrometres: 3,706 naive changes, 67 confirmed in
+  every image, 18 survivors after the artefact checks: 8 catalogued variables, 2 known novae (V7994 Sgr, V0691 Ser), 8 unexplained,
+  of which 4 are candidates (A RA 270.80362 Dec -23.46745, B RA 253.18044 Dec -44.67687, C RA 241.70931 Dec -52.20484, D weak) and
+  4 were set aside after looking. A, B, C are in no catalogue asked (B and C only with a counterpart 1,000 times fainter), NEOWISE
+  saw nothing there in 2014 to 2024, and no report was found: candidates, not confirmed, not for the word "discovery".
+- A saturated image gives a lower limit and is never evidence that a source is absent (a bug found and fixed on 2026-11-14: it had
+  produced three false candidates). Known hole: a source 4 pixels from a saturated core slipped between the neighbour and
+  saturation-residue checks.
