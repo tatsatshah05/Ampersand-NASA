@@ -338,6 +338,18 @@ export interface DistanceScale {
   nearest: { x: number }
 }
 
+/**
+ * Which side of its marker the nearest-star label goes: to the right unless the object's
+ * marker (and the line down to it) would fall inside the label, then to the left if there
+ * is room. `textWidth` is the label's width in picture units.
+ */
+export function nearestLabelSide(s: DistanceScale, textWidth: number): 'right' | 'left' {
+  const gap = 6
+  const clearRight = s.object.x < s.nearest.x - gap || s.object.x > s.nearest.x + 3 + textWidth + gap
+  if (clearRight) return 'right'
+  return s.nearest.x - 3 - textWidth >= 0 ? 'left' : 'right'
+}
+
 /** A round number at or above v: 1, 2 or 5 times a power of ten. */
 export function niceCeil(v: number): number {
   const p = 10 ** Math.floor(Math.log10(v))
@@ -362,7 +374,7 @@ export function distanceScale(ly: number | null, low: number | null = null, high
   for (let v = 0; v <= maxLy + 1e-9; v += step) ticks.push({ x: at(v), label: v.toLocaleString('en-US') })
   return {
     width,
-    height: 78,
+    height: 86,
     x0,
     x1,
     maxLy,

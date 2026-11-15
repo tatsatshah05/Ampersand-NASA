@@ -30,6 +30,7 @@ import {
   hueDegrees,
   limbIntensity,
   linearSrgb,
+  nearestLabelSide,
   niceCeil,
   portraitLayout,
   type Rgb,
@@ -252,6 +253,12 @@ describe('the distance line', () => {
     expect(s.object.xHigh).toBeGreaterThan(s.object.x)
     expect(s.maxLy).toBeGreaterThanOrEqual(2742)
     expect(s.nearest.x - s.x0).toBeLessThan(1)
+  })
+  it("puts the nearest-star label where the object's marker is not", () => {
+    // Barnard's Star at 5.96 ly sits inside a right-hand label: it goes left.
+    expect(nearestLabelSide(distanceScale(5.963)!, 120)).toBe('left')
+    // R Draconis far to the right: the label stays right, next to the Sun's end.
+    expect(nearestLabelSide(distanceScale(2607, 2472, 2742)!, 120)).toBe('right')
   })
   it('rounds the end of the line to 1, 2 or 5 times a power of ten', () => {
     expect([0.3, 1, 1.5, 3, 7, 40, 999].map(niceCeil)).toEqual([0.5, 1, 2, 5, 10, 50, 1000])

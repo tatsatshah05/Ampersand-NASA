@@ -1,0 +1,354 @@
+/* The "What is it?" card (ObjectCard.tsx).
+   The card's own chrome uses only the page's tokens: --bg, --surface, --line, --text,
+   --muted, and --ink for the one primary action. The picture (.oc-plate) is the exception:
+   space is black, so it is drawn on a small black field of its own, with its label in
+   white; every colour inside it is computed from a measured temperature (portrait.ts). */
+.oc {
+  box-sizing: border-box;
+  max-width: 640px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card, 18px);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--size-body, 14px);
+  line-height: 1.47;
+}
+
+/* Long catalogue names ("WISEA J085510.74-071442.5", "gaiadr3.astrophysical_parameters.teff_gspphot")
+   may break anywhere; ordinary words and numbers wrap only between words. */
+.oc-title,
+.oc-aka,
+.oc code,
+.oc-col,
+.oc-near,
+.oc-notes {
+  overflow-wrap: anywhere;
+}
+
+.oc * {
+  box-sizing: border-box;
+}
+
+.oc-eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-small, 12px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.oc-title {
+  margin: 4px 0 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.oc-aka {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.oc-status {
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+.oc-notice {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control, 10px);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.oc-kind {
+  margin: 14px 0 0;
+  font-size: var(--size-read, 17px);
+  line-height: 1.4;
+}
+
+.oc-line {
+  margin: 8px 0 0;
+}
+
+.oc-blur {
+  padding-left: 12px;
+  border-left: 3px solid var(--line);
+}
+
+/* ---------------------------------------------------------------- the picture */
+.oc-plate {
+  margin: 16px 0 0;
+  padding: 14px 14px 12px;
+  border-radius: var(--radius-tile, 14px);
+  background: #000000; /* space is black */
+  color: #ffffff;
+}
+
+.oc-plate-label {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.oc-plate svg {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.oc-scale {
+  margin-top: 12px !important;
+}
+
+.oc-plate figcaption {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.oc-plate figcaption ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oc-plate figcaption li + li {
+  margin-top: 4px;
+}
+
+/* ---------------------------------------------------------------- the words */
+.oc-facts {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+}
+
+.oc-facts li {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.oc-src {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: var(--size-small, 12px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.oc-unknown {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.oc-h3 {
+  margin: 20px 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.oc-near {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.oc-ids {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.oc-ids div {
+  display: flex;
+  gap: 8px;
+}
+
+.oc-ids dt {
+  flex: 0 0 56px;
+  font-weight: 600;
+}
+
+.oc-ids dd {
+  margin: 0;
+}
+
+.oc code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.92em;
+}
+
+.oc-table-wrap {
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.oc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.oc-table th,
+.oc-table td {
+  padding: 7px 12px 7px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.oc-table thead th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.oc-table tbody th {
+  font-weight: 500;
+}
+
+.oc-values {
+  table-layout: fixed;
+}
+
+.oc-w-quantity {
+  width: 25%;
+}
+
+.oc-w-value {
+  width: 23%;
+}
+
+.oc-w-error {
+  width: 17%;
+}
+
+.oc-w-source {
+  width: 35%;
+}
+
+.oc-num {
+  overflow-wrap: anywhere;
+}
+
+.oc-col {
+  display: block;
+  color: var(--muted);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  overflow-wrap: normal;
+}
+
+.oc-notes {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.oc-look {
+  margin-top: 16px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 980px;
+  background: var(--ink);
+  color: var(--bg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.oc-look:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.oc-credit {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: var(--size-small, 12px);
+}
+
+@media (max-width: 480px) {
+  .oc {
+    padding: 16px;
+  }
+
+  .oc-title {
+    font-size: 22px;
+  }
+
+  .oc-plate {
+    padding: 12px 10px 10px;
+  }
+}
+
+/* On a narrow screen each table row becomes a short block: the quantity, then its value
+   and error, then where it comes from. */
+@media (max-width: 560px) {
+  .oc-table thead {
+    display: none;
+  }
+
+  .oc-table,
+  .oc-table tbody,
+  .oc-table tr,
+  .oc-table th,
+  .oc-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .oc-table tr {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .oc-table th,
+  .oc-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .oc-table td.oc-num {
+    display: inline;
+    white-space: normal;
+  }
+
+  .oc-table td.oc-num + td.oc-num:not(:empty)::before {
+    content: '  ';
+    white-space: pre;
+  }
+
+  .oc-table td:last-child {
+    margin-top: 2px;
+    color: var(--muted);
+  }
+
+  .oc-nb td,
+  .oc-nb td:last-child {
+    display: inline;
+    margin: 0 12px 0 0;
+    color: var(--text);
+  }
+
+  .oc-nb td[data-label]:not(:empty)::before {
+    content: attr(data-label) ' ';
+    color: var(--muted);
+  }
+
+  .oc-nb td.oc-num + td.oc-num:not(:empty)::before {
+    content: attr(data-label) ' ';
+  }
+}
