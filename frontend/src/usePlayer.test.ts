@@ -20,12 +20,12 @@ describe('the timer', () => {
 
 /** A page whose picture can be scrolled away and whose tab can be hidden, by hand. */
 function fakePage() {
-  let seen: ((entries: { isIntersecting: boolean }[]) => void) | null = null
+  let seen: ((entries: { isIntersecting: boolean; intersectionRatio: number }[]) => void) | null = null
   let onVisibility: (() => void) | null = null
   let watching = 0
   const page: SightPage = {
     IntersectionObserver: class {
-      constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+      constructor(callback: (entries: { isIntersecting: boolean; intersectionRatio: number }[]) => void) {
         seen = callback
       }
       observe() {
@@ -47,7 +47,7 @@ function fakePage() {
   }
   return {
     page,
-    scroll: (inView: boolean) => seen?.([{ isIntersecting: inView }]),
+    scroll: (inView: boolean, ratio = inView ? 1 : 0) => seen?.([{ isIntersecting: inView, intersectionRatio: ratio }]),
     tab: (hidden: boolean) => {
       page.document.hidden = hidden
       onVisibility?.()
@@ -64,6 +64,14 @@ describe('resting while the picture is out of sight', () => {
     watchSight({} as Element, (r) => said.push(r), f.page)
     f.scroll(false)
     f.scroll(true)
+    expect(said).toEqual([false, true, false])
+  })
+  it('rests when only a sliver of the picture is left in the window (a short tool panel)', () => {
+    const f = fakePage()
+    const said: boolean[] = []
+    watchSight({} as Element, (r) => said.push(r), f.page)
+    f.scroll(true, 0.006) // 4 px of a 642 px picture
+    f.scroll(true, 0.5)
     expect(said).toEqual([false, true, false])
   })
   it('rests while the tab is hidden, and only says each change once', () => {

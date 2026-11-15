@@ -89,13 +89,23 @@ export function usePlayer(framesKey: string, count: number, resting = false) {
 
 /** What watchSight needs from the page, so that it can be tested without one. */
 export interface SightPage {
-  IntersectionObserver?: new (callback: (entries: { isIntersecting: boolean }[]) => void) => { observe(el: Element): void; disconnect(): void }
+  IntersectionObserver?: new (
+    callback: (entries: { isIntersecting: boolean; intersectionRatio: number }[]) => void,
+    options?: { threshold: number[] },
+  ) => { observe(el: Element): void; disconnect(): void }
   document: { hidden: boolean; addEventListener(type: 'visibilitychange', f: () => void): void; removeEventListener(type: 'visibilitychange', f: () => void): void }
 }
 
 /**
- * Tell `onChange` whether the picture should rest: true while `el` is entirely out of the
- * window or the tab is hidden, false when it is back. Returns a function that stops watching.
+ * The share of the picture that must be in the window for it to count as seen. A short tool
+ * panel can leave a sliver of a few pixels at the top of the window; nobody watches that.
+ */
+export const SEEN_SHARE = 0.1
+
+/**
+ * Tell `onChange` whether the picture should rest: true while less than SEEN_SHARE of `el`
+ * is in the window, or the tab is hidden; false when it is back. Returns a function that
+ * stops watching.
  */
 export function watchSight(el: Element, onChange: (resting: boolean) => void, page: SightPage): () => void {
   let inView = true
@@ -107,12 +117,15 @@ export function watchSight(el: Element, onChange: (resting: boolean) => void, pa
     said = resting
   }
   const observer = page.IntersectionObserver
-    ? new page.IntersectionObserver((entries) => {
-        const last = entries[entries.length - 1]
-        if (!last) return
-        inView = last.isIntersecting
-        report()
-      })
+    ? new page.IntersectionObserver(
+        (entries) => {
+          const last = entries[entries.length - 1]
+          if (!last) return
+          inView = last.isIntersecting && last.intersectionRatio >= SEEN_SHARE
+          report()
+        },
+        { threshold: [0, SEEN_SHARE] },
+      )
     : null
   observer?.observe(el)
   const onVisibility = () => {

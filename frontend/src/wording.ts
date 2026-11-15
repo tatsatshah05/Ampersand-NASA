@@ -362,7 +362,7 @@ export function tableNotes(data: FramesReady, level: 'beginner' | 'expert'): str
   if (level === 'beginner') {
     // The overall sentence already says it when nothing moved, so this is only for a mover.
     if ((withinError.length || inPositionError.length) && overallKind(data) === 'moved') {
-      notes.push('Within error: too small to be sure it is real movement.')
+      notes.push('Within error: too small to be sure.')
     }
     if (notFound.length) notes.push(`Not found in ${listVisits(notFound)}: no clear spot could be measured there.`)
     return notes
@@ -416,7 +416,7 @@ function overallKind(data: FramesReady): OverallKind {
   return measured.some((r) => r.real) ? 'came back' : 'still'
 }
 
-const BRIGHTNESS_ELSEWHERE = 'For changes in brightness, see Expert’s Brightness over time.'
+const BRIGHTNESS_ELSEWHERE = 'For brightness, see Expert’s Brightness over time.'
 
 /**
  * Beginner's sentence about the whole run, from the first visit with a position to the last,

@@ -113,7 +113,7 @@ describe('an object that stayed in place: RW Aurigae', () => {
     expect(overallResult(rwAur)).toEqual({
       sentence: 'No movement seen between September 2025 and September 2026.',
       more: ['Any shift was under a third of a pixel. Its catalogue motion expected 0.0: it barely moves.'],
-      pointer: 'For changes in brightness, see Expert’s Brightness over time.',
+      pointer: 'For brightness, see Expert’s Brightness over time.',
     })
     // The sentence says "within error" for every row, so the rows do not repeat it.
     expect(plain(rwAur)).toEqual(['start', '0.2 south, 0.8 east', '0.2 south, 0.8 east'])
@@ -157,7 +157,7 @@ describe('a marginal detection and a blended neighbour: WISE 0855, detector 6', 
 describe('four visits, one of them within error: Epsilon Indi B', () => {
   it('marks only that row, and explains once', () => {
     expect(plain(epsInd)).toEqual(['start', '1.2 south, 1.2 east, within error', '2.0 south, 4.0 east', '3.8 south, 5.0 east'])
-    expect(tableNotes(epsInd, 'beginner')).toEqual(['Within error: too small to be sure it is real movement.'])
+    expect(tableNotes(epsInd, 'beginner')).toEqual(['Within error: too small to be sure.'])
     expect(expert(epsInd)[1].about).toMatch(/· within error$/)
     expect(overallResult(epsInd).sentence).toBe('It moved 6.3 arcseconds south-east between May 2025 and September 2026.')
   })

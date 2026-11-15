@@ -1297,8 +1297,12 @@
     padding: 16px;
   }
 
-  .readout-block {
-    height: 200px;
+  /* Stacked, the page scrolls: the block takes the height of the whole table and its notes. */
+  .readout-block,
+  .inspector.beginner .readout-block {
+    height: auto;
+    min-height: 200px;
+    overflow: visible;
   }
 
   /* Beginner on a narrow screen: the steps come first, under the targets, so a newcomer sees
