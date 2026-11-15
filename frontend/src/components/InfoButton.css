@@ -33,11 +33,29 @@
   margin-top: -2px;
 }
 
+/* The player's buttons are all 36px tall; this one is round, whatever the row says. */
+.transport .info-button {
+  width: 24px;
+  height: 24px;
+}
+
 /* On a finger-sized screen the button is finger-sized too. */
 @media (pointer: coarse) {
-  .info-button {
+  .info-button,
+  .transport .info-button {
     width: 32px;
     height: 32px;
+  }
+}
+
+/* A narrow top bar (Beginner only: Expert has no button there): the title may wrap so that
+   the switch and its button share its row. */
+@media (max-width: 520px) {
+  .topbar:has(.info-button) .brand {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.2;
   }
 }
 
