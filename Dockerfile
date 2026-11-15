@@ -27,7 +27,7 @@ RUN pip install -r backend/requirements.txt
 # processor or no disk of its own. Packed on a laptop and published as a release file:
 # docs/deploy-render.md. Build with --build-arg SEED_URL= to leave them out.
 COPY scripts/seed_cache.py scripts/seed_cache.py
-ARG SEED_URL=https://github.com/tatsatshah05/Ampersand-NASA/releases/download/demo-cache-1/spherex-demo-cache.tar.gz
+ARG SEED_URL=https://github.com/tatsatshah05/Ampersand-NASA/releases/download/demo-cache-2/spherex-demo-cache.tar.gz
 RUN python scripts/seed_cache.py fetch "$SEED_URL" backend/cache
 
 COPY backend/ backend/

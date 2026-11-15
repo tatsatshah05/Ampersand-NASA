@@ -10,10 +10,10 @@ Render (render.com), chosen by the team on 2026-11-15.
   `/openapi.json`, redeployed on every push to the branch it was made from.
 - The `Dockerfile` downloads the **pre-built demo results** and unpacks them into the cache
   folder while the image is built (`scripts/seed_cache.py fetch`). They are a release file
-  of this repository, `demo-cache-1` (81 MB packed; about 240 MB and 8,260 files unpacked):
+  of this repository, `demo-cache-2` (82 MB packed; about 240 MB and 8,365 files unpacked):
   the finished views of the eleven buttons in every detector and mode, their brightness
-  tables, the answers of their tools that were on the laptop's disk, and the list behind
-  Observe anomalies with its pictures and no votes. Results only, no cutouts.
+  tables, the answers of their tools (below), and the list behind Observe anomalies with
+  its pictures and no votes. Results only, no cutouts.
 
 Why they are needed: the free plan has a tenth of a processor and no disk. Without them
 the first visitor would wait minutes while the opening view was built from the archive,
@@ -32,6 +32,22 @@ and again after every restart.
 5. Open it and check: the page opens on Candidate B, blinking; the buttons Candidate A and
    Candidate C, and the five targets; `/?tools=1`; `/?watchlist=1`; What is it? on Barnard's Star.
 6. Put the address in `docs/project-page.md` (it is marked there) and in the submission.
+
+## What is pre-built for the tools, and what is not
+
+For all eleven buttons the answers of Far-off planet, Asteroids and What is it? are in
+the pre-built results (each was asked once on the laptop on 2026-11-15; JPL took up to
+six and a half minutes for one of them).
+
+Find changes is pre-built for Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae,
+R Draconis and Serpens South. It is **not** for Candidates A, B and C, V462 Lupi and
+V572 Velorum: those patches were first searched on 2026-11-15, when ESA's Gaia server
+took no connections all day. The search then ends with "Gaia DR3 did not answer", and an
+answer with a catalogue missing is never kept on disk, so each new server process works
+it out again from cutouts (one to four minutes on a laptop; far longer on the free plan).
+When Gaia answers again: run those five searches once on the laptop (the loop in
+`docs/deploy.md`, "After deploying: warm-up", step 4), then pack and publish again (last
+section below).
 
 ## What the free plan means
 
@@ -52,16 +68,17 @@ and again after every restart.
 
 Tested on a laptop on 2026-11-15:
 
-- `scripts/seed_cache.py` pack, fetch and copy: 8,260 files out, 142 rows in the list, no
-  votes. The release file downloads.
+- `scripts/seed_cache.py` pack, fetch and copy (first packing: 8,260 files out, 142 rows in
+  the list, no votes; the second packing, `demo-cache-2`, has 8,365 files). The release
+  file downloads.
 - With only the unpacked results as its cache and the network blocked,
   `scripts/warm_cache.py --check` loaded from disk at once all 74 requests for Barnard's
   Star (its 60 views and 14 brightness and spectrum requests) and the first 17 for
   Epsilon Indi B. The run was stopped at the next one, which is not kept on disk (Epsilon
   Indi B, detector 1, Sum following the target with no motion given: it is built from
   cutouts each time, so a deployed copy fetches them from the archive).
-- The image built with Docker (1.08 GB, the demo results downloaded from the release
-  during the build). Run with the free plan's limits (`--memory=512m --cpus=0.1`, `PORT`
+- The image built with Docker from the first packing (1.08 GB, the demo results
+  downloaded from the release during the build; the second packing was not built again). Run with the free plan's limits (`--memory=512m --cpus=0.1`, `PORT`
   set as Render sets it), the server was ready 37 seconds after the container started,
   used about 130 MB, and answered the opening view (Candidate B) in 0.4 seconds from the
   pre-built results.
@@ -77,7 +94,7 @@ the laptop that holds the warm cache:
 python scripts/warm_cache.py
 python scripts/warm_cache.py --check
 python scripts/seed_cache.py pack /tmp/spherex-demo-cache.tar.gz
-gh release create demo-cache-2 /tmp/spherex-demo-cache.tar.gz --prerelease \
+gh release create demo-cache-3 /tmp/spherex-demo-cache.tar.gz --prerelease \
   --title "Pre-built demo views (for deployment)" --notes "Results only; see docs/deploy-render.md"
 ```
 

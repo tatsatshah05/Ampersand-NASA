@@ -1228,9 +1228,11 @@ How to run them: `scripts/checks/README.md`. After deploying, the warm-up of eve
 
 Deploying (2026-11-15): the team chose Render. `render.yaml` is its blueprint (one free web service from the
 `Dockerfile`, redeployed on every push to the branch it was made from, `main`). The `Dockerfile` downloads the
-pre-built demo results (release file `demo-cache-1` of this repository: about 240 MB of finished views and answers
+pre-built demo results (release file `demo-cache-2` of this repository: about 240 MB of finished views and answers
 for the eleven buttons, no cutouts) and unpacks them into the cache folder, so the site opens at once on a host
 with a slow processor and no disk; `scripts/seed_cache.py` packs, fetches and copies them. After a change of
 `pipeline.VERSION` or `photometry.VERSION` the packed results are stale: warm the cache, pack and publish a new
-release, and change `SEED_URL` in the `Dockerfile`. Steps, limits of the free plan and what was tested:
-`docs/deploy-render.md`.
+release, and change `SEED_URL` in the `Dockerfile`. A patch search (`/api/search`) whose catalogue lookup failed is never
+kept on disk (`search.py`, "cached only when complete"): the five patches first searched on 2026-11-15 (Candidates A, B,
+C, V462 Lup, V572 Vel), with ESA's Gaia server down, are worked out again by every new server process until they are
+searched once with Gaia answering. Steps, limits of the free plan and what was tested: `docs/deploy-render.md`.
