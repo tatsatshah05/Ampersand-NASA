@@ -33,6 +33,7 @@ import {
   BRIGHTNESS_LOADING,
   BRIGHTNESS_TITLE,
   bandCaption,
+  bandVerdicts,
   brightnessAxis,
   brightnessResult,
   brightnessTip,
@@ -641,26 +642,51 @@ function SmallCharts({ chart, measure, hover, onHover, plain = false }: { chart:
  */
 export function PlainBrightness({ data }: { data: LightcurveResponse }) {
   const [hover, setHover] = useState<Hover>(null)
-  const measure = plainMeasure(data)
-  const chart = useMemo(() => layout(data, measure, new Set()), [data, measure])
+  const groups = useMemo(() => plainChartGroups(data), [data])
   const visits = [...new Set((data.bins ?? []).flatMap((b) => b.points.map((p) => p.epoch)))].sort((a, b) => a - b)
   return (
     <>
       <PlainWords lines={brightnessResult(data)} cautions={measureCautions(data)} />
-      {chart.charts.length > 0 && (
-        <>
-          <div className="spectrum-visits">
-            {visits.map((ep) => (
-              <span key={ep} className="brightness-visit">
-                <i style={{ background: visitColour(ep) }} />
-                Visit {ep}
-              </span>
-            ))}
-          </div>
-          <p className="brightness-axis">{brightnessAxis(measure)}</p>
-          <SmallCharts chart={chart} measure={measure} hover={hover} onHover={setHover} plain />
-        </>
+      {groups.length > 0 && (
+        <div className="spectrum-visits">
+          {visits.map((ep) => (
+            <span key={ep} className="brightness-visit">
+              <i style={{ background: visitColour(ep) }} />
+              Visit {ep}
+            </span>
+          ))}
+        </div>
       )}
+      {groups.map((g) => (
+        <div key={g.measure} className="plain-chart-group">
+          <p className="brightness-axis">{brightnessAxis(g.measure)}</p>
+          <SmallCharts chart={g.chart} measure={g.measure} hover={hover} onHover={setHover} plain />
+        </div>
+      ))}
     </>
   )
+}
+
+/**
+ * The charts Beginner sees: each band drawn in the measure its sentence is about. When the
+ * sentences use both (RW Aurigae: the star itself in its shortest colours, the light around it
+ * in its longest), the bands read from the light around the star get charts of that measure
+ * under their own axis line; the other bands keep the measured brightness. Otherwise one set.
+ */
+function plainChartGroups(data: LightcurveResponse): { measure: Measure; chart: Layout }[] {
+  const decided = bandVerdicts(data).filter((v) => v.verdict !== 'too few bins')
+  const ringBands = new Set(decided.filter((v) => v.measure === 'wing').map((v) => v.detector))
+  const mixed = ringBands.size > 0 && decided.some((v) => v.measure === 'flux')
+  if (!mixed) {
+    const measure = plainMeasure(data)
+    const chart = layout(data, measure, new Set())
+    return chart.charts.length ? [{ measure, chart }] : []
+  }
+  const all = [...new Set((data.bins ?? []).map((b) => b.detector))]
+  const own = layout(data, 'flux', ringBands)
+  const ring = layout(data, 'wing', new Set(all.filter((d) => !ringBands.has(d))))
+  return [
+    ...(own.charts.length ? [{ measure: 'flux' as const, chart: own }] : []),
+    ...(ring.charts.length ? [{ measure: 'wing' as const, chart: ring }] : []),
+  ]
 }

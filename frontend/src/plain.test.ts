@@ -143,10 +143,10 @@ describe('every Beginner sentence of the six tools', () => {
 })
 
 describe('Brightness: the tool’s own same-colour comparison', () => {
-  it("Barnard's Star: too bright to measure directly, and its outer light did not change beyond the error", () => {
+  it("Barnard's Star: too bright to measure directly, and its outer light shows no clear change (the tool's own verdict)", () => {
     expect(brightnessResult(OBJECTS["Barnard's Star"].lc)).toEqual([
       'It is too bright to measure directly: 350 of its 364 photos are overexposed.',
-      'So we measured the light just around it, which showed no change bigger than the measuring error.',
+      'So we measured the light just around it, which showed no clear change between its visits.',
     ])
     expect(plainMeasure(OBJECTS["Barnard's Star"].lc)).toBe('wing')
   })
@@ -257,7 +257,7 @@ describe('Far-off planet: found or not, how faint, and nothing ruled out elsewhe
   })
   it('WISE 0855: its own field reaches half its brightness, over two thirds of the picture', () => {
     expect(distantResult(OBJECTS['WISE 0855'].di).slice(1, 3)).toEqual([
-      'The faintest planet it could catch is only half as bright as WISE 0855.',
+      'The faintest planet it could catch is about half as bright as WISE 0855.',
       'At best it could catch one that faint in about two thirds of this picture.',
     ])
   })
@@ -266,7 +266,7 @@ describe('Far-off planet: found or not, how faint, and nothing ruled out elsewhe
     expect(distantResult(OBJECTS['Serpens South'].di)[1]).toBe('The faintest planet it could catch is about 9 times as bright as WISE 0855.')
   })
   it('the words of the limit', () => {
-    expect(faintWords(0.183)).toBe('only half as bright as WISE 0855')
+    expect(faintWords(0.183)).toBe('about half as bright as WISE 0855')
     expect(faintWords(0.538)).toBe('about as bright as WISE 0855')
     expect(faintWords(1.7)).toBe('about 4 times as bright as WISE 0855')
     expect(shareWords(0.54)).toBe('half')
@@ -278,8 +278,19 @@ describe('Far-off planet: found or not, how faint, and nothing ruled out elsewhe
     expect(distantResult(r)).toEqual([
       'It found 1 candidate: something that jumps the way a far-off planet would.',
       'It is not confirmed: another telescope would have to see it in the same places.',
-      'The faintest planet it could catch is only half as bright as WISE 0855.',
+      'The faintest planet it could catch is about half as bright as WISE 0855.',
       'At best it could catch one that faint in about two thirds of this picture.',
+    ])
+  })
+  it('the limit and the share of the picture always come from the same row of the table', () => {
+    // A made-up table where the faintest limit and the widest cover are in different rows: the
+    // share said is the faintest row's, never the widest row's.
+    const base = OBJECTS["Barnard's Star"].di
+    const row = base.limit[0]
+    const r = { ...base, limit: [{ ...row, faintest_mjy: 0.2, share_of_picture: 0.2 }, { ...row, faintest_mjy: 0.9, share_of_picture: 0.75 }] }
+    expect(distantResult(r).slice(1, 3)).toEqual([
+      'The faintest planet it could catch is about half as bright as WISE 0855.',
+      'At best it could catch one that faint in about a fifth of this picture.',
     ])
   })
 })

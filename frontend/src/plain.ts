@@ -162,10 +162,11 @@ function mostlyTooFaint(data: LightcurveResponse): boolean {
  * brightness of each visit's picture, which samples different colours in every visit. When a
  * band got brighter or fainter by that rule: by about how much (the median change of its
  * wavelength bins, as Expert's table gives it), between which months (the first and last visit
- * compared), and in which of SPHEREx's colours. When the rule found no change: "no change bigger
- * than the measuring error" (the rule's 5 per cent bar sits above the 3 per cent the backend adds
- * for repeatability). When it could decide nothing: why (overexposed, too faint, one visit only,
- * or too few photos of the same colour in two visits).
+ * compared), and in which of SPHEREx's colours. When the rule found no change: "no clear change",
+ * the rule's own verdict (Expert: "does not show a clear change"); a change under its 5 per cent
+ * bar, or one most bins do not agree on, is not called a change, so it is not said to be absent
+ * either. When it could decide nothing: why (overexposed, too faint, one visit only, or too few
+ * photos of the same colour in two visits).
  */
 export function brightnessResult(data: LightcurveResponse): string[] {
   const total = data.n_exposures ?? 0
@@ -205,8 +206,8 @@ export function brightnessResult(data: LightcurveResponse): string[] {
     const ring = decided.every((v) => v.measure === 'wing')
     out.push(
       ring
-        ? 'So we measured the light just around it, which showed no change bigger than the measuring error.'
-        : 'It showed no change bigger than the measuring error between its visits.',
+        ? 'So we measured the light just around it, which showed no clear change between its visits.'
+        : 'It showed no clear change between its visits.',
     )
     return out
   }
@@ -345,12 +346,12 @@ export const DISTANT_ELSEWHERE = 'Finding nothing here does not rule out a plane
  */
 export const WISE_0855_MJY = 0.45
 
-/** "only half as bright as WISE 0855", "about as bright as WISE 0855", "3 times as bright as WISE 0855". */
+/** "about half as bright as WISE 0855", "about as bright as WISE 0855", "about 3 times as bright as WISE 0855". */
 export function faintWords(mjy: number): string {
   const q = mjy / WISE_0855_MJY
   if (q <= 0.6) {
     const f = FRACTIONS[Math.round(1 / q)] ?? 'less than a tenth'
-    return `only ${f} as bright as WISE 0855`
+    return `about ${f} as bright as WISE 0855`
   }
   if (q < 1.5) return 'about as bright as WISE 0855'
   if (q < 2.5) return 'about twice as bright as WISE 0855'
@@ -374,10 +375,10 @@ export function shareWords(share: number): string {
 
 /**
  * What the distant-world search found here. The rule: whether anything was found (the answer's
- * own status), how faint it could reach (its best limit, the faintest brightness over its table,
- * against the largest share of the picture it covered, as its headline does, said against WISE
- * 0855), and always that finding nothing here rules nothing out elsewhere. A link is a candidate
- * and needs another telescope.
+ * own status), how faint it could reach (its best limit: the row of its table with the faintest
+ * brightness, said against WISE 0855, and the share of the picture that same row covered, so the
+ * two numbers always belong together), and always that finding nothing here rules nothing out
+ * elsewhere. A link is a candidate and needs another telescope.
  */
 export function distantResult(r: DistantResult): string[] {
   const out: string[] = []
@@ -388,10 +389,10 @@ export function distantResult(r: DistantResult): string[] {
     out.push(n === 1 ? 'It is not confirmed: another telescope would have to see it in the same places.' : 'None is confirmed: another telescope would have to see them in the same places.')
   } else out.push('Nothing here jumps the way a far-off planet would.')
   if (r.limit.length > 0 && r.status !== 'cannot_search') {
-    const faintest = Math.min(...r.limit.map((l) => l.faintest_mjy))
-    const share = Math.max(...r.limit.map((l) => l.share_of_picture))
-    out.push(`The faintest planet it could catch is ${faintWords(faintest)}.`)
-    out.push(`At best it could catch one that faint in about ${shareWords(share)} of this picture.`)
+    // The faintest row (of equal ones, the one covering most of the picture): its limit and its share.
+    const best = r.limit.reduce((a, b) => (b.faintest_mjy < a.faintest_mjy || (b.faintest_mjy === a.faintest_mjy && b.share_of_picture > a.share_of_picture) ? b : a))
+    out.push(`The faintest planet it could catch is ${faintWords(best.faintest_mjy)}.`)
+    out.push(`At best it could catch one that faint in about ${shareWords(best.share_of_picture)} of this picture.`)
   }
   if (r.failures.length > 0) out.push('Some parts of the search failed, so this answer may be incomplete.')
   if (!(r.catalogue.asked && r.catalogue.answered)) out.push('The list of known infrared objects did not answer, so known ones were not ruled out.')

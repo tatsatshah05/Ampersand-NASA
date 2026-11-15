@@ -67,6 +67,21 @@ describe('Brightness in Beginner', () => {
       expect(html).not.toMatch(/>D\d</)
     })
   }
+  it('RW Aurigae: each band is drawn in the measure its sentence is about (the star in bands 1 to 4, the light around it in 5 and 6)', () => {
+    const html = renderToStaticMarkup(<PlainBrightness data={rwaurLc as unknown as LightcurveResponse} />)
+    const own = html.indexOf('How bright, compared with usual (1 = usual)')
+    const ring = html.indexOf('Light just around the star, compared with usual (1 = usual)')
+    expect(own).toBeGreaterThan(-1)
+    expect(ring).toBeGreaterThan(own)
+    const captions = (from: number, to: number) => [...new Set([...html.slice(from, to).matchAll(/Band (\d) of 6/g)].map((m) => Number(m[1])))]
+    expect(captions(own, ring)).toEqual([1, 2, 3, 4])
+    expect(captions(ring, html.length)).toEqual([5, 6])
+  })
+  it("Barnard's Star: one set, the light around it, as its sentence says", () => {
+    const html = renderToStaticMarkup(<PlainBrightness data={barnardLc as unknown as LightcurveResponse} />)
+    expect(html).toContain('Light just around the star, compared with usual (1 = usual)')
+    expect(html).not.toContain('How bright, compared with usual')
+  })
   it('the panel itself, while it measures: plain words, the same request', () => {
     const html = renderToStaticMarkup(<BrightnessPanel request={request} onClose={noop} level="beginner" />)
     expectPlain(html)

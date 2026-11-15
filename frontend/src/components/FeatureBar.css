@@ -1,8 +1,9 @@
 /* The bar of features in the top bar of every screen (FeatureBar.tsx). Colours only through
-   the page's tokens. The current item is told by the ink of the chosen item, bold type and a
-   line under it, so it is seen without colour; its width is kept for the bold type in advance,
-   so marking another item moves nothing. In a window too narrow for all ten the bar scrolls
-   sideways inside itself, on one line, and the page never does. */
+   the page's tokens: the items are the page's readable grey (--muted), and the current one is
+   black (--ink), semibold, with a black line under it, so it is seen without colour; its width
+   is kept for the semibold type in advance, so marking another item moves nothing. In a window
+   too narrow for all ten the bar scrolls sideways inside itself, on one line, and the page never
+   does. */
 
 .feature-bar {
   flex: 1 1 auto;
@@ -59,12 +60,13 @@
 }
 
 .feature-item:hover:not([aria-disabled='true']) {
-  background: var(--surface);
-  color: var(--text);
+  background: transparent;
+  color: var(--ink);
 }
 
 .feature-item:active:not([aria-disabled='true']) {
-  background: var(--surface-press);
+  background: transparent;
+  color: var(--ink);
 }
 
 .feature-item:focus-visible {
@@ -84,14 +86,14 @@
   height: 0;
   overflow: hidden;
   visibility: hidden;
-  font-weight: 700;
+  font-weight: 600;
   user-select: none;
   pointer-events: none;
 }
 
 .feature-item[aria-current='page'] {
   color: var(--ink, var(--text));
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .feature-item[aria-current='page']::after {
@@ -125,7 +127,7 @@
   .topbar .feature-bar {
     flex: 1 1 100%;
     order: 2;
-    height: 40px;
+    height: 36px;
     margin: 0 -16px;
     padding: 0 8px;
   }

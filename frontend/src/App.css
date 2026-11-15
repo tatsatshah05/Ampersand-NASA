@@ -29,7 +29,7 @@
   grid-template-rows: var(--topbar-h) var(--targets-h) minmax(0, 1fr);
 }
 
-/* ---- the top bar: title, search, level ------------------------------------------------- */
+/* ---- the top bar: title and the bar of features (FeatureBar.css) ------------------------ */
 
 /* Its own layer, so the search box's pop-up stays above the plate under it. */
 .topbar {
@@ -53,11 +53,6 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
-}
-
-.topbar .searchbar {
-  flex: 1 1 auto;
-  max-width: 440px;
 }
 
 /* A segmented control: a grey track, the chosen side a white pill with a soft shadow. Both
@@ -1115,7 +1110,7 @@
   margin: 12px 0 0;
 }
 
-/* Folded extras: catalogue notes, frame details, sky context. */
+/* Folded extras of Expert's side column: catalogue notes and visit details. */
 .fold {
   border-top: 1px solid var(--line);
 }
@@ -1282,6 +1277,10 @@ main.watchlist {
     height: clamp(300px, calc(100dvh - 406px), 440px);
   }
 
+  .bench > .inspector .readout-block {
+    margin-top: 8px;
+  }
+
   .bench > .inspector .guide {
     padding-top: 8px;
   }
@@ -1303,7 +1302,11 @@ main.watchlist {
   }
 
   .bench > .inspector:not(.beginner) .readout-block {
-    height: 226px;
+    height: 214px;
+  }
+
+  .bench > .inspector:not(.beginner) .fold summary {
+    padding: 4px 0;
   }
 
   .bench > .inspector:not(.beginner) #ins-view {
@@ -1317,19 +1320,30 @@ main.watchlist {
   }
 }
 
-/* Beginner's line under the steps: a little air before its "i". */
-.guide-further .info-button {
-  margin-left: 8px;
+/* A short, wide window (1280x720): the picture is as tall as the window allows and no wider,
+   so the side column takes the width it leaves (the picture keeps its size), and Expert's four
+   switches of what is drawn sit on one line. The column ends at the dock's top edge. */
+@media (min-width: 1200px) and (max-height: 800px) {
+  .app {
+    --inspector-w: 640px;
+    --dock-room: 48px;
+  }
+}
+
+/* Beginner's line under the steps (now a pointer to the bar at the top) is a sentence, so it is
+   set no smaller than the page's secondary text. */
+.inspector .guide-further {
+  font-size: var(--size-body);
 }
 
 .tool-panels:not(:empty) {
   padding-bottom: var(--dock-room);
 }
 
-/* "Back to the picture" sits over the dock. */
+/* "Back to the picture" sits over the dock (32px tall, 16px from the bottom), 8px above it. */
 .app > .back-to-plate {
   right: 16px;
-  bottom: var(--dock-room);
+  bottom: 56px;
 }
 
 /* The same patch in other surveys, as a panel under the picture: a sky atlas of a sensible
@@ -1409,12 +1423,6 @@ main.watchlist {
   .level-switch .segment {
     min-width: 76px;
     padding: 0 10px;
-  }
-
-  .topbar .searchbar {
-    order: 3;
-    flex: 1 1 100%;
-    max-width: none;
   }
 
   .targets {
@@ -1536,7 +1544,7 @@ main.watchlist {
   /* A little tighter above the strip of visits, so on a phone the dock at the bottom right
      clears the strip when the page opens. */
   .bench > .stagecol {
-    padding-top: 8px;
+    padding-top: 4px;
   }
 
   .bench .transport {
@@ -1979,10 +1987,10 @@ main.training > footer {
   grid-column: 1 / -1;
 }
 
-/* The practice and watchlist screens have the same top bar as the viewer, and room at their
-   foot for the dock of the level switch. */
+/* The practice and watchlist screens have the same top bar as the viewer (52px, as the
+   viewer's --topbar-h), and room at their foot for the dock of the level switch. */
 .topbar.screen-topbar {
-  height: 56px;
+  height: 52px;
 }
 
 main.training,

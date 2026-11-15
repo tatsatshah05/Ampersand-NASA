@@ -50,17 +50,6 @@
   }
 }
 
-/* A narrow top bar (Beginner only: Expert has no button there): the title may wrap so that
-   the switch and its button share its row. */
-@media (max-width: 520px) {
-  .topbar:has(.info-button) .brand {
-    flex: 1 1 0;
-    min-width: 0;
-    white-space: normal;
-    line-height: 1.2;
-  }
-}
-
 /* The picture's own, in its corner (where the "?" is in Expert). */
 .plate-info {
   position: absolute;
