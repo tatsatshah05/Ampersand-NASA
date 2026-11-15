@@ -1,0 +1,22 @@
+alerts read: 27076 header: ['#Name', 'Date', 'RaDeg', 'DecDeg', 'AlertMag', 'HistoricMag', 'HistoricStdDev', 'Class', 'Published', 'Comment', 'TNSid']
+earliest alert date: 2014-07-27 19:10:29  latest alert date: 2025-01-15 00:59:00
+
+target: alerts within 60 arcsec: 0, within 1 deg: 24
+        993.9 arcsec  ('Gaia18chp', '2018-08-16 03:10:14', 270.78308, -23.192, '16.53', 'unknown', '0.25 mag brightening in Galactic plane source')
+       1008.2 arcsec  ('Gaia22avj', '2022-02-26 12:24:45', 270.64981, -23.22559, '16.88', 'CV', '2 mag outburst of known cataclysmic variable 2XMM J180235.9-231332 = ZTF18abfpcvs')
+       1256.4 arcsec  ('Gaia21axm', '2021-02-16 21:29:46', 270.49491, -23.67177, '20.31', 'unknown', '~1 mag dimming in Galactic plane source')
+
+V7994 Sgr: alerts within 60 arcsec: 0, within 1 deg: 11
+        951.4 arcsec  ('Gaia23czj', '2023-10-18 17:47:49', 271.05936, -31.71042, '16.46', 'unknown', '0.35 mag brightening in source towards Galactic centre')
+       1073.9 arcsec  ('Gaia17bzj', '2017-08-07 15:46:07', 270.82944, -31.73067, '18.34', 'CV', 'Outburst of OGLE dwarf nova BLG-DN-559')
+       1485.7 arcsec  ('Gaia20eqm', '2020-10-05 02:34:12', 270.58756, -31.71089, '15.46', 'unknown', '0.3 mag slow rise in a red source in the Bulge - microlensing or LPV')
+
+V462 Lup: alerts within 60 arcsec: 0, within 1 deg: 5
+        359.4 arcsec  ('Gaia23apa', '2023-02-05 06:48:26', 227.10765, -40.07382, '18.10', 'SN Ia', 'Apparently hostless blue transient')
+        987.8 arcsec  ('Gaia20doy', '2020-08-04 09:00:20', 226.65498, -40.13254, '17.95', 'QSO', 'known QSO (z=1.03) brightens by 0.5 mag over 1.5 years')
+       1308.6 arcsec  ('Gaia20dkl', '2020-07-23 18:28:08', 227.12623, -39.78998, '15.66', 'unknown', 'apparently hostless blue transient')
+
+V1716 Sco (2023 nova control): alerts within 60 arcsec: 1, within 1 deg: 6
+          1.6 arcsec  ('Gaia23bsx', '2023-04-29 07:43:18', 260.68768, -41.6212, '8.04', 'Nova', '~11 mag outburst in known Nova V1716 Sco')
+        419.0 arcsec  ('Gaia21ayr', '2021-02-17 17:37:42', 260.84244, -41.61353, '17.97', 'unknown', 'gal.plane source candidate microlensing event rises by 2.0 mag')
+       2202.9 arcsec  ('Gaia19bib', '2019-04-09 23:26:47', 260.15551, -42.08769, '18.43', 'unknown', 'blue transient near Galactic plane, declining')

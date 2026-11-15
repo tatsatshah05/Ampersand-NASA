@@ -1,0 +1,59 @@
+"""Extract sky positions from saved ATel texts and report every telegram with a position within 1 degree of the
+target (and, as a parser self-check, of the control novae V7994 Sgr, V462 Lup, V0691 Ser, which have ATels)."""
+import sys, os, re, glob
+import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from lists import T, sep
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+files = sorted(glob.glob(os.path.join(ROOT, "downloads", "atel_pages", "*.txt")), key=lambda p: int(os.path.basename(p)[:-4]))
+
+SEXA = re.compile(r"(?<![\d.])(\d{1,2})[h: ]\s?(\d{1,2})[m: ]\s?(\d{1,2}(?:\.\d+)?)s?,?\s*(?:\(?J2000\)?|,|;|and|Dec(?:l(?:ination)?)?\s*[=:]?|\s)*\s*([+-−–])\s?(\d{1,2})[d°: ]\s?(\d{1,2})['m: ]\s?(\d{1,2}(?:\.\d+)?)")
+JNAME = re.compile(r"J(\d{2})(\d{2})(\d{2}(?:\.\d+)?)([+-])(\d{2})(\d{2})(\d{2}(?:\.\d+)?)")
+DEC = re.compile(r"R\.?A\.?\s*(?:\(J2000\))?\s*[=:,]?\s*(\d{1,3}\.\d{2,})\s*(?:deg|°)?\s*,?\s*(?:and\s*)?Dec(?:l(?:ination)?)?\.?\s*(?:\(J2000\))?\s*[=:,]?\s*([+-−–]?\d{1,2}\.\d{2,})", re.I)
+
+def sgn(s):
+    return -1 if s in "-−–" else 1
+
+pos = []  # (atel, ra, dec, snippet)
+nfiles = 0
+for p in files:
+    n = int(os.path.basename(p)[:-4])
+    t = open(p).read()
+    if len(t) < 200:
+        continue
+    nfiles += 1
+    title = t[:200]
+    for m in SEXA.finditer(t):
+        hh, mm, ss, s, dd, dm, ds = m.groups()
+        if int(hh) > 23 or int(mm) > 59 or int(dm) > 59:
+            continue
+        ra = 15 * (int(hh) + int(mm) / 60 + float(ss) / 3600)
+        de = sgn(s) * (int(dd) + int(dm) / 60 + float(ds) / 3600)
+        pos.append((n, ra, de, t[max(0, m.start() - 60): m.end() + 10]))
+    for m in JNAME.finditer(t):
+        hh, mm, ss, s, dd, dm, ds = m.groups()
+        ss = ss if "." in ss else ss  # J-names: HHMMSS.ss or HHMMSSss
+        ra = 15 * (int(hh) + int(mm) / 60 + float(ss) / 3600)
+        de = sgn(s) * (int(dd) + int(dm) / 60 + float(ds) / 3600)
+        pos.append((n, ra, de, "Jname " + m.group(0)))
+    for m in DEC.finditer(t):
+        ra = float(m.group(1)); de = sgn(m.group(2)[0]) * float(m.group(2).lstrip("+-−–"))
+        if 0 <= ra < 360 and -90 <= de <= 90:
+            pos.append((n, ra, de, t[max(0, m.start() - 40): m.end() + 10]))
+
+print(f"ATel pages read: {nfiles} ({os.path.basename(files[0])[:-4]} to {os.path.basename(files[-1])[:-4]}); positions extracted: {len(pos)}; telegrams with a position: {len(set(x[0] for x in pos))}")
+for name, p0 in T.items():
+    d = [(sep(p0, (x[1], x[2])), x) for x in pos]
+    near = sorted([y for y in d if y[0] < 3600], key=lambda y: y[0])
+    print(f"\n{name}: telegrams with a position within 1 deg: {sorted(set(y[1][0] for y in near))}")
+    seen = set()
+    for s_, x in near:
+        if x[0] in seen:
+            continue
+        seen.add(x[0])
+        print(f"   ATel {x[0]}: {s_:8.1f} arcsec  ...{' '.join(x[3].split())[:150]}")
+    if not near:
+        best = sorted(d, key=lambda y: y[0])[:3]
+        for s_, x in best:
+            print(f"   nearest: ATel {x[0]} at {s_/3600:.2f} deg ...{' '.join(x[3].split())[:120]}")

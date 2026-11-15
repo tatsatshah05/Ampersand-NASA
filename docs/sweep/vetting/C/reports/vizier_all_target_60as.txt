@@ -1,0 +1,83 @@
+== TARGET_60as: all VizieR catalogues within 60.0" of 241.70931 -52.20484, server vizier.cfa.harvard.edu, 2026-11-15T05:12Z
+catalogues with rows: 81
+I/243/out                           n= 48 rmin=13.0240 None | * output (out of 526,280,881 stars)
+I/252/out                           n= 48 rmin=13.1870 None | * output (out of 526,280,881 stars)
+I/284/out                           n= 50 rmin=13.2210 None | data (around 0+0)
+I/297/out                           n= 50 rmin=9.5190 None | Example of the an output of NOMAD-1
+I/305/out                           n= 50 rmin=12.8400 None | records of GSC2.3.2 (near 0+0)
+I/317/sample                        n= 50 rmin=16.4590 None | Example of formatted output
+I/319/xpm                           n= 43 rmin=13.1130 None | formatted catalog (on a total of 313,610,083 sources)
+I/320/spm4                          n= 27 rmin=13.1740 None | SPM4 output (out of 103319647 stars)
+I/322A/out                          n=  5 rmin=17.5160 None | UCAC4 output (out of 113780093 stars)
+I/324/igsl3                         n= 50 rmin=9.5270 None | the IGSL3 data release
+I/337/gaia                          n= 50 rmin=9.1960 None | GaiaSource data
+I/339/hsoy                          n= 50 rmin=13.1760 None | The HSOY catalogue (583001653 sources)
+I/340/ucac5                         n=  5 rmin=17.4990 None | UCAC5 catalog (107,758,513 sources)
+I/345/gaia2                         n= 50 rmin=9.1880 None | GaiaSource DR2 data
+I/347/gaia2dis                      n= 50 rmin=9.1880 None | Estimating distances from parallaxes (1331909727 sources)
+I/349/starhorse                     n= 28 rmin=13.1600 None | Starhorse catalog
+I/350/gaiaedr3                      n= 50 rmin=9.1890 None | GaiaSource EDR3 data
+I/350/comscanl                      n=  1 rmin=9.0860 None | *Representation of the Gaia scanning law over the 34 month time period
+I/352/gedr3dis                      n= 50 rmin=9.1890 None | Estimating distances from parallaxes (1467744818 sources)
+I/353/gsc242                        n= 50 rmin=9.1880 None | records of GSC 2.4.2
+I/354/starhorse2021                 n= 41 rmin=13.1600 None | First 1000 lines as an example, Starhorse 2021
+I/355/gaiadr3                       n= 50 rmin=9.1890 None | Gaia DR3 source catalog (1811709771 sources)
+I/355/paramp                        n= 50 rmin=9.1890 None | 1D astrophysical parameters produced by the Apsis processing chain dev
+I/355/paramsup                      n= 47 rmin=13.1810 None | Additional parameters from the Apsis processing chain, compared to the
+I/355/epphot                        n= 50 rmin=13.1600 None | Light curves for a given object in bands G, BP and RP (555868797 rows)
+I/355/xpsummary                     n= 25 rmin=13.1600 None | Auxiliary information about the mean BP/RP spectrum (219197643 sources
+I/355/xpsample                      n= 50 rmin=54.4850 None | BP/RP externally calibrated sampled mean spectrum (11822651939 rows) (
+I/355/xpcont                        n= 25 rmin=13.1600 None | Mean BP and RP spectra based on the continuous representation in basis
+I/358/varisum                       n=  1 rmin=13.1600 None | Information on where a source_id can be found in the different Variabi
+I/358/vclassre                      n=  1 rmin=13.1600 None | Variability classification results of all classifiers (vari_classifier
+I/360/syntphot                      n= 25 rmin=13.1600 None | Synthetic photometry generated from the Gaia BP/RP mean spectra (21893
+I/363/gaia_rv_dr3                   n=  3 rmin=52.8940 None | the catalog, as in VizieR version
+II/246/out                          n= 50 rmin=9.5190 None | 2MASS Point Source Catalogue, output (on a total of 470,992,970 source
+II/293/glimpse                      n= 50 rmin=16.4470 None | GLIMPSE sources in Galactic Center
+II/311/wise                         n= 18 rmin=10.9710 None | the WISE All-Sky release (among 563,921,584 sources)
+II/328/allwise                      n= 12 rmin=11.0340 None | *the AllWISE data release (among 747,634,026 sources) (updated version
+II/336/apass9                       n=  6 rmin=16.0050 None | The APASS catalog, output (on a total of 62 million sources)
+II/337/vvv1                         n= 50 rmin=17.0260 None | VVV catalog DR1 (2014-07-15)
+II/348/vvv2                         n= 50 rmin=9.1120 None | VVV catalog DR2 (2015-08-19)
+II/360/catalog                      n=  1 rmin=29.5460 None | Gaia DR2 X AllWise catalog
+II/363/unwise                       n= 50 rmin=10.2690 None | the band-merged unWISE catalog (among 2,214,734,224 sources)
+II/364/virac                        n= 50 rmin=4.1700 None | VIRAC catalog
+II/365/catwise                      n= 50 rmin=10.7890 None | the CatWISE2020 catalog (among 1,890,715,640 sources)
+II/368/sstsl2                       n= 11 rmin=13.5010 None | Bandmerged list of photometry for high-reliability compact sources (ex
+II/374/table2                       n= 24 rmin=13.1810 None | Catalogue with RGB magnitudes for Gaia DR3 objects
+II/376/vvv4                         n= 50 rmin=13.2020 None | VISTA variables in the Via Lactea (VVV) DR4.2 ZYJHKs Catalog; output (
+II/379/smssdr4                      n= 50 rmin=9.2180 None | SkyMapper DR4
+II/386/vphasplus32                  n= 50 rmin=9.1290 None | VPHAS+ DR3.2 catalog
+II/387/virac2                       n= 50 rmin=5.7830 None | *VIRAC2 source catalog (VVVX DR3); the complete catalog containing 545
+IV/38/tic                           n= 50 rmin=9.5190 None | Transiting Exoplanet Survey Satellite (TESS) Input Catalog - v8.0 (TIC
+IV/39/tic82                         n= 50 rmin=9.5190 None | Transiting Exoplanet Survey Satellite (TESS) Input Catalog - v8.2 (TIC
+V/155/gdr2ap                        n=  1 rmin=29.5000 None | records of GDR2AP
+V/160/shboost                       n= 25 rmin=13.1600 None | Data model of the Gaia DR3 SHBoost catalogue
+VI/42/out                           n=  1 rmin=0.1000 None | Compute constellation name from position
+VIII/106/hprsl                      n=  3 rmin=37.6850 None | Herschel/PACS rejected source list
+B/denis/denis                       n= 50 rmin=16.5010 None | DENIS output
+B/vsx/vsx                           n=  1 rmin=13.1900 None | Variable Star indeX, Version 2026-10-18 (\originalcolumnnames)
+J/ApJ/639/227/catalog               n=  2 rmin=27.0000 None | MSX IR dark cloud candidate catalog
+J/ApJ/867/105/refcat2               n= 50 rmin=17.0720 None | ATLAS all-sky stellar reference catalog, ATLAS-REFCAT2
+J/ApJ/984/58/table1                 n= 25 rmin=13.1600 None | Stellar Parameters Derived from XP Spectra
+J/ApJS/267/34/table2                n=  1 rmin=58.5960 None | The astrometric and photometric parameters of the member stars from Ga
+J/A+A/469/1221/catalog              n=  1 rmin=53.0930 None | Objects detected on all plates
+J/A+A/591/A149/higalred             n=  1 rmin=7.5100 None | Red (PACS 160um) band HIGAL Herschel catalog
+J/A+A/591/A149/higalpsw             n=  1 rmin=4.4920 None | PSW (SPIRE 250um) band HIGAL Herschel catalog
+J/A+A/591/A149/higalpmw             n=  1 rmin=3.3030 None | PMW (SPIRE 350um) band HIGAL Herschel catalog
+J/A+A/591/A149/higalplw             n=  1 rmin=10.9470 None | PLW (SPIRE 500um) band HIGAL Herschel catalog
+J/A+A/594/A116/nhi_hpx              n=  1 rmin=47.2200 None | HI column densities
+J/A+A/646/A74/tablee1               n=  1 rmin=6.2000 None | 5_sigma catalogue
+J/A+A/646/A74/tablee1b              n=  1 rmin=6.2000 None | 3_sigma catalogue
+J/A+A/665/A78/bkgev                 n=  5 rmin=51.5250 None | Events generated by the simulated background (eRASS1_mock_events_BKG.f
+J/A+A/669/A104/catalog              n=  3 rmin=52.8940 None | Catalog (table A1)
+J/A+A/674/A25/vspursig              n=  1 rmin=13.1600 None | Spurious signals (vari\_vari\_spursign)
+J/A+A/675/A68/members               n=  3 rmin=27.0100 None | Members of 2492 open clusters
+J/A+A/692/A115/pristine_ca          n= 25 rmin=13.1600 None | Photometry catalogue that includes both the synthetic CaHKsyn and the 
+J/AJ/149/64/archive                 n=  1 rmin=19.3500 None | MIPSGAL 24{mu}m lower quality point source archive (2015-05-22 version
+J/AJ/158/93/table2                  n= 17 rmin=13.2000 None | Results of our regression in Gaia DR2 (Cat. I/345)
+J/AJ/159/84/table2                  n= 17 rmin=13.2000 None | Results of our regression for Gaia DR2 (Cat. I/345) (1000 sources amon
+J/MNRAS/471/100/hcatalog            n=  1 rmin=6.5820 None | High reliability Hi-GAL catalog
+J/MNRAS/509/2566/vivace             n=  2 rmin=13.3130 None | VIrac VAriable Classification Ensemble catalog
+J/MNRAS/522/29/table2               n=  1 rmin=54.2230 None | Results for all TESS input targets
+J/MNRAS/546/F1849/smgpscsc          n=  1 rmin=23.2240 None | SMGPS compact source catalogue

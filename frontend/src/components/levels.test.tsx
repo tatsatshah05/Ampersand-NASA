@@ -1,6 +1,7 @@
 // The Beginner / Expert switch: what each level puts on the page.
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { LANDING } from '../address'
 import { Viewer } from '../App'
 import { FEATURES } from '../features'
 import { GO_FURTHER, INFO_NAMES, levelInfo, NO_PROGRESS } from '../guide'
@@ -68,10 +69,17 @@ describe('the bar of features at the top', () => {
     const hrefs = (html: string) => [...topBar(html).matchAll(/<a [^>]*href="([^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
     const beginner = hrefs(viewerAt(''))
     expect(beginner).toHaveLength(3)
-    expect(beginner[0]).toMatch(/^\?ra=269\.446267&dec=4\.768222.*&train=\d+&level=easy&ui=beginner$/)
+    // The page opens on the landing view (address.ts LANDING): the links carry its place.
+    const at = `ra=${LANDING.ra}&dec=${LANDING.dec}`
+    expect(beginner[0].startsWith(`?${at}`)).toBe(true)
+    expect(beginner[0]).toMatch(/&train=\d+/)
+    expect(new URLSearchParams(beginner[0]).get("ui")).toBe("beginner")
     // The methods screen carries the place on screen, for its way back to it.
-    expect(beginner.slice(1)).toEqual(['?watchlist=1&ui=beginner', "?tools=1&ra=269.446267&dec=4.768222&name=Barnard%27s+Star&ui=beginner"])
-    expect(hrefs(viewerAt('?ui=expert')).slice(1)).toEqual(['?watchlist=1&ui=expert', "?tools=1&ra=269.446267&dec=4.768222&name=Barnard%27s+Star&ui=expert"])
+    expect(beginner[1]).toBe('?watchlist=1&ui=beginner')
+    expect(beginner[2].startsWith(`?tools=1&${at}&name=`) && beginner[2].endsWith('&ui=beginner')).toBe(true)
+    const expert = hrefs(viewerAt('?ui=expert'))
+    expect(expert[1]).toBe('?watchlist=1&ui=expert')
+    expect(expert[2].endsWith('&ui=expert')).toBe(true)
   })
 
   it('has the search field at the start of the target row, before the star buttons, and the switch in the dock', () => {
@@ -168,8 +176,25 @@ describe('the same frame at both levels', () => {
     for (const name of ['Young star in Serpens South', 'Nova V462 Lupi', 'Nova V572 Velorum']) {
       expect(html).toMatch(new RegExp(`class="target"[^>]*title="[^"]+"[^>]*aria-label="${name}"`))
     }
-    // The address's target is the one marked as on screen.
-    expect(html).toMatch(/aria-current="true">Barnard&#x27;s Star</)
+    // The address names no target, so the page opens on Candidate B, which is marked as on screen.
+    expect(html).toMatch(/aria-current="true">Candidate B</)
+    // Barnard's Star is still the first of the test stars, and an address that names it marks it.
+    expect(html.indexOf('>Barnard&#x27;s Star<')).toBeLessThan(html.indexOf('>Epsilon Indi B<'))
+    expect(viewerAt('?ra=269.446267&dec=4.768222&name=Barnard%27s+Star')).toMatch(/aria-current="true">Barnard&#x27;s Star</)
+  })
+
+  it('the three candidates come first, in their own named group, each described by the referee’s sentence', () => {
+    const html = viewerAt('')
+    const row = html.slice(html.indexOf('class="target-list"'))
+    const groups = [...row.matchAll(/role="group" aria-label="([^"]+)"/g)].map((m) => m[1])
+    expect(groups.slice(0, 3)).toEqual(['Candidates our search found', 'The challenge&#x27;s test targets', 'What we turned this tool on ourselves'])
+    const first = html.slice(html.indexOf('aria-label="Candidates our search found"'), html.indexOf('aria-label="The challenge&#x27;s test targets"'))
+    const buttons = [...first.matchAll(/class="target"[^>]*title="([^"]+)"[^>]*>([^<]+)<\/button>/g)].map((m) => [m[2], m[1]])
+    expect(buttons.map(([name]) => name)).toEqual(['Candidate A', 'Candidate B', 'Candidate C'])
+    for (const [name, title] of buttons) {
+      expect(title).toMatch(new RegExp(`^${name}, an infrared source in \\w+, was too faint to detect in SPHEREx images`))
+      expect(title).toMatch(/it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet\.$/)
+    }
   })
 })
 

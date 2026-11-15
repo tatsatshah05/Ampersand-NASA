@@ -1,0 +1,66 @@
+"""Fit the position of the source near candidate B in every cached SPHEREx cutout (D3-D6).
+Read-only on the cache. Output: CSV in ../data/centroids.csv"""
+import sys, os, glob, csv, math, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from scipy.optimize import least_squares
+warnings.filterwarnings("ignore")
+sys.path.insert(0, "<repository>/.claude/worktrees/agent-afd7766a5a5ec349f")
+from backend import photometry  # masks only
+RA0, DEC0 = 253.18044, -44.67687
+REF = {"cand": (253.18044, -44.67687), "catwise3.5": (253.1817900, -44.6769000),
+       "red9.9_2MASS": (253.183849, -44.675522), "catwise5.9": (253.17815, -44.67679)}
+D = "<repository>/backend/cache/sweep/cutouts/b464db86a4"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "centroids.csv")
+def sep(a, b, c, d):
+    return 3600*math.degrees(math.acos(min(1, math.sin(math.radians(b))*math.sin(math.radians(d)) + math.cos(math.radians(b))*math.cos(math.radians(d))*math.cos(math.radians(a-c)))))
+def model(p, xx, yy):
+    a, x0, y0, s, c = p
+    return a*np.exp(-((xx-x0)**2+(yy-y0)**2)/(2*s*s)) + c
+rows = []
+for f in sorted(glob.glob(D + "/*.fits")):
+    det = int(f[-6])
+    if det < 3: continue
+    with fits.open(f) as h:
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        flg = h["FLAGS"].data
+        hd = h["IMAGE"].header
+        w = WCS(hd)
+        wave = h["WAVE"].data
+    x, y = w.all_world2pix(RA0, DEC0, 0)
+    ix, iy = int(round(float(x))), int(round(float(y)))
+    if not (5 <= ix < img.shape[1]-5 and 5 <= iy < img.shape[0]-5): continue
+    bad = (flg & photometry.PHOTOMETRY_BAD) != 0
+    yy, xx = np.mgrid[0:img.shape[0], 0:img.shape[1]]
+    r = np.hypot(xx-x, yy-y)
+    ring = (r > 14) & (r < 20) & ~((flg & (photometry.PHOTOMETRY_BAD | photometry.OVERFLOW)) != 0) & np.isfinite(img)
+    from astropy.stats import sigma_clipped_stats
+    sky = sigma_clipped_stats(img[ring])[1] if ring.sum() > 20 else np.nan
+    if not np.isfinite(sky):
+        print("nosky", os.path.basename(f)); continue
+    box = (np.abs(xx-ix) <= 3) & (np.abs(yy-iy) <= 3)
+    nbad = int((bad & box).sum())
+    sel = box & ~bad & np.isfinite(img)
+    if sel.sum() < 30:
+        print("few", os.path.basename(f), sel.sum()); continue
+    z = img[sel] - sky
+    p0 = [max(z.max(), 1e-3), float(x), float(y), 0.9, 0.0]
+    try:
+        res = least_squares(lambda p: model(p, xx[sel], yy[sel]) - z, p0,
+                            bounds=([0, x-2.5, y-2.5, 0.4, -np.inf], [np.inf, x+2.5, y+2.5, 2.5, np.inf]))
+        a, fx, fy, s, c = res.x
+        ok = res.success
+    except Exception as e:
+        print("fit fail", os.path.basename(f), e); continue
+    fra, fdec = w.all_pix2world(fx, fy, 0)
+    peak_snr = a / np.sqrt(np.median(np.abs(z - np.median(z)))**2 + 1e-30)
+    row = dict(file=os.path.basename(f), det=det, mjd=hd.get("MJD-AVG"), date=hd.get("DATE-AVG", "")[:10],
+               wave=float(wave[iy, ix]), amp=a, sigma_px=s, const=c, fit_ra=float(fra), fit_dec=float(fdec),
+               dx_px=fx-x, dy_px=fy-y, nbad_box=nbad, ok=ok)
+    for k, (ra, dec) in REF.items():
+        row["d_" + k] = sep(float(fra), float(fdec), ra, dec)
+    rows.append(row)
+with open(OUT, "w", newline="") as fo:
+    wr = csv.DictWriter(fo, fieldnames=list(rows[0].keys())); wr.writeheader(); wr.writerows(rows)
+print(len(rows), "fits ->", OUT)

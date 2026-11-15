@@ -1,0 +1,10 @@
+SPHEREx D5+D6 Gaussian centroids vs 2MASS positions (all epochs, all cached exposures)
+  16523695-4440310       n=120  median dRA*cosDec=+0.01"  dDec=+0.73"  |offset|=0.73"  per-exposure scatter [0.33631253 0.4083425 ]
+  16523648-4440071       n=118  median dRA*cosDec=+0.82"  dDec=-0.38"  |offset|=0.90"  per-exposure scatter [0.69571963 0.52764113]
+  16525070-4441274       n=120  median dRA*cosDec=-0.47"  dDec=+0.40"  |offset|=0.61"  per-exposure scatter [0.22464494 0.29254906]
+  16523352-4440399       n=118  median dRA*cosDec=-0.03"  dDec=-0.26"  |offset|=0.27"  per-exposure scatter [0.13255885 0.16456795]
+  16525276-4440079       n=120  median dRA*cosDec=+0.25"  dDec=+0.11"  |offset|=0.28"  per-exposure scatter [0.15756374 0.18029994]
+  16524962-4438501       n=120  median dRA*cosDec=+0.10"  dDec=-0.07"  |offset|=0.12"  per-exposure scatter [0.37880068 0.48825586]
+  16523230-4440192       n=119  median dRA*cosDec=+0.18"  dDec=+0.14"  |offset|=0.22"  per-exposure scatter [0.3238732 0.3441398]
+  16524412-4440318(R)    n=119  median dRA*cosDec=-8.71"  dDec=-5.14"  |offset|=10.12"  per-exposure scatter [0.52853891 0.34065198]
+median |offset| over control stars: 0.4436223206522784  max: 10.116490289615973

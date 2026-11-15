@@ -1,0 +1,28 @@
+import sys, os, requests
+UA = {"User-Agent": "generic-astro-client/1.0"}
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+BASE = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"
+def asu(source, ra, dec, rad, out=None, maxrows=300):
+    p = {"-source": source, "-c": f"{ra} {dec}", "-c.rs": str(rad), "-out.max": str(maxrows), "-out.add": "_r", "-sort": "_r"}
+    if out: p["-out"] = out
+    r = requests.get(BASE, params=p, headers=UA, timeout=240)
+    fn = os.path.join(OUT, f"viz_{source.replace('/','_')}_{int(rad)}as_{ra:.4f}_{dec:.4f}.tsv")
+    open(fn, "w").write(r.text)
+    return r.status_code, r.text, fn
+if __name__ == "__main__":
+    ra, dec = float(sys.argv[1]), float(sys.argv[2])
+    for spec in sys.argv[3:]:
+        src, rad = spec.rsplit("@", 1)
+        out = None
+        if "|" in src: src, out = src.split("|", 1)
+        try:
+            s, t, fn = asu(src, ra, dec, float(rad), out)
+        except Exception as e:
+            print(f"##### {src} r={rad}: ERROR {type(e).__name__} {e}"); continue
+        lines = t.splitlines()
+        tabs = [l for l in lines if l.startswith("#RESOURCE") or l.startswith("#Table")]
+        data = [l for l in lines if l and not l.startswith("#")]
+        print(f"##### {src} r={rad}\" HTTP {s} -> {fn}")
+        for l in tabs: print("   ", l)
+        if not data: print("    (no data lines; INFO:", [l for l in lines if 'INFO' in l or 'Error' in l or 'error' in l][:5], ")")
+        for l in data[:60]: print("    " + l[:400])

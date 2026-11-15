@@ -2,6 +2,7 @@
 // Field names are the backend's (backend/search.py `search()`, backend/jobs.py). The wording
 // follows docs/search.md. Anything the search finds that no catalogue lists is a CANDIDATE:
 // never a "discovery", never "new". Nothing here rounds a number up or fills in a missing one.
+import { findAt, findNear } from './finds'
 
 export interface SearchQuery {
   ra: number
@@ -84,6 +85,11 @@ export interface SearchObject {
   detectors_at_3_sigma: number[]
   catalogue_status: CatalogueStatus
   evidence: Evidence
+  /**
+   * Set here, not by the backend: one of our sweep's candidates (finds.ts) is at this place or its
+   * light reaches this place's measuring circle, so the change found is most likely the candidate's.
+   */
+  near_find?: { name: string; arcsec: number; at: boolean }
 }
 
 export interface RejectedObject {
@@ -153,7 +159,34 @@ export async function fetchSearchStatus(q: SearchQuery, signal?: AbortSignal): P
     }
     throw new Error(r.status === 404 ? 'this server does not offer the search yet.' : detail)
   }
-  return (await r.json()) as SearchStatus
+  return markFinds((await r.json()) as SearchStatus)
+}
+
+/**
+ * A changer within 25 arcsec of one of our candidates (finds.ts) is marked: at the candidate, it is
+ * that candidate; near it, its change is most likely the candidate's light in this place's circle
+ * (at B's patch the steady 40 mJy star 10 arcsec away came out "changed brightness" for that
+ * reason). Such an object gets a caution and is never offered as a candidate of its own.
+ */
+export function markFinds(status: SearchStatus): SearchStatus {
+  if (!status.result) return status
+  const objects = status.result.objects.map((o): SearchObject => {
+    if (o.kind !== 'changer') return o
+    const at = findAt(o.ra, o.dec)
+    const near = at ? null : findNear(o.ra, o.dec)
+    const find = at ?? near?.find
+    if (!find) return o
+    return { ...o, verdict: 'caution', near_find: { name: find.name, arcsec: near?.arcsec ?? 0, at: at !== null } }
+  })
+  return { ...status, result: { ...status.result, objects } }
+}
+
+/** What a changer near one of our candidates is (markFinds), or null. */
+export function nearFindLine(o: SearchObject): string | null {
+  const f = o.near_find
+  if (!f) return null
+  if (f.at) return `This is ${f.name}, one of the three candidates of our sweep of the Milky Way's plane: found in no catalogue or report we checked, and confirmed by nobody (docs/sweep.md).`
+  return `${f.name}, ${Math.round(f.arcsec)} arcseconds from here, appeared between 2025 and 2026 and its light reaches this place's measuring circle, so this change is most likely ${f.name}'s light, not a change of this source.`
 }
 
 export const POLL_MS = 3000
@@ -298,7 +331,7 @@ export const CANDIDATE_CATEGORIES = [
   'changer_no_counterpart',
 ]
 
-export const isCandidate = (o: SearchObject) => CANDIDATE_CATEGORIES.includes(o.catalogue_status.category)
+export const isCandidate = (o: SearchObject) => !o.near_find && CANDIDATE_CATEGORIES.includes(o.catalogue_status.category)
 
 export function answeredSentence(c: CatalogueStatus): string {
   const failed = Object.keys(c.did_not_answer)
@@ -369,6 +402,8 @@ export function flagSentence(flag: string): string {
 }
 
 export function verdictSentence(o: SearchObject): string {
+  const find = nearFindLine(o)
+  if (find) return find
   return o.verdict === 'clean'
     ? 'Passed every artefact test the search has, and none of its caution flags was raised.'
     : 'Passed the artefact tests, but it has flags a person should look at before believing it.'

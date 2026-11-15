@@ -1,0 +1,42 @@
+== J/ApJS/254/33 r=60" failed=False info=[]
+   J/ApJS/254/33: 0 rows; Gal. midplane Spitzer/IRAC candidate YSOs (SPICY) (Kuhn+, 2021)
+   J/ApJS/254/33/table1: 1 rows; Spitzer/IRAC Candidate YSOs (SPICY)
+      {'_r': '33.265', 'SPICY': '43146', 'RA_ICRS': '253.168360', 'DE_ICRS': '-44.673448', 'class': 'ClassIII', 'alpha': '-1.7830e+00', 'Group': 'G341.1-0.3', 'var': '', 'o_ZTFrmag': '', 'ZTFrmag': '', 'Spitzer': 'SSTGLMC G341.0858-00.4067', '3.6mag': '11.951'}
+   J/ApJS/254/33/table2: 0 rows; *YSO groups from HDBSCAN
+   J/ApJS/254/33/fig25: 0 rows; ZTF light curves for 7585 YSO candidates showing strong variability
+== J/AJ/136/2413 r=60" failed=False info=[]
+   J/AJ/136/2413: 0 rows; Galactic midplane Spitzer red sources (Robitaille+, 2008)
+   J/AJ/136/2413/table2: 0 rows; Final red source catalog
+   J/AJ/136/2413/table3: 0 rows; Red sources from the GLIMPSE II region with photometry at two epochs
+== J/MNRAS/458/3479 r=60" failed=False info=[]
+   J/MNRAS/458/3479: 0 rows; SVM selection of WISE YSO Candidates (Marton+, 2016)
+   J/MNRAS/458/3479/clasi-ii: 0 rows; Class I/II YSO candidates
+   J/MNRAS/458/3479/clasiii: 0 rows; Class III and more evolved YSO candidates
+== J/MNRAS/487/2522 r=60" failed=False info=[]
+   II/360: 0 rows; Gaia DR2 x AllWISE catalogue (Marton+, 2019)
+   II/360/catalog: 0 rows; Gaia DR2 X AllWise catalog
+== J/MNRAS/465/3011 r=60" failed=False info=['#Column\te_Zmag\t(F5.2)\t? Error in Zmag\t[ucd=stat.error;phot.mag;em.opt.I]', '#Column\te_Ymag\t(F5.2)\t? Error in Ymag\t[ucd=stat.error;phot.mag;em.opt.B]']
+   J/MNRAS/465/3011: 0 rows; VVV high amplitude NIR variable stars (Contreras Pena+, 2017)
+   J/MNRAS/465/3011/table2: 0 rows; Photometric parameters for 816 high amplitude near-infrared variables from VVV
+== I/358/vclassre r=60" failed=False info=[]
+   I/358: 0 rows; Gaia DR3 Part 4. Variability (Gaia Collaboration, 2022)
+   I/358/vclassre: 2 rows; Variability classification results of all classifiers (vari_classifier_result)
+      {'_r': '37.128', 'Source': '5964332646302546560', 'SolID': '375316653866487564', 'Classifier': 'nTransits:5+', 'Class': 'RR', 'RA_ICRS': '253.16596284737', 'DE_ICRS': '-44.67570630317'}
+      {'_r': '57.861', 'Source': '5964332543223328000', 'SolID': '375316653866487564', 'Classifier': 'nTransits:5+', 'Class': 'LPV', 'RA_ICRS': '253.15888632802', 'DE_ICRS': '-44.68205025065'}
+== I/358/varisum r=60" failed=False info=[]
+   I/358: 0 rows; Gaia DR3 Part 4. Variability (Gaia Collaboration, 2022)
+   I/358/varisum: 2 rows; Information on where a source_id can be found in the different Variability tables and stat
+      {'_r': '37.128', 'Source': '5964332646302546560', 'RA_ICRS': '253.16596284737', 'DE_ICRS': '-44.67570630317', 'TimeG': '2245.367069', 'DurG': '925.349600', 'Gmagmean': '19.447172', 'TimeBP': '2002.821710', 'DurBP': '587.725600', 'BPmagmean': '19.592050', 'TimeRP': '2002.821798', 'DurRP': '587.725600'}
+      {'_r': '57.861', 'Source': '5964332543223328000', 'RA_ICRS': '253.15888632802', 'DE_ICRS': '-44.68205025065', 'TimeG': '2251.914096', 'DurG': '925.423600', 'Gmagmean': '15.637654', 'TimeBP': '2242.881490', 'DurBP': '925.423600', 'BPmagmean': '17.069450', 'TimeRP': '2233.560124', 'DurRP': '892.442900'}
+== B/vsx/vsx r=60" failed=False info=[]
+   B/vsx: 0 rows; AAVSO International Variable Star Index VSX (Watson+, 2006-)
+   B/vsx/vsx: 2 rows; Variable Star indeX, Version 2026-10-18 (\originalcolumnnames)
+      {'_r': '37.08', 'OID': '8966500', 'Name': 'Gaia DR3 5964332646302546560', 'V': '0', 'RAJ2000': '253.16599', 'DEJ2000': '-44.67569', 'Type': 'RRC', 'l_max': '', 'max': '19.140', 'u_max': '', 'n_max': 'G', 'f_min': ''}
+      {'_r': '57.88', 'OID': '6082338', 'Name': 'Gaia DR3 5964332543223328000', 'V': '0', 'RAJ2000': '253.15887', 'DEJ2000': '-44.68204', 'Type': 'L', 'l_max': '', 'max': '15.510', 'u_max': '', 'n_max': 'G', 'f_min': ''}
+== J/ApJS/237/28 r=60" failed=False info=[]
+   J/ApJS/237/28: 0 rows; WISE catalog of periodic variable stars (Chen+, 2018)
+   J/ApJS/237/28/table2: 0 rows; WISE variables catalog
+   J/ApJS/237/28/table6: 0 rows; WISE suspected variables catalog
+== J/ApJS/260/46 r=60" failed=False info=[]
+   J/ApJS/260/46: 0 rows; Milky Way Mira variable stars from OGLE (Iwanek+, 2022)
+   J/ApJS/260/46/miras: 0 rows; Identifications and equatorial coordinates (Table 1; corrected version) and observational 

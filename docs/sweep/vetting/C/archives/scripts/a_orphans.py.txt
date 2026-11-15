@@ -1,0 +1,27 @@
+"""How often does a WISE/NEOWISE single-exposure detection in this 30" cone match no persistent source?
+(chance that a spurious one lands within 2.1" of a given point)."""
+import math, warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+from pathlib import Path
+from astropy.table import Table, vstack
+from astropy.io.votable import parse
+D = Path(__file__).resolve().parent.parent / "data"
+t = vstack([Table.read(D / f, format="csv") for f in ["neowiser_p1bs_psd_30.csv", "allsky_4band_p1bs_psd_30.csv", "allsky_3band_p1bs_psd_30.csv"]], metadata_conflicts="silent")
+ref = []
+for f in ["gator_catwise_2020_30.tbl", "gator_unwise_2019_30.tbl", "gator_allwise_p3as_psd_30.tbl"]:
+    r = Table.read(D / f, format="ipac"); ref += list(zip(np.array(r["ra"], float), np.array(r["dec"], float)))
+ref = np.array(ref)
+ra, dec = np.array(t["ra"], float), np.array(t["dec"], float)
+dmin = np.array([np.min(np.hypot((ref[:, 0] - a) * math.cos(math.radians(d)), ref[:, 1] - d)) * 3600 for a, d in zip(ra, dec)])
+orph = dmin > 3.0
+print(f"single-exposure detections in 30\" cone 2010-2024: {len(t)}; not within 3\" of any CatWISE/unWISE/AllWISE source: {orph.sum()}")
+cc = np.array([str(x) for x in t["cc_flags"]])
+for r, d, m, w1, w2, s, c, q in zip(ra[orph], dec[orph], np.array(t['mjd'])[orph], np.array(t['w1mpro'])[orph], np.array(t['w2mpro'])[orph], np.array(t['w2snr'])[orph], cc[orph], np.array(t['qual_frame'])[orph]):
+    print(f"   {r:.6f} {d:.6f} MJD {m:.3f} W1 {w1} W2 {w2} w2snr {s} cc {c} qual_frame {q}  dist to C-2026 {math.hypot((r-241.70912)*math.cos(math.radians(d)), d+52.205661)*3600:.1f}\"")
+n_frames = len(np.unique(np.round(np.array(t['mjd'], float), 5)))
+p = orph.sum() * (2.1 / 30.0) ** 2
+print(f"frames: {n_frames}; expected number of orphan detections within 2.1\" of a fixed point (uniform): {p:.3f}")
+g = np.array([c.startswith('g') or c[1:2] == 'g' for c in cc])
+fr_g = np.unique(np.round(np.array(t['mjd'], float)[g], 5))
+print(f"frames with glint flag in this cone: {len(fr_g)} of {n_frames}: MJD {fr_g}")

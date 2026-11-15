@@ -1,0 +1,25 @@
+"""Separations from target and controls to every row of Koji Mukai's novae pages (positions 'HH MM SS.ss<BR>-DD MM SS.s')."""
+import sys, re, html
+import numpy as np
+sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
+from lists import T, sep
+
+for path in sys.argv[1:]:
+    t = open(path, encoding="utf-8", errors="replace").read()
+    out = []
+    for row in re.split(r"<TR>|<tr>", t)[1:]:
+        m = re.search(r"(\d{1,2}) (\d{2}) (\d{2}(?:\.\d+)?)\s*<BR>\s*([+-]?)(\d{1,2}) (\d{2}) (\d{2})\.*(\d*)", row, re.I)
+        if not m:
+            continue
+        hh, mm, ss, sg, dd, dm, ds, dfrac = m.groups()
+        ra = 15 * (int(hh) + int(mm) / 60 + float(ss) / 3600)
+        dsec = float(ds + ("." + dfrac if dfrac else ""))
+        dec = (-1 if sg == "-" else 1) * (int(dd) + int(dm) / 60 + dsec / 3600)
+        s = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", row)).split())
+        out.append((ra, dec, s))
+    print(f"== {path}: {len(out)} rows with positions")
+    for n, p in T.items():
+        d = sorted((sep(p, (e[0], e[1])), e[2]) for e in out)
+        print(f"  {n}: within 60 arcsec: {sum(1 for x in d if x[0] < 60)}; within 1 deg: {sum(1 for x in d if x[0] < 3600)}")
+        for x in d[:3]:
+            print(f"     {x[0]:9.1f} arcsec  {x[1][:200]}")

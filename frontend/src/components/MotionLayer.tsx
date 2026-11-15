@@ -31,9 +31,14 @@ interface Props {
   hereMarginal?: boolean
   /** Put an arrowhead on the end of the path. Off when the shift is too small to be real. */
   arrow: boolean
+  /**
+   * One of our candidates' fixed place (finds.ts), marked in every visit with the same gapped cross
+   * as a start, so the eye knows where to look in the visit where nothing is there yet.
+   */
+  place?: Point | null
 }
 
-export function MotionLayer({ sizePx, scale, start, path, here, hereMarginal, arrow }: Props) {
+export function MotionLayer({ sizePx, scale, start, path, here, hereMarginal, arrow, place }: Props) {
   const gap = CROSS_GAP_SCREEN_PX / scale
   const arm = CROSS_ARM_SCREEN_PX / scale
 
@@ -54,17 +59,12 @@ export function MotionLayer({ sizePx, scale, start, path, here, hereMarginal, ar
 
   // Drawn in this order: the cross (a fixed reference) underneath, the path over it,
   // the ring on top.
+  const cross = (at: Point) =>
+    `M${at.x - arm} ${at.y}H${at.x - gap}M${at.x + gap} ${at.y}H${at.x + arm}` + `M${at.x} ${at.y - arm}V${at.y - gap}M${at.x} ${at.y + gap}V${at.y + arm}`
   const marks = (
     <>
-      {start && (
-        <path
-          className="mark-line mark-start"
-          d={
-            `M${start.x - arm} ${start.y}H${start.x - gap}M${start.x + gap} ${start.y}H${start.x + arm}` +
-            `M${start.x} ${start.y - arm}V${start.y - gap}M${start.x} ${start.y + gap}V${start.y + arm}`
-          }
-        />
-      )}
+      {start && <path className="mark-line mark-start" d={cross(start)} />}
+      {place && <path className="mark-line mark-start mark-place" d={cross(place)} />}
       {path.length >= 2 && (
         <>
           <polyline className="mark-line mark-measured" points={path.map((p) => `${p.x},${p.y}`).join(' ')} />

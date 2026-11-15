@@ -1,0 +1,158 @@
+"""Independent check, on the sweep's cached SPHEREx cutouts (read only), of WHERE the 2026 brightening sits
+relative to the catalogued pre-2025 sources, and roughly how bright it is, calibrated on AllWISE W2 stars
+in the same cutout (my own simple aperture photometry, not the project's photometry module).
+
+Per exposure: Gaussian+plane fit of a 7x7 box at the position -> centroid; same fit on AllWISE calibration
+stars (W2 5.5-8.8, 'A' quality, no AllWISE neighbour within 25") -> per-image astrometric offset and
+flux scale (catalogue W2 mJy / fitted Gaussian volume). D5 and D6 only for the flux scale (W2 = 4.6 um)."""
+import sys, glob, math, warnings
+warnings.filterwarnings("ignore")
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from astropy.table import Table
+from scipy.optimize import curve_fit
+
+# flag bits copied from the project's backend/pipeline.py BIT table
+BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7,
+       "MISSING_DATA": 9, "HOT": 10, "COLD": 11, "FULLSAMPLE": 12, "PHANMISS": 14,
+       "NONLINEAR": 15, "PERSIST": 17, "OUTLIER": 19, "CROSSTALK": 20, "SOURCE": 21,
+       "GHOST": 22, "GHOST_FPA": 23, "GHOST_EXT": 24, "STREAK": 25, "BLOOM": 26,
+       "SNOWBALL": 27, "HALO": 28, "SATELLITE_HALO": 29}
+_mask = lambda *n: sum(1 << BIT[k] for k in n)
+BAD = _mask("SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR",
+                     "PERSIST", "BLOOM", "SNOWBALL", "HALO", "SATELLITE_HALO")
+RA, DEC = 241.70931, -52.20484
+CUT = Path("<repository>/backend/cache/sweep/cutouts/4ae14c5ec1")
+OUT = Path(__file__).resolve().parent.parent / "data"
+aw = Table.read(OUT / "allwise_300as.csv", format="csv")
+w2 = np.array(aw["w2mpro"], float)
+ara, adec = np.array(aw["ra"], float), np.array(aw["dec"], float)
+# isolation: no other AllWISE source within 25"
+iso = np.ones(len(aw), bool)
+for i in range(len(aw)):
+    d = np.hypot((ara - ara[i]) * math.cos(math.radians(adec[i])), adec - adec[i]) * 3600
+    d[i] = 1e9
+    iso[i] = not np.any((d < 15) & (w2 < w2[i] + 1.5))
+qual = np.array([str(q)[1] == "A" for q in aw["ph_qual"]])
+cal = (w2 > 6.0) & (w2 < 9.0) & qual & iso
+W2_ZP_MJY = 171.787e3
+cal_mjy = W2_ZP_MJY * 10 ** (-0.4 * w2)
+print("calibration stars:", cal.sum())
+
+REF = {"GLIMPSE [4.5]13.80 @4.1\"": (241.711093, -52.204495), "VVV Ks16.56 @2.8\"": (241.708042, -52.204723),
+       "HiGAL clump @6.6\"": (241.709, -52.206654), "NEOWISE 2022 1-frame @5.0\"": (241.7092471, -52.206233),
+       "CatWISE red W1-W2=1.7 @12.1\"": (241.70924, -52.20821), "AllWISE W2 11.3 @11.0\"": (241.7043487, -52.2045159)}
+
+
+def fit(data, x, y, h=8, rap=2.5, ring=(5.0, 8.0)):
+    """Local-sky-subtracted flux-weighted centroid (3x3 around the brightest pixel within 1.5 px of the
+    guess) and aperture sum (radius rap) minus the median of a ring. Returns None if flagged pixels touch it."""
+    xi, yi = int(round(x)), int(round(y))
+    if xi - h < 0 or yi - h < 0 or xi + h + 1 > data.shape[1] or yi + h + 1 > data.shape[0]:
+        return None
+    win = data[yi - h:yi + h + 1, xi - h:xi + h + 1]
+    yy, xx = np.mgrid[yi - h:yi + h + 1, xi - h:xi + h + 1]
+    r = np.hypot(xx - x, yy - y)
+    rg = (r >= ring[0]) & (r < ring[1]) & np.isfinite(win)
+    if rg.sum() < 20:
+        return None
+    sky = float(np.median(win[rg]))
+    near = (r <= 1.5)
+    if not np.isfinite(win[near]).all():
+        return None
+    sub = win - sky
+    k = np.argmax(np.where(near, sub, -np.inf))
+    py, px = np.unravel_index(k, sub.shape)
+    b = sub[py - 1:py + 2, px - 1:px + 2]
+    if b.shape != (3, 3) or not np.isfinite(b).all():
+        return None
+    bb = np.clip(b, 0, None)
+    cx = float((bb * (xx[py - 1:py + 2, px - 1:px + 2])).sum() / bb.sum())
+    cy = float((bb * (yy[py - 1:py + 2, px - 1:px + 2])).sum() / bb.sum())
+    ap = r <= rap
+    if not np.isfinite(win[ap]).all():
+        return None
+    return dict(x=cx, y=cy, vol=float(sub[ap].sum()), peak=float(b[1, 1]), sky=sky,
+                noise=float(1.4826 * np.median(np.abs(win[rg] - sky))), s=0.0, ex=0.0, ey=0.0)
+
+
+rows = []
+for f in sorted(CUT.glob("*_D[3456].fits")):
+    obs, det = f.stem.rsplit("_D", 1)
+    det = int(det)
+    with fits.open(f) as h:
+        hd = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        flg = h["FLAGS"].data
+        wcs = WCS(hd)
+        lam = float(np.nanmedian(h["WAVE"].data))
+        mjd = float(hd.get("MJD-AVG", hd.get("MJD-OBS")))
+    img *= proj_plane_pixel_area(wcs) * (math.pi / 180) ** 2 * 1e9  # mJy per pixel
+    img[(flg & BAD) != 0] = np.nan
+    x, y = wcs.all_world2pix(RA, DEC, 0)
+    r = fit(img, float(x), float(y))
+    # calibration stars
+    cx, cy = wcs.all_world2pix(ara[cal], adec[cal], 0)
+    dra, ddec, ratio = [], [], []
+    for k, (sx, sy) in enumerate(zip(cx, cy)):
+        q = fit(img, float(sx), float(sy))
+        if q is None or q["vol"] <= 0:
+            continue
+        fra, fdec = wcs.all_pix2world(q["x"], q["y"], 0)
+        dra.append((ara[cal][k] - float(fra)) * math.cos(math.radians(DEC)) * 3600)
+        ddec.append((adec[cal][k] - float(fdec)) * 3600)
+        ratio.append(cal_mjy[cal][k] / q["vol"])
+    n = len(dra)
+    row = dict(obs=obs, det=det, lam=lam, mjd=mjd, ncal=n)
+    if n >= 3:
+        row["off_ra"], row["off_dec"] = float(np.median(dra)), float(np.median(ddec))
+        row["scale"] = float(np.median(ratio))
+        row["scale_mad"] = float(np.median(np.abs(np.array(ratio) - np.median(ratio))))
+    if r is not None and n >= 3:
+        fra, fdec = wcs.all_pix2world(r["x"], r["y"], 0)
+        cra = float(fra) + row["off_ra"] / 3600 / math.cos(math.radians(DEC))
+        cdec = float(fdec) + row["off_dec"] / 3600
+        row.update(cra=cra, cdec=cdec, sig_px=r["s"], vol=r["vol"], flux_w2cal=r["vol"] * row["scale"],
+                   ex_as=r["ex"] * 6.15, ey_as=r["ey"] * 6.15)
+    rows.append(row)
+
+keys = ["obs", "det", "lam", "mjd", "ncal", "off_ra", "off_dec", "scale", "scale_mad", "cra", "cdec", "sig_px", "vol", "flux_w2cal", "ex_as", "ey_as"]
+t = Table({k: [r.get(k, np.nan) for r in rows] for k in keys})
+t.write(OUT / "spx_centroids.csv", format="csv", overwrite=True)
+ep = np.where(t["mjd"] < 61000, 0, np.where(t["mjd"] < 61200, 1, 2))
+t["epoch"] = ep
+print("per-exposure fits:", len(t))
+for e, name in [(0, "Jul-Aug 2025"), (1, "Feb-Apr 2026"), (2, "Jul-Sep 2026")]:
+    for det in (3, 4, 5, 6):
+        s = (t["epoch"] == e) & (t["det"] == det) & np.isfinite(np.array(t["flux_w2cal"], float) if "flux_w2cal" in t.colnames else 0)
+        if "flux_w2cal" not in t.colnames or s.sum() == 0:
+            continue
+        fl = np.array(t["flux_w2cal"][s], float)
+        print(f"{name}  D{det}: n={s.sum():2d}  Gaussian-volume flux (W2-calibrated scale) median {np.nanmedian(fl):8.1f} mJy  "
+              f"[{np.nanpercentile(fl,16):.1f}, {np.nanpercentile(fl,84):.1f}]  ncal median {int(np.median(t['ncal'][s]))}")
+# centroid in the bright epoch, only exposures where the fitted amplitude is clearly significant
+s = (t["epoch"] == 1) & np.isfinite(np.array(t["cra"], float))
+cra, cdec = np.array(t["cra"][s], float), np.array(t["cdec"][s], float)
+fl = np.array(t["flux_w2cal"][s], float)
+good = fl > 30
+mra, mdec = np.median(cra[good]), np.median(cdec[good])
+dx = (cra[good] - mra) * math.cos(math.radians(DEC)) * 3600
+dy = (cdec[good] - mdec) * 3600
+print(f"\nBright epoch (Feb-Apr 2026), {good.sum()} exposures (D3-D6) with fitted flux > 30 mJy:")
+print(f"  median centroid RA {mra:.6f} Dec {mdec:.6f}; scatter (1.4826*MAD) {1.4826*np.median(np.abs(dx-np.median(dx))):.2f}\" in RA*cos, {1.4826*np.median(np.abs(dy-np.median(dy))):.2f}\" in Dec;"
+      f" error of the median ~{1.2533*1.4826*np.median(np.abs(np.hypot(dx,dy)))/math.sqrt(good.sum()):.2f}\"")
+print(f"  offset from the sweep position: {(mra-RA)*math.cos(math.radians(DEC))*3600:+.2f}\" E, {(mdec-DEC)*3600:+.2f}\" N")
+for k, (rr, dd) in REF.items():
+    print(f"  distance to {k:32s}: {math.hypot((mra-rr)*math.cos(math.radians(DEC))*3600, (mdec-dd)*3600):5.2f}\"")
+from astropy.time import Time
+sel = (t["epoch"] == 1)
+print("\nBright-epoch exposures (date, detector, wavelength, flux on the W2-calibrated scale, centroid offset from sweep position):")
+for r in t[sel]:
+    fx = r["flux_w2cal"]
+    off = "" if not np.isfinite(r["cra"]) else f"{(r['cra']-RA)*math.cos(math.radians(DEC))*3600:+5.1f}E {(r['cdec']-DEC)*3600:+5.1f}N"
+    print(f"  {Time(r['mjd'],format='mjd').iso[:16]}  D{r['det']}  {r['lam']:.2f}um  {fx:7.1f} mJy  ncal={r['ncal']:2d}  {off}")
+print("  calibration-star astrometric offsets applied (median over exposures): "
+      f"{np.nanmedian(np.array(t['off_ra'],float)):+.2f}\" E, {np.nanmedian(np.array(t['off_dec'],float)):+.2f}\" N")

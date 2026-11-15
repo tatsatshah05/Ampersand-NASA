@@ -1,0 +1,33 @@
+"""Fresh SIA2 query of all SPHEREx collections at the source position; compare with the cached list."""
+import io, json, sys, time
+import requests
+from astropy.io.votable import parse_single_table
+
+W = "docs/sweep/vetting/B/pixels"
+RA, DEC = 253.18044, -44.67687
+UA = {"User-Agent": "python-requests (astronomy data check)"}
+out = {}
+for coll in ["spherex_dr1", "spherex_qr3", "spherex_dr1_deep", "spherex_qr3_deep"]:
+    for attempt in range(10):
+        try:
+            r = requests.get("https://irsa.ipac.caltech.edu/SIA", params={"COLLECTION": coll, "POS": f"circle {RA} {DEC} 0.01"},
+                             headers=UA, timeout=90)
+            if r.status_code == 200:
+                break
+            print(coll, "HTTP", r.status_code, file=sys.stderr)
+        except Exception as e:
+            print(coll, type(e).__name__, file=sys.stderr)
+        time.sleep(1 + attempt)
+    open(f"{W}/downloads/sia_{coll}.xml", "wb").write(r.content)
+    t = parse_single_table(io.BytesIO(r.content)).to_table(use_names_over_ids=True)
+    rows = [(str(x["obs_id"]), str(x["energy_bandpassname"]), float(x["t_min"])) for x in t]
+    out[coll] = rows
+    print(coll, len(rows))
+cached = json.load(open("<repository>/backend/cache/sweep/queries/sia_f17f2b60997fa157.json"))
+ck = {(e["obs_id"], e["detector"]) for e in cached}
+fresh = set()
+for coll, rows in out.items():
+    for o, b, t in rows:
+        fresh.add((o, int(b[-1])))
+print("fresh unique", len(fresh), "cached", len(ck), "in fresh not cached", sorted(fresh - ck)[:20], "in cached not fresh", sorted(ck - fresh)[:20])
+json.dump({k: v for k, v in out.items()}, open(f"{W}/downloads/sia_fresh.json", "w"))

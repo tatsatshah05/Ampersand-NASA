@@ -37,6 +37,15 @@
   white-space: nowrap;
 }
 
+/* A phone, Beginner: the name sits a little lower under the strip of visits, so when the page
+   opens the dock at the bottom right lies over the name, never over the sentence's "i" or a row
+   of the table (the switch must cover no control). */
+@media (max-width: 600px) {
+  .inspector.beginner > .object {
+    margin-top: 64px;
+  }
+}
+
 /* A long object name, a size smaller, so it keeps to one line in the side column. */
 .object-name.long-name {
   font-size: 24px;

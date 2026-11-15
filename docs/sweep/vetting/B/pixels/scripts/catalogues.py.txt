@@ -1,0 +1,85 @@
+"""Catalogue rows near the source and bright stars within 0.5 deg, saved as JSON (raw answers kept)."""
+import io, json, sys, time
+import requests
+
+W = "docs/sweep/vetting/B/pixels"
+RA, DEC = 253.18044, -44.67687
+UA = {"User-Agent": "python-requests (astronomy data check)"}
+VIZ = ["https://vizier.cfa.harvard.edu/viz-bin/asu-tsv", "https://vizier.cds.unistra.fr/viz-bin/asu-tsv"]
+
+
+def get(url, params, tries=6, timeout=120):
+    for a in range(tries):
+        try:
+            r = requests.get(url, params=params, headers=UA, timeout=timeout)
+            if r.status_code == 200:
+                return r.text
+            print("HTTP", r.status_code, url, file=sys.stderr)
+        except Exception as e:
+            print(type(e).__name__, url, file=sys.stderr)
+        time.sleep(2 + 2 * a)
+    return None
+
+
+def vizier(source, radius_arcsec, cols, extra=None, name=None):
+    p = {"-source": source, "-c": f"{RA} {DEC}", "-c.rs": str(radius_arcsec), "-out": cols, "-out.max": "5000",
+         "-out.add": "_r", "-sort": "_r"}
+    if extra:
+        p.update(extra)
+    for base in VIZ:
+        t = get(base, p)
+        if t is not None and "#" in t and "QUERY_STATUS=ERROR" not in t and "#INFO\tError" not in t:
+            open(f"{W}/downloads/viz_{name}.tsv", "w").write(t)
+            return parse_tsv(t), base
+    return None, None
+
+
+def parse_tsv(t):
+    lines = [l for l in t.splitlines() if l and not l.startswith("#")]
+    if len(lines) < 3:
+        return []
+    head = [h.strip() for h in lines[0].split("\t")]
+    rows = []
+    for l in lines[2:]:
+        if l.startswith("-") or not l.strip():
+            continue
+        v = l.split("\t")
+        if len(v) != len(head):
+            continue
+        rows.append({h: x.strip() for h, x in zip(head, v)})
+    return rows
+
+
+out = {}
+which = sys.argv[1:] or ["near", "bright", "field"]
+ONLY = set(a for a in which if a.startswith("only="))
+which = [a for a in which if not a.startswith("only=")]
+if "near" in which:
+    out["2MASS_30"] = vizier("II/246/out", 30, "2MASS,RAJ2000,DEJ2000,errMaj,errMin,Jmag,e_Jmag,Hmag,e_Hmag,Kmag,e_Kmag,Qflg,Cflg,Date", name="2mass30")
+    out["AllWISE_30"] = vizier("II/328/allwise", 30, "AllWISE,RAJ2000,DEJ2000,eeMaj,eeMin,W1mag,e_W1mag,W2mag,e_W2mag,W3mag,e_W3mag,W4mag,e_W4mag,ccf,ex,var,qph", name="allwise30")
+    out["CatWISE_30"] = vizier("II/365/catwise", 30, "Name,RA_ICRS,DE_ICRS,e_RA_ICRS,e_DE_ICRS,W1mproPM,e_W1mproPM,W2mproPM,e_W2mproPM,pmRA,pmDE,MJD", name="catwise30")
+    out["GLIMPSE_30"] = vizier("II/293/glimpse", 30, "GLIMPSE,RAJ2000,DEJ2000,Jmag,Hmag,Ksmag,3.6mag,e_3.6mag,4.5mag,e_4.5mag,5.8mag,e_5.8mag,8.0mag,e_8.0mag", name="glimpse30")
+    # Gaia DR3 from ESA TAP
+    q = (f"SELECT source_id, ra, dec, ra_error, dec_error, pmra, pmdec, parallax, phot_g_mean_mag, bp_rp, ruwe, phot_variable_flag "
+         f"FROM gaiadr3.gaia_source WHERE 1=CONTAINS(POINT('ICRS',ra,dec), CIRCLE('ICRS',{RA},{DEC},{30/3600}))")
+    t = get("https://gea.esac.esa.int/tap-server/tap/sync", {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv", "QUERY": q})
+    if t:
+        open(f"{W}/downloads/gaia30.csv", "w").write(t)
+        import csv
+        out["Gaia_30"] = (list(csv.DictReader(io.StringIO(t))), "gea.esac.esa.int")
+if "bright" in which:
+    out["2MASS_bright"] = vizier("II/246/out", 1800, "2MASS,RAJ2000,DEJ2000,Jmag,Hmag,Kmag,Qflg", extra={"Kmag": "<6"}, name="2mass_bright")
+    out["AllWISE_bright"] = vizier("II/328/allwise", 1800, "AllWISE,RAJ2000,DEJ2000,W1mag,W2mag,W3mag", extra={"W2mag": "<5"}, name="allwise_bright")
+if "field" in which:
+    out["2MASS_field"] = vizier("II/246/out", 420, "2MASS,RAJ2000,DEJ2000,Jmag,Hmag,Kmag,Qflg,Cflg", extra={"Kmag": "<11.5"}, name="2mass_field")
+    out["AllWISE_field"] = vizier("II/328/allwise", 420, "AllWISE,RAJ2000,DEJ2000,W1mag,W2mag,W3mag,ccf,ex", extra={"W2mag": "<10.5"}, name="allwise_field")
+for k, v in out.items():
+    rows, src = v
+    print(k, src, None if rows is None else len(rows))
+prev = {}
+try:
+    prev = json.load(open(f"{W}/downloads/catalogues.json"))
+except Exception:
+    pass
+prev.update({k: {"rows": v[0], "service": v[1]} for k, v in out.items()})
+json.dump(prev, open(f"{W}/downloads/catalogues.json", "w"), indent=1)

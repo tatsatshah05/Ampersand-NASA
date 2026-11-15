@@ -1,0 +1,12 @@
+import sys, requests, datetime
+# SIMBAD TAP: all objects within 60 arcsec, with types and bibcode counts
+url = sys.argv[1] if len(sys.argv)>1 else 'https://simbad.harvard.edu/simbad/sim-tap/sync'
+def q(ra, dec, rad_deg, label):
+    adql = f"""SELECT main_id, ra, dec, otype, nbref, DISTANCE(POINT('ICRS',ra,dec), POINT('ICRS',{ra},{dec}))*3600 AS sep
+    FROM basic WHERE CONTAINS(POINT('ICRS',ra,dec), CIRCLE('ICRS',{ra},{dec},{rad_deg}))=1 ORDER BY sep"""
+    r = requests.post(url, data={'REQUEST':'doQuery','LANG':'ADQL','FORMAT':'csv','QUERY':adql}, headers={'User-Agent':'generic research client'}, timeout=120)
+    print(f'== {label} ({datetime.datetime.now(datetime.timezone.utc):%Y-%m-%dT%H:%MZ}) HTTP {r.status_code} | ADQL: {" ".join(adql.split())}')
+    print(r.text[:4000] if r.ok else r.text[:300])
+q(241.70931, -52.20484, 1/60, 'TARGET 60"')
+q(227.01362, -40.14308, 1/60, 'CONTROL V462 Lup 60"')
+q(270.96983, -31.45739, 10/3600, 'CONTROL V7994 Sgr 10"')

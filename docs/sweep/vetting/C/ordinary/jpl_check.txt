@@ -1,0 +1,19 @@
+asking Horizons for Pallas
+Horizons Pallas line: 2026-Mar-03 00:09:59.616     340.98224  -1.68352   10.022   5.959
+Pallas geocentric RA, Dec on JD 2461102.50694 (2026-03-03 00:10 UTC): 340.98224 -1.68352
+CONTROL sb_ident at Pallas's position: None [] None HTTP 502: <html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+
+visit 1 middle (2025-07-30..08-19): n=None warning=no matching records error=None rows=[]
+visit 2b (2026-04-09..10): n=None warning=no matching records error=None rows=[]
+visit 2 middle (2026-02-19..03-03): n=None warning=no matching records error=None rows=[]
+first bright exposure D4 2026-02-19 02:57: n=None warning=no matching records error=None rows=[]
+brightest exposure D5 Br-alpha 2026-02-27 01:36: n=None warning=no matching records error=None rows=[]
+visit 3 middle (2026-07-28..09-12): n=None warning=no matching records error=None rows=[]
+[Mg IV] exposure D6 2026-08-08 02:11: n=None warning=no matching records error=None rows=[]
+bright D6 2026-03-03 00:11: n=None warning=None error=ReadTimeout: HTTPSConnectionPool(host='ssd-api.jpl.nasa.gov', port=443): Read timed out. (read timeout=180) rows=[]

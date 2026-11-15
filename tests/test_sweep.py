@@ -1,0 +1,563 @@
+"""backend/sweep.py: choosing images, measuring, the ten-times rule, the vetoes and the classification.
+
+Everything here uses real pieces saved in tests/data/sweep (nothing is invented):
+
+- `exposures_d6_v7994_tile.json`: the archive's list of the 56 detector 6 images that cover a tile
+  of the proof run (centre RA 270.7, Dec -31.2), as `sweep.exposure_list` returns it;
+- six 0.12 degree cutouts of the nova V7994 Sagittarii (RA 270.96983, Dec -31.45739), the images
+  the proof run chose (two from August 2025, two from March and April 2026, two from August and
+  September 2026), copied unchanged from the cache;
+- `survivors_v7994.json`: what the proof run recorded for its two survivors, the nova and a
+  bright variable star, including every catalogue's real answer at their positions.
+"""
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from backend import sweep
+
+DATA = Path(__file__).parent / "data" / "sweep"
+NOVA = (270.96983, -31.45739)
+TILE = (270.7, -31.2)
+
+
+@pytest.fixture(scope="module")
+def exposures() -> list[dict]:
+    return json.loads((DATA / "exposures_d6_v7994_tile.json").read_text())
+
+
+@pytest.fixture(scope="module")
+def images() -> list[sweep.Img]:
+    chosen = json.loads((DATA / "chosen_images.json").read_text())
+    out = []
+    for name, exp in sorted(chosen.items(), key=lambda kv: kv[1]["mjd"]):
+        im = sweep.Img.load(DATA / name, exp)
+        im.prepare()
+        out.append(im)
+    return out
+
+
+@pytest.fixture(scope="module")
+def measured(images: list[sweep.Img]) -> list[dict]:
+    return [im.measure(*NOVA) for im in images]
+
+
+# ------------------------------------------------------------------ choosing images
+
+def test_epochs_are_runs_of_visits_without_a_long_gap(exposures):
+    epochs = sweep.group_epochs(exposures)
+    assert len(epochs) == 3
+    assert sum(len(e) for e in epochs) == len(exposures) == 56
+    for a, b in zip(epochs, epochs[1:], strict=False):
+        assert b[0]["mjd"] - a[-1]["mjd"] > sweep.EPOCH_GAP_DAYS
+    for e in epochs:
+        assert e[-1]["mjd"] - e[0]["mjd"] <= sweep.EPOCH_GAP_DAYS + 1
+
+
+def test_the_images_chosen_for_the_proof_tile(exposures):
+    chosen = sweep.choose_images(exposures, *TILE)
+    assert [c["epoch"] for c in chosen] == [0, 0, 1, 1, 2, 2]
+    anchors = {c["epoch"]: c for c in chosen if c["role"] == "anchor"}
+    assert [anchors[e]["obs_id"] for e in (0, 1, 2)] == ["2025W35_2A_0209_2", "2026W14_1A_0223_2",
+                                                         "2026W35_2A_0657_3"]
+    # Each epoch's anchor is the image whose centre is nearest the tile centre.
+    for epoch in sweep.group_epochs(exposures):
+        best = min(epoch, key=lambda e: sweep.sep_deg(e["s_ra"], e["s_dec"], *TILE))
+        if best["obs_id"] in {c["obs_id"] for c in chosen}:
+            assert anchors[chosen[[c["obs_id"] for c in chosen].index(best["obs_id"])]["epoch"]]["obs_id"] \
+                == best["obs_id"]
+    # A second image is at least a day from its anchor wherever the epoch has one (epoch 1's best centred
+    # second image is six days away), and a different pointing from it.
+    for c in chosen:
+        if c["role"] == "partner":
+            assert abs(c["gap_days"]) >= sweep.MIN_PARTNER_DAYS
+            assert sweep.visit_of(c["obs_id"]) != sweep.visit_of(anchors[c["epoch"]]["obs_id"])
+    assert all(c["sep_deg"] <= sweep.MAX_CENTRE_SEP_DEG for c in chosen)
+
+
+def test_an_epoch_with_nothing_near_the_centre_is_left_out(exposures):
+    far = sweep.choose_images(exposures, 10.0, 80.0)
+    assert far == []
+
+
+def test_separation_and_pointing_name():
+    assert sweep.sep_deg(10.0, 0.0, 11.0, 0.0) == pytest.approx(1.0)
+    assert sweep.sep_deg(359.5, 0.0, 0.5, 0.0) == pytest.approx(1.0)
+    assert sweep.visit_of("2026W14_1A_0223_2") == "2026W14_1A_0223"
+
+
+# ------------------------------------------------------------------ measuring
+
+def test_the_nova_is_absent_in_2025_bright_in_spring_2026_and_fading_by_autumn(measured, images):
+    by_epoch: dict[int, list[float]] = {}
+    for m, im in zip(measured, images, strict=True):
+        assert m["status"] == "ok"
+        by_epoch.setdefault(im.epoch, []).append(m["flux"])
+    assert all(abs(f) < 10 for f in by_epoch[0])                      # nothing there in August 2025
+    assert all(1000 < f < 1700 for f in by_epoch[1])                  # the project measured 1,070 to 1,420 mJy
+    assert all(100 < f < 260 for f in by_epoch[2])                    # 96 to 177 mJy in the project's circles
+    assert all(m["err"] > 0 for m in measured)
+
+
+def test_the_nova_is_found_by_detection_in_the_images_where_it_shines(images):
+    for im in images:
+        found = [d for d in im.detect() if not d["saturated"]]
+        hit = []
+        for d in found:
+            x, y = (float(v[0]) for v in im.sky_to_pix(*NOVA))
+            if np.hypot(d["x"] - x, d["y"] - y) < 1.5:
+                hit.append(d)
+        assert bool(hit) == (im.epoch in (1, 2)), im.obs_id
+
+
+def test_detections_of_the_same_star_in_two_images_become_one_source(images):
+    dets = [im.detect() for im in images if im.epoch == 1]
+    merged = sweep.merge_detections(dets)
+    both = [s for s in merged if s["n_detections"] == 2]
+    assert both
+    assert len(merged) <= len(dets[0]) + len(dets[1]) - len(both)
+    near = [s for s in merged if abs(s["ra"] - NOVA[0]) < 0.003 and abs(s["dec"] - NOVA[1]) < 0.003]
+    assert len(near) == 1 and near[0]["n_detections"] == 2
+
+
+def test_a_position_off_the_image_is_not_measured(images):
+    m = images[0].measure(NOVA[0] + 5.0, NOVA[1])
+    assert m["status"] == "off" and m["flux"] is None
+    near_edge = images[0].measure_xy(5.0, 30.0)
+    assert near_edge["status"] == "edge" and near_edge["flux"] is None
+
+
+def test_aperture_weights_add_up_to_the_area_of_the_circle():
+    for fx, fy in ((0.0, 0.0), (0.3, -0.2), (-0.5, 0.5)):
+        w = sweep.aperture_weights(fx, fy)
+        assert w.sum() == pytest.approx(np.pi * sweep.APERTURE_PX ** 2, rel=0.02)
+
+
+# ------------------------------------------------------------------ the ten-times rule
+
+def _epochs(measured, images):
+    out: dict[int, list[dict]] = {}
+    for m, im in zip(measured, images, strict=True):
+        out.setdefault(im.epoch, []).append(m)
+    return out
+
+
+def test_the_nova_passes_in_the_right_direction_only(measured, images):
+    e = _epochs(measured, images)
+    assert sweep.change_test(e[1], e[0], min_bright=2)["passes"]
+    assert sweep.change_test(e[2], e[0], min_bright=2)["passes"]
+    backwards = sweep.change_test(e[0], e[1], min_bright=2)
+    assert not backwards["passes"] and backwards["reason"] == "too faint"
+
+
+def test_ten_times_is_a_rule_about_the_faintest_bright_image_and_the_brightest_faint_one(measured, images):
+    e = _epochs(measured, images)
+    spring_over_autumn = sweep.change_test(e[1], e[2])
+    assert spring_over_autumn["reason"] == "not faint enough"
+    assert 5 < spring_over_autumn["ratio"] < 10                      # about 7: a fade, not a disappearance
+    assert sweep.change_test(e[1], e[2], ratio=5.0)["passes"]        # the rule is the threshold, nothing else
+    assert sweep.change_test(e[1], e[2], ratio=10.0)["passes"] is False
+    assert sweep.change_test(e[1], e[0])["bright_mjy"] == min(m["flux"] for m in e[1])
+
+
+def test_a_source_must_reach_the_minimum_brightness(measured, images):
+    e = _epochs(measured, images)
+    assert sweep.change_test(e[2], e[0], min_mjy=500.0)["reason"] == "too faint"
+
+
+def test_one_image_cannot_confirm_when_two_are_asked_for(measured, images):
+    e = _epochs(measured, images)
+    one = sweep.change_test(e[1][:1], e[0], min_bright=2)
+    assert not one["passes"] and one["reason"] == "no data"
+    assert sweep.change_test(e[1][:1], e[0], min_bright=1)["passes"]
+
+
+def test_a_saturated_measurement_is_never_evidence_of_absence(measured, images):
+    e = _epochs(measured, images)
+    lower_limits = [{**m, "status": "saturated"} for m in e[0]]
+    result = sweep.change_test(e[1], lower_limits)
+    assert not result["passes"] and result["reason"] == "no data"
+    assert sweep.change_test(lower_limits, e[0], min_bright=2)["passes"] is False    # and 0 mJy is not bright
+
+
+def test_an_unusable_measurement_is_never_a_pass(measured, images):
+    e = _epochs(measured, images)
+    broken = [{**m, "status": "flagged", "flux": None, "err": None} for m in e[0]]
+    result = sweep.change_test(e[1], broken)
+    assert not result["passes"] and result["reason"] == "no data"
+
+
+def test_best_pair_takes_the_brightest_pass(measured, images):
+    e = _epochs(measured, images)
+    pair = sweep.best_pair(e, min_bright=2)
+    assert pair is not None and (pair["bright_epoch"], pair["faint_epoch"]) == (1, 0)
+    assert sweep.best_pair({0: e[0], 2: e[2]}, min_bright=2)["bright_epoch"] == 2
+    assert sweep.best_pair({0: e[0]}) is None
+
+
+# ------------------------------------------------------------------ a tile's tallies
+
+def test_evaluate_counts_the_nova_through_every_stage(images, measured):
+    sources = [{"ra": NOVA[0], "dec": NOVA[1], "l": 359.81, "b": -4.68}]
+    meas = [[m] for m in measured]
+    meta = [{"obs_id": im.obs_id, "epoch": im.epoch, "role": im.role, "mjd": im.mjd, "shape": im.shape}
+            for im in images]
+    clumps = [np.zeros((0, 2)) for _ in images]
+    out = sweep.evaluate(sources, meas, meta, clumps, [0.0] * len(images))
+    assert out["tally"]["sources"] == out["tally"]["comparable"] == 1
+    assert out["tally"]["changed_anchors"] == out["tally"]["changed_all_images"] == out["tally"]["survivors"] == 1
+    assert out["survivors"][0]["pair"]["bright_epoch"] == 1
+    assert out["survivors"][0]["direction"] == "brightened"
+    assert out["survivors"][0]["same_day_only"] is False
+    # Not this tile's source: counted nowhere.
+    none = sweep.evaluate(sources, meas, meta, clumps, [0.0] * len(images), keep=np.array([False]))
+    assert none["tally"]["sources"] == 0
+
+
+def test_a_second_image_that_disagrees_kills_the_source(images, measured):
+    """Only the 2025 and spring 2026 images, and the spring partner shows nothing: the two-visit comparison
+    passes, the confirmed one does not."""
+    keep = [i for i, im in enumerate(images) if im.epoch in (0, 1)]
+    sources = [{"ra": NOVA[0], "dec": NOVA[1]}]
+    meas = [[dict(measured[i])] for i in keep]
+    meta = [{"obs_id": images[i].obs_id, "epoch": images[i].epoch, "role": images[i].role, "mjd": images[i].mjd,
+             "shape": images[i].shape} for i in keep]
+    clumps, ratios = [np.zeros((0, 2))] * len(keep), [0.0] * len(keep)
+    assert sweep.evaluate(sources, meas, meta, clumps, ratios)["tally"]["survivors"] == 1
+    partner = next(k for k, m in enumerate(meta) if m["epoch"] == 1 and m["role"] == "partner")
+    donor = next(k for k, m in enumerate(meta) if m["epoch"] == 0)
+    meas[partner] = [dict(meas[donor][0])]     # the real "nothing there" measurement of an August 2025 image
+    out = sweep.evaluate(sources, meas, meta, clumps, ratios)
+    assert out["tally"]["changed_anchors"] == 1 and out["tally"]["killed_second_image"] == 1
+    assert out["tally"]["survivors"] == 0
+
+
+def test_a_source_whose_second_image_is_unusable_is_listed_apart(images, measured):
+    """The spring partner image is flagged at the source: nothing contradicts the anchor, but nothing confirms it."""
+    keep = [i for i, im in enumerate(images) if im.epoch in (0, 1)]
+    sources = [{"ra": NOVA[0], "dec": NOVA[1]}]
+    meas = [[dict(measured[i])] for i in keep]
+    meta = [{"obs_id": images[i].obs_id, "epoch": images[i].epoch, "role": images[i].role, "mjd": images[i].mjd,
+             "shape": images[i].shape} for i in keep]
+    partner = next(k for k, m in enumerate(meta) if m["epoch"] == 1 and m["role"] == "partner")
+    meas[partner] = [{**meas[partner][0], "status": "flagged", "flux": None, "err": None}]
+    out = sweep.evaluate(sources, meas, meta, [np.zeros((0, 2))] * len(keep), [0.0] * len(keep))
+    assert out["tally"]["single_image_only"] == 1 and out["tally"]["survivors_single_image"] == 1
+    assert out["tally"]["survivors"] == 0 and out["survivors"][0]["single_image_only"] is True
+
+
+def test_the_vetoes_in_order(images, measured):
+    meta = [{"obs_id": im.obs_id, "epoch": im.epoch, "role": im.role, "mjd": im.mjd, "shape": im.shape}
+            for im in images]
+    bright = [i for i, m in enumerate(meta) if m["epoch"] == 1]
+    sources = [{"ra": NOVA[0], "dec": NOVA[1]}]
+    meas = [[m] for m in measured]
+    flux = np.array([[m["flux"]] for m in measured])
+    px = np.array([[m["x"]] for m in measured])
+    py = np.array([[m["y"]] for m in measured])
+    strength = flux.copy()
+    clumps = [np.zeros((0, 2)) for _ in images]
+    args = (0, sources, meas, meta, bright, flux, strength, px, py, clumps, [0.0] * 6, None, 0.005)
+    assert sweep.veto(*args) is None
+    # edge: the same source seen 10 pixels from the border
+    close = np.array(py)
+    close[bright[0], 0] = 10.0
+    assert sweep.veto(0, sources, meas, meta, bright, flux, strength, px, close, clumps, [0.0] * 6, None, 0.005) \
+        == "edge"
+    # shape: a star whose own peak-to-flux ratio is a third of what the nova shows in these images
+    typical = [m["peak_ratio"] * 3.0 if m["peak_ratio"] else 0.0 for m in measured]
+    assert sweep.veto(0, sources, meas, meta, bright, flux, strength, px, py, clumps, typical, None, 0.005) == "shape"
+    # saturation residue: a clump of saturated pixels 8 pixels away
+    near = [np.array([[px[i, 0] + 8.0, py[i, 0]]]) for i in range(6)]
+    assert sweep.veto(0, sources, meas, meta, bright, flux, strength, px, py, near, [0.0] * 6, None, 0.005) \
+        == "saturation_residue"
+
+
+# ------------------------------------------------------------------ sky cells
+
+def test_a_cell_at_the_equator_is_a_hundredth_of_a_square_degree():
+    ci, cj = sweep.cell_of(np.array([10.05]), np.array([0.05]))
+    assert (ci[0], cj[0]) == (100, 0)
+    assert sweep.cell_area(ci, cj) == pytest.approx(0.01, rel=1e-3)
+    ci2, _ = sweep.cell_of(np.array([359.95]), np.array([0.0]))
+    assert ci2[0] == -1                       # longitude wraps through zero
+
+
+def test_a_tile_answers_for_the_sky_nearest_its_centre():
+    centres = [(0.0, 0.0), (3.0, 0.0), (357.0, 0.0)]
+    pick = sweep.nearest_centre(np.array([0.5, 1.7, 359.0, 3.4]), np.array([0.0, 0.0, 0.0, 0.2]), centres)
+    assert pick.tolist() == [0, 1, 0, 1]
+
+
+# ------------------------------------------------------------------ what the catalogues say
+
+@pytest.fixture(scope="module")
+def survivors() -> dict:
+    return json.loads((DATA / "survivors_v7994.json").read_text())
+
+
+def test_the_nova_is_a_known_eruption(survivors):
+    s = survivors["nova"]
+    result = sweep.classify(s["bright_mjy"], s["catalogues"]["rows"], s["catalogues"]["offsets"])
+    assert result["kind"] == "known_eruption"
+    assert "V7994 Sgr" in result["reasons"][0]
+
+
+def test_a_catalogued_bright_variable_is_a_known_variable(survivors):
+    s = survivors["variable"]
+    result = sweep.classify(s["bright_mjy"], s["catalogues"]["rows"], s["catalogues"]["offsets"])
+    assert result["kind"] == "known_variable"
+    assert any("W2" in r or "variable" in r for r in result["reasons"])
+
+
+def test_without_the_eruption_row_the_nova_has_no_bright_counterpart(survivors):
+    """Take the VSX and SIMBAD rows away: AllWISE, CatWISE and Gaia show only a star far fainter than 1,289 mJy."""
+    s = survivors["nova"]
+    rows = [(o, r) for o, r in zip(s["catalogues"]["offsets"], s["catalogues"]["rows"], strict=True)
+            if r["catalogue"] not in ("AAVSO VSX", "SIMBAD")]
+    result = sweep.classify(s["bright_mjy"], [r for _, r in rows], [o for o, _ in rows])
+    assert result["kind"] == "candidate"
+
+
+def test_nothing_in_any_catalogue_is_a_candidate_and_never_more():
+    result = sweep.classify(500.0, [], [])
+    assert result["kind"] == "candidate" and "no row within" in result["reasons"][0]
+
+
+def test_a_catalogue_that_did_not_answer_stops_the_word_uncatalogued():
+    cat = {"rows": [], "offsets": [], "answers": {}, "failed": {"AAVSO VSX": "ArchiveError: down"}}
+    result = sweep.classify_with_catalogues(500.0, cat)
+    assert result["kind"] == "candidate_incomplete" and result["catalogues_failed"] == ["AAVSO VSX"]
+
+
+def test_infrared_magnitudes_to_millijanskys():
+    assert sweep.w2_mjy(0.0) == pytest.approx(171787.0)             # zero magnitude: 171.787 Jy
+    assert sweep.w2_mjy(None) is None
+    assert sweep.k_mjy(0.0) == pytest.approx(666700.0)
+
+
+# ------------------------------------------------------------------ the glare of a saturated nova (V0691 Ser)
+
+V0691 = (279.74438, -3.86389)       # the nova, saturated at 11.8 Jy in September 2025
+GLARE = (279.73756, -3.86269)       # 4 pixels from its core: its wing, not a source
+
+
+def test_the_wing_of_a_saturated_nova_is_not_a_candidate():
+    """Real 0.12 degree cutouts of the tile's six images. The first sweep let the wing through, because the
+    saturation-residue check took a saturated clump 4 pixels away for the source's own core."""
+    chosen = json.loads((DATA / "v0691" / "chosen_images.json").read_text())
+    imgs = []
+    for name, exp in sorted(chosen.items(), key=lambda kv: kv[1]["mjd"]):
+        im = sweep.Img.load(DATA / "v0691" / name, exp)
+        im.prepare()
+        imgs.append(im)
+    sources = [{"ra": V0691[0], "dec": V0691[1]}, {"ra": GLARE[0], "dec": GLARE[1]}]
+    meas = [[im.measure(s["ra"], s["dec"]) for s in sources] for im in imgs]
+    meta = [{"obs_id": im.obs_id, "epoch": im.epoch, "role": im.role, "mjd": im.mjd, "shape": im.shape}
+            for im in imgs]
+    clumps = [np.array([[d["x"], d["y"]] for d in im.detect() if d["saturated"]]).reshape(-1, 2) for im in imgs]
+    assert any(c.size for c in clumps)
+    out = sweep.evaluate(sources, meas, meta, clumps, [0.0] * len(imgs))
+    assert out["tally"]["survivors"] == 1
+    assert [(round(s["ra"], 3), round(s["dec"], 3)) for s in out["survivors"]] == [(279.744, -3.864)]
+    assert out["tally"]["killed_saturation_residue"] == 1
+    assert out["killed"]["killed_saturation_residue"] == [1]
+
+
+# ------------------------------------------------------------------ the fixes after the vetting of 2026-11-15
+#
+# docs/sweep/vetting/ruling.json found that the sweep's first write-up of its three candidates was wrong: the
+# 2025 "detections" of A and B were neighbouring stars' light, A's and C's positions were 3 arcsec off, the
+# "counterparts" named for B and C are other stars, a W2 magnitude was converted wrongly, GLIMPSE II was never
+# asked, and C's bright readings fell on emission lines. The data below are real: 45 x 45 pixel crops (pixel
+# values unchanged, WCS shifted by the crop offset) of ten cached detector 6 cutouts of each candidate, and the
+# catalogues' answers at the ruled positions. FIRST holds the first run's positions only to start from them:
+# they are the withdrawn ones.
+
+CAND = DATA / "candidates"
+RULED = {"A": (270.80408, -23.46818), "B": (253.18038, -44.67697), "C": (241.70906, -52.20564)}
+# Read from the vetting folder, the only place the withdrawn positions and tile readings are kept.
+FIRST = {v["label"]: tuple(v["first_run_position_withdrawn"]) for v in sweep.vetted_candidates()}
+_RERUN = json.loads((Path(__file__).parent.parent / "docs" / "sweep" / "vetting" / "rerun.json").read_text())
+C_TILE_IMAGES = [{"obs_id": r["obs_id"], "mjy": round(r["tile_mjy"], 2)}
+                 for r in _RERUN["candidates"]["C"]["describe"]["lines"]["readings"]]
+
+
+def _arcsec(a: tuple[float, float], b: tuple[float, float]) -> float:
+    return sweep.sep_deg(a[0], a[1], b[0], b[1]) * 3600.0
+
+
+@pytest.fixture(scope="module")
+def described() -> dict:
+    out = {}
+    for k in "ABC":
+        cuts = [sweep.Cutout.load(p) for p in sorted((CAND / k).glob("*.fits"))]
+        assert len(cuts) == 10
+        out[k] = sweep.describe(cuts, *FIRST[k], tile_images=C_TILE_IMAGES if k == "C" else None,
+                                position_detectors=(6,))
+    return out
+
+
+def test_the_position_is_the_bright_state_centroid(described):
+    """Within 0.5 arcsec of the ruling's positions, although the fit starts at the first run's blended ones."""
+    for k, d in described.items():
+        pos = (d["position"]["ra"], d["position"]["dec"])
+        assert _arcsec(pos, RULED[k]) < 0.5, k
+        assert d["position"]["n"] >= 3 and d["position"]["scatter_arcsec"] < 0.5
+    assert described["A"]["position"]["moved_arcsec"] > 2.5        # the first run was 3.0 arcsec off for A and C
+    assert described["C"]["position"]["moved_arcsec"] > 2.5
+    assert described["B"]["position"]["moved_arcsec"] < 1.0        # and 0.4 for B
+
+
+def test_the_2025_light_in_the_old_circle_was_a_neighbours_for_a_and_b(described):
+    for k in "AB":
+        f = described[k]["faint"]["0"]
+        assert f["neighbour_light"] is True, k                      # the circle's light is centred elsewhere
+        assert f["shift_px"] > 1.0 and f["concentration"] < 0.6 * f["bright_concentration"]
+        assert f["detected"] is False and abs(f["fit"]["median"]) < 3.0   # the source itself: nothing
+    # The old 15-arcsec circle still reads tens of mJy at A's true place in 2025: the star 20 arcsec away.
+    assert described["A"]["faint"]["0"]["circle_mjy"] > 30.0
+
+
+def test_the_corrected_brightness_agrees_with_the_reviewers(described):
+    a, b, c = (described[k]["epochs"] for k in "ABC")
+    assert 600 < a["2"]["detectors"]["6"]["fit"]["median"] < 850          # ruling: 670-803 mJy, Aug-Sep 2026
+    assert a["1"]["detectors"]["6"]["fit"]["median"] > 1000               # spring 2026, partly saturated
+    assert 950 < b["2"]["detectors"]["6"]["fit"]["median"] < 1100         # ruling: 1,006-1,089 mJy, Aug 2026
+    assert 250 < b["1"]["detectors"]["6"]["fit"]["median"] < 450          # rising about 10 per cent a day in March
+    assert 85 < c["1"]["detectors"]["6"]["fit"]["median"] < 140           # continuum about 85-110 mJy plus lines
+    assert described["A"]["rise_at_least"] > 100                          # "more than 100 times"
+    assert described["C"]["rise_at_least"] > 30                           # "at least 30 times in its continuum"
+    assert described["C"]["faint"]["0"]["limit_3sigma"] < 4.0             # ruling: below about 3 mJy
+
+
+def test_c_bright_tile_readings_fell_on_emission_lines(described):
+    lines = described["C"]["lines"]
+    assert lines["possible_emission_line"] is True
+    waves = sorted(round(r["um"], 2) for r in lines["readings"] if r.get("line"))
+    assert waves == [4.63, 4.74]                                         # ruling: 4.631 and 4.739 micrometres
+    for r in lines["readings"]:
+        assert r["ratio"] > sweep.LINE_FACTOR and 85 < r["continuum_mjy"] < 115
+
+
+def test_a_reading_at_the_continuum_is_not_called_a_line():
+    paths = sorted((CAND / "C").glob("2026W09_2A_04*.fits")) + sorted((CAND / "C").glob("2026W09_2A_0389_[234]*.fits"))
+    rows = []
+    for p in paths:
+        cu = sweep.Cutout.load(p)
+        x, y = cu.xy(*RULED["C"])
+        rows.append({"obs_id": cu.obs_id, "um": cu.wavelength(x, y), "mjy": sweep.forced_fit(cu, x, y)["flux"]})
+    assert len(rows) == 4
+    assert sweep.line_flag(rows[:1], rows[1:])["possible_emission_line"] is False
+
+
+def test_the_neighbour_is_modelled_not_measured():
+    """In A's 2025 images the fit finds the bright star 20 arcsec (3.3 pixels) away and gives it its light."""
+    cu = sweep.Cutout.load(sorted((CAND / "A").glob("2025*.fits"))[0])
+    f = sweep.forced_fit(cu, *cu.xy(*RULED["A"]))
+    assert f["status"] == "ok" and abs(f["flux"]) < 5.0
+    big = max(f["neighbours"], key=lambda n: n["mjy"])
+    assert 2.8 < math.hypot(big["dx_px"], big["dy_px"]) < 3.8 and big["mjy"] > 300.0
+
+
+@pytest.fixture(scope="module")
+def ruled_catalogues() -> dict:
+    return json.loads((CAND / "catalogues.json").read_text())
+
+
+def _rows_at(ruled_catalogues: dict, k: str) -> tuple[list, list]:
+    rows = ruled_catalogues[k]["rows"]
+    return rows, [_arcsec((r["ra"], r["dec"]), RULED[k]) for r in rows]
+
+
+def test_no_counterpart_is_named_further_out_than_spherex_positions_allow(ruled_catalogues):
+    for k in "ABC":
+        rows, offs = _rows_at(ruled_catalogues, k)
+        result = sweep.classify(500.0, rows, offs)
+        assert result["kind"] == "candidate", k
+        assert result["circle"]["at_place"] == [], k                    # nothing within 1.5 arcsec
+        assert result["reasons"][0].startswith("no row within 1.5 arcsec")
+    # B's first "counterpart" (CatWISE, 3.5 arcsec from the first position) is now listed as another star.
+    rows, offs = _rows_at(ruled_catalogues, "B")
+    assert any(o < 6.2 for o in offs)
+    assert any("not at the place" in s for s in sweep.classify(500.0, rows, offs)["reasons"])
+
+
+def test_the_brightest_star_whose_light_reaches_the_circle_is_named(ruled_catalogues):
+    rows, offs = _rows_at(ruled_catalogues, "A")
+    top = sweep.circle_census(rows, offs)["brightest_in_reach"][0]
+    assert "180312.4" in top["name"] and 19.0 < top["offset_arcsec"] < 21.0 and 400 < top["mjy"] < 470  # 437 mJy
+    rows, offs = _rows_at(ruled_catalogues, "B")
+    top = sweep.circle_census(rows, offs)["brightest_in_reach"][0]
+    assert "165244.1" in top["name"] and 9.5 < top["offset_arcsec"] < 10.6 and 35 < top["mjy"] < 45     # 40 mJy
+
+
+def test_w2_magnitudes_are_converted_by_code_not_by_hand():
+    assert sweep.w2_mjy(11.655) == pytest.approx(3.74, abs=0.01)     # the first write-up was a factor of ten low
+    assert sweep.w2_mjy(11.6) == pytest.approx(3.9, abs=0.05)
+    assert "3.74 mJy" in sweep.brightness_text({"w2": 11.655})
+    band, mjy = sweep.infrared_mjy({"w2": 6.487})
+    assert band == "W2" and mjy == pytest.approx(436.7, abs=1.0)
+
+
+def test_glimpse_ii_is_asked(monkeypatch):
+    asked = []
+
+    def fake_gator(table, ra, dec, radius, cols):
+        asked.append(table)
+        return [{"designation": "G006.7117-00.6347", "ra": ra, "dec": dec, "mag4_5": 14.35, "mag3_6": 14.6}]
+
+    monkeypatch.setattr(sweep.search, "_gator", fake_gator)
+    names = [n for n, _ in sweep.SERVICES]
+    assert "GLIMPSE" in names and "GLIMPSE II" in names
+    rows = dict(sweep.SERVICES)["GLIMPSE II"](*RULED["A"], 30 / 3600, False)
+    assert asked == ["glimpse2_v2cat"] and rows[0]["catalogue"] == "GLIMPSE II"
+    assert sweep.irac2_mjy(rows[0]["irac2"]) == pytest.approx(0.33, abs=0.01)    # ruling: [4.5] 14.35 = 0.33 mJy
+
+
+def test_a_survivor_is_placed_where_it_is_bright(images):
+    """The nova's detections exist only in the bright images; its position comes from those."""
+    dets = [im.detect() for im in images]
+    merged = sweep.merge_detections(dets)
+    nova = min(merged, key=lambda s: _arcsec((s["ra"], s["dec"]), NOVA))
+    bright = [i for i, im in enumerate(images) if im.epoch == 1]
+    ra, dec, how = sweep.bright_position(nova, bright)
+    assert _arcsec((ra, dec), NOVA) < 1.5 and "bright images" in how
+    assert sweep.bright_position({"ra": 1.0, "dec": 2.0}, bright)[2] == "merged over all images"
+
+
+def test_the_summary_carries_only_the_ruled_numbers(tmp_path, monkeypatch):
+    """A tile record holding candidate A at its first position comes out with the ruling's position and numbers."""
+    vetted = sweep.vetted_candidates(Path(__file__).parent.parent / "docs" / "sweep" / "vetting" / "candidates.json")
+    tile = {"name": "l006.0_b+0.0", "status": "done", "area_sq_deg": 6.16, "tally": dict.fromkeys(sweep.STAGES, 0),
+            "survivors": [{"ra": FIRST["A"][0], "dec": FIRST["A"][1], "classification": {"kind": "candidate"},
+                           "pair": {"bright_mjy": 2575.6, "bright_epoch": 1, "faint_epoch": 0},
+                           "measurements": [], "direction": "brightened"}]}
+    (tmp_path / "l006.0_b+0.0.json").write_text(json.dumps(tile))
+    monkeypatch.setattr(sweep, "TILE_DIR", tmp_path)
+    s = sweep.summarise(vetted=vetted)
+    (a,) = s["survivors"]
+    assert a["label"] == "A" and (a["ra"], a["dec"]) == RULED["A"] and a["kind"] == "candidate"
+    assert "bright_mjy" not in a and str(FIRST["A"][0]) not in json.dumps(s)
+    assert "nobody has confirmed it yet" in a["allowed_sentence"]
+
+
+def test_a_light_curve_draws_a_non_detection_as_an_arrow_never_as_a_faint_point(tmp_path):
+    """In the rerun, A, B and C were not detected in 2025: no 2025 point is drawn, one arrow at the limit is."""
+    rerun = json.loads((Path(__file__).parent.parent / "docs" / "sweep" / "vetting" / "rerun.json").read_text())
+    for label, limit in (("A", 14.97), ("B", 6.0), ("C", 2.07)):
+        d = rerun["candidates"][label]["describe"]
+        points, limits = sweep.lightcurve_marks(d)
+        first = d["epochs"]["0"]["dates"]
+        assert limits[0]["mjy"] == limit and limits[0]["dates"] == first
+        # Every point is a detection at 3 times its error or more, and none is from the 2025 visit.
+        assert points and all(p["mjy"] > 0 for p in points)
+        t_end = sweep.Time(f"{first[1]}T23:59:59", format="isot", scale="utc").mjd
+        assert all(p["mjd"] > t_end for p in points)
+        sweep.lightcurve_picture(points, tmp_path / f"{label}.png", label, limits=limits)
+        assert (tmp_path / f"{label}.png").stat().st_size > 0

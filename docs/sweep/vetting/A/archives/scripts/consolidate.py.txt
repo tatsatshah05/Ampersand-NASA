@@ -1,0 +1,89 @@
+"""Read every saved catalogue answer (Gator .tbl, VizieR .tsv) and list, with offsets from
+C (the sweep's position) and P (the 2026 SPHEREx centroid measured in sphx_pos.py), every row within
+R_NEAR of P, and the brightest rows in 30 arcsec.  Writes tables/consolidated_near.csv."""
+import os, sys, glob, io, re, warnings
+import numpy as np
+from astropy.io import ascii
+from astropy.table import Table, vstack
+from astropy.coordinates import SkyCoord
+warnings.filterwarnings("ignore")
+TAB = "docs/sweep/vetting/A/archives/tables"
+C = SkyCoord(270.80362, -23.46745, unit="deg")
+P = SkyCoord(270.80409, -23.46819, unit="deg")
+W = SkyCoord(270.8020277, -23.4629541, unit="deg")
+R_NEAR = float(sys.argv[1]) if len(sys.argv) > 1 else 8.0
+prefix = sys.argv[2] if len(sys.argv) > 2 else "C"
+
+
+def read_tsv(path):
+    """VizieR asu-tsv may hold several tables; return list of (name, Table)."""
+    txt = open(path).read()
+    out = []
+    blocks = re.split(r"\n(?=#RESOURCE|#Table)", txt)
+    cur_name = None
+    for blk in txt.split("\n#Table"):
+        lines = blk.split("\n")
+        name = lines[0].split("\t")[0].strip("#Table ").strip() if blk is not txt.split("\n#Table")[0] else None
+        data = [l for l in lines[1:] if l and not l.startswith("#")]
+        if len(data) < 3:
+            continue
+        hdr = data[0].split("\t")
+        rows = [l.split("\t") for l in data[3:] if not l.startswith("---")]
+        rows = [r for r in rows if len(r) == len(hdr)]
+        if not rows:
+            continue
+        t = Table(rows=rows, names=[h if h else f"c{i}" for i, h in enumerate(hdr)], dtype=[str] * len(hdr))
+        out.append((name, t))
+    return out
+
+
+def coords(t, ra, dec):
+    r = np.array([float(x) if str(x).strip() not in ("", "--", "null") else np.nan for x in t[ra]])
+    d = np.array([float(x) if str(x).strip() not in ("", "--", "null") else np.nan for x in t[dec]])
+    return SkyCoord(r, d, unit="deg")
+
+
+rows_out = []
+for path in sorted(glob.glob(os.path.join(TAB, f"gator_{prefix.lower() if prefix=='C' else prefix}*.tbl")) +
+                   sorted(glob.glob(os.path.join(TAB, f"gator_cand_*.tbl")))):
+    pass
+
+files = sorted(glob.glob(os.path.join(TAB, "gator_cand_*.tbl"))) + sorted(glob.glob(os.path.join(TAB, "viz_C_*.tsv")))
+for path in files:
+    base = os.path.basename(path)
+    tables = []
+    if path.endswith(".tbl"):
+        try:
+            t = ascii.read(open(path).read(), format="ipac")
+        except Exception:
+            continue
+        if len(t) == 0:
+            continue
+        tables.append((base, t, "ra", "dec"))
+    else:
+        for name, t in read_tsv(path):
+            if "_RAJ2000" in t.colnames:
+                tables.append((f"{base}:{name}", t, "_RAJ2000", "_DEJ2000"))
+    for name, t, ra, dec in tables:
+        c = coords(t, ra, dec)
+        dP = c.separation(P).arcsec
+        dC = c.separation(C).arcsec
+        dW = c.separation(W).arcsec
+        t["dP"] = np.round(dP, 2)
+        t["dC"] = np.round(dC, 2)
+        t["dW"] = np.round(dW, 2)
+        t["paP"] = np.round(P.position_angle(c).deg, 0)
+        near = t[(dP <= R_NEAR) | (dC <= R_NEAR)]
+        near.sort("dP")
+        print(f"\n##### {name}: {len(t)} rows in cone; {len(near)} within {R_NEAR}\" of P or C; nearest to P {np.nanmin(dP):.2f}\"; rows within 3\" of W: {(dW<3).sum()}")
+        keep = [k for k in near.colnames if k not in ("clon", "clat") and not k.startswith("e_") and not k.startswith("sigma")]
+        if len(keep) > 40:
+            extra = [k for k in keep[6:] if re.search(r"mag|_m$|mpro|flux|fnu|^f|Ks|^J|^H|^G|plx|pm|eta|Ep|snr|qual|flag|Nep|^d[PCW]$|paP", k)]
+            keep = list(dict.fromkeys(keep[:6] + extra[:40] + ["dP", "dC", "dW", "paP"]))
+        if len(near):
+            near[keep].pprint(max_lines=-1, max_width=-1)
+        # also the W row(s)
+        ww = t[dW < 3]
+        if len(ww):
+            print("   -- W (bright WISE/MIPSGAL source 17 arcsec NNW of C):")
+            ww[keep].pprint(max_lines=6, max_width=-1)

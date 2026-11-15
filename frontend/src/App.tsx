@@ -28,6 +28,7 @@ import {
   type UiLevel,
 } from './address'
 import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
+import { BeforeAfter } from './components/BeforeAfter'
 import { BrightnessPanel } from './components/BrightnessPanel'
 import { ContextView } from './components/ContextView'
 import { ObjectCard } from './components/ObjectCard'
@@ -67,7 +68,10 @@ import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
 import { newSeed, trainingAddress } from './training'
 import { useFrames } from './useFrames'
 import { usePlayer, useResting } from './usePlayer'
+import { isHeldFind } from './finds'
 import {
+  beforeAfter,
+  expertResult,
   expertVerdict,
   failuresSentence,
   flagsNote,
@@ -158,7 +162,9 @@ export function Viewer() {
   // The picture's box: while it is out of the window (or the tab is hidden) the player's timer rests.
   const plate = useRef<HTMLDivElement>(null)
   const resting = useResting(plate)
-  const player = usePlayer(data?.key ?? '', data?.frames.length ?? 0, resting)
+  // One of our sweep's candidates opens blinking between the visit without it and the first with it.
+  const pair = data ? beforeAfter(data) : null
+  const player = usePlayer(data?.key ?? '', data?.frames.length ?? 0, resting, pair && [pair.before, pair.after])
   const frame = data?.frames[player.current] ?? null
   // For screen readers: the row of the visit just stepped to or chosen, said once (D6). The
   // frames key it was said for; cleared by Play and Blink, and by another star.
@@ -382,7 +388,9 @@ export function Viewer() {
     else aperture = frame.predicted ? toPicture(frame.predicted) : { x: grid.sizePx / 2, y: grid.sizePx / 2 }
   }
 
-  const givenMotion = selection.pmra !== null && selection.pmdec !== null ? Math.hypot(selection.pmra, selection.pmdec) / 1000 : null
+  // One of our sweep's candidates held at its corrected place (finds.ts): no motion was given or measured, so none is said.
+  const heldFind = isHeldFind(selection)
+  const givenMotion = selection.pmra !== null && selection.pmdec !== null && !heldFind ? Math.hypot(selection.pmra, selection.pmdec) / 1000 : null
   const motionKnown = givenMotion !== null || (data?.target?.pmra != null && data.target.pmdec != null)
   const saturation = data && saturationSentence(data)
   const failures = fresh && failuresSentence(fresh)
@@ -556,8 +564,8 @@ export function Viewer() {
       />
     )
 
-  // Beginner's sentence about the whole run and the clearness line; the notes under the table (both levels).
-  const result = data && !expert ? overallResult(data) : null
+  // Beginner's sentence about the whole run (Expert's only for something that appeared or faded) and the clearness line; the notes under the table (both levels).
+  const result = data ? (expert ? expertResult(data) : overallResult(data)) : null
   const seen = data && !expert ? seenLine(data) : null
   const underTable = data ? tableNotes(data, expert ? 'expert' : 'beginner') : []
   const verdict = data && expert ? expertVerdict(data) : null
@@ -616,10 +624,11 @@ export function Viewer() {
                             sizePx={grid.sizePx}
                             scale={scale}
                             start={expert && start && path.length > 1 ? toPicture(start) : null}
-                            path={path.map(toPicture)}
+                            path={heldFind && !expert ? [] : path.map(toPicture)}
                             here={frame.centroid && toPicture(frame.centroid)}
                             hereMarginal={isMarginal(frame)}
                             arrow={arrow}
+                            place={heldFind && !expert && frame.predicted ? toPicture(frame.predicted) : null}
                           />
                         )}
                         {expert && showGaia && (
@@ -644,6 +653,7 @@ export function Viewer() {
                   // Nothing to show yet: an empty plate of the same size, so nothing around it moves.
                   <div className="stage stage-empty" />
                 )}
+                {data && !busy && <BeforeAfter data={data} current={player.current} />}
                 {busy && <PlateLoading key={`${attempt} ${url}`} what={whereInWords} />}
                 {load.state === 'error' && (
                   <PlateMessage title="The frames could not be loaded" tone="error">
@@ -679,6 +689,7 @@ export function Viewer() {
                 onStep={step}
                 onSpeed={player.setSpeedMs}
                 info={infoButton('player')}
+                beforeAfter={pair !== null}
               />
               {expert ? (
                 <VisitStrip visits={visits} current={player.current} disabled={busy} onShow={showVisit} />
@@ -751,6 +762,11 @@ export function Viewer() {
               {/* Expert: the whole run against the catalogue in one line, in a scientist's units, over the table. */}
               {data && verdict && <p className="expert-verdict">{verdict}</p>}
               {data && <VisitTable data={data} current={player.current} expert={expert} disabled={busy} onShow={showVisit} follow={voice !== ''} />}
+              {result?.after?.map((line) => (
+                <p key={line} className="result-more result-after">
+                  {line}
+                </p>
+              ))}
               {underTable.map((line) => (
                 <p key={line} className="table-note">
                   {line}

@@ -1,0 +1,53 @@
+"""fit_at / neighbours_of / ep copied from astro2.py"""
+import math, numpy as np
+from scipy.optimize import least_squares
+import fitlib as L
+def ep(m): return 0 if m < 61000 else (1 if m < 61200 else 2)
+def neighbours_of(ra0, de0, kmax=13.5, rmax=28):
+    return [(ra, de, k, nm) for ra, de, k, nm in L.stars if k < kmax and 0.5 < L.sep(ra, de, ra0, de0) < rmax]
+
+def fit_at(img, ok, wcs, ra0, de0, s, ce, cn, neigh, free=True, half=5):
+    # world -> pixel with the exposure's correction (measured = true + corr)
+    def topix(ra, de):
+        return map(float, wcs.world_to_pixel_values(ra + ce / 3600 / math.cos(math.radians(de)), de + cn / 3600))
+    x0, y0 = topix(ra0, de0)
+    xi, yi = int(round(x0)), int(round(y0))
+    ny, nx = img.shape
+    if not (half <= xi < nx - half and half <= yi < ny - half):
+        return None
+    win = img[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    good = ok[yi - half:yi + half + 1, xi - half:xi + half + 1] & np.isfinite(win)
+    if good.sum() < 0.75 * good.size:
+        return None
+    n = 2 * half + 1
+    nb = [tuple(v - o for v, o in zip(topix(ra, de), (xi - half, yi - half))) for ra, de, k, nm in neigh]
+    tx, ty = x0 - (xi - half), y0 - (yi - half)
+    def model(p):
+        if free:
+            a, dx, dy, b = p[:4]; rest = p[4:]
+        else:
+            a, b = p[:2]; dx = dy = 0.0; rest = p[2:]
+        mdl = a * L.pixgauss(n, n, tx + dx, ty + dy, s) + b
+        for (bx, by), an in zip(nb, rest):
+            mdl = mdl + an * L.pixgauss(n, n, bx, by, s)
+        return mdl
+    res = lambda p: (model(p) - win)[good]
+    b0 = float(np.nanpercentile(win, 20)); a0 = max(float(np.nansum(win - b0)) * 0.5, 1e-3)
+    if free:
+        p0 = [a0, 0, 0, b0] + [a0 * 0.1] * len(nb); lo = [0, -2.5, -2.5, -np.inf] + [0] * len(nb); hi = [np.inf, 2.5, 2.5, np.inf] + [np.inf] * len(nb)
+    else:
+        p0 = [a0, b0] + [a0 * 0.1] * len(nb); lo = [-np.inf, -np.inf] + [0] * len(nb); hi = [np.inf] * 2 + [np.inf] * len(nb)
+    r = least_squares(res, p0, bounds=(lo, hi))
+    p = r.x; dof = max(good.sum() - len(p), 1)
+    try:
+        cov = np.linalg.inv(r.jac.T @ r.jac) * (2 * r.cost / dof); ea = math.sqrt(cov[0, 0])
+    except Exception:
+        ea = None
+    out = {"amp": p[0], "amp_err": ea, "neigh_amp": list(p[(4 if free else 2):])}
+    if free:
+        xm, ym = xi - half + tx + p[1], yi - half + ty + p[2]
+        mra, mde = map(float, wcs.pixel_to_world_values(xm, ym))
+        mra -= ce / 3600 / math.cos(math.radians(de0)); mde -= cn / 3600
+        out["e"] = (mra - ra0) * math.cos(math.radians(de0)) * 3600; out["n"] = (mde - de0) * 3600
+    return out
+

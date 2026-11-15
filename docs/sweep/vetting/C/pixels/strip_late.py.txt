@@ -1,0 +1,38 @@
+"""Native-pixel 15 x 15 stamps of the D6 exposures of Jul-Sep 2026 (and Jul-Aug 2025 for contrast), sorted by wavelength,
+one grey scale -1..12 MJy/sr, to look for the line channels (4.46-4.53 and 4.65-4.70 um) where the source is still seen."""
+import json, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from PIL import Image, ImageDraw
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+from measure import CUT
+from stamps import to_png
+R = json.load(open("measurements.json")); F = {(f["obs_id"], f["det"]): f for f in json.load(open("forced.json"))}
+rows = []
+for ep in (3, 0):
+    ex = sorted([r for r in R if r["det"] == 6 and r.get("ep") == ep and r.get("sky") is not None], key=lambda r: r["wave_um"])
+    rows.append((ep, ex))
+sc, half, per = 6, 7, 15
+tw = (2 * half + 1) * sc
+nrows = sum((len(ex) + per - 1) // per for _, ex in rows)
+canvas = Image.new("RGB", (per * (tw + 6) + 10, nrows * (tw + 34) + 60), (255, 255, 255))
+dr = ImageDraw.Draw(canvas)
+dr.text((6, 6), "D6 exposures, native pixels 15 x 15, sorted by wavelength, one scale -1..12 MJy/sr. Top block Jul-Sep 2026, "
+                "bottom block Jul-Aug 2025. Label: wavelength, forced flux (mJy)", fill=(0, 0, 0))
+k0 = 0
+for ep, ex in rows:
+    for k, r in enumerate(ex):
+        with fits.open(os.path.join(CUT, f"{r['obs_id']}_D6.fits")) as h:
+            d = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        xi, yi = int(round(r["x"])), int(round(r["y"]))
+        t = d[yi - half:yi + half + 1, xi - half:xi + half + 1] - r["sky"]
+        x = 6 + (k % per) * (tw + 6)
+        y = 30 + ((k0 + k // per)) * (tw + 34)
+        canvas.paste(to_png(t, -1.0, 12.0, sc), (x, y))
+        f = F.get((r["obs_id"], 6))
+        dr.text((x, y + tw + 1), f"{r['wave_um']:.3f}um", fill=(0, 0, 0))
+        dr.text((x, y + tw + 12), f"{f['flux_forced']:.0f} mJy" if f and f["core_ok"] >= 6 else "flagged core", fill=(0, 0, 0))
+    k0 += (len(ex) + per - 1) // per
+canvas.save(os.path.join(HERE, "strip_D6_faint_visits.png"))
+print("ok")

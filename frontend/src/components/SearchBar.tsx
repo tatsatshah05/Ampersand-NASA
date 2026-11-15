@@ -7,6 +7,7 @@
 // line under the box says what was found. The box opens the row of target buttons (choosing
 // what to look at is one job); useSkySearch holds what both share.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { FINDS, findAt, findTarget, type Find } from '../finds'
 import { releaseFocusAfterPointer } from '../focus'
 import {
   COORD_EXAMPLES,
@@ -26,7 +27,6 @@ import {
   type ResolvedName,
 } from '../resolve'
 import './SearchBar.css'
-import './TargetRow.css'
 
 /** What a search hands to the app: where to look and, when known, how the object there moves. */
 export interface SearchTarget {
@@ -208,6 +208,7 @@ export interface SearchState {
   submit: () => void
   pickPreset: (preset: Preset) => void
   pickLook: (look: OwnLook) => void
+  pickFind: (find: Find) => void
 }
 
 /**
@@ -307,7 +308,23 @@ function useSkySearch(onSelect: OnSelect): SearchState {
         kind: 'found',
         text: `Coordinates read as RA ${formatRaDeg(ra)}°, Dec ${formatDecDeg(dec)}° (${sexagesimal}).`,
       })
+      // One of our candidates' places (within 5 arcsec): shown as its button shows it, held at its
+      // corrected place. With no motion the page would measure the brightest spot near the centre,
+      // which in 2025 was a neighbouring star, and say it was "seen clearly in all 3 visits".
+      const find = findAt(ra, dec)
+      if (find) {
+        setStatus({ kind: 'found', text: `Coordinates read as RA ${formatRaDeg(ra)}°, Dec ${formatDecDeg(dec)}° (${sexagesimal}): that is ${find.name}'s place.` })
+        onSelectNow.current(findTarget(find), find.name)
+        return
+      }
       onSelectNow.current({ ra, dec }) // no motion: nothing is known about what is at a typed position
+      return
+    }
+    // A candidate's name ("Candidate B", "candidate b") is its button.
+    const named = FINDS.find((f) => sameName(f.name, query))
+    if (named) {
+      setStatus({ kind: 'idle' })
+      onSelectNow.current(findTarget(named), named.name)
       return
     }
     if (name.length > MAX_NAME_LENGTH) {
@@ -347,13 +364,24 @@ function useSkySearch(onSelect: OnSelect): SearchState {
       setStatus({ kind: 'idle' })
       onSelectNow.current({ ra: look.ra, dec: look.dec, name: look.name, det: look.det }, look.name)
     },
+    pickFind: (find) => {
+      begin()
+      setText(find.name)
+      setStatus({ kind: 'idle' })
+      onSelectNow.current(findTarget(find), find.name)
+    },
   }
 }
 
 /** The target button for a target shown under `name` (the catalogue's or the button's), if one is. */
 function targetNamed(name: string | null): string | null {
   if (!name) return null
-  return presetNamed(name)?.name ?? OWN_LOOKS.find((look) => sameName(look.name, name))?.name ?? null
+  return (
+    FINDS.find((find) => sameName(find.name, name))?.name ??
+    presetNamed(name)?.name ??
+    OWN_LOOKS.find((look) => sameName(look.name, name))?.name ??
+    null
+  )
 }
 
 /**
@@ -436,7 +464,9 @@ export function SearchField({ search }: { search: SearchState }) {
 }
 
 /**
- * The challenge's five test targets, then what this project turned the tool on itself.
+ * The three candidates our own search found (finds.ts), then the challenge's five test targets,
+ * then what this project turned the tool on itself. A candidate's button carries the referee's
+ * one allowed sentence as its description.
  * The button whose target is on screen is marked: `picked` is the button that was pressed
  * for it, when one was; otherwise the one named `shown` (the name the target is shown under).
  */
@@ -460,15 +490,15 @@ export function TargetButtons({ search, picked, shown }: { search: SearchState; 
   )
   return (
     <div className="target-list">
+      <div className="target-group" role="group" aria-label="Candidates our search found">
+        {FINDS.map((find) => button(find.name, find.allowed, find.name, () => search.pickFind(find)))}
+      </div>
+      <span className="target-divider" aria-hidden="true" />
       <div className="target-group" role="group" aria-label="The challenge's test targets">
         {PRESETS.map((preset) => button(preset.name, preset.about, preset.name, () => search.pickPreset(preset)))}
       </div>
       <span className="target-divider" aria-hidden="true" />
       <div className="target-group" role="group" aria-label="What we turned this tool on ourselves">
-        {/* Said, not only in the tooltips: these three changed while SPHEREx was watching them. */}
-        <span className="target-group-label" title="Each of these changed in brightness between SPHEREx's visits">
-          Caught changing:
-        </span>
         {OWN_LOOKS.map((look) => button(look.name, look.about, look.label ?? look.name, () => search.pickLook(look)))}
       </div>
     </div>

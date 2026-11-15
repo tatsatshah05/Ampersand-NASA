@@ -1,0 +1,7 @@
+NEOWISE single-exposure forced fit at fixed positions (X, R, c + 8 other CatWISE sources within 22"), flux scale from R = AllWISE/NEOWISE-steady
+2014-03 W1 n=12  X =   0.01 mJy (per-frame fit err 1.30, scatter 0.29, error of median ~0.47)   c =  1.83 mJy
+2014-03 W2 n=13  X =  -0.64 mJy (per-frame fit err 0.76, scatter 0.39, error of median ~0.27)   c =  2.17 mJy
+2023-08 W1 n=14  X =  -0.99 mJy (per-frame fit err 1.31, scatter 0.92, error of median ~0.44)   c =  3.25 mJy
+2023-08 W2 n=14  X =  -2.09 mJy (per-frame fit err 0.79, scatter 0.91, error of median ~0.31)   c =  4.51 mJy
+2024-03 W1 n=11  X =  -0.48 mJy (per-frame fit err 1.36, scatter 0.40, error of median ~0.51)   c =  2.20 mJy
+2024-03 W2 n=12  X =  -1.02 mJy (per-frame fit err 0.82, scatter 0.80, error of median ~0.30)   c =  2.46 mJy

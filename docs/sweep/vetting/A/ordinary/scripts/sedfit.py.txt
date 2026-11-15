@@ -1,0 +1,111 @@
+"""Blackbody (+ interstellar extinction) fits to candidate A's own SED per SPHEREx visit,
+from this session's forced two-source photometry (out/forced.csv), and luminosities.
+
+Data: every exposure with A's core >= 80% unmasked, 1.1 to 5.0 micrometres, error = fit
+error (+) 10% (PSF-model and calibration systematics); the D5 4.41 um exposure of
+2026-03-25 (bad fit: chi2 4624, A 16 mJy where its neighbours in time give ~1,400) is dropped.
+Extinction: Nishiyama et al. 2009 (arXiv:0902.3095) A_J:A_H:A_Ks:A_3.6:A_4.5:A_5.8 =
+3.02:1.73:1:0.50:0.39:0.36, interpolated in log-log, lambda^-2 below 1.25 um.
+A_Ks per distance from Schultheis et al. 2014 (VizieR J/A+A/566/A120), grid point
+l=6.7 b=-0.6 (2.2 arcmin away): E(J-K) 0.513 (3.0-3.5 kpc), 2.898 (8.0-8.5), 3.517 (10.0-10.5,
+the map's last bin, used as a lower bound for 12 kpc), times A_Ks/E(J-Ks) = 0.528 (Nishiyama 2009).
+Usage: sedfit.py forced.csv
+"""
+import csv, math, sys
+import numpy as np
+from scipy.optimize import least_squares
+
+h, c, k, sigma = 6.62607e-34, 2.99792458e8, 1.380649e-23, 5.670374e-8
+LSUN, KPC = 3.828e26, 3.0857e19
+LAM = np.array([1.25, 1.65, 2.16, 3.6, 4.5, 5.8]); RAT = np.array([3.02, 1.73, 1.0, 0.50, 0.39, 0.36])
+
+
+def ext_ratio(lam):
+    lam = np.asarray(lam, float)
+    out = np.exp(np.interp(np.log(lam), np.log(LAM), np.log(RAT)))
+    lo = lam < 1.25
+    out[lo] = 3.02 * (lam[lo] / 1.25) ** -2.0
+    return out
+
+
+def bnu(lam_um, T):
+    nu = c / (lam_um * 1e-6)
+    return 2 * h * nu ** 3 / c ** 2 / np.expm1(h * nu / (k * T))
+
+
+def model(p, lam, ak):
+    T, logom = p[0], p[1]
+    a = ak if ak is not None else p[2]
+    return 10 ** logom * bnu(lam, T) * 1e29 * 10 ** (-0.4 * a * ext_ratio(lam))  # mJy
+
+
+def load(path, ep, tmin=None, tmax=None):
+    rows = list(csv.DictReader(open(path)))
+    L, F, E = [], [], []
+    for x in rows:
+        if x["epoch"] != ep or float(x["A_core_ok"]) < 0.8:
+            continue
+        lam = float(x["wl"])
+        if lam < 1.1 or (x["det"] == "5" and abs(lam - 4.41) < 0.002 and x["mjd"].startswith("61124")):
+            continue
+        m = float(x["mjd"])
+        if tmin and m < tmin or tmax and m > tmax:
+            continue
+        f, e = float(x["A_mjy"]), float(x["A_err"])
+        L.append(lam); F.append(f); E.append(math.hypot(e, 0.10 * abs(f)) + 0.5)
+    return np.array(L), np.array(F), np.array(E)
+
+
+def fit(L, F, E, ak):
+    def res(p):
+        return (model(p, L, ak) - F) / E
+    best = None
+    for T0 in (500, 800, 1200, 2000, 3500):
+        p0 = [T0, -16.0] + ([] if ak is not None else [1.0])
+        lo = [150, -25] + ([] if ak is not None else [0])
+        hi = [20000, -5] + ([] if ak is not None else [15])
+        # scale start
+        s = least_squares(res, p0, bounds=(lo, hi))
+        if best is None or s.cost < best.cost:
+            best = s
+    p = best.x
+    chi2 = 2 * best.cost / max(1, len(F) - len(p))
+    J = best.jac
+    try:
+        cov = np.linalg.inv(J.T @ J) * max(chi2, 1)
+        err = np.sqrt(np.diag(cov))
+    except Exception:
+        err = np.full(len(p), np.nan)
+    return p, err, chi2
+
+
+def lum(T, logom, d_kpc):
+    fbol = 10 ** logom * sigma * T ** 4 / math.pi  # W m^-2, unreddened blackbody
+    L = 4 * math.pi * (d_kpc * KPC) ** 2 * fbol / LSUN
+    R = d_kpc * KPC * math.sqrt(10 ** logom / math.pi) / 1.496e11  # au
+    return L, R
+
+
+AK = {3: 0.528 * 0.513, 8: 0.528 * 2.898, 12: 0.528 * 3.517}
+sets = {"Mar-Apr 2026 (all)": ("2", None, None), "Mar 25-29 2026 only": ("2", None, 61128.9),
+        "Aug 25-Sep 2 2026": ("3", None, 61290.0)}
+for name, (ep, tmin, tmax) in sets.items():
+    L, F, E = load(sys.argv[1], ep, tmin, tmax)
+    print(f"\n=== {name}: {len(L)} points, {L.min():.2f}-{L.max():.2f} um")
+    for label, ak in [("no extinction", 0.0), ("A_K free", None), ("A_K 3 kpc=%.2f" % AK[3], AK[3]),
+                      ("A_K 8 kpc=%.2f" % AK[8], AK[8]), ("A_K >=12 kpc=%.2f" % AK[12], AK[12])]:
+        p, err, chi2 = fit(L, F, E, ak)
+        akv = p[2] if ak is None else ak
+        line = f"  {label:18s}: T = {p[0]:6.0f} +- {err[0]:4.0f} K, A_K = {akv:.2f}" + (f" +- {err[2]:.2f}" if ak is None else "") + f", chi2nu = {chi2:6.2f}"
+        dists = [3, 8, 12] if ak in (0.0, None) else [d for d in (3, 8, 12) if abs(AK[d] - ak) < 1e-9]
+        for d in dists:
+            Lsun, R = lum(p[0], p[1], d)
+            line += f" | d={d} kpc: L={Lsun:9.0f} Lsun R={R:6.1f} au"
+        print(line)
+    # residual pattern for the A_K-free fit
+    p, err, chi2 = fit(L, F, E, None)
+    m = model(p, L, None)
+    for lo, hi in [(1.1, 1.4), (1.4, 1.65), (1.65, 1.9), (1.9, 2.2), (2.2, 2.5), (2.5, 3.1), (3.8, 4.1), (4.1, 4.42), (4.42, 4.7), (4.7, 5.01)]:
+        s = (L >= lo) & (L < hi)
+        if s.any():
+            print(f"     {lo:.2f}-{hi:.2f} um: data median {np.median(F[s]):8.1f}  model {np.median(m[s]):8.1f} (n={s.sum()})")

@@ -1,0 +1,28 @@
+"""Every VizieR table with a row within R arcsec of the position (astroquery, CfA mirror first)."""
+import sys, json, warnings
+warnings.filterwarnings("ignore")
+from astroquery.vizier import Vizier
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+ra, dec, rad, out = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), sys.argv[4]
+c = SkyCoord(ra, dec, unit="deg")
+res = None
+for server in ["vizier.cfa.harvard.edu", "vizier.cds.unistra.fr"]:
+    try:
+        v = Vizier(columns=["*", "+_r"], row_limit=50, vizier_server=server, timeout=300)
+        res = v.query_region(c, radius=rad * u.arcsec)
+        print("server", server, "tables", len(res))
+        break
+    except Exception as e:
+        print("server", server, "failed", repr(e)[:200])
+summary = []
+for key in res.keys():
+    t = res[key]
+    r = [float(x) for x in t["_r"]] if "_r" in t.colnames else []
+    unit = str(t["_r"].unit) if "_r" in t.colnames else ""
+    summary.append({"table": key, "n": len(t), "min_r": min(r) if r else None, "r_unit": unit, "desc": t.meta.get("description", "")[:120],
+                    "nearest_row": {k: str(t[0][k]) for k in t.colnames[:14]} if len(t) else None})
+summary.sort(key=lambda s: (s["min_r"] if s["min_r"] is not None else 1e9))
+json.dump(summary, open(out, "w"), indent=1)
+for s in summary:
+    print(f'{s["min_r"]:8.2f} {s["r_unit"]:7s} {s["n"]:3d} {s["table"]:35s} {s["desc"]}')

@@ -1,0 +1,6 @@
+CTYPE RA---TAN BUNIT MJy/sr
+calibration star MG341.0920-00.4061: raw aperture 1.66 mJy -> correction 6.65 (MIPS handbook value for r=3.5", 6-8" sky is about 2.16; not verified here)
+X: forced 24um flux  -0.31 mJy; random-aperture median -0.29, sigma 3.14 mJy
+R: forced 24um flux   7.33 mJy; random-aperture median -0.29, sigma 3.14 mJy
+c: forced 24um flux   3.70 mJy; random-aperture median -0.29, sigma 3.14 mJy
+X 3-sigma upper limit at 24um (2006-10-04): 9.4 mJy

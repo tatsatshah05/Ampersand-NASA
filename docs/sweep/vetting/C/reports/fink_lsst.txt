@@ -1,0 +1,11 @@
+date 2026-11-15T05:11:50.682775+00:00
+== TARGET r=60" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=241.70931&dec=-52.20484&radius=60&startdate=2025-01-01 -> 0 []
+== TARGET r=600" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=241.70931&dec=-52.20484&radius=600&startdate=2025-01-01&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> b'HTTP Error 400: BAD REQUEST'
+== CONTROL api example r=10" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=61.96482&dec=-48.713443&radius=10&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> 2 [{"r:dec": -48.7134355427, "r:diaObjectId": 313761043604045880, "r:midpointMjdTai": 61357.2297327221, "r:ra": 61.9648065722, "v:separation_degree": 1.15806e-05}, {"r:dec": -48.7118612396, "r:diaObjectId": 170028498820792325, "r:midpointMjdTai": 61094.108123313, "r:ra": 61.962764923, "v:separation_degree": 0.0020834438}]
+== CONTROL V462 Lup r=10" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=227.01362&dec=-40.14308&radius=10&startdate=2025-01-01&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> b'HTTP Error 400: BAD REQUEST'
+== CONTROL V7994 Sgr r=10" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=270.96983&dec=-31.45739&radius=10&startdate=2025-01-01&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> b'HTTP Error 400: BAD REQUEST'
+== statistics https://api.lsst.fink-portal.org/api/v1/statistics?columns=f:night,f:alerts&output-format=json -> b'HTTP Error 400: BAD REQUEST'
+== TARGET r=600" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=241.70931&dec=-52.20484&radius=600&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> 0 []
+== TARGET r=3600" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=241.70931&dec=-52.20484&radius=3600&n=20&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> 0 []
+== CONTROL V462 Lup r=10" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=227.01362&dec=-40.14308&radius=10&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> 0 []
+== CONTROL V7994 Sgr r=10" https://api.lsst.fink-portal.org/api/v1/conesearch?ra=270.96983&dec=-31.45739&radius=10&columns=r:diaObjectId,r:ra,r:dec,r:midpointMjdTai -> 0 []

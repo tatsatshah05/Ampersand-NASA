@@ -88,7 +88,9 @@ describe('the steps', () => {
     expect(text).toContain('The bar at the top lists every tool')
     expect(text).toContain('Practise, Vote and Three tools open pages of their own.')
     expect(text).toContain('None of those finds is confirmed.')
-    expect(text).toContain('Nothing here is a new find.')
+    // The first three buttons are our own candidates: said to be unconfirmed, never a find.
+    expect(text).toContain('nobody has confirmed them yet')
+    expect(text).toContain('The last three changed while SPHEREx watched them.')
     expect(text).not.toMatch(/Expert adds more tools/)
   })
 })
@@ -334,6 +336,6 @@ describe('an angle a newcomer can picture', () => {
     expect(movementInfo(barnardJson as unknown as FramesReady).join(' ')).toContain('That is about the width of a coin seen from 500 metres away.')
   })
   it('the steps explanation names the three that changed while SPHEREx watched', () => {
-    expect(stepsInfo().join(' ')).toContain('“Caught changing” changed while SPHEREx watched them')
+    expect(stepsInfo().join(' ')).toContain('The last three changed while SPHEREx watched them.')
   })
 })

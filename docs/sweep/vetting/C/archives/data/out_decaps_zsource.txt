@@ -1,0 +1,5 @@
+z-source 0.9" from C-2026              g:   0.09+-0.03 nMgy (AB 25.08) | r:   0.39+-0.07 nMgy (AB 23.52) | z:   3.04+-0.18 nMgy (AB 21.29)
+VVV Ks15.29 / GLIMPSE[4.5]13.8 star    g:   0.00+-0.03 nMgy (AB 30.45) | r:   0.10+-0.06 nMgy (AB 25.01) | z:   3.41+-0.19 nMgy (AB 21.17)
+Gaia G17.38 (VSX RS CVn) star          g:  28.81+-0.03 nMgy (AB 18.85) | r:  94.65+-0.09 nMgy (AB 17.56) | z: 258.51+-0.22 nMgy (AB 16.47)
+Gaia G20.09 star                       g:   1.34+-0.03 nMgy (AB 22.18) | r:   7.20+-0.06 nMgy (AB 20.36) | z:  30.16+-0.19 nMgy (AB 18.80)
+aperture r=1.5" (no aperture correction; ~0.2-0.3 mag fainter than total for ~1" seeing); units: Legacy Survey cutout nanomaggies (AB, m=22.5-2.5log10 f)

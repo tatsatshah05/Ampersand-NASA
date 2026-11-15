@@ -1,0 +1,18 @@
+import sys, os, requests, concurrent.futures as cf
+UA = {"User-Agent": "generic-astro-client/1.0"}
+B = "docs/sweep/vetting/B/archives/"
+def one(line, tag):
+    mjd, band, url = line.split()
+    fn = B + f"img/neowise_l1b/{tag}_{band}_{mjd}.fits"
+    if os.path.exists(fn): return fn, "cached"
+    import time
+    for k in range(6):
+        r = requests.get(url + "?center=253.18044,-44.67687&size=80arcsec", headers=UA, timeout=180)
+        if r.status_code == 200: break
+        time.sleep(3 + 3*k)
+    if r.status_code != 200: return fn, f"HTTP {r.status_code}"
+    open(fn, "wb").write(r.content); return fn, len(r.content)
+for tag in sys.argv[1:]:
+    lines = [l for l in open(B + f"data/neowise_frames_{tag}.txt").read().splitlines() if l.strip()]
+    with cf.ThreadPoolExecutor(2) as ex:
+        for fn, st in ex.map(lambda l: one(l, tag), lines): print(os.path.basename(fn), st)

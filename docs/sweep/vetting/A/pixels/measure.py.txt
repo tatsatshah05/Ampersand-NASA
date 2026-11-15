@@ -1,0 +1,244 @@
+"""Independent pixel-level measurement of candidate A in every cached SPHEREx cutout.
+
+Own code (astropy + numpy + scipy). Reads the cached slim cutouts (IMAGE, FLAGS, VARIANCE,
+ZODI, WAVE, BANDWIDTH) and the cached SIA exposure list. Writes measurements.json.
+Flag bit numbers: Explanatory Supplement v2.1 Table 16 as copied into CLAUDE.md / pipeline.py.
+"""
+import json, sys, warnings
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from scipy.optimize import least_squares
+
+warnings.simplefilter("ignore")
+import logging; logging.getLogger("astropy").setLevel(logging.ERROR)
+RA0, DEC0 = 270.80362, -23.46745
+CACHE = Path("<repository>/backend/cache/sweep")
+CUT = CACHE / "cutouts" / "250d2b7784"
+LIST = CACHE / "queries" / "sia_c428f2a794d0f4b5.json"
+OUT = Path(__file__).resolve().parent
+
+BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7, "MISSING_DATA": 9,
+       "HOT": 10, "COLD": 11, "FULLSAMPLE": 12, "PHANMISS": 14, "NONLINEAR": 15, "PERSIST": 17,
+       "OUTLIER": 19, "CROSSTALK": 20, "SOURCE": 21, "GHOST": 22, "GHOST_FPA": 23, "GHOST_EXT": 24,
+       "STREAK": 25, "BLOOM": 26, "SNOWBALL": 27, "HALO": 28, "SATELLITE_HALO": 29}
+NAME = {v: k for k, v in BIT.items()}
+def mask(*n): return sum(1 << BIT[x] for x in n)
+PHOT_BAD = mask("SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR", "PERSIST", "BLOOM",
+                "SNOWBALL", "HALO", "SATELLITE_HALO")
+SKY_BAD = PHOT_BAD | mask("OVERFLOW", "OUTLIER", "SOURCE", "TRANSIENT")
+OVF, SUR, SPILL = mask("OVERFLOW"), mask("SUR_ERROR"), mask("BLOOM", "NONLINEAR")
+R_AP, SKY_IN, SKY_OUT = 2.5, 14.0, 20.0
+
+def names(bits):
+    return [NAME.get(b, f"bit{b}") for b in range(31) if bits >> b & 1]
+
+def frac_disk(nx, ny, x, y, r, sub=7):
+    t = np.zeros((ny, nx))
+    x0, x1 = max(int(x - r - 2), 0), min(int(x + r + 3), nx)
+    y0, y1 = max(int(y - r - 2), 0), min(int(y + r + 3), ny)
+    yy, xx = np.mgrid[y0:y1, x0:x1]
+    o = (np.arange(sub) + 0.5) / sub - 0.5
+    acc = np.zeros(yy.shape)
+    for dy in o:
+        for dx in o:
+            acc += np.hypot(xx + dx - x, yy + dy - y) < r
+    t[y0:y1, x0:x1] = acc / sub ** 2
+    return t
+
+def clipped_median(v, k=3.0, it=6):
+    v = v[np.isfinite(v)]
+    for _ in range(it):
+        m = np.median(v); s = 1.4826 * np.median(np.abs(v - m))
+        keep = np.abs(v - m) < k * s
+        if keep.all(): break
+        v = v[keep]
+    return float(np.median(v)), float(1.4826 * np.median(np.abs(v - np.median(v)))), v.size
+
+def gauss_fit(data, good, x0, y0, half=4, sig0=0.65):
+    """Elliptical-free circular+elliptical Gaussian on a (2*half+1) box. Returns dict or None."""
+    ny, nx = data.shape
+    xi, yi = int(round(x0)), int(round(y0))
+    if xi - half < 0 or yi - half < 0 or xi + half >= nx or yi + half >= ny: return None
+    sl = (slice(yi - half, yi + half + 1), slice(xi - half, xi + half + 1))
+    d = data[sl]; g = good[sl] & np.isfinite(d)
+    if g.sum() < 20: return None
+    yy, xx = np.mgrid[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    X, Y, D = xx[g], yy[g], d[g]
+    bg0 = np.percentile(D, 20); a0 = max(D.max() - bg0, 1e-3)
+    def model(p):
+        a, xc, yc, sx, sy, th, b = p
+        ct, st = np.cos(th), np.sin(th)
+        u = (X - xc) * ct + (Y - yc) * st; v = -(X - xc) * st + (Y - yc) * ct
+        return a * np.exp(-0.5 * (u ** 2 / sx ** 2 + v ** 2 / sy ** 2)) + b
+    p0 = [a0, x0, y0, sig0 * 1.2, sig0 * 1.2, 0.0, bg0]
+    lo = [0, x0 - 2.5, y0 - 2.5, 0.25, 0.25, -np.pi, -np.inf]
+    hi = [np.inf, x0 + 2.5, y0 + 2.5, 4.0, 4.0, np.pi, np.inf]
+    try:
+        r = least_squares(lambda p: model(p) - D, p0, bounds=(lo, hi))
+    except Exception:
+        return None
+    a, xc, yc, sx, sy, th, b = r.x
+    # crude errors from Jacobian
+    try:
+        J = r.jac; dof = max(D.size - 7, 1); s2 = 2 * r.cost / dof
+        cov = np.linalg.pinv(J.T @ J) * s2; err = np.sqrt(np.clip(np.diag(cov), 0, None))
+    except Exception:
+        err = np.full(7, np.nan)
+    return {"amp": float(a), "x": float(xc), "y": float(yc), "sx": float(sx), "sy": float(sy), "theta": float(th),
+            "bg": float(b), "ex": float(err[1]), "ey": float(err[2]), "npix": int(D.size),
+            "fwhm_px": float(2.3548 * np.sqrt(sx * sy)), "axis_ratio": float(min(sx, sy) / max(sx, sy))}
+
+def find_peaks(data, good, thresh, border=6):
+    from scipy.ndimage import maximum_filter
+    d = np.where(good & np.isfinite(data), data, -np.inf)
+    mx = maximum_filter(d, size=5)
+    pk = (d == mx) & (d > thresh)
+    pk[:border] = pk[-border:] = False; pk[:, :border] = pk[:, -border:] = False
+    ys, xs = np.nonzero(pk)
+    return list(zip(xs.tolist(), ys.tolist(), d[ys, xs].tolist()))
+
+def measure_one(path, exp, epoch):
+    with fits.open(path) as h:
+        hd = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float); flg = h["FLAGS"].data.astype(np.int64)
+        var = h["VARIANCE"].data.astype(float); zod = h["ZODI"].data.astype(float)
+        wav = h["WAVE"].data; bw = h["BANDWIDTH"].data
+    w = WCS(hd)
+    ny, nx = img.shape
+    px, py = (float(v) for v in w.all_world2pix(RA0, DEC0, 0))
+    detx, dety = px + 1 - float(hd["CRPIX1A"]), py + 1 - float(hd["CRPIX2A"])   # 0-based active detector pixel
+    # detector x axis position angle on sky (deg E of N) from local WCS
+    r1 = w.all_pix2world([[px, py], [px + 10, py]], 0)
+    dra = (r1[1, 0] - r1[0, 0]) * np.cos(np.radians(DEC0)); ddec = r1[1, 1] - r1[0, 1]
+    pa_x = float(np.degrees(np.arctan2(dra, ddec)) % 360)
+    rec = {"obs_id": exp["obs_id"], "det": exp["detector"], "mjd": float(hd["MJD-AVG"]), "epoch": epoch,
+           "nx": nx, "ny": ny, "cx": px, "cy": py, "detx": detx, "dety": dety, "pa_x": pa_x,
+           "wcs_retry": str(hd.get("RETRY_WCSMODE", "")), "psf_fwhm_hdr": float(hd.get("PSF_FWHM", np.nan))}
+    edge = SKY_OUT + 1
+    if not (edge <= px < nx - edge and edge <= py < ny - edge):
+        rec["status"] = "edge"; return rec, None
+    xi, yi = int(round(px)), int(round(py))
+    rec["wave"] = float(wav[yi, xi]); rec["bw"] = float(bw[yi, xi])
+    data = img - zod
+    impossible = img < -10 * np.sqrt(var)
+    data[impossible] = np.nan
+    to_mjy = float(proj_plane_pixel_area(w)) * (np.pi / 180) ** 2 * 1e9
+    rec["to_mjy"] = to_mjy
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    r = np.hypot(xx - px, yy - py)
+    ring = (r >= SKY_IN) & (r < SKY_OUT) & np.isfinite(data)
+    sky_ok = ring & ((flg & SKY_BAD) == 0)
+    sky_mode = "strict"
+    if sky_ok.sum() < 100:
+        sky_ok = ring & ((flg & (SKY_BAD & ~mask("SOURCE", "OUTLIER"))) == 0); sky_mode = "loose"
+    if sky_ok.sum() < 50:
+        rec["status"] = "no_sky"; return rec, None
+    sky, sky_sig, nsky = clipped_median(data[sky_ok])
+    rec.update(sky=sky, sky_sig=sky_sig, nsky=nsky, sky_mode=sky_mode)
+    wt = frac_disk(nx, ny, px, py, R_AP)
+    used = wt > 0
+    f_ap = flg[used]; d_ap = data[used]
+    bits = 0
+    for v in np.unique(f_ap): bits |= int(v)
+    rec["flags_ap"] = names(bits & ~mask("SOURCE"))
+    sat = (((f_ap & OVF) != 0) & ((f_ap & SUR) != 0)) | ((f_ap & SPILL) != 0) | (((f_ap & OVF) != 0) & ~np.isfinite(d_ap))
+    bad = ((f_ap & PHOT_BAD) != 0) | ~np.isfinite(d_ap)
+    rec["n_sat"] = int(sat.sum()); rec["n_bad"] = int(bad.sum()); rec["n_ovf"] = int(((f_ap & OVF) != 0).sum())
+    rec["n_nan"] = int((~np.isfinite(d_ap)).sum())
+    # core (within 1.5 px) flags
+    core = r < 1.5
+    cb = 0
+    for v in np.unique(flg[core]): cb |= int(v)
+    rec["flags_core"] = names(cb & ~mask("SOURCE"))
+    tot = float(np.nansum(wt[used] * (d_ap - sky)))
+    rec["flux_any"] = tot * to_mjy  # includes flagged pixels where finite (diagnostic only)
+    good_ap = ~bad
+    if rec["n_sat"] > 0: rec["status"] = "saturated"
+    elif rec["n_bad"] > 0: rec["status"] = "flagged"
+    else: rec["status"] = "ok"
+    if good_ap.any():
+        scale = wt[used].sum() / wt[used][good_ap].sum()
+        rec["flux_goodscaled"] = float(np.sum(wt[used][good_ap] * (d_ap[good_ap] - sky)) * scale * to_mjy)
+    if rec["status"] == "ok":
+        rec["flux"] = tot * to_mjy
+        v_ap = var[used]
+        rec["err_stat"] = float(np.sqrt(np.sum(wt[used] ** 2 * v_ap) + wt[used].sum() ** 2 * sky_sig ** 2 / nsky)) * to_mjy
+    # peak value
+    rec["peak_mjysr"] = float(np.nanmax(np.where(r < 2.0, data - sky, np.nan)))
+    # Gaussian centroid / width; use pixels not photometry-bad and finite (saturated keeps finite non-bloom pixels out)
+    good = np.isfinite(data) & ((flg & PHOT_BAD) == 0)
+    # start at brightest good pixel within 2 px
+    cand = np.where((r < 2.2) & good, data, -np.inf)
+    if np.isfinite(cand.max()):
+        yb, xb = np.unravel_index(np.argmax(cand), cand.shape)
+        gf = gauss_fit(data - sky, good, float(xb), float(yb))
+    else:
+        gf = None
+    if gf:
+        ra_c, dec_c = (float(v) for v in w.all_pix2world(gf["x"], gf["y"], 0))
+        dra = (ra_c - RA0) * np.cos(np.radians(DEC0)) * 3600; ddec = (dec_c - DEC0) * 3600
+        pscale = np.sqrt(proj_plane_pixel_area(w)) * 3600
+        gf.update(ra=ra_c, dec=dec_c, east=float(dra), north=float(ddec), fwhm_arcsec=gf["fwhm_px"] * pscale,
+                  err_arcsec=float(np.hypot(gf["ex"], gf["ey"]) * pscale))
+        rec["fit"] = gf
+    # empty-aperture noise: random positions in the cutout far from the target and from bright peaks
+    rng = np.random.default_rng(abs(hash(exp["obs_id"] + str(exp["detector"]))) % 2**32)
+    sums = []
+    tries = 0
+    while len(sums) < 80 and tries < 1500:
+        tries += 1
+        ex_, ey_ = rng.uniform(4, nx - 5), rng.uniform(4, ny - 5)
+        if np.hypot(ex_ - px, ey_ - py) < 6: continue
+        wt2 = frac_disk(nx, ny, ex_, ey_, R_AP, sub=3); u2 = wt2 > 0
+        if (~np.isfinite(data[u2])).any() or ((flg[u2] & PHOT_BAD) != 0).any(): continue
+        sums.append(float(np.sum(wt2[u2] * (data[u2] - sky)) * to_mjy))
+    sums = np.array(sums)
+    if sums.size > 20:
+        m = np.median(sums); rec["empty_med"] = float(m); rec["empty_sig"] = float(1.4826 * np.median(np.abs(sums - m)))
+        rec["empty_n"] = int(sums.size)
+    # comparison stars in the same cutout: peaks, fitted, unsaturated, isolated
+    thr = sky_sig * 8 if sky_sig > 0 else 1
+    peaks = find_peaks(data - sky, good, thr, border=6)
+    comps = []
+    for (x, y, pv) in peaks:
+        if np.hypot(x - px, y - py) < 4: continue
+        # isolation: no other peak within 4 px brighter than 0.25 of it
+        near = [q for q in peaks if 0 < np.hypot(q[0] - x, q[1] - y) < 4 and q[2] > 0.25 * pv]
+        if near: continue
+        sub = flg[y - 2:y + 3, x - 2:x + 3]
+        if (((sub & OVF) != 0) | ((sub & PHOT_BAD) != 0)).any(): continue
+        g2 = gauss_fit(data - sky, good, float(x), float(y))
+        if g2 is None or g2["fwhm_px"] > 6 or g2["amp"] <= 0: continue
+        wt3 = frac_disk(nx, ny, g2["x"], g2["y"], R_AP, sub=3); u3 = wt3 > 0
+        fl = float(np.nansum(wt3[u3] * (data[u3] - sky)) * to_mjy)
+        comps.append({"x": g2["x"], "y": g2["y"], "fwhm_px": g2["fwhm_px"], "axis_ratio": g2["axis_ratio"], "flux": fl,
+                      "peak": pv})
+    rec["comps"] = comps
+    return rec, None
+
+def _one(args):
+    e, k = args
+    import logging; logging.getLogger("astropy").setLevel(logging.ERROR)
+    p = CUT / f"{e['obs_id']}_D{e['detector']}.fits"
+    if not p.exists():
+        return {"obs_id": e["obs_id"], "det": e["detector"], "epoch": k, "status": "missing_file"}
+    return measure_one(p, e, k)[0]
+
+def main():
+    L = json.load(open(LIST))
+    L.sort(key=lambda e: e["mjd"])
+    ep, cur = [], 0
+    for i, e in enumerate(L):
+        if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+        ep.append(cur + 1)
+    from multiprocessing import Pool
+    with Pool(6) as pool:
+        recs = pool.map(_one, list(zip(L, ep)))
+    json.dump(recs, open(OUT / "measurements.json", "w"), indent=1)
+    print("wrote", len(recs))
+
+if __name__ == "__main__":
+    main()

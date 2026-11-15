@@ -1,0 +1,16 @@
+import sys, requests, io, time
+UA = {"User-Agent": "generic-astro-client/1.0"}
+def irsa_tap(adql, fmt="csv", timeout=300):
+    r = requests.post("https://irsa.ipac.caltech.edu/TAP/sync", data={"QUERY": adql, "FORMAT": fmt, "LANG":"ADQL", "REQUEST":"doQuery"}, headers=UA, timeout=timeout)
+    return r.status_code, r.text
+def vizier_tap(adql, fmt="csv", timeout=300):
+    r = requests.post("https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync", data={"QUERY": adql, "FORMAT": fmt, "LANG":"ADQL", "REQUEST":"doQuery"}, headers=UA, timeout=timeout)
+    return r.status_code, r.text
+def simbad_tap(adql, fmt="csv", timeout=300):
+    r = requests.post("https://simbad.cds.unistra.fr/simbad/sim-tap/sync", data={"QUERY": adql, "FORMAT": fmt, "LANG":"ADQL", "REQUEST":"doQuery"}, headers=UA, timeout=timeout)
+    return r.status_code, r.text
+if __name__ == "__main__":
+    which, q = sys.argv[1], sys.argv[2]
+    f = {"irsa": irsa_tap, "viz": vizier_tap, "simbad": simbad_tap}[which]
+    s, t = f(q)
+    print("HTTP", s); print(t[:20000])

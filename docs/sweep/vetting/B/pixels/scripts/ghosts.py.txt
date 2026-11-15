@@ -1,0 +1,86 @@
+"""Can the instrument fake it? Detector geometry of the target and of every bright star within 0.5 deg, per exposure.
+
+Bright stars: AllWISE W2 < 5 and 2MASS Ks < 6 within 30 arcmin (VizieR CfA answers saved in downloads/).
+For each exposure: where the target falls on the detector (0-based active pixel coordinates from the
+header's alternate WCS 'A'), the detector's orientation on the sky, and where each bright star falls (the
+cutout's TAN-SIP WCS extrapolated to the whole 2040 x 2040 array). Then tests:
+ - persistence: does the target sit on the same detector pixels in different exposures? (it must not)
+ - fixed-offset ghost of star S: target_det - S_det constant? point-reflection ghost: target_det + S_det constant?
+   A real sky source keeps its sky place while these quantities change; we report their spread.
+"""
+import json, os, sys
+import numpy as np
+sys.path.insert(0, os.path.dirname(__file__))
+from common import CUT, W, Cut, read_vizier_tsv, num, sep_arcsec, RA0, DEC0
+
+B = []
+for r in read_vizier_tsv(f"{W}/downloads/viz_allwise_bright.tsv"):
+    B.append(("AllWISE " + r["AllWISE"], float(r["RAJ2000"]), float(r["DEJ2000"]), num(r["W2mag"]), "W2"))
+for r in read_vizier_tsv(f"{W}/downloads/viz_2mass_bright.tsv"):
+    ra, de = float(r["RAJ2000"]), float(r["DEJ2000"])
+    if any(sep_arcsec(ra, de, b[1], b[2]) < 3 for b in B):
+        continue
+    B.append(("2MASS J" + r["2MASS"], ra, de, num(r["Kmag"]), "Ks"))
+print("bright stars within 0.5 deg:", len(B))
+P = json.load(open(f"{W}/out/per_exposure.json"))
+bright_files = [p for p in P if p["forced"] is not None and p["forced"] > 100]
+allp = P
+out = []
+for p in allp:
+    c = Cut(os.path.join(CUT, p["file"]))
+    x0, y0 = c.sky2pix(RA0, DEC0)
+    tx, ty = c.det_xy(x0, y0)
+    tx, ty = float(tx[0]), float(ty[0])
+    # offset between cutout pixel and detector pixel
+    ox, oy = tx - float(x0[0]), ty - float(y0[0])
+    stars = []
+    for name, ra, de, mag, band in B:
+        sx, sy = c.sky2pix(ra, de)
+        sx, sy = float(sx[0]) + ox, float(sy[0]) + oy
+        on = (0 <= sx < 2040) and (0 <= sy < 2040)
+        stars.append(dict(name=name, mag=mag, band=band, x=sx, y=sy, on=on, dpx=float(np.hypot(sx - tx, sy - ty)),
+                          sep_deg=float(sep_arcsec(ra, de, RA0, DEC0) / 3600)))
+    out.append(dict(file=p["file"], obs=p["obs"], det=p["det"], ep=p["ep"], mjd=p["mjd"], tx=tx, ty=ty, pa=p["pa"],
+                    forced=p["forced"], stars=stars))
+json.dump(out, open(f"{W}/out/geometry.json", "w"))
+
+# --- summaries ---
+print("\nDetector position of the target and orientation, per detector and visit")
+for det in range(1, 7):
+    for ep in range(3):
+        s = [o for o in out if o["det"] == det and o["ep"] == ep]
+        if not s:
+            continue
+        tx = np.array([o["tx"] for o in s]); ty = np.array([o["ty"] for o in s]); pa = np.array([o["pa"] for o in s])
+        print(f"D{det} ep{ep}: n={len(s)} det_x {tx.min():.0f}-{tx.max():.0f}, det_y {ty.min():.0f}-{ty.max():.0f}, PA {pa.min():.1f}-{pa.max():.1f}")
+# persistence: pairs of exposures (same detector) where the target fell within 3 px of the same detector pixel
+print("\nPersistence check: pairs of exposures of one detector with the target within 3 detector pixels of the same place")
+for det in range(1, 7):
+    s = [o for o in out if o["det"] == det]
+    n = 0
+    for i in range(len(s)):
+        for j in range(i + 1, len(s)):
+            if np.hypot(s[i]["tx"] - s[j]["tx"], s[i]["ty"] - s[j]["ty"]) < 3:
+                n += 1
+    print(f"  D{det}: {n} pairs of {len(s)*(len(s)-1)//2}")
+# bright stars on the detector in the bright exposures
+print("\nBright exposures (forced flux > 100 mJy): bright stars on the same detector array")
+bs = [o for o in out if o["forced"] is not None and o["forced"] > 100]
+print("number of bright exposures:", len(bs), "by detector", {d: sum(1 for o in bs if o["det"] == d) for d in range(1, 7)})
+names = sorted({s["name"] for o in bs for s in o["stars"]}, key=lambda n: min(s["mag"] for o in bs for s in o["stars"] if s["name"] == n))
+rows = []
+for n in names:
+    v = [(o, s) for o in bs for s in o["stars"] if s["name"] == n and s["on"]]
+    mag = [s["mag"] for o in bs for s in o["stars"] if s["name"] == n][0]
+    sep = [s["sep_deg"] for o in bs for s in o["stars"] if s["name"] == n][0]
+    if not v:
+        rows.append((n, mag, sep, 0, None, None, None))
+        continue
+    dif = np.array([(s["x"] - o["tx"], s["y"] - o["ty"]) for o, s in v])
+    sm = np.array([(s["x"] + o["tx"], s["y"] + o["ty"]) for o, s in v])
+    sx = np.array([(s["x"], s["y"]) for o, s in v])
+    rows.append((n, mag, sep, len(v), float(np.ptp(sx[:, 0])) + 0, float(np.hypot(*np.ptp(dif, axis=0))), float(np.hypot(*np.ptp(sm, axis=0)))))
+print("star | mag | sep deg | n bright exposures with star on array | spread of star det_x (px) | spread of (star-target) det vector | spread of (star+target)")
+for r in sorted(rows, key=lambda r: r[1])[:25]:
+    print(f"  {r[0]:28s} {r[1]:6.2f} {r[2]:.3f} {r[3]:3d} " + ("" if r[3] == 0 else f"{r[4]:7.0f} {r[5]:7.0f} {r[6]:7.0f}"))
+json.dump(rows, open(f"{W}/out/ghost_rows.json", "w"))

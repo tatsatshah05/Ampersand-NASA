@@ -1,0 +1,38 @@
+"""Distances from (a) the sweep position and (b) my 2026 SPHEREx centroid to every catalogued source within 12"."""
+import sys, math, warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+from pathlib import Path
+from astropy.table import Table
+from astropy.io.votable import parse
+D = Path(__file__).resolve().parent.parent / "data"
+P = {"sweep": (241.70931, -52.20484), "mine2026": (241.709120, -52.205661)}
+def dist(ra, dec, p):
+    return np.hypot((np.asarray(ra, float) - p[0]) * math.cos(math.radians(p[1])), np.asarray(dec, float) - p[1]) * 3600
+cats = []
+def add(name, t, ra, dec, desc):
+    for r in t:
+        cats.append((name, float(r[ra]), float(r[dec]), desc(r)))
+ipac = lambda f: Table.read(D / f, format="ipac")
+vt = lambda f: parse(D / f).get_first_table().to_table(use_names_over_ids=True)
+add("2MASS PSC (1999-2000)", ipac("gator_fp_psc_30.tbl"), "ra", "dec", lambda r: f"J {r['j_m']} H {r['h_m']} Ks {r['k_m']} q {r['ph_qual']}")
+add("GLIMPSE I archive (2004)", ipac("gator_glimpse_s07_ar_30.tbl"), "ra", "dec", lambda r: f"[3.6] {r['mag3_6']} [4.5] {r['mag4_5']} [5.8] {r['mag5_8']} [8.0] {r['mag8_0']}  f4.5 {r['f4_5']} mJy")
+add("VIRAC2 (VVV 2010-2019)", vt("viz_II_387_30.xml"), "RAJ2000", "DEJ2000", lambda r: f"J {r['Jmag']} H {r['Hmag']} Ks {r['Ksmag']} sd {r['e_Ksmag']} n {r['o_Ksmag']}")
+add("VVV DR2 (II/348)", vt("viz_II_348_30.xml"), "RAJ2000", "DEJ2000", lambda r: f"J {r['Jmag3']} H {r['Hmag3']} Ks {r['Ksmag3']}")
+add("AllWISE (2010-11)", ipac("gator_allwise_p3as_psd_30.tbl"), "ra", "dec", lambda r: f"W1 {r['w1mpro']} W2 {r['w2mpro']} W3 {r['w3mpro']} W4 {r['w4mpro']} q {r['ph_qual']}")
+add("CatWISE2020 (2010-2018)", ipac("gator_catwise_2020_30.tbl"), "ra", "dec", lambda r: f"W1 {r['w1mpro']} W2 {r['w2mpro']}")
+add("unWISE (2010-2015)", ipac("gator_unwise_2019_30.tbl"), "ra", "dec", lambda r: f"W1 {22.5-2.5*math.log10(r['flux_1']) if r['flux_1'] and r['flux_1']>0 else '--':} W2 {22.5-2.5*math.log10(r['flux_2']) if r['flux_2'] and r['flux_2']>0 else '--'}")
+add("Gaia DR3 (2014-17)", ipac("gator_gaia_dr3_source_30.tbl"), "ra", "dec", lambda r: f"G {r['phot_g_mean_mag']:.2f} var {r['phot_variable_flag']}")
+add("Hi-GAL clump (2010)", ipac("gator_higal360clump_60.tbl"), "ra", "dec", lambda r: f"{r['designation']} T {r['temp']} K M {r['mass']} Msun d {r['dist']} kpc 70um<{r['ulim_70']} Jy")
+add("Hi-GAL 160um", ipac("gator_higal160_60.tbl"), "ra", "dec", lambda r: f"{r['designation']} F160 {r['fint']} Jy")
+add("Hi-GAL 250um", ipac("gator_higal250_60.tbl"), "ra", "dec", lambda r: f"{r['designation']} F250 {r['fint']} Jy")
+add("NEOWISE single frame 2022-03-02", Table(rows=[(241.7092471, -52.206233)], names=["ra", "dec"]), "ra", "dec", lambda r: "W2 10.69 (9.1 mJy), W1 not detected, 1 of 15 frames")
+out = []
+for name, ra, dec, desc in cats:
+    d1, d2 = float(dist(ra, dec, P["sweep"])), float(dist(ra, dec, P["mine2026"]))
+    if min(d1, d2) < 12:
+        out.append((d2, d1, name, ra, dec, desc))
+out.sort()
+print(f"{'d_mine':>6} {'d_sweep':>7}  catalogue                          RA          Dec        values")
+for d2, d1, name, ra, dec, desc in out:
+    print(f"{d2:6.2f} {d1:7.2f}  {name:34s} {ra:.6f} {dec:.6f}  {desc}")

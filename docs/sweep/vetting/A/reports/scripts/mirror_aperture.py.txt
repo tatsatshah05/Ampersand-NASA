@@ -1,0 +1,49 @@
+"""Aperture (radius 2.5 px, as the sweep) at the target versus the same aperture placed at the same distance from the
+steady neighbour in other directions ('mirror' positions), per epoch, D5 and D6. If the 2025 aperture flux at the
+target equals the mirror fluxes, the 2025 reading is the neighbour's light, not a source at the target."""
+import glob, os, warnings
+import numpy as np
+warnings.filterwarnings("ignore")
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from astropy.coordinates import SkyCoord
+
+CUT = "<repository>/backend/cache/sweep/cutouts/250d2b7784"
+T = SkyCoord(270.80362, -23.46745, unit="deg")
+NB = SkyCoord(270.80192, -23.46297, unit="deg")
+res = {}
+for f in sorted(glob.glob(os.path.join(CUT, "*.fits"))):
+    det = int(os.path.basename(f).split("_D")[-1][0])
+    if det not in (5, 6):
+        continue
+    with fits.open(f) as h:
+        hd = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+    w = WCS(hd)
+    mjd = hd["MJD-AVG"]
+    ep = "Aug-Sep 2025" if mjd < 60950 else ("Mar-Apr 2026" if mjd < 61150 else "Aug-Sep 2026")
+    to_mjy = float(proj_plane_pixel_area(w)) * (np.pi / 180) ** 2 * 1e9
+    xt, yt = (float(v) for v in w.world_to_pixel(T))
+    xn, yn = (float(v) for v in w.world_to_pixel(NB))
+    ny, nx = img.shape
+    if not (21 <= xt < nx - 21 and 21 <= yt < ny - 21):
+        continue
+    yy, xx = np.mgrid[0:ny, 0:nx]
+
+    def ap(x, y):
+        r = np.hypot(xx - x, yy - y)
+        sky = np.nanmedian(img[(r >= 14) & (r < 20)])
+        m = (r <= 2.5)
+        return float(np.nansum(img[m] - sky)) * to_mjy
+
+    at = ap(xt, yt)
+    dx, dy = xt - xn, yt - yn
+    rad = np.hypot(dx, dy); a0 = np.arctan2(dy, dx)
+    mir = [ap(xn + rad * np.cos(a), yn + rad * np.sin(a)) for a in np.linspace(0, 2 * np.pi, 12, endpoint=False)
+           if abs(np.angle(np.exp(1j * (a - a0)))) > np.radians(75)]
+    res.setdefault((ep, det), []).append((at, np.median(mir), ap(xn, yn)))
+print("epoch          det  n   aperture at target (mJy)   same aperture at mirror positions around the neighbour (mJy)   aperture on neighbour (mJy)")
+for k in sorted(res, key=lambda k: (k[0][-4:], k[0], k[1])):
+    a = np.array(res[k])
+    print(f"{k[0]:14s} D{k[1]} {len(a):3d}   {np.median(a[:,0]):10.1f}            {np.median(a[:,1]):10.1f}                                     {np.median(a[:,2]):10.1f}")

@@ -1,0 +1,11 @@
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from irsa_cones import cone
+rows = cone("neowiser_p1bs_psd", 15, "source_id,ra,dec,mjd,w1mpro,w1sigmpro,w1snr,w2mpro,w2sigmpro,w2snr,cc_flags,ph_qual,qual_frame,qi_fact,saa_sep,moon_masked,nb,na,w1rchi2,w2rchi2")
+for r in rows:
+    print("  %6.2f\"  mjd=%s w1=%s(%s) w2=%s(%s) snr=%s/%s ph=%s cc=%s qf=%s qi=%s nb=%s" % (r["_sep"], r["mjd"], r["w1mpro"], r["w1sigmpro"], r["w2mpro"], r["w2sigmpro"], r["w1snr"], r["w2snr"], r["ph_qual"], r["cc_flags"], r["qual_frame"], r["qi_fact"], r["nb"]))
+# AllWISE multi-epoch (2010) single exposures
+rows = cone("allwise_p3as_mep", 15, "source_id_mf,ra,dec,mjd,w1mpro_ep,w1sigmpro_ep,w2mpro_ep,w2sigmpro_ep,w3mpro_ep,w4mpro_ep,qi_fact,cc_flags")
+if rows:
+  for r in rows:
+    print("  MEP %6.2f\"  mjd=%s w1=%s w2=%s w3=%s w4=%s qi=%s cc=%s" % (r["_sep"], r["mjd"], r["w1mpro_ep"], r["w2mpro_ep"], r["w3mpro_ep"], r["w4mpro_ep"], r["qi_fact"], r["cc_flags"]))

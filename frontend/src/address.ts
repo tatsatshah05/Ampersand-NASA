@@ -10,6 +10,7 @@
 import type { FramesQuery, Mode, Reference, Track } from './api'
 import type { SearchTarget } from './components/SearchBar'
 import { isToolKey, TOOL_KEYS, type ToolKey } from './features'
+import { FINDS, type Find } from './finds'
 
 /** The six SPHEREx detectors and the wavelengths each one sees, in micrometres. */
 export const DETECTORS = [
@@ -60,7 +61,8 @@ export interface Selection {
   level: Level
 }
 
-// Barnard's Star where it is in 2026 (see CLAUDE.md), shown when the address gives no position.
+// Barnard's Star where it is in 2026 (see CLAUDE.md): the usual settings (detector, field of
+// view, mode) and the example the page falls back to when an address's position cannot be used.
 export const DEFAULT_SELECTION: Selection = {
   ui: 'beginner',
   ra: 269.446267,
@@ -78,7 +80,25 @@ export const DEFAULT_SELECTION: Selection = {
   level: 'easy',
 }
 
-const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i
+/** The candidate the page opens on when the address names no position: Candidate B (finds.ts). */
+export const LANDING_FIND: Find = FINDS.find((f) => f.key === 'B') ?? FINDS[0]
+
+/**
+ * What the page opens on when the address names no position: the most striking true thing it
+ * has, Candidate B appearing between 2025 and 2026, with the usual field of view and mode, in the
+ * detector that shows it best and held still at its corrected place (finds.ts, findTarget).
+ */
+export const LANDING: Selection = {
+  ...DEFAULT_SELECTION,
+  ra: LANDING_FIND.ra,
+  dec: LANDING_FIND.dec,
+  name: LANDING_FIND.name,
+  pmra: 0,
+  pmdec: 0,
+  det: LANDING_FIND.det,
+}
+
+const NUMBER =/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i
 
 /** A plain decimal number from the address, or null if the text is missing or is not one. */
 function numberFrom(raw: string | null): number | null {
@@ -109,6 +129,12 @@ function cleanName(raw: string | null | undefined): string | null {
     .trim()
     .slice(0, 80)
   return text || null
+}
+
+/** A whole-number seed (`train=<seed>`) makes the address a practice round. */
+function isPractice(p: URLSearchParams): boolean {
+  const train = numberFrom(p.get('train'))
+  return train !== null && Number.isInteger(train) && train >= 0 && train <= 2147483647
 }
 
 function oneOf<T extends string>(raw: string | null, allowed: readonly T[]): T | null {
@@ -177,6 +203,11 @@ export function readAddress(search: string, stored: string | null = null): { sel
     s.ra = ra
     s.dec = dec
     s.name = cleanName(p.get('name'))
+  } else if (raRaw === null && decRaw === null && !isPractice(p)) {
+    // No position at all: the page opens on the landing view (a detector in the address still applies, below).
+    // A practice round with no position stays on Barnard's Star: a real candidate appearing in the
+    // picture would only confuse the hunt for the made-up object.
+    Object.assign(s, { ra: LANDING.ra, dec: LANDING.dec, name: LANDING.name, pmra: LANDING.pmra, pmdec: LANDING.pmdec, det: LANDING.det })
   } else if (raRaw !== null || decRaw !== null) {
     const problems: string[] = []
     if (raRaw === null) problems.push('no right ascension (ra)')
@@ -251,7 +282,7 @@ export function readAddress(search: string, stored: string | null = null): { sel
   // Practice mode: a whole-number seed makes the address a practice round.
   const trainRaw = p.get('train')
   const train = numberFrom(trainRaw)
-  if (train !== null && Number.isInteger(train) && train >= 0 && train <= 2147483647) {
+  if (isPractice(p) && train !== null) {
     s.train = train
     const levelRaw = p.get('level')
     const level = oneOf(levelRaw, LEVELS)
@@ -383,6 +414,12 @@ export function toFramesQuery(s: Selection): FramesQuery {
  */
 export function withTarget(s: Selection, target: SearchTarget, usualDetector = s.det): Selection | null {
   if (!Number.isFinite(target.ra) || !validDec(target.dec)) return null
+  // A candidate's view (the landing view among them) is in the candidate's own detector, and the
+  // page takes an opening address's detector as the visitor's usual one. Leaving a candidate still
+  // in its own detector, a target that suggests none goes back to the usual detector, 5, rather
+  // than keeping the candidate's (Epsilon Indi B shows ghost rings in detector 6).
+  const find = FINDS.find((f) => f.ra === s.ra && f.dec === s.dec)
+  if (find && s.det === find.det && usualDetector === find.det) usualDetector = DEFAULT_SELECTION.det
   // A right ascension outside 0 to 360 is brought round into it; one inside is kept
   // digit for digit, because the backend's cache is keyed on the number it is sent.
   const ra = validRa(target.ra) ? target.ra : Number((((target.ra % 360) + 360) % 360).toFixed(9)) % 360

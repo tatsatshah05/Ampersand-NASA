@@ -1,0 +1,19 @@
+"""Background-subtracted surface brightness (MJy/sr) in the pixel holding B and in the pixel holding the red star
+10 arcsec away, per D5/D6 exposure; medians per visit. A self-check of the brightening, not a calibrated flux."""
+import sys
+src = open(sys.argv[1]).read().split("# picture:")[0].split("year = lambda")[0]
+sys.argv = ["x", sys.argv[2], "unused"]
+exec(src)
+import numpy as np
+red = REF["red star 2MASS J16524412-4440318 / AllWISE J165244.11-444031.8 (Ks 10.66, W2 9.07)"]
+out = {}
+for name, f in [("Aug 2025", "2025W3"), ("Feb-Mar 2026", "2026W"), ("Aug 2026", "2026W3")]:
+    for det in (5, 6):
+        sel = [r for r in rows if r[0].startswith(f) and r[1] == det and not (f == "2026W" and r[0].startswith("2026W3"))]
+        vb = []; vr = []
+        for r in sel:
+            w = r[7]; sub = r[6]
+            xb, yb = [int(round(float(t))) for t in w.world_to_pixel(B)]
+            xr, yr = [int(round(float(t))) for t in w.world_to_pixel(red)]
+            vb.append(sub[yb, xb]); vr.append(sub[yr, xr])
+        print(f"{name:13s} D{det}: n={len(sel):3d}  B pixel median {np.nanmedian(vb):8.3f} MJy/sr   red-star pixel median {np.nanmedian(vr):8.3f} MJy/sr")

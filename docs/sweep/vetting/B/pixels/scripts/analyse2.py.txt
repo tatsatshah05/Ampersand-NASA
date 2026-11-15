@@ -1,0 +1,79 @@
+"""Forced PSF photometry at the adopted bright-state place, at the faint counterpart, and at 12 empty control places."""
+import json, os, sys
+import numpy as np
+from astropy.time import Time
+sys.path.insert(0, os.path.dirname(__file__))
+from common import W
+
+R = json.load(open(f"{W}/out/pass3.json"))
+R.sort(key=lambda r: r["mjd"])
+cur = 0
+for i, r in enumerate(R):
+    if i and r["mjd"] - R[i - 1]["mjd"] > 30:
+        cur += 1
+    r["epoch"] = cur
+
+
+def clean(f):
+    return f and f.get("status") == "ok" and f["n_core_lost"] == 0
+
+
+def rob(a):
+    a = np.asarray(a, float)
+    if a.size == 0:
+        return np.nan, np.nan
+    med = np.median(a)
+    return float(med), float(1.4826 * np.median(np.abs(a - med)))
+
+
+rows = []
+print("Forced PSF fit (target at the adopted bright place, width = field stars, catalogued neighbours fixed), mJy")
+print("cols: n_clean/n | median | robust sd | sd of the median | controls: median, robust sd per exposure | empty-aperture r2.5 median, robust sd | counterpart-place fit")
+table = {}
+for det in range(1, 7):
+    for ep in range(3):
+        rr = [r for r in R if r["det"] == det and r["epoch"] == ep and r.get("forced")]
+        if not rr:
+            continue
+        fb = [r["forced"]["bright"]["F_mjy"] for r in rr if clean(r["forced"].get("bright"))]
+        fc = [r["forced"]["counterpart_2mass"]["F_mjy"] for r in rr if clean(r["forced"].get("counterpart_2mass"))]
+        ctrl = [r["forced"][k]["F_mjy"] for r in rr for k in r["forced"] if k.startswith("ctrl") and clean(r["forced"][k])]
+        emp = [e[0] for r in rr for e in r.get("empty", [])]
+        emp_far = [e[0] for r in rr for e in r.get("empty", []) if e[1] > 8]
+        mb, sb = rob(fb); mc, sc = rob(ctrl); me, se = rob(emp); mef, sef = rob(emp_far); mcp, scp = rob(fc)
+        n = len(fb)
+        sem = 1.2533 * sb / np.sqrt(n) if n else np.nan
+        wav = [r["wave"] for r in rr if r["wave"]]
+        print(f"D{det} ep{ep} ({min(wav):.2f}-{max(wav):.2f} um): {n}/{len(rr)} | {mb:8.2f} | {sb:6.2f} | {sem:5.2f} | ctrl {mc:+6.2f} {sc:5.2f} (n={len(ctrl)}) | "
+              f"empty {me:+6.2f} {se:5.2f} (blank>8\": {mef:+6.2f} {sef:5.2f}, n={len(emp_far)}) | cpart {mcp:7.2f} ({scp:.2f})")
+        table[f"D{det}_ep{ep}"] = dict(n=n, n_total=len(rr), median=mb, sd=sb, sem=sem, ctrl_median=mc, ctrl_sd=sc, n_ctrl=len(ctrl),
+                                       empty_median=me, empty_sd=se, blank_median=mef, blank_sd=sef, counterpart_median=mcp,
+                                       wave=[min(wav), max(wav)])
+        for r in rr:
+            f = r["forced"].get("bright")
+            rows.append(dict(file=r["file"], obs=r["obs"], det=det, ep=ep, mjd=r["mjd"], date=Time(r["mjd"], format="mjd").iso[:16],
+                             wave=r["wave"], bw=r["bandwidth"], det_x=r["det_x"], det_y=r["det_y"], pa=r["pa_deg"],
+                             ap25_status=r["ap25"]["status"], ap25=r["ap25"].get("flux"), ap25_err=r["ap25"].get("err"),
+                             ap25_flags=r["ap25"].get("flags"), n_overflow=r["ap25"].get("n_overflow"), n_sat=r["ap25"].get("n_sat"),
+                             forced=f["F_mjy"] if clean(f) else None, forced_err=f["eF_mjy"] if clean(f) else None,
+                             forced_status=(f or {}).get("status"), core_lost=(f or {}).get("n_core_lost"),
+                             neigh=[(q["name"], round(q["F_mjy"], 2)) for q in (f or {}).get("neigh", [])][:16],
+                             ctrl_sd_exp=float(np.std([r["forced"][k]["F_mjy"] for k in r["forced"] if k.startswith("ctrl") and clean(r["forced"][k])] or [np.nan]))))
+json.dump(table, open(f"{W}/out/forced_table.json", "w"), indent=1)
+json.dump(rows, open(f"{W}/out/per_exposure.json", "w"), indent=0, default=str)
+# write a CSV for people
+import csv
+with open(f"{W}/out/per_exposure.csv", "w", newline="") as fh:
+    w = csv.writer(fh)
+    keys = ["obs", "det", "ep", "date", "mjd", "wave", "bw", "det_x", "det_y", "pa", "ap25_status", "ap25", "ap25_err", "ap25_flags", "n_overflow", "n_sat", "forced", "forced_err", "core_lost", "ctrl_sd_exp"]
+    w.writerow(keys)
+    for r in rows:
+        w.writerow([r[k] if not isinstance(r[k], float) else round(r[k], 4) for k in keys])
+print("wrote per_exposure.csv with", len(rows), "rows")
+# neighbour fluxes in the faint epoch (what fills the aperture)
+print("\nFitted neighbour fluxes (median over clean exposures), the 41 mJy star CWISE J165244.11-444031.9 / 2MASS J16524412-4440318:")
+for det in range(1, 7):
+    for ep in range(3):
+        v = [q[1] for r in rows if r["det"] == det and r["ep"] == ep and r["forced"] is not None for q in r["neigh"] if q[0] in ("CWISE J165244.11-444031.9", "2MASS J16524412-4440318")]
+        if v:
+            print(f"  D{det} ep{ep}: {np.median(v):.1f} mJy (n={len(v)})")

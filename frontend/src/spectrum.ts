@@ -1,6 +1,8 @@
 // Types and the fetch for GET /api/spectrum: the brightness of one object in every
 // SPHEREx exposure. Each exposure sees the object at a different wavelength, so the
 // measurements together are its spectrum. Field names are the backend's.
+import { FIND_EVIDENCE, findAt, findNear, inQuiet, nearFindSentence } from './finds'
+import { NEIGHBOURS_LIGHT } from './lightcurve'
 
 /** What was actually measured, as /api/spectrum and /api/lightcurve describe it. */
 export interface Measured {
@@ -138,5 +140,34 @@ export async function fetchSpectrum(req: SpectrumRequest, signal?: AbortSignal):
     }
     throw new Error(detail)
   }
-  return (await r.json()) as SpectrumResponse
+  return guardSpectrum(req, (await r.json()) as SpectrumResponse)
+}
+
+/**
+ * The spectrum's side of lightcurve.ts's guardLightcurve: at one of our candidates (finds.ts),
+ * the exposures whose measuring circle held its neighbours' light, not the candidate's, get no
+ * value, and the summary says why; near a candidate, the summary says its light reaches here.
+ */
+export function guardSpectrum(req: { ra: number; dec: number }, data: SpectrumResponse): SpectrumResponse {
+  const at = findAt(req.ra, req.dec)
+  if (!at) {
+    const near = findNear(req.ra, req.dec)
+    return near ? { ...data, message: `${nearFindSentence(near.find, near.arcsec)} ${data.message ?? countSentence(data)}` } : data
+  }
+  const counts = { ...(data.status_counts ?? {}) }
+  const points = (data.points ?? []).map((p) => {
+    if (!inQuiet(at, p.date)) return p
+    counts[p.status] = (counts[p.status] ?? 1) - 1
+    counts[NEIGHBOURS_LIGHT] = (counts[NEIGHBOURS_LIGHT] ?? 0) + 1
+    return { ...p, status: NEIGHBOURS_LIGHT, flux_mjy: null, flux_err_mjy: null }
+  })
+  const guarded = { ...data, points, status_counts: counts }
+  return { ...guarded, message: `${at.circle} ${FIND_EVIDENCE} ${data.message ?? countSentence(guarded)}` }
+}
+
+/** The panel's own first sentence (SpectrumPanel's summary), for when a message goes in front of it. */
+function countSentence(data: SpectrumResponse): string {
+  const n = data.n_exposures ?? 0
+  const ok = data.status_counts?.ok ?? 0
+  return `${ok} of ${n} ${n === 1 ? 'exposure' : 'exposures'} gave a clean measurement.`
 }

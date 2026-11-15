@@ -1,0 +1,52 @@
+"""Draw labelled image panels with markers. usage: panel(list of (title, 2D array, WCS)), out png"""
+import numpy as np, warnings
+from PIL import Image, ImageDraw, ImageFont
+warnings.filterwarnings("ignore")
+MARK = [("X", 253.18040, -44.67697, (255, 60, 60)),       # SPHEREx 2026 centroid (this work)
+        ("R", 253.183849, -44.675522, (80, 200, 255)),     # red 2MASS/AllWISE neighbour
+        ("c", 253.18179, -44.67690, (255, 220, 0))]        # CatWISE J165243.63 (faint)
+def stretch(a, lo=None, hi=None):
+    a = np.array(a, float); f = np.isfinite(a)
+    if lo is None: lo = np.nanpercentile(a[f], 5)
+    if hi is None: hi = np.nanpercentile(a[f], 99.7)
+    x = np.clip((a - lo) / max(hi - lo, 1e-12), 0, 1)
+    x = np.arcsinh(10 * x) / np.arcsinh(10)
+    x[~f] = 0
+    return (x * 255).astype(np.uint8)
+def tile(title, arr, wcs, size=260, half_arcsec=45, lo=None, hi=None, ra0=253.18044, dec0=-44.67687, radius_arcsec=None):
+    # crop to +-half_arcsec around ra0,dec0 using wcs
+    x0, y0 = wcs.all_world2pix(ra0, dec0, 0)
+    sc = wcs.proj_plane_pixel_scales() if hasattr(wcs, "proj_plane_pixel_scales") else None
+    from astropy.wcs.utils import proj_plane_pixel_scales
+    pix = float(np.mean(proj_plane_pixel_scales(wcs.celestial))) * 3600
+    h = int(np.ceil(half_arcsec / pix))
+    xi, yi = int(round(float(x0))), int(round(float(y0)))
+    sub = np.full((2*h+1, 2*h+1), np.nan)
+    ys, xs = slice(max(0, yi-h), min(arr.shape[0], yi+h+1)), slice(max(0, xi-h), min(arr.shape[1], xi+h+1))
+    sub[ys.start-(yi-h):ys.stop-(yi-h), xs.start-(xi-h):xs.stop-(xi-h)] = arr[ys, xs]
+    g = stretch(sub, lo, hi)[::-1]  # north up if CD2_2>0
+    im = Image.fromarray(g).resize((size, size), Image.NEAREST).convert("RGB")
+    d = ImageDraw.Draw(im)
+    s = size / (2*h+1)
+    for lab, ra, dec, col in MARK:
+        mx, my = wcs.all_world2pix(ra, dec, 0)
+        px = (float(mx) - (xi-h) + 0.5) * s; py = size - (float(my) - (yi-h) + 0.5) * s
+        r = 7
+        d.ellipse([px-r, py-r, px+r, py+r], outline=col, width=2)
+        d.text((px+r+1, py-r-2), lab, fill=col)
+    if radius_arcsec:
+        mx, my = wcs.all_world2pix(ra0, dec0, 0)
+        px = (float(mx) - (xi-h) + 0.5) * s; py = size - (float(my) - (yi-h) + 0.5) * s
+        rr = radius_arcsec / pix * s
+        d.ellipse([px-rr, py-rr, px+rr, py+rr], outline=(120, 255, 120), width=1)
+    d.rectangle([0, 0, size, 14], fill=(0, 0, 0)); d.text((3, 1), title[:44], fill=(255, 255, 255))
+    d.text((3, size-13), f"{2*half_arcsec}\" wide, {pix:.2f}\"/px", fill=(200, 200, 200))
+    return im
+def save(tiles, out, ncol=4, caption=""):
+    w, h = tiles[0].size
+    nrow = (len(tiles) + ncol - 1) // ncol
+    canvas = Image.new("RGB", (ncol*w + (ncol-1)*4, nrow*h + (nrow-1)*4 + 30), (20, 20, 24))
+    for i, t in enumerate(tiles):
+        canvas.paste(t, ((i % ncol)*(w+4), (i // ncol)*(h+4)))
+    ImageDraw.Draw(canvas).text((4, nrow*h + (nrow-1)*4 + 8), caption[:220], fill=(230, 230, 230))
+    canvas.save(out)

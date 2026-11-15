@@ -1,0 +1,56 @@
+"""Cone searches of named VizieR tables at the CfA mirror (asu-tsv). Prints rows with _r, and any #INFO/#Error lines."""
+import sys, requests, time, json
+UA = {"User-Agent": "generic-astro-client/1.0"}
+URL = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"
+def cone(source, ra, dec, rad, maxrows=200):
+    p = {"-source": source, "-c": f"{ra} {dec}", "-c.rs": str(rad), "-out.max": str(maxrows), "-out.add": "_r", "-sort": "_r", "-out.all": ""}
+    last = None
+    for t in range(4):
+        try:
+            r = requests.get(URL, params=p, headers=UA, timeout=120)
+            if r.status_code == 200 and r.text.strip():
+                return r.text
+            last = f"HTTP {r.status_code}"
+        except Exception as e:
+            last = repr(e)[:150]
+        time.sleep(3)
+    return f"#FAILED {last}"
+def parse(text):
+    tables, cur, hdr, info = [], None, None, []
+    for line in text.splitlines():
+        if line.startswith("#"):
+            if line.startswith("#RESOURCE") or line.startswith("#Table"):
+                pass
+            if "Error" in line or "INFO" in line and ("rror" in line or "not found" in line.lower()):
+                info.append(line)
+            if line.startswith("#Name:"):
+                cur = {"name": line[6:].strip(), "rows": [], "hdr": None}; tables.append(cur); hdr = None
+            if line.startswith("#Title:") and cur is not None:
+                cur["title"] = line[7:].strip()
+            continue
+        if not line.strip() or cur is None:
+            continue
+        parts = line.split("\t")
+        if cur["hdr"] is None:
+            cur["hdr"] = [x.strip() for x in parts]; cur["_skip"] = 2; continue
+        if cur.get("_skip", 0) > 0:
+            cur["_skip"] -= 1; continue
+        cur["rows"].append({h: x.strip() for h, x in zip(cur["hdr"], parts)})
+    return tables, info
+if __name__ == "__main__":
+    ra, dec = float(sys.argv[1]), float(sys.argv[2]); out = sys.argv[3]
+    jobs = [l.split(None, 1) for l in sys.argv[4].split(";")]
+    res = {}
+    for src, rad in jobs:
+        txt = cone(src, ra, dec, float(rad))
+        tables, info = parse(txt)
+        res[src] = {"radius": float(rad), "tables": [{"name": t["name"], "title": t.get("title"), "n": len(t["rows"]), "rows": t["rows"][:30]} for t in tables],
+                    "info": info, "failed": txt.startswith("#FAILED"), "raw_head": txt[:400] if not tables else None}
+        print(f"== {src} r={rad}\" failed={txt.startswith('#FAILED')} info={info[:2]}")
+        for t in tables:
+            print(f"   {t['name']}: {len(t['rows'])} rows; {t.get('title','')[:90]}")
+            for row in t["rows"][:6]:
+                print("     ", {k: v for k, v in list(row.items())[:12]})
+        if not tables:
+            print("   no table returned; head:", txt[:300].replace("\n", " | "))
+    json.dump(res, open(out, "w"), indent=1)

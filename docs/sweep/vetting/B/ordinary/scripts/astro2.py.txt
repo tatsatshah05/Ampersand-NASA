@@ -1,0 +1,98 @@
+"""(a) forced PSF flux at the fixed bright-epoch position in every exposure; (b) control stars fitted like the target."""
+import sys, os, glob, json, math
+import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fitlib as L
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from scipy.optimize import least_squares
+
+A = json.load(open(os.path.join(L.HERE, "out/astro_points.json")))
+corr = {p["file"]: (p.get("corr_e"), p.get("corr_n"), p.get("corr_scatter"), p["n_ref"]) for p in A["points"]}
+def ep(m): return 0 if m < 61000 else (1 if m < 61200 else 2)
+# adopted position: weighted from D4-D6 in epochs 1-2 (computed here again)
+sel = [p for p in A["points"] if p["det"] >= 4 and ep(p["mjd"]) > 0 and "e" in p and p["n_ref"] >= 3 and p["corr_scatter"] < 0.6]
+E = np.median([p["e"] for p in sel]); N = np.median([p["n"] for p in sel])
+RAT = L.RA0 + E / 3600 / L.COS0; DET = L.DEC0 + N / 3600
+print("adopted offset from sweep position E %.3f N %.3f (n=%d) -> RA %.6f Dec %.6f" % (E, N, len(sel), RAT, DET))
+
+def neighbours_of(ra0, de0, kmax=13.5, rmax=28):
+    return [(ra, de, k, nm) for ra, de, k, nm in L.stars if k < kmax and 0.5 < L.sep(ra, de, ra0, de0) < rmax]
+
+def fit_at(img, ok, wcs, ra0, de0, s, ce, cn, neigh, free=True, half=5):
+    # world -> pixel with the exposure's correction (measured = true + corr)
+    def topix(ra, de):
+        return map(float, wcs.world_to_pixel_values(ra + ce / 3600 / math.cos(math.radians(de)), de + cn / 3600))
+    x0, y0 = topix(ra0, de0)
+    xi, yi = int(round(x0)), int(round(y0))
+    ny, nx = img.shape
+    if not (half <= xi < nx - half and half <= yi < ny - half):
+        return None
+    win = img[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    good = ok[yi - half:yi + half + 1, xi - half:xi + half + 1] & np.isfinite(win)
+    if good.sum() < 0.75 * good.size:
+        return None
+    n = 2 * half + 1
+    nb = [tuple(v - o for v, o in zip(topix(ra, de), (xi - half, yi - half))) for ra, de, k, nm in neigh]
+    tx, ty = x0 - (xi - half), y0 - (yi - half)
+    def model(p):
+        if free:
+            a, dx, dy, b = p[:4]; rest = p[4:]
+        else:
+            a, b = p[:2]; dx = dy = 0.0; rest = p[2:]
+        mdl = a * L.pixgauss(n, n, tx + dx, ty + dy, s) + b
+        for (bx, by), an in zip(nb, rest):
+            mdl = mdl + an * L.pixgauss(n, n, bx, by, s)
+        return mdl
+    res = lambda p: (model(p) - win)[good]
+    b0 = float(np.nanpercentile(win, 20)); a0 = max(float(np.nansum(win - b0)) * 0.5, 1e-3)
+    if free:
+        p0 = [a0, 0, 0, b0] + [a0 * 0.1] * len(nb); lo = [0, -2.5, -2.5, -np.inf] + [0] * len(nb); hi = [np.inf, 2.5, 2.5, np.inf] + [np.inf] * len(nb)
+    else:
+        p0 = [a0, b0] + [a0 * 0.1] * len(nb); lo = [-np.inf, -np.inf] + [0] * len(nb); hi = [np.inf] * 2 + [np.inf] * len(nb)
+    r = least_squares(res, p0, bounds=(lo, hi))
+    p = r.x; dof = max(good.sum() - len(p), 1)
+    try:
+        cov = np.linalg.inv(r.jac.T @ r.jac) * (2 * r.cost / dof); ea = math.sqrt(cov[0, 0])
+    except Exception:
+        ea = None
+    out = {"amp": p[0], "amp_err": ea, "neigh_amp": list(p[(4 if free else 2):])}
+    if free:
+        xm, ym = xi - half + tx + p[1], yi - half + ty + p[2]
+        mra, mde = map(float, wcs.pixel_to_world_values(xm, ym))
+        mra -= ce / 3600 / math.cos(math.radians(de0)); mde -= cn / 3600
+        out["e"] = (mra - ra0) * math.cos(math.radians(de0)) * 3600; out["n"] = (mde - de0) * 3600
+    return out
+
+# control stars: Ks 9.5-11.5, 60-250" from target, not used as references
+refnames = {r[3] for r in L.refs}
+ctrl_all = [(ra, de, k, nm) for ra, de, k, nm in L.stars if 9.0 < k < 11.0 and 60 < L.sep(ra, de, L.RA0, L.DEC0) < 220 and nm not in refnames]
+ctrl = sorted(ctrl_all, key=lambda c: c[2])[:12]
+print("control stars", len(ctrl))
+forced, control = [], []
+for path in sorted(glob.glob(os.path.join(L.CUT, "*.fits"))):
+    fn = os.path.basename(path)
+    ce, cn, cs, nref = corr[fn]
+    if ce is None or nref < 3 or cs > 0.6:
+        continue
+    with fits.open(path) as h:
+        hd = h["IMAGE"].header; img = (h["IMAGE"].data - h["ZODI"].data).astype(float); flg = h["FLAGS"].data; wave = h["WAVE"].data
+        det = int(hd["DETECTOR"]); mjd = float(hd["MJD-AVG"]); wcs = WCS(hd)
+    ok = ((flg & L.BAD) == 0) & np.isfinite(img)
+    to_mjy = proj_plane_pixel_area(wcs) * (math.pi / 180) ** 2 * 1e9
+    s = [p for p in A["points"] if p["file"] == fn][0]["sigma_px"]
+    tx, ty = map(float, wcs.world_to_pixel_values(RAT, DET))
+    wv = float(wave[int(round(ty)), int(round(tx))]) if 0 <= round(ty) < 88 and 0 <= round(tx) < 88 else None
+    fr = fit_at(img, ok, wcs, RAT, DET, s, ce, cn, neighbours_of(RAT, DET), free=False)
+    if fr:
+        forced.append({"file": fn, "det": det, "mjd": mjd, "wave_um": wv, "flux_mjy": fr["amp"] * to_mjy,
+                       "err_mjy": fr["amp_err"] * to_mjy if fr["amp_err"] else None, "neigh_mjy": [a * to_mjy for a in fr["neigh_amp"]]})
+    if det >= 5 and ep(mjd) == 2:
+        for ra, de, k, nm in ctrl:
+            fc = fit_at(img, ok, wcs, ra, de, s, ce, cn, neighbours_of(ra, de), free=True)
+            if fc and fc["amp"] * to_mjy > 30:
+                control.append({"file": fn, "det": det, "mjd": mjd, "star": nm, "k": k, "e": fc["e"], "n": fc["n"], "flux_mjy": fc["amp"] * to_mjy})
+json.dump({"adopted": {"ra": RAT, "dec": DET, "e_from_sweep": E, "n_from_sweep": N, "n_used": len(sel)}, "forced": forced, "control": control},
+          open(os.path.join(L.HERE, "out/astro2.json"), "w"), indent=1)
+print("forced", len(forced), "control fits", len(control))

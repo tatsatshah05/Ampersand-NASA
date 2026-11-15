@@ -1,0 +1,260 @@
+"""Pre-2025 images of the place versus SPHEREx 2025-2026, on one north-up grid, with forced
+photometry at P calibrated against catalogued stars in the same image.
+
+Outputs: png/prior_images.png (panels), tables/forced_phot.json, printed table."""
+import os, sys, glob, json, warnings
+import numpy as np
+from astropy.io import fits, ascii
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
+from astropy.stats import sigma_clipped_stats
+from reproject import reproject_interp
+from PIL import Image, ImageDraw, ImageFont
+warnings.filterwarnings("ignore")
+
+BASE = "docs/sweep/vetting/A/archives"
+DL, TAB, PNG = BASE + "/dl", BASE + "/tables", BASE + "/png"
+CUT = "<repository>/backend/cache/sweep/cutouts/250d2b7784"
+P = SkyCoord(270.80409, -23.46819, unit="deg")
+C = SkyCoord(270.80362, -23.46745, unit="deg")
+W = SkyCoord(270.8020277, -23.4629541, unit="deg")
+
+# common grid: 1 arcsec/px, 120 x 120 arcsec, north up, east left
+N, SC = 121, 1.0
+gw = WCS(naxis=2)
+gw.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+gw.wcs.crval = [P.ra.deg, P.dec.deg]
+gw.wcs.crpix = [(N + 1) / 2, (N + 1) / 2]
+gw.wcs.cdelt = [-SC / 3600, SC / 3600]
+
+
+def load(path, ext=0):
+    with fits.open(path) as h:
+        hd = h[ext].header
+        d = h[ext].data.astype(float)
+    if d.ndim > 2:
+        d = d[0]
+    return d, hd, WCS(hd).celestial
+
+
+def aperture(data, wcs, coord, r_as, rin_as, rout_as):
+    """Sum in a circle minus median sky in an annulus (native pixels), returns (flux_sum, sky_per_px, npix, pixscale)."""
+    ps = np.sqrt(abs(np.linalg.det(wcs.pixel_scale_matrix))) * 3600
+    if wcs.wcs.ctype[0].startswith("GLON"):
+        g = coord.galactic
+        x, y = wcs.all_world2pix(g.l.deg, g.b.deg, 0)
+    else:
+        x, y = wcs.all_world2pix(coord.ra.deg, coord.dec.deg, 0)
+    yy, xx = np.mgrid[0:data.shape[0], 0:data.shape[1]]
+    rr = np.hypot(xx - x, yy - y) * ps
+    ann = (rr >= rin_as) & (rr < rout_as) & np.isfinite(data)
+    if ann.sum() < 10:
+        return np.nan, np.nan, 0, ps
+    _, sky, _ = sigma_clipped_stats(data[ann], sigma=3, maxiters=5)
+    ap = (rr < r_as) & np.isfinite(data)
+    if ap.sum() == 0 or (rr < r_as).sum() != ap.sum():
+        return np.nan, sky, int(ap.sum()), ps
+    return float(np.sum(data[ap] - sky)), float(sky), int(ap.sum()), ps
+
+
+def empty_apertures(data, wcs, centre, r_as, rin_as, rout_as, ring=(15, 60), n=60, avoid=()):
+    """Same aperture at n positions on a ring of radii ring around centre (avoiding listed coords by 2r)."""
+    rng = np.random.default_rng(1)
+    vals = []
+    tries = 0
+    while len(vals) < n and tries < 2000:
+        tries += 1
+        rad = rng.uniform(*ring)
+        ang = rng.uniform(0, 2 * np.pi)
+        c = centre.directional_offset_by(ang * 180 / np.pi * __import__("astropy.units", fromlist=["deg"]).deg,
+                                         rad * __import__("astropy.units", fromlist=["arcsec"]).arcsec)
+        if any(c.separation(a).arcsec < 2 * r_as + 2 for a in avoid):
+            continue
+        f, _, npx, _ = aperture(data, wcs, c, r_as, rin_as, rout_as)
+        if np.isfinite(f):
+            vals.append(f)
+    vals = np.array(vals)
+    med = np.median(vals)
+    mad = 1.4826 * np.median(np.abs(vals - med))
+    return med, mad, len(vals)
+
+
+def calib(data, wcs, stars, r_as, rin_as, rout_as):
+    """stars: list of (SkyCoord, flux_mJy). Returns median mJy-per-unit and the individual ratios."""
+    rat = []
+    for c, f in stars:
+        a, _, _, _ = aperture(data, wcs, c, r_as, rin_as, rout_as)
+        if np.isfinite(a) and a > 0 and np.isfinite(f) and f > 0:
+            rat.append(f / a)
+    rat = np.array(rat)
+    return (np.median(rat) if len(rat) else np.nan), rat
+
+
+def tbl(name):
+    return ascii.read(open(os.path.join(TAB, name)).read(), format="ipac")
+
+
+# ------------- catalogue stars for calibration
+tm = tbl("gator_cand_fp_psc_r30.tbl")
+glm = tbl("gator_cand_glimpse2_v2arc_r30.tbl")
+aw = tbl("gator_cand_allwise_p3as_psd_r30.tbl")
+ZP = {"J": 1594e3, "H": 1024e3, "K": 666.7e3, "W1": 309.540e3, "W2": 171.787e3, "W3": 31.674e3, "W4": 8.363e3,
+      "I1": 280.9e3, "I2": 179.7e3, "I3": 115.0e3, "I4": 64.13e3}   # mJy for mag 0 (2MASS Cohen+03; WISE Jarrett+11; IRAC handbook)
+
+
+def mag2mjy(m, band):
+    return ZP[band] * 10 ** (-0.4 * m)
+
+
+def stars_2mass(col, band):
+    out = []
+    for r in tm:
+        m = r[col]
+        if np.ma.is_masked(m):
+            continue
+        q = r["ph_qual"]["JHK".index(band)]
+        if q != "A":
+            continue
+        out.append((SkyCoord(r["ra"], r["dec"], unit="deg"), mag2mjy(float(m), band)))
+    return out
+
+
+def stars_glm(col, band):
+    out = []
+    for r in glm:
+        m = r[col]
+        if np.ma.is_masked(m) or not np.isfinite(float(m)):
+            continue
+        out.append((SkyCoord(r["ra"], r["dec"], unit="deg"), mag2mjy(float(m), band)))
+    return out
+
+
+def stars_aw(col, band, snrcol):
+    out = []
+    for r in aw:
+        m, s = r[col], r[snrcol]
+        if np.ma.is_masked(m) or float(s) < 10:
+            continue
+        out.append((SkyCoord(r["ra"], r["dec"], unit="deg"), mag2mjy(float(m), band)))
+    return out
+
+
+# ------------- images: (label, path, ext, band, aperture radius, annulus, stars, epoch)
+imgs = [
+    ("2MASS J 1998", DL + "/twomass/tm_j.fits", 0, "J", 4.0, 14, 24, stars_2mass("j_m", "J"), "1998-06-14"),
+    ("2MASS H 1998", DL + "/twomass/tm_h.fits", 0, "H", 4.0, 14, 24, stars_2mass("h_m", "H"), "1998-06-14"),
+    ("2MASS Ks 1998", DL + "/twomass/tm_k.fits", 0, "K", 4.0, 14, 24, stars_2mass("k_m", "K"), "1998-06-14"),
+    ("IRAC 3.6 GLIMPSE II", DL + "/glimpse/glm2_I1.fits", 0, "I1", 2.4, 7.2, 14.4, stars_glm("mag3_6", "I1"), "2005-2006"),
+    ("IRAC 4.5 GLIMPSE II", DL + "/glimpse/glm2_I2.fits", 0, "I2", 2.4, 7.2, 14.4, stars_glm("mag4_5", "I2"), "2005-2006"),
+    ("IRAC 5.8 GLIMPSE II", DL + "/glimpse/glm2_I3.fits", 0, "I3", 2.4, 7.2, 14.4, stars_glm("mag5_8", "I3"), "2005-2006"),
+    ("IRAC 8.0 GLIMPSE II", DL + "/glimpse/glm2_I4.fits", 0, "I4", 2.4, 7.2, 14.4, stars_glm("mag8_0", "I4"), "2005-2006"),
+    ("MIPS 24 MIPSGAL", DL + "/mipsgal/mg24.fits", 0, "M24", 6.0, 20, 32, [(W, 298.82)], "2005-2006"),
+    ("WISE W1 AllWISE", DL + "/allwise/aw_w1.fits", 0, "W1", 8.25, 30, 45, stars_aw("w1mpro", "W1", "w1snr"), "2010"),
+    ("WISE W2 AllWISE", DL + "/allwise/aw_w2.fits", 0, "W2", 8.25, 30, 45, stars_aw("w2mpro", "W2", "w2snr"), "2010"),
+    ("WISE W3 AllWISE", DL + "/allwise/aw_w3.fits", 0, "W3", 8.25, 30, 45, stars_aw("w3mpro", "W3", "w3snr"), "2010"),
+    ("WISE W4 AllWISE", DL + "/allwise/aw_w4.fits", 0, "W4", 16.5, 30, 45, stars_aw("w4mpro", "W4", "w4snr"), "2010"),
+]
+
+results = []
+panels = []
+for label, path, ext, band, rap, rin, rout, stars, epoch in imgs:
+    if not os.path.exists(path):
+        print("missing", path)
+        continue
+    d, hd, w = load(path, ext)
+    # crop big images (MIPSGAL mosaic) around P first
+    if d.shape[0] > 1000:
+        if w.wcs.ctype[0].startswith("GLON"):
+            x, y = w.all_world2pix(P.galactic.l.deg, P.galactic.b.deg, 0)
+        else:
+            x, y = w.all_world2pix(P.ra.deg, P.dec.deg, 0)
+        x, y = int(x), int(y)
+        d = d[y - 150:y + 151, x - 150:x + 151]
+        w = w[y - 150:y + 151, x - 150:x + 151]
+    k, rats = calib(d, w, stars, rap, rin, rout)
+    fP, sky, npx, ps = aperture(d, w, P, rap, rin, rout)
+    fC, _, _, _ = aperture(d, w, C, rap, rin, rout)
+    fW, _, _, _ = aperture(d, w, W, rap, rin, rout)
+    med, mad, ne = empty_apertures(d, w, P, rap, rin, rout, ring=(rap * 2 + 3, 60), avoid=[W])
+    rec = {"image": label, "epoch": epoch, "band": band, "aperture_arcsec": rap, "n_cal_stars": int(len(rats)),
+           "cal_ratio_spread": [float(np.min(rats)), float(np.max(rats))] if len(rats) else None,
+           "mJy_per_unit": float(k) if np.isfinite(k) else None,
+           "P_mJy": float(fP * k) if np.isfinite(k) else None, "C_mJy": float(fC * k) if np.isfinite(k) else None,
+           "W_mJy_measured": float(fW * k) if np.isfinite(k) else None,
+           "empty_ap_median_mJy": float(med * k) if np.isfinite(k) else None, "empty_ap_sigma_mJy": float(mad * k) if np.isfinite(k) else None,
+           "n_empty": ne}
+    if rec["P_mJy"] is not None:
+        rec["upper_limit_3sigma_mJy"] = max(rec["P_mJy"] - rec["empty_ap_median_mJy"], 0) + 3 * rec["empty_ap_sigma_mJy"]
+    results.append(rec)
+    # reproject onto common grid for the picture
+    if w.wcs.ctype[0].startswith("GLON"):
+        # build equatorial view through pixel->world->pixel: reproject handles celestial frames
+        pass
+    arr, _ = reproject_interp((d, w), gw, shape_out=(N, N))
+    panels.append((f"{label} ({epoch})", arr))
+
+# ------------- SPHEREx per-epoch medians (D6 and D3), image - zodi, flagged pixels masked
+sys.path.insert(0, "<repository>/.claude/worktrees/agent-afd7766a5a5ec349f")
+os.environ.setdefault("SPHEREX_CACHE_DIR", "<repository>/backend/cache/sweep")
+from backend import pipeline  # noqa
+BAD = pipeline._mask("SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR", "PERSIST", "BLOOM",
+                     "SNOWBALL", "HALO", "SATELLITE_HALO")
+for det in (6, 3):
+    for ep, lo, hi in (("Aug-Sep 2025", 0, 61000), ("Mar-Apr 2026", 61000, 61200), ("Aug-Sep 2026", 61200, 99999)):
+        stack = []
+        for f in sorted(glob.glob(f"{CUT}/*_D{det}.fits")):
+            with fits.open(f) as h:
+                mjd = h["IMAGE"].header["MJD-AVG"]
+                if not (lo <= mjd < hi):
+                    continue
+                im = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+                fl = h["FLAGS"].data
+                im[(fl & BAD) != 0] = np.nan
+                ww = WCS(h["IMAGE"].header)
+            arr, _ = reproject_interp((im, ww), gw, shape_out=(N, N))
+            stack.append(arr)
+        if stack:
+            panels.append((f"SPHEREx D{det} {ep} median of {len(stack)}", np.nanmedian(np.array(stack), axis=0)))
+
+json.dump(results, open(os.path.join(TAB, "forced_phot.json"), "w"), indent=1)
+print(f"{'image':24s} {'n_cal':>5s} {'mJy/unit':>10s} {'P mJy':>9s} {'C mJy':>9s} {'W meas':>9s} {'empty med':>9s} {'sigma':>8s} {'UL3s':>8s}")
+for r in results:
+    f = lambda v: f"{v:9.3f}" if isinstance(v, float) else f"{'--':>9s}"
+    print(f"{r['image']:24s} {r['n_cal_stars']:5d} {r['mJy_per_unit'] if r['mJy_per_unit'] else float('nan'):10.4g} {f(r['P_mJy'])} {f(r['C_mJy'])} {f(r['W_mJy_measured'])} {f(r['empty_ap_median_mJy'])} {f(r['empty_ap_sigma_mJy'])} {f(r.get('upper_limit_3sigma_mJy'))}  cal spread {r['cal_ratio_spread']}")
+
+# ------------- picture
+cell, pad, lab = 200, 6, 30
+ncol = 6
+nrow = int(np.ceil(len(panels) / ncol))
+img = Image.new("RGB", (ncol * (cell + pad) + pad, nrow * (cell + lab + pad) + pad + 40), (18, 18, 22))
+dr = ImageDraw.Draw(img)
+try:
+    font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 11)
+    fontb = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 14)
+except Exception:
+    font = fontb = ImageFont.load_default()
+dr.text((pad, 8), "Place of candidate A: P (green, 2026 SPHEREx centroid, r=4\"), C (cyan, sweep position), W (red, AllWISE W2 6.5 star 20\" NNW). 2'x2', N up, E left", fill=(230, 230, 230), font=fontb)
+px, py = gw.all_world2pix([[P.ra.deg, P.dec.deg], [C.ra.deg, C.dec.deg], [W.ra.deg, W.dec.deg]], 0).T
+for i, (label, arr) in enumerate(panels):
+    r, c = divmod(i, ncol)
+    x0, y0 = pad + c * (cell + pad), 40 + pad + r * (cell + lab + pad)
+    a = np.array(arr, float)
+    fin = np.isfinite(a)
+    if fin.sum() > 10:
+        lo, hi = np.nanpercentile(a, 5), np.nanpercentile(a, 99.7)
+        z = np.clip((a - lo) / (hi - lo + 1e-12), 0, 1)
+        z = np.arcsinh(z * 10) / np.arcsinh(10)
+        z[~fin] = 0
+    else:
+        z = np.zeros_like(a)
+    g = (z[::-1] * 255).astype(np.uint8)   # flip so north is up
+    pim = Image.fromarray(g, "L").resize((cell, cell), Image.NEAREST).convert("RGB")
+    img.paste(pim, (x0, y0))
+    s = cell / N
+    for (xx, yy, rad, col) in ((px[0], py[0], 4, (0, 255, 0)), (px[1], py[1], 2, (0, 220, 255)), (px[2], py[2], 4, (255, 60, 60))):
+        cx, cy = x0 + (xx + 0.5) * s, y0 + (N - 1 - yy + 0.5) * s
+        rr = rad * s / SC
+        dr.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], outline=col, width=1)
+    dr.text((x0, y0 + cell + 3), label[:40], fill=(220, 220, 220), font=font)
+img.save(os.path.join(PNG, "prior_images.png"))
+print("saved", os.path.join(PNG, "prior_images.png"))

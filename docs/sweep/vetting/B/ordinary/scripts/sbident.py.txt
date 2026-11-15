@@ -1,0 +1,38 @@
+"""JPL sb_ident at the candidate for given MJDs (geocentre, MPC code 500), plus a control on a known asteroid.
+Saves every raw answer in data/sbident_*.json."""
+import json, sys, time, math, requests
+from astropy.time import Time
+from astropy.coordinates import Angle
+import astropy.units as u
+UA = {"User-Agent": "generic-astro-client/1.0"}
+URL = "https://ssd-api.jpl.nasa.gov/sb_ident.api"
+def hms(ra):
+    a = Angle(ra, u.deg).hms; return f"{int(a.h):02d}-{int(a.m):02d}-{a.s:05.2f}"
+def dms(dec):
+    s = "M" if dec < 0 else ""
+    a = Angle(abs(dec), u.deg).dms; return f"{s}{int(a.d):02d}-{int(a.m):02d}-{a.s:04.1f}"
+def ask(tag, mjd, ra, dec, half_deg=0.05):
+    p = {"mpc-code": "500", "obs-time": f"{Time(mjd, format='mjd').jd:.5f}", "fov-ra-center": hms(ra),
+         "fov-dec-center": dms(dec), "fov-ra-hwidth": f"{half_deg / math.cos(math.radians(dec)):.4f}",
+         "fov-dec-hwidth": f"{half_deg:.4f}", "two-pass": "true", "suppress-first-pass": "true"}
+    for t in range(4):
+        try:
+            r = requests.get(URL, params=p, headers=UA, timeout=180)
+            if r.status_code == 200:
+                break
+        except Exception as e:
+            r = None
+        time.sleep(10)
+    out = {"tag": tag, "mjd": mjd, "iso": Time(mjd, format="mjd").iso, "params": p,
+           "status": r.status_code if r is not None else None, "reply": r.json() if r is not None and r.status_code == 200 else (r.text if r is not None else None)}
+    json.dump(out, open(f"data/sbident_{tag}.json", "w"), indent=1)
+    rep = out["reply"] if isinstance(out["reply"], dict) else {}
+    print(tag, out["iso"], "status", out["status"], "n_first", rep.get("n_first_pass"), "n_second", rep.get("n_second_pass"),
+          "fields2", rep.get("fields_second"), "data2", rep.get("data_second_pass"), "data1", rep.get("data_first_pass"),
+          {k: v for k, v in rep.items() if k not in ("data_first_pass", "data_second_pass", "fields_first", "fields_second")})
+if __name__ == "__main__":
+    RA, DEC = 253.18035, -44.67701
+    jobs = [("ep0_mid", 60906.955), ("ep1_mid", 61106.144), ("ep2_mid", 61269.387), ("brightest_D6", 61264.570235),
+            ("ep0_start", 60889.154), ("ep0_end", 60933.923)]
+    for tag, mjd in jobs:
+        ask(tag, mjd, RA, DEC)

@@ -407,6 +407,55 @@
   }
 }
 
+/* One of our sweep's candidates: "Before" and "After" at the top of the picture. Both are always
+   there and the one on screen is the chosen item (ink), so no word changes while the pictures flip. */
+.before-after {
+  position: absolute;
+  top: calc(var(--mat) + 10px);
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--bg);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.before-after > span {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: var(--size-body);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.before-after > span.on {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.before-after .before-after-when {
+  padding: 0;
+  color: inherit;
+}
+
+/* On a phone the picture is narrow: the two words only, clear of the compass and the zoom buttons
+   (the strip of visits under the picture gives the months). */
+@media (max-width: 600px) {
+  .before-after > span {
+    padding: 4px 10px;
+    font-size: var(--size-small);
+  }
+
+  .before-after .before-after-when {
+    display: none;
+  }
+}
+
 /* How to work the picture: a small round button in its corner, and what it opens. */
 .plate-help-button {
   position: absolute;
@@ -719,8 +768,8 @@
 
 /* Beginner: the sentence, the lines under it and a two-column table. */
 .inspector.beginner .readout-block {
-  height: clamp(300px, calc(100vh - 384px), 440px);
-  height: clamp(300px, calc(100dvh - 384px), 440px);
+  height: clamp(300px, calc(100vh - 384px), 480px);
+  height: clamp(300px, calc(100dvh - 384px), 480px);
 }
 
 /* Beginner's name block: the name and one line of position (no motion line at this level). */
@@ -751,6 +800,11 @@
   margin: 0 0 8px;
   line-height: 1.4;
   text-wrap: pretty;
+}
+
+/* A line under the table in normal type: one of our candidates' allowed sentence, in Beginner. */
+.inspector .result-after {
+  margin-top: 12px;
 }
 
 /* The four switches under the menus of the same section. */
@@ -1507,8 +1561,9 @@ main.watchlist {
     overflow: visible;
   }
 
-  /* Beginner on a narrow screen: the steps come first, under the targets, so a newcomer sees
-     them without scrolling past the picture. The side column dissolves into the page. */
+  /* Beginner on a narrow screen: the side column dissolves into the page. The picture comes
+     first, then what it shows (the name, the sentence over the table and the table), and the
+     steps after that: a newcomer's first screen is the picture itself, not instructions. */
   .bench {
     display: flex;
     flex-direction: column;
@@ -1524,11 +1579,15 @@ main.watchlist {
   }
 
   .inspector.beginner .guide {
-    order: -1;
+    order: 1;
     margin: 0;
     padding: 10px 16px;
-    border-top: 0;
+    border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
+  }
+
+  .inspector.beginner .credits {
+    order: 2;
   }
 
   .guide-steps {

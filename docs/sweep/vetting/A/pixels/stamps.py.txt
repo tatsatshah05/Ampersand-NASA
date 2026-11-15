@@ -1,0 +1,135 @@
+"""North-up stamps of candidate A per visit for D6, D4, D2 (median of all exposures of the visit, each
+reprojected to a 1.5 arcsec grid; photometry-flagged and saturated pixels left out, shown blue where no
+exposure has a value). Same grey scale for the three visits of one detector. Marks: red ticks = A' (this
+work's centroid), green ticks = 2MASS 18031245-2327467 / AllWISE J180312.46-232746.7, yellow dot = sweep
+position. Also one native-pixel single exposure per visit and detector (nearest-pixel, no resampling)."""
+import json, math, warnings, logging, sys
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from reproject import reproject_interp
+from PIL import Image, ImageDraw
+warnings.simplefilter("ignore"); logging.getLogger("astropy").setLevel(logging.ERROR)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from measure import CUT, LIST, PHOT_BAD, OVF, SUR, SPILL
+D = Path(__file__).resolve().parent
+A = (270.804063, -23.468200); NB = (270.801899, -23.462976); SW = (270.80362, -23.46745)
+STEP, NPIX = 1.5, 81              # 121.5 arcsec across
+SCALE = 4                          # display magnification
+
+grid = WCS(naxis=2)
+grid.wcs.ctype = ["RA---TAN", "DEC--TAN"]; grid.wcs.crval = list(A)
+grid.wcs.crpix = [(NPIX + 1) / 2] * 2; grid.wcs.cdelt = [-STEP / 3600, STEP / 3600]
+
+L = json.load(open(LIST)); L.sort(key=lambda e: e["mjd"])
+ep, cur = [], 0
+for i, e in enumerate(L):
+    if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+    ep.append(cur + 1)
+
+def load(e):
+    with fits.open(CUT / f"{e['obs_id']}_D{e['detector']}.fits") as h:
+        hd = h["IMAGE"].header; img = h["IMAGE"].data.astype(float); flg = h["FLAGS"].data.astype(np.int64)
+        zod = h["ZODI"].data.astype(float); var = h["VARIANCE"].data.astype(float)
+    d = img - zod
+    sat = (((flg & OVF) != 0) & ((flg & SUR) != 0)) | ((flg & SPILL) != 0)
+    bad = ((flg & PHOT_BAD) != 0) | ~np.isfinite(d) | (img < -10 * np.sqrt(var))
+    d_masked = np.where(bad, np.nan, d)
+    w = WCS(hd)
+    # local sky: clipped median of the cutout
+    v = d_masked[np.isfinite(d_masked)]
+    sky = np.median(v)
+    for _ in range(5):
+        s = 1.4826 * np.median(np.abs(v - sky)); v = v[np.abs(v - sky) < 3 * s]; sky = np.median(v)
+    return w, d_masked - sky, sat, d - sky
+
+def to_rgb(a, lo, hi):
+    t = np.arcsinh((a - lo) / (0.05 * (hi - lo))) / np.arcsinh(1 / 0.05)
+    g = (np.clip(t, 0, 1) * 255).astype(np.uint8)
+    rgb = np.stack([g, g, g], -1)
+    nan = ~np.isfinite(a)
+    rgb[nan] = (40, 60, 160)
+    return rgb[::-1]   # north up (FITS y up -> image row 0 at top)
+
+def marks(im, wcs_like, n, scale):
+    dr = ImageDraw.Draw(im)
+    for (ra, de), col in ((A, (255, 60, 60)), (NB, (60, 220, 60))):
+        x, y = (float(v) for v in wcs_like.all_world2pix(ra, de, 0))
+        X, Y = (x + 0.5) * scale, (n - 0.5 - y) * scale
+        g, l = 9 * scale / 4, 7 * scale / 4
+        dr.line([(X + g, Y), (X + g + l, Y)], fill=col, width=2); dr.line([(X, Y - g), (X, Y - g - l)], fill=col, width=2)
+    x, y = (float(v) for v in wcs_like.all_world2pix(*SW, 0))
+    X, Y = (x + 0.5) * scale, (n - 0.5 - y) * scale
+    dr.ellipse([X - 2, Y - 2, X + 2, Y + 2], fill=(255, 220, 0))
+
+panels = {}
+for det in (6, 4, 2):
+    stacks = {}
+    for k in (1, 2, 3):
+        es = [e for e, kk in zip(L, ep) if e["detector"] == det and kk == k]
+        arrs = []
+        for e in es:
+            w, dm, sat, _ = load(e)
+            out, foot = reproject_interp((dm, w), grid, shape_out=(NPIX, NPIX), order="bilinear")
+            out[foot < 0.5] = np.nan
+            arrs.append(out)
+        stacks[k] = (np.nanmedian(np.array(arrs), axis=0), len(es))
+    allv = np.concatenate([s[0][np.isfinite(s[0])] for s in stacks.values()])
+    lo = np.percentile(allv, 5); hi = np.nanmax([np.nanmax(s[0]) for s in stacks.values()])
+    for k, (st, n) in stacks.items():
+        im = Image.fromarray(to_rgb(st, lo, hi)).resize((NPIX * SCALE, NPIX * SCALE), Image.NEAREST)
+        marks(im, grid, NPIX, SCALE)
+        panels[(det, k)] = (im, n, lo, hi)
+    print(f"D{det}: grey scale {lo:.2f} to {hi:.2f} MJy/sr (asinh); exposures per visit " +
+          ", ".join(str(stacks[k][1]) for k in (1, 2, 3)))
+
+# montage
+W = NPIX * SCALE; pad = 18
+M = Image.new("RGB", (3 * W + 4 * 6, 3 * (W + pad) + 30), (20, 20, 24))
+dr = ImageDraw.Draw(M)
+dr.text((6, 4), "Candidate A, north up, east left, 121 arcsec across. Median of each visit. red ticks: A' (centroid, this check); green: 2MASS K=7.4 / W2=6.5 star; yellow dot: sweep position", fill=(230, 230, 230))
+names = {1: "Aug-Sep 2025", 2: "Mar-Apr 2026", 3: "Aug-Sep 2026"}
+for r, det in enumerate((6, 4, 2)):
+    for c, k in enumerate((1, 2, 3)):
+        im, n, lo, hi = panels[(det, k)]
+        x0, y0 = 6 + c * (W + 6), 30 + r * (W + pad)
+        M.paste(im, (x0, y0))
+        dr.text((x0 + 2, y0 + W + 2), f"D{det} {names[k]} ({n} exp)  scale {lo:.1f}..{hi:.0f} MJy/sr", fill=(220, 220, 220))
+M.save(D / "stamps_D6_D4_D2.png")
+
+# native single exposures (no resampling): one clean-ish exposure per visit for D6 and D5, nearest pixel
+rows = []
+for det in (6, 5, 3):
+    pics = []
+    for k in (1, 2, 3):
+        es = [e for e, kk in zip(L, ep) if e["detector"] == det and kk == k]
+        e = es[len(es) // 2]
+        w, dm, sat, draw = load(e)
+        px, py = (float(v) for v in w.all_world2pix(*A, 0))
+        xi, yi = int(round(px)), int(round(py))
+        h = 10
+        sub = draw[yi - h:yi + h + 1, xi - h:xi + h + 1].copy()
+        satm = sat[yi - h:yi + h + 1, xi - h:xi + h + 1]
+        pics.append((sub, satm, e, w, xi - h, yi - h))
+    vmax = max(np.nanmax(p[0]) for p in pics); vmin = np.nanpercentile(np.concatenate([p[0].ravel() for p in pics]), 5)
+    for sub, satm, e, w, x0, y0 in pics:
+        rgb = to_rgb(sub, vmin, vmax)
+        rgb[satm[::-1]] = (220, 40, 200)  # saturated pixels magenta (detector frame, not north-up)
+        im = Image.fromarray(rgb).resize((21 * 12, 21 * 12), Image.NEAREST)
+        # marks in detector frame
+        dr2 = ImageDraw.Draw(im)
+        for (ra, de), col in ((A, (255, 60, 60)), (NB, (60, 220, 60))):
+            x, y = (float(v) for v in w.all_world2pix(ra, de, 0))
+            X, Y = (x - x0 + 0.5) * 12, (21 - 0.5 - (y - y0)) * 12
+            dr2.line([(X + 14, Y), (X + 26, Y)], fill=col, width=2); dr2.line([(X, Y - 14), (X, Y - 26)], fill=col, width=2)
+        rows.append((det, e["obs_id"], im))
+S = Image.new("RGB", (3 * 252 + 4 * 6, 3 * (252 + 18) + 30), (20, 20, 24))
+d2 = ImageDraw.Draw(S)
+d2.text((6, 4), "Single exposures, native 6.15\" pixels, detector frame (rows D6, D5, D3; cols visit 1, 2, 3). magenta = saturated/bloom", fill=(230, 230, 230))
+for i, (det, oid, im) in enumerate(rows):
+    r, c = divmod(i, 3)
+    x0, y0 = 6 + c * 258, 30 + r * 270
+    S.paste(im, (x0, y0)); d2.text((x0 + 2, y0 + 254), f"D{det} {oid}", fill=(220, 220, 220))
+S.save(D / "stamps_native_single.png")
+print("saved")

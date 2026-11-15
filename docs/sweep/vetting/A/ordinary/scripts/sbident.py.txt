@@ -1,0 +1,67 @@
+"""JPL small-body identification (sb_ident.api) at candidate A for the mid-date of each
+SPHEREx visit and the brightest exposure, geocentre (code 500), field +-0.05 deg (6 arcmin
+square), V limit 25; plus a CONTROL: the same request centred on (4) Vesta's position from
+JPL Horizons at one of the same dates, which must return Vesta. Writes raw JSON answers.
+Usage: sbident.py OUTDIR"""
+import json, sys, time, urllib.parse, urllib.request
+from pathlib import Path
+from astropy.time import Time
+from astropy.coordinates import Angle
+import astropy.units as u
+
+OUT = Path(sys.argv[1]); OUT.mkdir(parents=True, exist_ok=True)
+UA = {"User-Agent": "generic-python-client/1.0"}
+RA, DEC = 270.80408, -23.46820   # A's fitted 2026 position (this session)
+
+
+def get(url, params):
+    full = url + "?" + urllib.parse.urlencode(params)
+    for k in range(5):
+        try:
+            return json.loads(urllib.request.urlopen(urllib.request.Request(full, headers=UA), timeout=120).read()), full
+        except Exception as e:
+            print("retry", k, e); time.sleep(4 * (k + 1))
+    raise SystemExit("failed " + full)
+
+
+def hms(ra):
+    return Angle(ra, u.deg).to_string(unit=u.hour, sep="-", precision=2, pad=True)
+
+
+def dms(dec):
+    sign = "M" if dec < 0 else ""
+    a = abs(dec); d = int(a); m = int((a - d) * 60.0)
+    return f"{sign}{d:02d}-{m:02d}-{(a - d - m / 60.0) * 3600.0:05.2f}"
+
+
+def ident(ra, dec, mjd, tag, hw=0.05):
+    params = {"mpc-code": "500", "obs-time": f"{Time(mjd, format='mjd').jd:.6f}",
+              "fov-ra-center": hms(ra), "fov-dec-center": dms(dec), "fov-ra-hwidth": f"{hw}",
+              "fov-dec-hwidth": f"{hw}", "vmag-lim": "25", "mag-required": "true", "two-pass": "true",
+              "suppress-first-pass": "true"}
+    d, full = get("https://ssd-api.jpl.nasa.gov/sb_ident.api", params)
+    (OUT / f"sbident_{tag}.json").write_text(json.dumps({"url": full, "answer": d}, indent=1))
+    rows = d.get("data_second_pass") or []
+    fields = d.get("fields_second") or []
+    print(f"== {tag}: {Time(mjd, format='mjd').iso} n_second_pass={len(rows)} keys={list(d.keys())}")
+    for r in rows[:15]:
+        print("   ", dict(zip(fields, r)))
+    return d
+
+
+dates = {"visit1_mid": 60919.9549, "visit2_mid": 61125.4331, "visit3_mid": 61291.6783,
+         "brightest_2026W14_1A_0357_1": 61130.726911629}
+for tag, mjd in dates.items():
+    ident(RA, DEC, mjd, tag)
+
+# control: Vesta's geocentric position on visit 2's mid-date from Horizons
+jd = Time(61125.4331, format="mjd").jd
+hz, hurl = get("https://ssd.jpl.nasa.gov/api/horizons.api",
+               {"format": "json", "COMMAND": "'4;'", "OBJ_DATA": "NO", "MAKE_EPHEM": "YES", "EPHEM_TYPE": "OBSERVER",
+                "CENTER": "'500'", "TLIST": f"'{jd:.6f}'", "QUANTITIES": "'1,9'", "ANG_FORMAT": "DEG"})
+(OUT / "horizons_vesta.json").write_text(json.dumps({"url": hurl, "answer": hz}, indent=1))
+txt = hz["result"]
+body = txt[txt.index("$$SOE") + 5: txt.index("$$EOE")].strip().split()
+print("Horizons Vesta line:", body)
+vra, vdec = float(body[2]), float(body[3])
+ident(vra, vdec, 61125.4331, "control_vesta", hw=0.05)

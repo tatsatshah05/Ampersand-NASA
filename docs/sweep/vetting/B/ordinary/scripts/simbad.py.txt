@@ -1,0 +1,14 @@
+import requests, sys, json
+UA = {"User-Agent": "generic-astro-client/1.0"}
+ra, dec, rad = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])
+q = f"""SELECT b.main_id, b.otype, b.ra, b.dec, b.coo_err_maj, b.coo_err_min, b.coo_bibcode,
+ DISTANCE(POINT('ICRS', b.ra, b.dec), POINT('ICRS', {ra}, {dec}))*3600 AS sep_arcsec
+ FROM basic AS b WHERE CONTAINS(POINT('ICRS', b.ra, b.dec), CIRCLE('ICRS', {ra}, {dec}, {rad/3600})) = 1 ORDER BY sep_arcsec"""
+for url in ["https://simbad.harvard.edu/simbad/sim-tap/sync", "https://simbad.cds.unistra.fr/simbad/sim-tap/sync"]:
+    try:
+        r = requests.get(url, params={"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "tsv", "QUERY": q}, headers=UA, timeout=90)
+        print("#", url, r.status_code)
+        print(r.text)
+        break
+    except Exception as e:
+        print("#", url, "failed", e)

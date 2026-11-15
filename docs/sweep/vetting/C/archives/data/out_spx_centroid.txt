@@ -1,0 +1,112 @@
+calibration stars: 48
+per-exposure fits: 304
+Jul-Aug 2025  D3: n=20  Gaussian-volume flux (W2-calibrated scale) median     13.1 mJy  [8.9, 18.9]  ncal median 9
+Jul-Aug 2025  D4: n= 5  Gaussian-volume flux (W2-calibrated scale) median     12.2 mJy  [8.1, 14.5]  ncal median 13
+Jul-Aug 2025  D5: n= 9  Gaussian-volume flux (W2-calibrated scale) median     12.3 mJy  [8.9, 12.9]  ncal median 23
+Jul-Aug 2025  D6: n=21  Gaussian-volume flux (W2-calibrated scale) median     10.5 mJy  [7.6, 12.2]  ncal median 21
+Feb-Apr 2026  D3: n=10  Gaussian-volume flux (W2-calibrated scale) median     42.6 mJy  [37.3, 54.7]  ncal median 9
+Feb-Apr 2026  D4: n= 4  Gaussian-volume flux (W2-calibrated scale) median     60.8 mJy  [51.3, 69.1]  ncal median 12
+Feb-Apr 2026  D5: n=11  Gaussian-volume flux (W2-calibrated scale) median    105.2 mJy  [84.7, 177.9]  ncal median 23
+Feb-Apr 2026  D6: n=17  Gaussian-volume flux (W2-calibrated scale) median    118.3 mJy  [110.4, 175.9]  ncal median 27
+Jul-Sep 2026  D3: n=20  Gaussian-volume flux (W2-calibrated scale) median     11.9 mJy  [8.6, 16.0]  ncal median 13
+Jul-Sep 2026  D4: n= 4  Gaussian-volume flux (W2-calibrated scale) median     13.7 mJy  [10.5, 15.2]  ncal median 14
+Jul-Sep 2026  D5: n=16  Gaussian-volume flux (W2-calibrated scale) median     15.5 mJy  [13.0, 19.4]  ncal median 20
+Jul-Sep 2026  D6: n=27  Gaussian-volume flux (W2-calibrated scale) median     15.6 mJy  [12.9, 22.7]  ncal median 20
+
+Bright epoch (Feb-Apr 2026), 41 exposures (D3-D6) with fitted flux > 30 mJy:
+  median centroid RA 241.709120 Dec -52.205661; scatter (1.4826*MAD) 0.44" in RA*cos, 0.46" in Dec; error of the median ~0.15"
+  offset from the sweep position: -0.42" E, -2.96" N
+  distance to GLIMPSE [4.5]13.80 @4.1"        :  6.05"
+  distance to VVV Ks16.56 @2.8"               :  4.13"
+  distance to HiGAL clump @6.6"               :  3.58"
+  distance to NEOWISE 2022 1-frame @5.0"      :  2.08"
+  distance to CatWISE red W1-W2=1.7 @12.1"    :  9.18"
+  distance to AllWISE W2 11.3 @11.0"          : 11.31"
+
+Bright-epoch exposures (date, detector, wavelength, flux on the W2-calibrated scale, centroid offset from sweep position):
+  2026-02-19 02:53  D4  2.47um     48.3 mJy  ncal= 8   -0.3E  -2.9N
+  2026-02-19 02:55  D4  2.53um     71.0 mJy  ncal=10   -2.2E  -4.2N
+  2026-02-19 02:57  D4  2.60um      nan mJy  ncal= 6  
+  2026-02-19 02:59  D4  2.67um      nan mJy  ncal= 6  
+  2026-02-19 20:48  D4  2.74um      nan mJy  ncal= 5  
+  2026-02-19 20:50  D4  2.82um      nan mJy  ncal= 3  
+  2026-02-19 20:52  D4  2.89um      nan mJy  ncal= 1  
+  2026-02-19 20:55  D4  2.97um      nan mJy  ncal= 2  
+  2026-02-21 15:18  D4  3.15um      nan mJy  ncal=10  
+  2026-02-21 15:21  D4  3.24um      nan mJy  ncal= 7  
+  2026-02-21 15:23  D4  3.33um      nan mJy  ncal= 5  
+  2026-02-22 14:05  D4  3.60um     67.1 mJy  ncal=14   -0.0E  -3.0N
+  2026-02-22 14:07  D4  3.70um      nan mJy  ncal= 6  
+  2026-02-22 14:10  D4  3.80um      nan mJy  ncal=10  
+  2026-02-22 18:57  D4  2.46um     54.6 mJy  ncal=18   +0.0E  -3.0N
+  2026-02-22 18:59  D4  2.53um      nan mJy  ncal=10  
+  2026-02-22 19:02  D4  2.60um      nan mJy  ncal= 7  
+  2026-02-23 17:46  D4  2.74um      nan mJy  ncal=20  
+  2026-02-23 17:48  D4  2.81um      nan mJy  ncal=11  
+  2026-02-23 17:50  D4  2.89um      nan mJy  ncal= 8  
+  2026-02-23 17:53  D4  2.97um      nan mJy  ncal= 5  
+  2026-02-24 05:09  D4  3.05um      nan mJy  ncal= 5  
+  2026-02-24 08:23  D4  3.51um      nan mJy  ncal= 6  
+  2026-02-24 18:08  D4  3.42um      nan mJy  ncal=11  
+  2026-02-24 21:23  D5  4.12um      nan mJy  ncal=22  
+  2026-02-24 21:25  D5  4.15um    107.3 mJy  ncal=12   -0.1E  -3.1N
+  2026-02-24 21:27  D5  4.19um    105.2 mJy  ncal=24   -0.2E  -2.7N
+  2026-02-24 23:01  D5  4.23um    102.4 mJy  ncal=23   -1.1E  -2.1N
+  2026-02-24 23:03  D5  4.26um      nan mJy  ncal=16  
+  2026-02-24 23:05  D5  4.30um    209.3 mJy  ncal=24   -0.9E  -2.9N
+  2026-02-24 23:07  D5  4.34um    103.0 mJy  ncal=22   -0.9E  -2.3N
+  2026-02-25 00:38  D5  4.37um    157.0 mJy  ncal=26   -1.2E  -3.1N
+  2026-02-25 00:40  D5  4.41um      nan mJy  ncal=22  
+  2026-02-25 04:00  D5  3.81um      nan mJy  ncal= 8  
+  2026-02-26 10:52  D5  3.84um      nan mJy  ncal=23  
+  2026-02-26 19:05  D5  3.87um      nan mJy  ncal=24  
+  2026-02-26 19:07  D5  3.90um     82.2 mJy  ncal=26   -0.3E  -2.5N
+  2026-02-26 19:09  D5  3.94um     70.4 mJy  ncal=22   -0.1E  -2.8N
+  2026-02-26 19:12  D5  3.97um      nan mJy  ncal=18  
+  2026-02-27 01:32  D5  4.01um    110.1 mJy  ncal=26   -0.3E  -3.4N
+  2026-02-27 01:34  D5  4.04um      nan mJy  ncal=17  
+  2026-02-27 01:36  D5  4.08um    382.8 mJy  ncal=23   -0.1E  -3.3N
+  2026-02-27 01:38  D5  4.11um     86.4 mJy  ncal=19   -0.2E  -3.5N
+  2026-02-28 13:27  D3  2.04um      nan mJy  ncal=18  
+  2026-02-28 13:27  D6  4.74um    182.5 mJy  ncal=23   -0.8E  -2.5N
+  2026-02-28 13:29  D3  2.08um     41.5 mJy  ncal= 9   -1.6E  -2.6N
+  2026-02-28 13:29  D6  4.77um    170.7 mJy  ncal=29   -0.6E  -2.5N
+  2026-02-28 13:31  D3  2.13um      nan mJy  ncal= 6  
+  2026-02-28 13:31  D6  4.81um    119.7 mJy  ncal=29   -0.5E  -2.5N
+  2026-02-28 13:33  D3  2.18um      nan mJy  ncal= 5  
+  2026-02-28 13:33  D6  4.84um    118.3 mJy  ncal=27   -0.3E  -2.9N
+  2026-02-28 15:02  D3  2.23um     40.3 mJy  ncal=18   -0.3E  -3.2N
+  2026-02-28 15:02  D6  4.88um    109.5 mJy  ncal=24   -1.3E  -3.1N
+  2026-02-28 15:04  D3  2.28um     43.7 mJy  ncal= 6   +0.4E  -2.7N
+  2026-02-28 15:04  D6  4.91um    118.5 mJy  ncal=20   -1.1E  -3.0N
+  2026-02-28 15:06  D3  2.34um     60.7 mJy  ncal= 7   -2.1E  -3.3N
+  2026-02-28 15:06  D6  4.95um    116.1 mJy  ncal=21   -0.9E  -3.0N
+  2026-02-28 15:08  D3  2.39um     46.5 mJy  ncal=13   -0.8E  -3.3N
+  2026-02-28 15:08  D6  4.99um    114.1 mJy  ncal=29   -0.8E  -2.6N
+  2026-02-28 23:15  D3  1.62um      nan mJy  ncal= 3  
+  2026-02-28 23:15  D6  4.41um      nan mJy  ncal=12  
+  2026-02-28 23:18  D3  1.65um     34.9 mJy  ncal= 9   -0.4E  -4.2N
+  2026-02-28 23:18  D6  4.43um    101.3 mJy  ncal=27   -0.1E  -2.7N
+  2026-03-01 02:28  D3  1.69um     40.6 mJy  ncal=18   -0.4E  -3.7N
+  2026-03-01 02:28  D6  4.47um    108.1 mJy  ncal=27   -0.4E  -2.8N
+  2026-03-01 02:30  D3  1.73um      nan mJy  ncal=12  
+  2026-03-01 02:30  D6  4.50um    111.1 mJy  ncal=29   -0.3E  -3.6N
+  2026-03-01 02:32  D3  1.77um     47.0 mJy  ncal= 9   -0.1E  -4.0N
+  2026-03-01 02:32  D6  4.53um    119.4 mJy  ncal=27   -1.2E  -3.0N
+  2026-03-01 02:34  D3  1.81um      nan mJy  ncal= 6  
+  2026-03-01 02:34  D6  4.56um    114.4 mJy  ncal=30   -0.5E  -2.4N
+  2026-03-03 00:07  D3  1.85um      nan mJy  ncal=19  
+  2026-03-03 00:07  D6  4.60um    115.3 mJy  ncal=25   -0.9E  -3.3N
+  2026-03-03 00:09  D3  1.90um    120.1 mJy  ncal= 5   -0.2E  -2.7N
+  2026-03-03 00:09  D6  4.63um    322.1 mJy  ncal=24   -0.3E  -2.5N
+  2026-03-03 00:11  D3  1.94um      nan mJy  ncal= 6  
+  2026-03-03 00:11  D6  4.67um    435.5 mJy  ncal=25   -0.2E  -2.8N
+  2026-03-03 00:13  D3  1.98um      nan mJy  ncal= 6  
+  2026-03-03 00:13  D6  4.70um      nan mJy  ncal=22  
+  2026-03-03 16:21  D3  2.03um      nan mJy  ncal=16  
+  2026-03-03 16:21  D6  4.73um    164.2 mJy  ncal=23   -0.4E  -3.2N
+  2026-04-09 21:18  D3  2.28um     22.1 mJy  ncal=16   -0.5E  -4.0N
+  2026-04-09 21:18  D6  4.91um      nan mJy  ncal=24  
+  2026-04-10 05:26  D3  2.34um      nan mJy  ncal= 5  
+  2026-04-10 05:26  D6  4.95um      nan mJy  ncal= 6  
+  calibration-star astrometric offsets applied (median over exposures): +0.17" E, +0.03" N

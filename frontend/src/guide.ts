@@ -9,6 +9,7 @@
 // or "centroid" here, and never "discovery" or "new planet" (guide.test.ts checks all of it).
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady } from './api'
 import { times } from './detection'
+import { findChangeInfo, findPictureInfo, findPlayerInfo } from './findsInfo'
 import { measuredRows, realShiftBar, shiftBetween, visitRows } from './motion'
 import { brightnessMayBeTheChange, catalogueCheck, isDrifting, listVisits, monthYear, monthYearLong, NOT_FOUND_WORDS, notFoundWhy, type NotFoundWhy } from './wording'
 
@@ -94,7 +95,7 @@ const allFrames = (data: FramesReady): Pick<Frame, 'date_start' | 'date_end' | '
 /** The three steps, and the bar at the top that the last line points to. */
 export function stepsInfo(): string[] {
   return [
-    'This page shows how one patch of sky changed between SPHEREx’s visits. The first five buttons are well-known objects, used as tests. The three after “Caught changing” changed while SPHEREx watched them. Nothing here is a new find.',
+    'This page shows how one patch of sky changed between SPHEREx’s visits. The first three buttons are candidates our own search found: nobody has confirmed them yet. The next five are well-known objects, used as tests. The last three changed while SPHEREx watched them.',
     'The bar at the top lists every tool, one after another. Brightness, Colours and the next four open under the picture. Watch brings you back.',
     'Practise, Vote and Three tools open pages of their own. Practise hides a made-up moving object in real photos. Vote shows what our computer search found. None of those finds is confirmed.',
   ]
@@ -320,14 +321,15 @@ export function levelInfo(): string[] {
 /** All popover texts for the view on screen, by key. None depends on which visit is shown. */
 export function infoFor(key: InfoKey, data: FramesReady | null, bright?: BrightStar[] | null, name?: string | null): string[] {
   switch (key) {
+    // One of our sweep's candidates (findsInfo.ts) is about something that appeared, not something that moved.
     case 'picture':
-      return pictureInfo(data, name)
+      return findPictureInfo(data, pictureInfo(data, name))
     case 'visits':
       return visitsInfo(data)
     case 'player':
-      return playerInfo(data)
+      return findPlayerInfo(data) ?? playerInfo(data)
     case 'movement':
-      return movementInfo(data)
+      return findChangeInfo(data) ?? movementInfo(data)
     case 'detection':
       return detectionInfo(data)
     case 'bright':

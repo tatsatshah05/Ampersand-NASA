@@ -5,6 +5,7 @@
 // The readout in the Catalogue notes says what those marks are; the table of visits compares
 // measured and predicted shifts for every visit.
 import { NATIVE_PIXEL_ARCSEC, type Frame, type GaiaStar } from '../api'
+import { findAt } from '../finds'
 
 interface OverlayProps {
   frames: Frame[]
@@ -101,6 +102,16 @@ export function GaiaReadout({ target, gaiaError, pixelArcsec }: ReadoutProps) {
       <p className="readout">
         Gaia DR3 {target.source_id} is near the centre, but Gaia lists no motion for it, so there is no predicted
         motion to compare with.
+      </p>
+    )
+  }
+  // One of our sweep's candidates, held at its corrected place by its button (finds.ts): the zero
+  // motion is the button's, not anyone's measurement, so the place is said instead of a motion.
+  const find = target.origin === 'request' && target.pmra === 0 && target.pmdec === 0 ? findAt(target.ra, target.dec) : null
+  if (find) {
+    return (
+      <p className="readout">
+        <span className="key gaia">+</span> {find.place}
       </p>
     )
   }

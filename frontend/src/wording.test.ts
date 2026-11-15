@@ -17,19 +17,34 @@ import noMatchJson from './fixtures/frames/nomatch241_d6.json'
 import rdraD1Json from './fixtures/frames/rdra_d1.json'
 import v462D3Json from './fixtures/frames/v462lup_d3.json'
 import wiseD1Json from './fixtures/frames/wise0855_d1.json'
+import findAJson from './fixtures/frames/find_a_d6.json'
+import findANoMotionJson from './fixtures/frames/find_a_d6_nomotion.json'
+import findBJson from './fixtures/frames/find_b_d6.json'
+import findBNoMotionJson from './fixtures/frames/find_b_d6_nomotion.json'
+import findCJson from './fixtures/frames/find_c_d5.json'
+import findCNoMotionJson from './fixtures/frames/find_c_d5_nomotion.json'
+import findC6Json from './fixtures/frames/find_c_d6.json'
+import { FINDS } from './finds'
+import { movementInfo, pictureInfo } from './guide'
 import {
   BRIGHTNESS_LINE,
+  CHANGE_CAUTION,
+  TIMES_SCATTER_NOTE,
+  beforeAfter,
   brightnessMayBeTheChange,
   catalogueCheck,
   catalogueLine,
+  changeHeadline,
   compassWord,
   expertVerdict,
   dateSpan,
   expertCells,
+  expertResult,
   flagsNote,
   isDrifting,
   monthYearLong,
   overallResult,
+  plainColumn,
   plainResult,
   rowAnnouncement,
   seenLine,
@@ -79,7 +94,8 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
     // First and last measured places 10.40 arcseconds apart (CLAUDE.md, step 1: -2.21, +10.16).
     expect(overallResult(barnard)).toEqual({
       sentence: 'It moved 10.4 arcseconds north between August 2025 and August 2026.',
-      more: ["Gaia's star map predicted 10.3 arcseconds: the two agree."],
+      more: ["Gaia's star map predicted 10.3 arcseconds: they agree."],
+      pointer: null,
     })
     // What that means is in the movement line's "i" (guide.ts), so the column stays short.
     expect(isDrifting(barnard)).toBe(true)
@@ -132,7 +148,7 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
 describe('a target given with its own motion (the name lookup)', () => {
   it('compares with the motion given, not with Gaia', () => {
     expect(tableCaption(request)).toBe('Shift since visit 1 in ″, east and north; + from the motion given. px: SPHEREx pixels of 6.15″.')
-    expect(catalogueLine(request)).toBe('Its catalogue motion predicted 10.3 arcseconds: the two agree.')
+    expect(catalogueLine(request)).toBe('Its catalogue motion predicted 10.3 arcseconds: they agree.')
   })
 })
 
@@ -143,6 +159,7 @@ describe('an object that stayed in place: RW Aurigae', () => {
     expect(overallResult(rwAur)).toEqual({
       sentence: 'No movement seen between September 2025 and September 2026.',
       more: [`Any shift was under a third of a pixel. ${BRIGHTNESS_LINE}`],
+      pointer: null,
     })
     expect(catalogueLine(rwAur)).toBe('Its catalogue motion predicted almost no shift: it barely moves.')
     // The movement line's "i" then points to the Brightness tool in the bar (guide.ts).
@@ -322,5 +339,195 @@ describe('built cases', () => {
     expect(flagsNote(barnard)).toBe(
       ": no value in any exposure of a frame (none here). For measuring brightness the star's core is saturated in some exposures, even where the image looks fine: 18 of 18 in visit 1, 19 of 19 in visit 2, 23 of 25 in visit 3.",
     )
+  })
+})
+
+// The three candidates of our sweep (finds.ts), on the server's real answers of 15 Nov 2026 for the
+// views their buttons ask for: the corrected position, held still (pmra = pmdec = 0), in detector 6.
+// The page's own measure, per visit, against the referee's ruling:
+//   A: -6.2 (not seen), 521, 168 times the scatter (fitted 1,925 and 631 mJy). Ruling: about 0 in
+//     Aug-Sep 2025 once the 437 mJy star 20″ away is modelled; 2.4-2.9 Jy in spring 2026; 0.67-0.80 Jy in Aug 2026.
+//   B: -2.6, 282, 619 (377 and 926 mJy). Ruling: about 0 in 2025; about 400 mJy in March, 1,000-1,090 in August.
+//   C: -1.4, 92 (129 mJy), unknown (two April exposures partly spoiled), 3.3 (marginal). Ruling: about
+//     0 in 2025; 85-110 mJy in Feb-Mar 2026; a third of that in April; 3-5 mJy in Jul-Sep 2026, lines persisting.
+//   C in detector 5 reads "not seen" in August 2026 (0.7 times the scatter), which reads as "back to
+//   nearly nothing", a phrase the ruling forbids: the page shows C in detector 6.
+const findA = findAJson as unknown as FramesReady
+const findB = findBJson as unknown as FramesReady
+const findC5 = findCJson as unknown as FramesReady
+const findC = findC6Json as unknown as FramesReady
+const find = (key: string) => FINDS.find((f) => f.key === key)!
+const allowed = (key: string) => find(key).allowed
+
+describe('something that appears: the three candidates', () => {
+  it('A: the headline, then the table, then the referee’s sentence under it; no pointer to the brightness tool', () => {
+    expect(overallResult(findA)).toEqual({
+      sentence: 'Not seen in August 2025. Clearly there by March 2026.',
+      more: [],
+      after: [allowed('A')],
+      pointer: null,
+    })
+    // Beginner's column says how clearly it is seen in each visit, and how it changed from the last
+    // visit it was clearly seen in, by the page's own measure (1,925 then 631 mJy: fainter).
+    expect(plainColumn(findA)).toEqual({ header: 'Seen', label: 'Every visit, and how clearly it is seen in it' })
+    expect(plain(findA)).toEqual(['not seen', 'seen clearly', 'seen clearly, fainter'])
+    expect(tableNotes(findA, 'beginner')).toEqual([])
+    expect(seenLine(findA)).toBeNull()
+  })
+
+  it('B: brighter in August than in March, and "not seen" where it is not seen, at both levels', () => {
+    expect(overallResult(findB)).toEqual({
+      sentence: 'Not seen in August 2025. Clearly there by March 2026.',
+      more: [],
+      after: [allowed('B')],
+      pointer: null,
+    })
+    expect(plain(findB)).toEqual(['not seen', 'seen clearly', 'seen clearly, brighter'])
+    // Nothing is predicted for a candidate held at its place, so there is nothing to differ from.
+    expect(expert(findB)[0]).toEqual({ measured: 'not seen', total: '', predicted: '', differ: '', about: '2–21 Aug 2025 · 18 exp. · not seen' })
+    expect(expert(findB)[2].measured).toBe('−0.3, +0.1') // Expert keeps the shifts: within error, as its notes say
+    // The reviewers' 0.3 arcsec, not the fit's 0.03: the shift of 0.3″ is then plainly within error.
+    expect(expert(findB)[1].about).toBe('8–16 Mar 2026 · 19 exp. · clear, 282× · ±0.3″')
+    expect(rowAnnouncement(findB, 0)).toBe('Visit 1 of 3, August 2025: not seen.')
+    expect(rowAnnouncement(findB, 2)).toBe('Visit 3 of 3, August 2026: seen clearly, brighter.')
+    // Held still at its place by the page, not by any catalogue: no "catalogue motion" anywhere.
+    expect(catalogueCheck(findB)).toBeNull()
+    expect(catalogueLine(findB)).toBeNull()
+    expect([...movementInfo(findB), ...pictureInfo(findB, 'Candidate B')].join(' ')).not.toMatch(/catalogue/i)
+  })
+
+  it('C, in detector 6: appeared and faded again, still only just seen in August 2026; the spoiled April visit is said so', () => {
+    expect(overallResult(findC)).toEqual({
+      sentence: 'Not seen in August 2025. Clearly there in March 2026, and faint again by August 2026.',
+      more: [],
+      after: [allowed('C')],
+      pointer: null,
+    })
+    expect(plain(findC)).toEqual(['not seen', 'seen clearly', 'picture spoiled here', 'only just seen'])
+    expect(tableNotes(findC, 'beginner')).toEqual([])
+    expect(rowAnnouncement(findC, 2)).toBe('Visit 3 of 4, April 2026: picture spoiled here.')
+    // In detector 5, August 2026 reads "not seen": the reason the page shows detector 6.
+    expect(plain(findC5)).toEqual(['not seen', 'seen clearly', 'not seen'])
+  })
+
+  it('Blink and the labels on the picture compare the visit without it and the first one with it', () => {
+    expect(beforeAfter(findA)).toEqual({ before: 0, after: 1 })
+    expect(beforeAfter(findB)).toEqual({ before: 0, after: 1 })
+    expect(beforeAfter(findC)).toEqual({ before: 0, after: 1 }) // never visit 1 and visit 4, both without it
+    for (const d of [barnard, difference, sum, request, epsInd, rwAur, nova, wise]) expect(beforeAfter(d)).toBeNull()
+  })
+
+  it('Expert: the headline, the referee’s sentence and the reviewers’ brightness over the table; the candidate’s notes first under it, then every caution', () => {
+    expect(expertResult(findB)).toEqual({
+      sentence: 'Not seen in August 2025. Clearly there by March 2026.',
+      more: [allowed('B'), find('B').brightness],
+      pointer: null,
+    })
+    expect(tableNotes(findB, 'expert')).toEqual([
+      TIMES_SCATTER_NOTE,
+      find('B').neighbour,
+      `This picture is detector 6 (4.4–5.0 micrometres). ${find('B').dates}`,
+      find('B').probably,
+      find('B').checked,
+      'Within error, visit 3: under a third of one SPHEREx pixel (6.15 arcseconds), so it may be measurement error rather than real movement.',
+      'Visit 1: no position could be measured. Visit details says why.',
+      'Not detected in visit 1: at least 3 times the background scatter is needed.',
+    ])
+    expect(tableNotes(findC, 'expert')).toContain(find('C').spoiled!.note)
+    // + is the corrected place, not a catalogue prediction: the caption says so.
+    expect(tableCaption(findB)).toBe('Shift since visit 2 in ″, east and north; + marks its corrected place, where it is held (no catalogue gives it a motion).')
+    // Anywhere else, Expert has no sentence over its table.
+    expect(expertResult(barnard)).toBeNull()
+  })
+
+  it('never points a candidate to the brightness tool, whose 2025 circle held a neighbour’s light', () => {
+    for (const d of [findA, findB, findC]) {
+      const r = overallResult(d)
+      const e = expertResult(d)!
+      expect([r.sentence, ...r.more, ...(r.after ?? []), r.pointer ?? '', e.sentence, ...e.more, ...tableNotes(d, 'expert')].join(' ')).not.toMatch(
+        /Brightness over time|brightness tool/,
+      )
+    }
+  })
+
+  it('says what was detected, never what the object is, and never "new" or "discovery"', () => {
+    for (const d of [findA, findB, findC]) {
+      const { sentence } = overallResult(d)
+      expect(sentence).toMatch(/^Not seen in \w+ 2025\. Clearly there /)
+      expect(sentence).not.toMatch(/nova|young star|eruption|outburst|new|discover|moved/i)
+    }
+  })
+
+  it('keeps Beginner’s words around the referee’s sentence few (70, 73 and 99 words with it)', () => {
+    const counts = [findA, findB, findC].map((d) => {
+      const r = overallResult(d)
+      return words([r.sentence, ...r.more, ...(r.after ?? []), seenLine(d) ?? '', ...plain(d), ...tableNotes(d, 'beginner')].join(' '))
+    })
+    expect(counts).toEqual([70, 73, 99])
+  })
+})
+
+describe('the same places asked for with no motion: the measure is of the brightest spot near the centre', () => {
+  // Without a target, /api/frames measures the brightest source within 14″ of the centre. In 2025
+  // that was a neighbouring star for all three: the 437 mJy star 20″ from A, the 40 mJy star 10″
+  // from B, neighbours of C. So no headline is said there.
+  const noMotion = [findANoMotionJson, findBNoMotionJson, findCNoMotionJson] as unknown as FramesReady[]
+  it('never says "not seen ... clearly there" from such a view, and Gaia has no star to G 17 within 15″ (no target)', () => {
+    for (const d of noMotion) {
+      expect(d.target).toBeNull()
+      expect(d.frames[0].detection).toBe('clear')
+      expect(changeHeadline(d)).toBeNull()
+      expect(overallResult(d).sentence).not.toMatch(/Not seen|Clearly there/)
+    }
+  })
+})
+
+describe('the headline does not fire where it should not', () => {
+  it('on any of the earlier views: movers, still stars, a sum, a difference, a marginal visit, no target', () => {
+    for (const d of [barnard, difference, sum, request, epsInd, rwAur, nova, wise]) expect(changeHeadline(d)).toBeNull()
+  })
+
+  const edit = (d: FramesReady, i: number, change: Partial<Frame>): FramesReady => ({
+    ...d,
+    frames: d.frames.map((f, k) => (k === i ? { ...f, ...change } : f)),
+  })
+  const elsewhere: FramesReady = { ...findB, ra: 10, dec: 20 }
+
+  it('somewhere that is not one of our candidates: one hedged line, and the pointer', () => {
+    expect(overallResult(elsewhere)).toEqual({
+      sentence: 'Not seen in August 2025. Clearly there by March 2026.',
+      // CHANGE_CAUTION already names the brightness tool, so no line of its own points there.
+      more: [CHANGE_CAUTION],
+      pointer: null,
+    })
+    expect(CHANGE_CAUTION).toBe('This can be a real change in the sky or a measuring problem. The brightness tool shows every measurement.')
+  })
+  it('a neighbour sharing the light in any visit', () => {
+    const star = { source_id: '1', gmag: 15, distance_arcsec: 4, light_share: 0.4 }
+    expect(changeHeadline(edit(elsewhere, 2, { blend: [star] }))).toBeNull()
+  })
+  it('something saturated at the place in a visit where it is not seen', () => {
+    expect(changeHeadline(edit(elsewhere, 0, { photometry_saturated_exposures: 3 }))).toBeNull()
+  })
+  it('a place near the picture’s edge', () => {
+    const near = edit(elsewhere, 0, { predicted: { ...findB.frames[0].predicted!, x: 20 } })
+    expect(changeHeadline(near)).toBeNull()
+  })
+  it('a visit too shallow for what is seen elsewhere to have been clear in it', () => {
+    const shallow = edit(elsewhere, 0, { detection_measure: { ...findB.frames[0].detection_measure, noise_mjy: 100 } })
+    expect(changeHeadline(shallow)).toBeNull()
+  })
+  it('a view with no target, or measured at the marked spot', () => {
+    expect(changeHeadline({ ...elsewhere, target: null })).toBeNull()
+    expect(changeHeadline(edit(elsewhere, 0, { detection_measure: { ...findB.frames[0].detection_measure, at: 'centroid' } }))).toBeNull()
+  })
+  it('seen only marginally before, or flickering: no headline', () => {
+    expect(changeHeadline(edit(elsewhere, 0, { detection: 'marginal', detection_sigma: 3.4 }))).toBeNull()
+    expect(changeHeadline(edit(elsewhere, 2, { ...findB.frames[0], epoch: 3 }))).not.toBeNull() // n c n: appeared and faded
+    expect(changeHeadline(edit(edit(elsewhere, 1, { ...findB.frames[0], epoch: 2 }), 0, findB.frames[1]))).toBeNull() // c n c
+  })
+  it('something that faded: clearly there, then not seen', () => {
+    const faded: FramesReady = { ...elsewhere, frames: [{ ...findB.frames[1], epoch: 1 }, { ...findB.frames[2], epoch: 2 }, { ...findB.frames[0], epoch: 3, date_mean: '2027-02-10' }] }
+    expect(changeHeadline(faded)?.sentence).toBe('Clearly there in March and August 2026. Not seen in February 2027.')
   })
 })

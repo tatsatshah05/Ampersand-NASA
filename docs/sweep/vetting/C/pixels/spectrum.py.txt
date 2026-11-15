@@ -1,0 +1,159 @@
+"""Brightness against wavelength per visit from measurements.json (own measurements), the excess of the bright
+visit over the faint visits at the same wavelength, hydrogen lines marked, and blackbody fits to the continuum.
+Writes spectrum.png and spectrum.json."""
+import json
+import os
+
+import numpy as np
+from scipy.optimize import least_squares
+from PIL import Image, ImageDraw, ImageFont
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+R = json.load(open(os.path.join(HERE, "measurements.json")))
+# vacuum wavelengths (um) of hydrogen lines in SPHEREx's range
+HLINES = {"Pa d": 1.0052, "Pa g": 1.0941, "Pa b": 1.2822, "Br 10": 1.7367, "Br e": 1.8179, "Pa a": 1.8756,
+          "Br d": 1.9451, "Br g": 2.1661, "Pf 9": 2.8730, "Pf e": 3.0392, "Pf d": 3.2970, "Br b": 2.6259,
+          "Pf g": 3.7406, "Br a": 4.0523, "Hu 13": 4.1708, "Hu 12": 4.3765, "Pf b": 4.6538, "Hu 11": 4.6725}
+EP_NAMES = {0: "Jul-Aug 2025", 1: "Feb-Mar 2026", 2: "Apr 2026", 3: "Jul-Sep 2026"}
+
+
+def pts(ep, statuses=("ok",)):
+    return sorted([r for r in R if r.get("ep") == ep and r.get("status") in statuses and r.get("flux") is not None],
+                  key=lambda r: r["wave_um"])
+
+
+def near_line(w, bw, margin=0.6):
+    return [n for n, l in HLINES.items() if abs(w - l) < margin * bw + 0.005]
+
+
+def baseline(w, faint):
+    """Faint-state brightness at wavelength w: median of faint clean points within +/- 0.06 um (same detector)."""
+    sel = [f["flux"] for f in faint if abs(f["wave_um"] - w) < 0.06 and f["det"] == faint_det(w)]
+    if len(sel) < 2:
+        sel = [f["flux"] for f in faint if abs(f["wave_um"] - w) < 0.15]
+    return (float(np.median(sel)), len(sel)) if sel else (None, 0)
+
+
+def faint_det(w):
+    edges = [(1, 0.75, 1.10), (2, 1.10, 1.64), (3, 1.64, 2.42), (4, 2.42, 3.82), (5, 3.82, 4.42), (6, 4.42, 5.02)]
+    for d, a, b in edges:
+        if a <= w < b:
+            return d
+    return 0
+
+
+H_C_K = 14387.77   # hc/k in um K
+
+
+def bb_nu(w, T):
+    """B_nu shape (arbitrary units) at wavelength w (um)."""
+    return (1.0 / w ** 3) / np.expm1(H_C_K / (w * T))
+
+
+def fit_bb(w, f, e):
+    w, f, e = map(np.asarray, (w, f, e))
+    best = None
+    for T0 in (300, 600, 1000, 2000, 4000):
+        def res(p):
+            return (p[0] * bb_nu(w, p[1]) / bb_nu(4.6, p[1]) - f) / e
+        try:
+            r = least_squares(res, [np.median(f), T0], bounds=([0, 50], [np.inf, 30000]))
+        except Exception:
+            continue
+        if best is None or r.cost < best.cost:
+            best = r
+    chi2 = 2 * best.cost
+    dof = len(w) - 2
+    J = best.jac
+    cov = np.linalg.inv(J.T @ J) * max(chi2 / dof, 1.0)
+    return {"T": float(best.x[1]), "T_err": float(np.sqrt(cov[1, 1])), "f46": float(best.x[0]), "chi2": float(chi2),
+            "dof": dof, "chi2_red": float(chi2 / dof)}
+
+
+def main():
+    out = {"visits": {}}
+    faint = pts(0) + pts(3)
+    for ep in (0, 1, 2, 3):
+        P = pts(ep)
+        out["visits"][EP_NAMES[ep]] = [{"det": p["det"], "um": round(p["wave_um"], 4), "bw": round(p["band_um"], 4),
+                                        "mjy": round(p["flux"], 2), "err": round(p["err"], 2), "date": p["date"],
+                                        "lines_in_band": near_line(p["wave_um"], p["band_um"])} for p in P]
+    # excess of the bright visit, clean points only, with lines flagged
+    ex = []
+    for p in pts(1):
+        b, nb = baseline(p["wave_um"], faint)
+        if b is None:
+            continue
+        ex.append({"det": p["det"], "um": p["wave_um"], "bw": p["band_um"], "excess": p["flux"] - b, "bright": p["flux"],
+                   "base": b, "n_base": nb, "lines": near_line(p["wave_um"], p["band_um"]), "date": p["date"]})
+    out["excess_feb_mar"] = ex
+    # continuum blackbody fits: (a) the excess, no line channels, detectors 2-6; (b) the raw bright visit; (c) raw faint
+    def err_of(v, floor):
+        return np.hypot(floor, 0.05 * abs(v))
+    cont = [x for x in ex if not x["lines"] and x["det"] >= 2]
+    fits_ = {}
+    if len(cont) > 4:
+        fits_["excess_feb_mar_continuum"] = fit_bb([x["um"] for x in cont], [x["excess"] for x in cont],
+                                                   [err_of(x["excess"], 3.0) for x in cont])
+        fits_["excess_feb_mar_continuum"]["n"] = len(cont)
+        cont6 = [x for x in cont if x["det"] >= 3]
+        fits_["excess_feb_mar_continuum_D3to6"] = fit_bb([x["um"] for x in cont6], [x["excess"] for x in cont6],
+                                                         [err_of(x["excess"], 3.0) for x in cont6])
+    for ep in (0, 3):
+        P = [p for p in pts(ep) if p["det"] >= 2 and not near_line(p["wave_um"], p["band_um"])]
+        fits_[f"raw_{EP_NAMES[ep]}"] = fit_bb([p["wave_um"] for p in P], [max(p["flux"], 0.1) for p in P],
+                                              [err_of(p["flux"], 3.0) for p in P])
+        fits_[f"raw_{EP_NAMES[ep]}"]["n"] = len(P)
+    out["blackbody"] = fits_
+    json.dump(out, open(os.path.join(HERE, "spectrum.json"), "w"), indent=1)
+    for k, v in fits_.items():
+        print(k, {a: (round(b, 2) if isinstance(b, float) else b) for a, b in v.items()})
+    print("\nexcess Feb-Mar 2026 (clean exposures), by wavelength:")
+    for x in ex:
+        print(f"  D{x['det']} {x['um']:.3f} bw {x['bw']:.3f}  bright {x['bright']:7.1f} base {x['base']:5.1f} excess {x['excess']:7.1f}  {','.join(x['lines'])}  {x['date'][:16]}")
+    draw(out, faint)
+
+
+def draw(out, faint):
+    W, H = 1100, 620
+    img = Image.new("RGB", (W, H), (255, 255, 255))
+    d = ImageDraw.Draw(img)
+    x0, x1, y0, y1 = 70, W - 20, 40, H - 60
+    wmin, wmax = 0.7, 5.05
+    lmin, lmax = np.log10(0.5), np.log10(800)
+
+    def X(w):
+        return x0 + (w - wmin) / (wmax - wmin) * (x1 - x0)
+
+    def Y(f):
+        return y1 - (np.log10(max(f, 0.5)) - lmin) / (lmax - lmin) * (y1 - y0)
+    d.rectangle([x0, y0, x1, y1], outline=(0, 0, 0))
+    for f in (1, 3, 10, 30, 100, 300):
+        d.line([x0, Y(f), x1, Y(f)], fill=(225, 225, 225))
+        d.text((x0 - 35, Y(f) - 6), f"{f}", fill=(0, 0, 0))
+    for w in np.arange(1, 5.1, 0.5):
+        d.line([X(w), y1, X(w), y1 + 5], fill=(0, 0, 0))
+        d.text((X(w) - 8, y1 + 8), f"{w:.1f}", fill=(0, 0, 0))
+    for n, l in HLINES.items():
+        d.line([X(l), y0, X(l), y1], fill=(250, 200, 200))
+        d.text((X(l) + 2, y0 + 2 + (12 if n in ("Hu 11", "Br e", "Pf e", "Hu 12") else 0)), n, fill=(200, 80, 80))
+    cols = {0: (60, 90, 200), 1: (220, 120, 0), 2: (0, 150, 0), 3: (120, 60, 160)}
+    for ep, col in cols.items():
+        for p in out["visits"][EP_NAMES[ep]]:
+            cx, cy = X(p["um"]), Y(p["mjy"])
+            r = 4
+            d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col if p["mjy"] > 0.5 else None, outline=col)
+    # blackbody of the excess continuum
+    bb = out["blackbody"].get("excess_feb_mar_continuum")
+    if bb:
+        ws = np.linspace(1.1, 5.0, 200)
+        fs = bb["f46"] * bb_nu(ws, bb["T"]) / bb_nu(4.6, bb["T"])
+        d.line([(X(w), Y(f)) for w, f in zip(ws, fs) if f > 0.5], fill=(0, 0, 0), width=1)
+    d.text((x0, 10), "Candidate C, own aperture photometry (r=2.5 px, sky 14-20 px), clean exposures only; mJy (log) vs micrometres. "
+           "Blue Jul-Aug 2025, orange Feb-Mar 2026, green Apr 2026, purple Jul-Sep 2026; red lines: hydrogen; black: blackbody fit "
+           "to the Feb-Mar excess continuum", fill=(0, 0, 0))
+    img.save(os.path.join(HERE, "spectrum.png"))
+
+
+if __name__ == "__main__":
+    main()

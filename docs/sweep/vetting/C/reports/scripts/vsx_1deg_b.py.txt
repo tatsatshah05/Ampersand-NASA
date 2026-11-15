@@ -1,0 +1,25 @@
+import json, sys, re
+from astropy.coordinates import SkyCoord
+d = json.load(open(sys.argv[1]))['VSXObjects']['VSXObject']
+c0 = SkyCoord(241.70931, -52.20484, unit='deg')
+sep = SkyCoord([float(o['RA2000']) for o in d], [float(o['Declination2000']) for o in d], unit='deg').separation(c0).arcmin
+print('objects within 1 deg:', len(d), '| OID range', min(int(o['OID']) for o in d), max(int(o['OID']) for o in d))
+def toks(t): return set(re.split(r'[+|/ ]', t.replace(':','')))
+nova = {'N','NA','NB','NC','NR'}
+yso = {'FUOR','EXOR','INSA','INS','INST','INSB','IN','INB','INA','ISA','ISB','IS','UXOR','YSO','DYPER','INT','INST'}
+cv = {'UG','UGSS','UGSU','UGZ','UGWZ','UGER','NL','ZAND','CV','SN','LBV','SDOR','RCB','GCAS','BE','MISC','VAR','*'}
+print('\n-- nova types within 1 deg --')
+for o,s in sorted(zip(d,sep), key=lambda x:x[1]):
+    t=o.get('VariabilityType','')
+    if toks(t)&nova: print(f"{s:6.2f}' {o['Name']} | {t} | {o.get('MaxMag')} - {o.get('MinMag')} | OID {o['OID']} | {o.get('Discoverer','')}")
+print('\n-- YSO/eruptive types within 1 deg --')
+for o,s in sorted(zip(d,sep), key=lambda x:x[1]):
+    t=o.get('VariabilityType','')
+    if toks(t)&yso: print(f"{s:6.2f}' {o['Name']} | {t} | {o.get('MaxMag')} - {o.get('MinMag')} | OID {o['OID']} | {o.get('Discoverer','')}")
+print('\n-- non-Gaia entries with OID > 10,700,000 (recent additions) --')
+for o,s in sorted(zip(d,sep), key=lambda x:x[1]):
+    if int(o['OID'])>10_700_000 and not o['Name'].startswith('Gaia DR3'):
+        print(f"{s:6.2f}' {o['Name']} | {o.get('VariabilityType')} | {o.get('MaxMag')} - {o.get('MinMag')} | OID {o['OID']} | {o.get('Discoverer','')}")
+print('\n-- all within 1.5 arcmin --')
+for o,s in sorted(zip(d,sep), key=lambda x:x[1]):
+    if s<1.5: print(f"{s*60:6.1f}\" {o['Name']} | {o.get('VariabilityType')} | {o.get('MaxMag')} - {o.get('MinMag')} | OID {o['OID']} | {o['RA2000']} {o['Declination2000']}")

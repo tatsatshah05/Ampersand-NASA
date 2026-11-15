@@ -1,0 +1,21 @@
+import sys, re
+txt = open(sys.argv[1], errors="replace").read().splitlines()
+cur, title, blocks = None, "", []
+i = 0
+while i < len(txt):
+    l = txt[i]
+    if l.startswith("#Name:"):
+        cur = l[6:].strip(); title = ""
+    elif l.startswith("#Title:") and cur:
+        title = l[7:].strip()
+    elif not l.startswith("#") and l.strip() and cur:
+        # header line, units, dashes, then data until blank
+        hdr = l.split("\t"); j = i + 3; data = []
+        while j < len(txt) and txt[j].strip() and not txt[j].startswith("#"):
+            data.append(txt[j]); j += 1
+        blocks.append((cur, title, hdr, data)); i = j; continue
+    i += 1
+print(len(blocks), "tables with rows")
+for cur, title, hdr, data in blocks:
+    r = [d.split("\t")[0].strip() for d in data]
+    print(f"{cur:28s} n={len(data):3d} r={','.join(r[:4]):24s} {title[:90]}")

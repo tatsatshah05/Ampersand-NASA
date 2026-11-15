@@ -1,0 +1,49 @@
+"""Summaries of own_phot.jsonl: epochs, medians per detector, flags, positions."""
+import json
+import math
+import sys
+from collections import defaultdict
+
+import numpy as np
+from astropy.time import Time
+
+recs = [json.loads(l) for l in open(sys.argv[1])]
+recs.sort(key=lambda r: r["mjd"])
+# epochs: gap > 30 days
+ep, last, k = {}, None, -1
+for r in recs:
+    if last is None or r["mjd"] - last > 30:
+        k += 1
+    r["ep"] = k
+    last = r["mjd"]
+eps = defaultdict(list)
+for r in recs:
+    eps[r["ep"]].append(r["mjd"])
+print("epochs:")
+for e, m in eps.items():
+    print(e, Time(min(m), format="mjd").iso[:10], Time(max(m), format="mjd").iso[:10], len(m),
+          "mid", Time((min(m) + max(m)) / 2, format="mjd").iso[:16])
+
+PB = {"SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR", "PERSIST", "BLOOM", "SNOWBALL", "HALO",
+      "SATELLITE_HALO"}
+print("\nflag counts in 2.5px aperture (photometry-bad only), all measured exposures:")
+cnt = defaultdict(int)
+nmeas = 0
+for r in recs:
+    if r.get("status") != "measured":
+        continue
+    nmeas += 1
+    for f in set(r["flags2.5"]) & PB:
+        cnt[f] += 1
+print(nmeas, dict(cnt))
+print("status counts:", {s: sum(1 for r in recs if r.get("status") == s) for s in {r.get('status') for r in recs}})
+
+print("\nmedians (mJy) per epoch and detector: clean2.5 [n] | clean1.5 [n] | all incl. flagged 1.5 (bad share<0.3) [n]")
+for e in sorted(eps):
+    for d in range(1, 7):
+        rr = [r for r in recs if r["ep"] == e and r["det"] == d and r.get("status") == "measured"]
+        c25 = [r["f2.5"] for r in rr if r["badshare2.5"] == 0 and r["f2.5"] is not None]
+        c15 = [r["f1.5"] for r in rr if r["badshare1.5"] == 0 and r["f1.5"] is not None]
+        a15 = [r["f1.5"] for r in rr if r["badshare1.5"] < 0.3 and r["f1.5"] is not None]
+        fmt = lambda v: f"{np.median(v):7.1f} [{len(v):2d}]" if v else "     -  [ 0]"
+        print(f"ep{e} D{d}: {fmt(c25)} | {fmt(c15)} | {fmt(a15)}   n_total={len(rr)}")

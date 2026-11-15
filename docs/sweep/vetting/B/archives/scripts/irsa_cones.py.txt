@@ -1,0 +1,26 @@
+import sys, io, csv, math, os
+sys.path.insert(0, os.path.dirname(__file__))
+from tap import irsa_tap
+RA, DEC = 253.18044, -44.67687
+OUT = os.path.join(os.path.dirname(__file__), "..", "data")
+def sep(ra, dec, ra0=RA, dec0=DEC):
+    r1, d1, r2, d2 = map(math.radians, (ra, dec, ra0, dec0))
+    s = math.sin((d2-d1)/2)**2 + math.cos(d1)*math.cos(d2)*math.sin((r2-r1)/2)**2
+    return math.degrees(2*math.asin(math.sqrt(s)))*3600
+def cone(table, radius_arcsec, cols="*", ra=RA, dec=DEC, racol="ra", deccol="dec", tag=None):
+    q = f"SELECT {cols} FROM {table} WHERE CONTAINS(POINT('ICRS',{racol},{deccol}), CIRCLE('ICRS',{ra},{dec},{radius_arcsec/3600.0}))=1"
+    s, t = irsa_tap(q)
+    name = (tag or table).replace('.', '_')
+    fn = os.path.join(OUT, f"irsa_{name}_{int(radius_arcsec)}as_{ra:.4f}_{dec:.4f}.csv")
+    open(fn, "w").write(t)
+    rows = list(csv.DictReader(io.StringIO(t))) if s == 200 and not t.lstrip().startswith("<") else None
+    if rows is None:
+        print(f"== {table}: HTTP {s} non-CSV answer: {t[:400]}"); return None
+    for r in rows:
+        try: r["_sep"] = sep(float(r[racol]), float(r[deccol]), ra, dec)
+        except Exception: r["_sep"] = float('nan')
+    rows.sort(key=lambda r: r["_sep"])
+    print(f"== {table} r<{radius_arcsec}\" around {ra:.5f} {dec:.5f}: {len(rows)} rows -> {fn}")
+    return rows
+if __name__ == "__main__":
+    pass
