@@ -32,6 +32,32 @@
   background: var(--control-hover);
 }
 
+/* Observe anomalies: what an anomaly is, then the three candidates, then the region and its groups. */
+.watchlist .anomaly-intro {
+  margin: 10px 0 0;
+  max-width: 64ch;
+  font-size: var(--size-read);
+}
+
+.watchlist .anomaly-intro + .anomaly-intro {
+  margin-top: 2px;
+}
+
+.anomaly-finds {
+  margin-top: 36px;
+}
+
+.anomaly-finds-title,
+.anomaly-patches-title {
+  margin: 0 0 16px;
+  font-size: var(--size-result);
+  letter-spacing: -0.01em;
+}
+
+.anomaly-patches {
+  margin-top: 40px;
+}
+
 /* The groups: pills in a row, the open one black. */
 .tabs {
   display: flex;

@@ -1,0 +1,21 @@
+{
+ "name": "l015.0_b+0.0",
+ "survivors": [
+  {
+   "ra": 274.2940883547215,
+   "dec": -16.2140028378106,
+   "classification": {
+    "kind": "known_variable",
+    "reasons": [
+     "CWISE J181710.67-161247.5 (CatWISE2020) W2 8.82 mag = 51 mJy, already bright",
+     "WISEA J181710.62-161247.3 (AllWISE) W2 8.46 mag = 71 mJy, already bright",
+     "GLIMPSE SSTGLMC G014.6493-00.0024 (GLIMPSE) [4.5] 9.66 mag = 25 mJy, already bright",
+     "WISEA J181710.84-161251.1 (AllWISE) W2 9.94 mag = 18 mJy, already bright",
+     "GLIMPSE SSTGLMC G014.6488-00.0008 (GLIMPSE) [4.5] 9.89 mag = 20 mJy, already bright",
+     "2MASS J18171028-1612460 (2MASS) Ks 11.66 mag = 14 mJy, already bright"
+    ],
+    "catalogues_failed": []
+   }
+  }
+ ]
+}

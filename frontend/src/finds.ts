@@ -51,7 +51,18 @@ export interface Find {
   firstSeen: string
   /** Where the evidence is written up. */
   evidence: string
+  /**
+   * The one sentence a public page may show about the second, wider search for earlier reports of it
+   * (2026-11-15: more than 30 catalogues and alert lists, each tested on a known object), word for word:
+   * that search's `what_can_be_said` for this candidate (docs/sweep.md quotes it).
+   */
+  reportSearch: string
+  /** Where it stands, said as it is. One edit here changes it on every page, the day a person files a report. */
+  status: string
 }
+
+/** Where all three stand today: nobody has confirmed them, and nothing has been sent to anyone. */
+export const NOT_REPORTED = 'Not confirmed. Not yet reported to astronomers.'
 
 export const FINDS: readonly Find[] = [
   {
@@ -85,6 +96,9 @@ export const FINDS: readonly Find[] = [
     lastNotSeen: '2025-09-10 09:53',
     firstSeen: '2026-03-20 04:30',
     evidence: 'docs/sweep.md',
+    reportSearch:
+      "We checked more than 30 public catalogues and alert lists, each tested on a known object, and found no earlier report of a new or brightening object at Candidate A's position in Sagittarius; some sources, including the full text of The Astronomer's Telegram and NASA's Astrophysics Data System, have not yet been searched, so this does not prove that no one else has seen it.",
+    status: NOT_REPORTED,
   },
   {
     key: 'B',
@@ -116,6 +130,9 @@ export const FINDS: readonly Find[] = [
     lastNotSeen: '2025-09-15 22:09',
     firstSeen: '2026-02-26 14:18',
     evidence: 'docs/sweep.md',
+    reportSearch:
+      "We checked more than 30 public catalogues and alert lists, each tested on a known object, and found no earlier report of a new or brightening object at Candidate B's position in Scorpius; some sources, including the full text of The Astronomer's Telegram and NASA's Astrophysics Data System, have not yet been searched, so this does not prove that no one else has seen it.",
+    status: NOT_REPORTED,
   },
   {
     key: 'C',
@@ -157,6 +174,9 @@ export const FINDS: readonly Find[] = [
     lastNotSeen: '2025-08-19 22:57',
     firstSeen: '2026-02-19 02:55',
     evidence: 'docs/sweep.md',
+    reportSearch:
+      "We checked more than 30 public catalogues and alert lists, each tested on a known object, and found no earlier report of a new or brightening object at Candidate C's position in Norma (two ordinary variable stars catalogued before 2025 lie 12 and 15 arcseconds away and are different stars); some sources, including the full text of The Astronomer's Telegram and NASA's Astrophysics Data System, have not yet been searched, so this does not prove that no one else has seen it.",
+    status: NOT_REPORTED,
   },
 ]
 

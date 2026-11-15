@@ -172,13 +172,18 @@ export function markFinds(status: SearchStatus): SearchStatus {
   if (!status.result) return status
   const objects = status.result.objects.map((o): SearchObject => {
     if (o.kind !== 'changer') return o
-    const at = findAt(o.ra, o.dec)
-    const near = at ? null : findNear(o.ra, o.dec)
-    const find = at ?? near?.find
-    if (!find) return o
-    return { ...o, verdict: 'caution', near_find: { name: find.name, arcsec: near?.arcsec ?? 0, at: at !== null } }
+    const near_find = nearFindAt(o.ra, o.dec)
+    return near_find ? { ...o, verdict: 'caution', near_find } : o
   })
   return { ...status, result: { ...status.result, objects } }
+}
+
+/** For a changer at (ra, dec): the candidate it is, or whose light reaches its circle (markFinds's `near_find`), or null. */
+export function nearFindAt(ra: number, dec: number): { name: string; arcsec: number; at: boolean } | null {
+  const at = findAt(ra, dec)
+  const near = at ? null : findNear(ra, dec)
+  const find = at ?? near?.find
+  return find ? { name: find.name, arcsec: near?.arcsec ?? 0, at: at !== null } : null
 }
 
 /** What a changer near one of our candidates is (markFinds), or null. */

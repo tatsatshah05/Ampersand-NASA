@@ -3,7 +3,7 @@
 // a "new object", and a vote is an opinion, never a confirmation. The sentences about what the
 // machine saw and what the catalogues say are src/search.ts's: they are reused, not repeated.
 import { addressOf, DEFAULT_SELECTION } from './address'
-import type { CatalogueStatus, Evidence, RejectedObject, SearchObject } from './search'
+import { nearFindAt, type CatalogueStatus, type Evidence, type RejectedObject, type SearchObject } from './search'
 
 export type Group = 'eyes' | 'known' | 'artefact'
 export const GROUPS: readonly Group[] = ['eyes', 'known', 'artefact']
@@ -68,6 +68,19 @@ export interface WatchRow {
   detector?: number
   sigma?: number
   reasons?: string[]
+  /** Set on the page (markNearFind), never by the server: the candidate of our sweep this changer is, or is next to. */
+  near_find?: { name: string; arcsec: number; at: boolean }
+}
+
+/**
+ * A brightness change at, or within reach of, one of the sweep's candidates (finds.ts) gets the same
+ * caution and words as in the patch search (search.ts, markFinds): near B, the patch search had
+ * flagged the steady star 10 arcsec away, whose circle holds B's light, as an unexplained change.
+ */
+export function markNearFind(r: WatchRow): WatchRow {
+  if (r.group === 'artefact' || r.kind !== 'changer') return r
+  const near_find = nearFindAt(r.ra, r.dec)
+  return near_find ? { ...r, verdict: 'caution', near_find } : r
 }
 
 export interface WatchPage {
@@ -223,11 +236,53 @@ async function failure(r: Response): Promise<Error> {
   return new Error(r.status === 404 ? 'this server does not offer the watchlist yet.' : detail)
 }
 
-export async function fetchWatchlist(group: Group, offset: number, limit: number, voter: string, signal?: AbortSignal): Promise<WatchPage> {
+export async function fetchWatchlist(
+  group: Group,
+  offset: number,
+  limit: number,
+  voter: string,
+  signal?: AbortSignal,
+  region: string | null = null,
+): Promise<WatchPage> {
   const params = new URLSearchParams({ group, offset: String(offset), limit: String(limit) })
+  if (region) params.set('region', region)
   const r = await fetch(`/api/watchlist?${params}`, { signal, headers: { 'X-Voter': voter } })
   if (!r.ok) throw await failure(r)
-  return (await r.json()) as WatchPage
+  const page = (await r.json()) as WatchPage
+  return { ...page, rows: page.rows.map(markNearFind) }
+}
+
+/** One patch a blind search covered (GET /api/watchlist/regions, backend/watchlist.py `regions`). */
+export interface PatchRegion {
+  key: string
+  ra: number
+  dec: number
+  /** The width of the patch, degrees. */
+  fov: number
+  area_sq_deg: number
+  /** The constellation its centre lies in (astropy's boundaries, the IAU's spelling). */
+  constellation: string
+  /** When a search of it last reported (UTC, ISO), or null. */
+  last_searched: string | null
+  /** The rows its searches reported; a row seen from two patches counts in both. */
+  count: number
+  counts: Record<Group, number>
+}
+
+export interface PatchRegions {
+  regions: PatchRegion[]
+  /** Every row of the list, once. */
+  total: number
+  counts: Record<Group, number>
+  patches_searched: number
+  first_searched: string | null
+  last_searched: string | null
+}
+
+export async function fetchRegions(signal?: AbortSignal): Promise<PatchRegions> {
+  const r = await fetch('/api/watchlist/regions', { signal })
+  if (!r.ok) throw await failure(r)
+  return (await r.json()) as PatchRegions
 }
 
 export async function castVote(id: string, answer: Answer, note: string, voter: string): Promise<{ votes: Votes; my_vote: Answer }> {

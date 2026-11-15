@@ -1,0 +1,225 @@
+/* The three candidate cards of Observe anomalies (CandidateCards.tsx). Colours only through the page's
+   tokens. The pictures are the Viewer's own frames, cropped to their middle third so the place fills
+   the box; the ticks around the place are white, like the Viewer's cross for a candidate. Nothing
+   here moves or animates. */
+
+.anomaly-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 20px;
+}
+
+.anomaly-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 20px 22px 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-card);
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.47;
+  overflow-wrap: anywhere;
+}
+
+.anomaly-name {
+  margin: 0;
+  font-size: var(--size-result);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.anomaly-where {
+  margin: 2px 0 14px;
+  color: var(--muted);
+  font-size: var(--size-body);
+}
+
+/* Two pictures side by side, each a square. */
+.anomaly-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.anomaly-shot {
+  margin: 0;
+  min-width: 0;
+}
+
+.anomaly-crop {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-tile);
+  background: var(--text);
+}
+
+/* The Viewer's picture at three times its width: the box shows its central third (2 arcminutes). */
+.anomaly-crop img {
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  max-width: none;
+  display: block;
+}
+
+.anomaly-crop-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--size-body);
+  text-align: center;
+}
+
+/* Four short ticks around the place, leaving its middle clear. */
+.anomaly-tick {
+  position: absolute;
+  background: var(--on-ink);
+  pointer-events: none;
+}
+
+.anomaly-tick-n,
+.anomaly-tick-s {
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 9%;
+}
+
+.anomaly-tick-n {
+  top: 32%;
+}
+
+.anomaly-tick-s {
+  bottom: 32%;
+}
+
+.anomaly-tick-e,
+.anomaly-tick-w {
+  top: calc(50% - 1px);
+  height: 2px;
+  width: 9%;
+}
+
+.anomaly-tick-e {
+  left: 32%;
+}
+
+.anomaly-tick-w {
+  right: 32%;
+}
+
+.anomaly-shot figcaption {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+  font-size: var(--size-body);
+  line-height: 1.35;
+}
+
+.anomaly-shot-label {
+  font-weight: 600;
+}
+
+.anomaly-shot-date {
+  color: var(--muted);
+}
+
+.anomaly-pair-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: var(--size-small);
+  line-height: 1.4;
+}
+
+.anomaly-allowed {
+  margin: 16px 0 0;
+  padding: 0 0 0 14px;
+  border-left: 3px solid var(--line-strong);
+}
+
+.anomaly-allowed p {
+  margin: 0;
+  font-size: var(--size-read);
+  line-height: 1.42;
+}
+
+.anomaly-probably {
+  margin: 12px 0 0;
+}
+
+.anomaly-report {
+  margin-top: 12px;
+}
+
+.anomaly-report p {
+  margin: 0;
+}
+
+.anomaly-label {
+  font-weight: 600;
+}
+
+.anomaly-status {
+  align-self: flex-start;
+  margin: 14px 0 0;
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font-size: var(--size-body);
+  font-weight: 600;
+}
+
+.anomaly-facts {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: var(--size-body);
+  line-height: 1.45;
+}
+
+.anomaly-facts dt {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.anomaly-facts dt:first-child {
+  margin-top: 0;
+}
+
+.anomaly-facts dd {
+  margin: 0;
+}
+
+/* The way to the Viewer: the card's one primary action. Pushed to the foot so the three line up. */
+.anomaly-actions {
+  margin: auto 0 0;
+  padding-top: 16px;
+}
+
+.anomaly-watch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.anomaly-watch:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--on-ink);
+}

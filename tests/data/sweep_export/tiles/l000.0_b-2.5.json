@@ -1,0 +1,29 @@
+{
+ "name": "l000.0_b-2.5",
+ "survivors": [
+  {
+   "ra": 270.9696799102593,
+   "dec": -31.457260799487806,
+   "classification": {
+    "kind": "known_eruption",
+    "reasons": [
+     "AAVSO VSX V7994 Sgr is NA, 6.6 V to <23 V (0.7 arcsec away)"
+    ],
+    "by": {
+     "catalogue": "AAVSO VSX",
+     "name": "V7994 Sgr",
+     "ra": 270.96983,
+     "dec": -31.45739,
+     "pmra": null,
+     "pmdec": null,
+     "parallax": null,
+     "ref_epoch": 2000.0,
+     "type": "NA, 6.6 V to <23 V",
+     "variable": true,
+     "vsx_category": "Variable"
+    },
+    "catalogues_failed": []
+   }
+  }
+ ]
+}

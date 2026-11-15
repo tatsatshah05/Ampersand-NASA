@@ -1,0 +1,19 @@
+{
+ "name": "l003.0_b+0.0",
+ "survivors": [
+  {
+   "ra": 267.78880174067046,
+   "dec": -26.618088321956535,
+   "classification": {
+    "kind": "known_variable",
+    "reasons": [
+     "CWISE J175109.20-263709.1 (CatWISE2020) W2 9.96 mag = 18 mJy, already bright",
+     "WISEA J175109.30-263700.0 (AllWISE) W2 9.76 mag = 21 mJy, already bright",
+     "CWISE J175109.30-263659.8 (CatWISE2020) W2 9.81 mag = 21 mJy, already bright",
+     "2MASS J17510929-2636598 (2MASS) Ks 11.63 mag = 15 mJy, already bright"
+    ],
+    "catalogues_failed": []
+   }
+  }
+ ]
+}

@@ -21,7 +21,7 @@ describe('the list of features', () => {
       ['smallbodies', 'Asteroids', 'Small bodies'],
       ['context', 'What is it?', 'Object card'],
       ['practise', 'Practise', 'Training'],
-      ['vote', 'Vote', 'Watchlist'],
+      ['vote', 'Observe anomalies', 'Anomalies'],
       ['tools', 'Three tools', 'Methods'],
     ])
   })
@@ -116,7 +116,7 @@ describe('the bar', () => {
       '?ui=expert&amp;tool=smallbodies',
       '?ui=expert&amp;tool=context',
     ])
-    expect(all.find((i) => i.attrs.includes('aria-current="page"'))?.text).toBe('Watchlist')
+    expect(all.find((i) => i.attrs.includes('aria-current="page"'))?.text).toBe('Anomalies')
   })
 })
 

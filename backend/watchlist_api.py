@@ -31,16 +31,24 @@ def _base(request: Request) -> str:
 @router.get("")
 def list_watchlist(group: str | None = Query(None, description="eyes, known or artefact"),
                    kind: str | None = Query(None, description="mover or changer"),
+                   region: str | None = Query(None, max_length=80,
+                                              description="a searched patch's key, from /api/watchlist/regions"),
                    limit: int = Query(20, ge=1, le=200), offset: int = Query(0, ge=0),
                    x_voter: str | None = Header(None)) -> dict[str, Any]:
     """The candidates, in the machine's order, each with vote tallies and (for brightness changes) NEOWISE's reading."""
     try:
-        return watchlist.list_rows(group, kind, limit, offset, x_voter)
+        return watchlist.list_rows(group, kind, limit, offset, x_voter, region)
     except watchlist.WatchlistError as e:
         raise _refuse(e) from e
 
 
-# The export routes come before /{candidate_id}, which would otherwise take "export.csv" as an id.
+# The regions and export routes come before /{candidate_id}, which would otherwise take "regions" as an id.
+@router.get("/regions")
+def list_regions() -> dict[str, Any]:
+    """Every searched patch: centre, width, constellation, when it was last searched and how many rows it reported."""
+    return watchlist.regions()
+
+
 @router.get("/export.csv")
 def export_csv(request: Request) -> Response:
     text = watchlist.export_csv(_base(request))

@@ -97,7 +97,7 @@ export function stepsInfo(): string[] {
   return [
     'This page shows how one patch of sky changed between SPHEREx’s visits. The first three buttons are candidates our own search found: nobody has confirmed them yet. The next five are well-known objects, used as tests. The last three changed while SPHEREx watched them.',
     'The bar at the top lists every tool, one after another. Brightness, Colours and the next four open under the picture. Watch brings you back.',
-    'Practise, Vote and Three tools open pages of their own. Practise hides a made-up moving object in real photos. Vote shows what our computer search found. None of those finds is confirmed.',
+    'Practise, Observe anomalies and Three tools open pages of their own. Practise hides a made-up moving object in real photos. Observe anomalies shows what our searches saw change. None of those finds is confirmed.',
   ]
 }
 

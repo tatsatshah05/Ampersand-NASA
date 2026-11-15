@@ -219,7 +219,7 @@ describe('the other screens', () => {
     // Watch and the tools go back to this patch of sky in the viewer, opening the tool pressed.
     expect(href(html, 'Watch')).toBe('?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&ui=beginner')
     expect(href(html, 'Colours')).toBe('?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&ui=beginner&tool=spectrum')
-    expect(href(html, 'Vote')).toBe('?watchlist=1&ui=beginner')
+    expect(href(html, 'Observe anomalies')).toBe('?watchlist=1&ui=beginner')
     // The screen's own way back carries the level too.
     expect(html).toContain('href="?ra=269.446267&amp;dec=4.768222&amp;fov=0.1&amp;det=5&amp;mode=normal&amp;ui=beginner">Back to the real sky</a>')
     expect(html).toContain('<div class="level-dock">')
@@ -228,10 +228,10 @@ describe('the other screens', () => {
     expect(html.indexOf('class="sim-banner"')).toBeLessThan(html.indexOf('class="topbar screen-topbar"'))
   })
 
-  it('the voting screen has the same bar, with Vote current, in the level the address or this device gives', () => {
+  it('the Observe anomalies screen has the same bar, with it current, in the level the address or this device gives', () => {
     const expert = screenAt('?watchlist=1&ui=expert', 'watchlist')
     expect(labels(expert)).toEqual(FEATURES.map((f) => f.label.expert))
-    expect(screenBar(expert)).toMatch(/aria-current="page"[^>]*><span class="feature-text" data-text="Watchlist">/)
+    expect(screenBar(expert)).toMatch(/aria-current="page"[^>]*><span class="feature-text" data-text="Anomalies">/)
     expect(href(expert, 'Viewer')).toBe('?ui=expert')
     expect(href(expert, 'Planet X search')).toBe('?ui=expert&tool=distant')
     expect(href(expert, 'Training')).toMatch(/&train=\d+&level=easy&ui=expert$/)

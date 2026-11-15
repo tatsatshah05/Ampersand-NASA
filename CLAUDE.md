@@ -306,6 +306,12 @@ Endpoints (adjust if something better emerges, and keep this list current):
   true, `notice` and `planted` (the truth), is cached under `cache/distant/simulation-*` and
   never goes to the watchlist. A link is a candidate, never a detection. Details, numbers and
   wording: `docs/distant.md`. `distant.VERSION` is part of its cache key.
+- `GET /api/watchlist/regions` BUILT (`backend/watchlist.py`, `regions`). Every patch a blind search covered:
+  `key` (`<ra>_<dec>_<fov>`, 6, 6 and 4 decimals), `ra`, `dec`, `fov`, `area_sq_deg`, `constellation` (astropy's
+  `get_constellation`, with the IAU's spelling where astropy's table differs: Ophiuchus, Chamaeleon), `last_searched`,
+  `count` and `counts` per group; plus `total`, `counts`, `patches_searched`, `first_searched`, `last_searched`. A row seen
+  from two patches counts in both. `GET /api/watchlist?region=<key>` keeps only that patch's rows (`counts` and `total`
+  are then the patch's; ranks stay the whole list's); an unknown key answers 404.
 - Errors, every endpoint (`backend/app.py`, `_answer`): 422 when FastAPI's own checks
   refuse a parameter; 400 with the reason when the request asks for something impossible
   (`spherex.BadRequest`: a mode that does not exist, an epoch not observed, track=target
@@ -1072,3 +1078,20 @@ The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the refe
   allowed sentence for a candidate (`findAt`, within 5 arcsec) or one hedged line elsewhere. It never fires without
   a target, with a blended Gaia neighbour, with saturation at the place in a "not seen" visit, near the picture's
   edge, or when a "not seen" visit is too shallow for the brightness seen elsewhere to have been clear in it.
+
+Observe anomalies (2026-11-15; `components/WatchlistView.tsx`, `CandidateCards.tsx`, `RegionPicker.tsx`, `SweepGroups.tsx`, `anomalies.ts`)
+- The watchlist screen became "Observe anomalies" (bar: "Observe anomalies" in Beginner, "Anomalies" in Expert); its
+  address is still `?watchlist=1`. From the top: what an anomaly is (three sentences, both levels); "Not reported anywhere
+  we could find" with one card per candidate (the Viewer's own `/api/frames` pictures of the last visit "none" and the
+  brightest clear visit, cropped to the central 2 arcmin; the allowed sentence; "probably" (Beginner: `findsInfo.ts`
+  MAYBE_PLAIN); `reportSearch`, the second search's `what_can_be_said`, word for word; `status` in `finds.ts`, today
+  "Not confirmed. Not yet reported to astronomers.", the one field to change the day a report is filed; no votes);
+  "Choose a region" (everywhere, the plane sweep, each searched patch); then the chosen region's groups. Never "never
+  seen before". A changer within 25 arcsec of a candidate gets the patch search's own caution (`watchlist.ts`
+  `markNearFind`, the words of `search.ts` `nearFindLine`): B's patch had the steady star 10 arcsec away in "needs eyes".
+- Beginner shows the watchlist cards' headline, candidate line and verdict, and folds the rest (detectors, times the
+  noise, mJy) into "More detail (for scientists)"; the words themselves are unchanged.
+- The sweep's 14 survivors reach the screen as `frontend/public/anomalies/sweep.json`, written by
+  `scripts/export_anomalies.py` from `docs/sweep/summary.json`, `docs/sweep.md` (dates, area, visits, the known-eruption
+  and set-aside tables) and the tile records in `<cache>/sweep/sweep_work/tiles/` (only the known objects' catalogue rows;
+  a candidate's tile record holds the withdrawn position). `--check` (offline) fails when it is out of date with the docs.
