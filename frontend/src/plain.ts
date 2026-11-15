@@ -13,7 +13,8 @@ import type { Measured, SpectrumResponse, StarsInCircle } from './spectrum'
 import { isCandidate, noData, type SearchObject, type SearchResult } from './search'
 import type { DistantResult } from './distant'
 import { groupByBody, type SmallBodiesResponse, type SmallBodyCrossing } from './smallbodies'
-import { dateSpan, monthYearLong } from './wording'
+import type { Target } from './api'
+import { compassWord, dateSpan, monthYearLong } from './wording'
 
 /** The summary of the one closed fold that holds everything else of a panel. */
 export const SCIENCE_FOLD = 'More detail (for scientists)'
@@ -41,12 +42,23 @@ export function measureCautions(data: { measured?: Measured; stars_in_circle?: S
   if (circle?.known === false) out.push('We could not check for other stars this close, so their light may be mixed in.')
   else if (near.length === 1) out.push('Another star is so close that its light is mixed into these numbers.')
   else if (near.length > 1) out.push(`${near.length} other stars are so close that their light is mixed into these numbers.`)
-  // The lightcurve's own word for "no motion was given and no catalogued star is here".
-  if (data.measured?.what === 'fixed_position') out.push('No catalogued star is listed exactly here, so we measured the same spot in every photo.')
+  // The lightcurve's own word for "no motion was given, and no Gaia star (G < 17) is within 3
+  // arcseconds" (backend/photometry.py): only that was checked, so only that is said. Other
+  // catalogues may well list the object (the search panel says so when they do).
+  if (data.measured?.what === 'fixed_position') {
+    out.push(
+      /Gaia did not answer/.test(data.measured.description ?? '')
+        ? 'Gaia, the star map we follow stars with, did not answer, so we measured one fixed spot.'
+        : 'Gaia lists no star bright enough to follow within 3 arcseconds, so we measured one fixed spot.',
+    )
+  }
   const failed = data.failures?.length ?? 0
   if (failed > 0) out.push(`${count(failed, 'photo', 'photos')} could not be downloaded, so ${failed === 1 ? 'it is' : 'they are'} missing.`)
   return out
 }
+
+/** What "overexposed" means, said where the word first appears in a panel. */
+export const OVEREXPOSED_MEANS = 'Overexposed means too bright for the camera: that part turns flat white, like a phone photo of a lamp.'
 
 // ---- Brightness (the light curve) ----------------------------------------------------------
 
@@ -70,9 +82,9 @@ export function colourWords(bands: number[]): string {
 /** The caption of one small chart: "Band 5 of 6 (longest infrared colours)". */
 export const bandCaption = (band: number) => `Band ${band} of 6 (${groupOf(band)} infrared colours)`
 
-/** The words of a hovered dot. */
-export const brightnessTip = (value: number, err: number | null) =>
-  `${value.toFixed(2)}${err !== null ? ` ± ${err.toFixed(2)}` : ''} times its usual brightness`
+/** The words of a hovered dot: "1.02 times its usual brightness, give or take 0.03". */
+export const brightnessTip = (value: number, err: number | null, m: Measure = 'flux') =>
+  `${value.toFixed(2)} times ${m === 'wing' ? 'the usual light just around it' : 'its usual brightness'}${err !== null ? `, give or take ${err.toFixed(2)}` : ''}`
 
 /** One band's verdict, with the measure it was read from. */
 export type BandVerdict = DetectorSummary & { measure: Measure }
@@ -88,12 +100,14 @@ export function bandVerdicts(data: LightcurveResponse): BandVerdict[] {
   const flux = summarise(data, 'flux')
   const wing = summarise(data, 'wing')
   const bands = [...new Set([...flux, ...wing].map((s) => s.detector))].sort((a, b) => a - b)
-  const decided = (s: DetectorSummary | undefined) => s !== undefined && s.verdict !== 'too few bins'
-  return bands.flatMap((band) => {
+  const decided = (s: DetectorSummary) => s.verdict !== 'too few bins'
+  return bands.flatMap((band): BandVerdict[] => {
     const f = flux.find((s) => s.detector === band)
     const w = wing.find((s) => s.detector === band)
-    const pick = decided(f) ? { s: f!, m: 'flux' as const } : decided(w) ? { s: w!, m: 'wing' as const } : f ? { s: f, m: 'flux' as const } : w ? { s: w, m: 'wing' as const } : null
-    return pick ? [{ ...pick.s, measure: pick.m }] : []
+    if (f && decided(f)) return [{ ...f, measure: 'flux' as const }]
+    if (w && decided(w)) return [{ ...w, measure: 'wing' as const }]
+    if (f) return [{ ...f, measure: 'flux' as const }]
+    return w ? [{ ...w, measure: 'wing' as const }] : []
   })
 }
 
@@ -107,14 +121,34 @@ export function plainMeasure(data: LightcurveResponse): Measure {
   return decided.length > 0 && decided.every((v) => v.measure === 'wing') ? 'wing' : 'flux'
 }
 
-/** The month of a visit: the middle date of its photos that have a value to compare, "September 2025". */
-export function visitMonth(data: LightcurveResponse, epoch: number): string {
+/**
+ * The month of a visit: the middle date of its photos that have a value to compare, "September
+ * 2025"; only those of the given bands when they are named (a visit lasts weeks, and each band is
+ * photographed on its own days, so the month is that of the photos the sentence compares).
+ */
+export function visitMonth(data: LightcurveResponse, epoch: number, bands?: number[]): string {
   const valued = (p: { relative_flux: number | null; relative_wing: number | null }) => p.relative_flux !== null || p.relative_wing !== null
-  const dates = (data.bins ?? []).flatMap((b) => b.points.filter((p) => p.epoch === epoch && valued(p)).map((p) => p.date)).sort()
+  const dates = (data.bins ?? [])
+    .filter((b) => !bands || bands.includes(b.detector))
+    .flatMap((b) => b.points.filter((p) => p.epoch === epoch && valued(p)).map((p) => p.date))
+    .sort()
   return dates.length ? monthYearLong(dates[Math.floor((dates.length - 1) / 2)]) : `visit ${epoch}`
 }
 
-/** "about 1.6 times as bright", "about 20 per cent brighter", "about 4.5 to 13 times as bright". */
+/** "between June 2025 and June 2026", "between February and July 2026". */
+export function monthsBetween(from: string, to: string): string {
+  const [fm, fy] = from.split(' ')
+  const [, ty] = to.split(' ')
+  return fy && ty && fy === ty && from !== to ? `between ${fm} and ${to}` : `between ${from} and ${to}`
+}
+
+/**
+ * A brightening as a factor: "about 1.6 times as bright", "about 20 per cent brighter", "about
+ * 4.5 to 13 times as bright". From 20 times up no factor is given ("many times as bright", or
+ * "at least 14 times as bright"): it is measured against a level near the noise, where a small
+ * error in the earlier reading makes a large change in the factor.
+ */
+export const MANY_TIMES = 20
 export function brighterWords(ratios: number[]): string {
   const lo = Math.min(...ratios)
   const hi = Math.max(...ratios)
@@ -122,21 +156,36 @@ export function brighterWords(ratios: number[]): string {
     const [a, b] = [Math.round((lo - 1) * 100), Math.round((hi - 1) * 100)]
     return a === b ? `about ${a} per cent brighter` : `about ${a} to ${b} per cent brighter`
   }
+  if (lo >= MANY_TIMES) return 'many times as bright'
+  if (hi >= MANY_TIMES) return lo < 1.3 ? 'up to many times as bright' : `at least ${factor(lo)} times as bright`
   if (factor(lo) === factor(hi)) return `about ${factor(hi)} times as bright`
   return lo < 1.3 ? `up to about ${factor(hi)} times as bright` : `about ${factor(lo)} to ${factor(hi)} times as bright`
 }
 
-const FRACTIONS = ['', '', 'half', 'a third', 'a quarter', 'a fifth', 'a sixth', 'a seventh', 'an eighth', 'a ninth', 'a tenth']
+/** The simple fractions a fading is said in, nearest first. */
+const FRACTIONS: [number, string][] = [
+  [2 / 3, 'two thirds'],
+  [1 / 2, 'half'],
+  [1 / 3, 'a third'],
+  [1 / 4, 'a quarter'],
+  [1 / 5, 'a fifth'],
+  [1 / 6, 'a sixth'],
+  [1 / 8, 'an eighth'],
+  [1 / 10, 'a tenth'],
+]
+const LESS_THAN_A_TENTH = 'less than a tenth'
 
-/** A ratio below 1 as a fraction of the earlier brightness, or null when "per cent fainter" says it better. */
-function fraction(r: number): string | null {
+/** A ratio below 1 as the nearest simple fraction of the earlier brightness, or null when "per cent fainter" says it better. */
+export function fraction(r: number): string | null {
   if (r > 0.72) return null
-  if (r > 0.6) return 'two thirds'
-  const n = Math.round(1 / r)
-  return FRACTIONS[n] ?? 'less than a tenth'
+  if (r < 0.075) return LESS_THAN_A_TENTH
+  return FRACTIONS.reduce((a, b) => (Math.abs(b[0] - r) < Math.abs(a[0] - r) ? b : a))[1]
 }
 
-/** "about half as bright", "about 10 per cent fainter", "about a third to half as bright". */
+/** "about" before a fraction, never before "less than a tenth". */
+const aboutFraction = (f: string) => (f === LESS_THAN_A_TENTH ? f : `about ${f}`)
+
+/** "about half as bright", "about 10 per cent fainter", "about a third to half as bright", "less than a tenth to about a quarter as bright". */
 export function fainterWords(ratios: number[]): string {
   const lo = Math.min(...ratios)
   const hi = Math.max(...ratios)
@@ -145,8 +194,9 @@ export function fainterWords(ratios: number[]): string {
     const [a, b] = [Math.round((1 - hi) * 100), Math.round((1 - lo) * 100)]
     return a === b ? `about ${a} per cent fainter` : `about ${a} to ${b} per cent fainter`
   }
-  if (fl === fh) return `about ${fl} as bright`
-  return fh === null ? `down to about ${fl} as bright` : `about ${fl} to ${fh} as bright`
+  if (fl === fh) return `${aboutFraction(fl as string)} as bright`
+  if (fh === null) return `down to ${aboutFraction(fl as string)} as bright`
+  return `${aboutFraction(fl as string)} to ${fl === LESS_THAN_A_TENTH ? `about ${fh}` : fh} as bright`
 }
 
 /** Whether most clean measurements are under 3 times their own error: the page's "not seen" bar (guide.ts). */
@@ -156,48 +206,104 @@ function mostlyTooFaint(data: LightcurveResponse): boolean {
 }
 
 /**
+ * How many photos show the object at all: every photo of the answer but those where it is off
+ * the edge of the picture. The colour tool counts the same photos, so both panels give one total.
+ */
+export function photosOfIt(data: { n_exposures?: number; status_counts?: Record<string, number> }): number {
+  return Math.max(0, (data.n_exposures ?? 0) - (data.status_counts?.off_image ?? 0))
+}
+
+/** Bands that changed the same way between the same two visits, read in the same measure. */
+interface ChangeGroup {
+  verdict: 'brighter' | 'fainter'
+  measure: Measure
+  firstEpoch: number
+  lastEpoch: number
+  bands: BandVerdict[]
+}
+
+function changeGroups(changed: BandVerdict[]): ChangeGroup[] {
+  const groups: ChangeGroup[] = []
+  for (const v of changed) {
+    const verdict = v.verdict === 'brighter' ? 'brighter' : 'fainter'
+    const g = groups.find((x) => x.verdict === verdict && x.measure === v.measure && x.firstEpoch === v.firstEpoch && x.lastEpoch === v.lastEpoch)
+    if (g) g.bands.push(v)
+    else groups.push({ verdict, measure: v.measure, firstEpoch: v.firstEpoch, lastEpoch: v.lastEpoch, bands: [v] })
+  }
+  return groups.sort((a, b) => a.firstEpoch - b.firstEpoch || a.lastEpoch - b.lastEpoch)
+}
+
+/** "bands 2, 5 and 6", "band 1". */
+const bandWords = (bands: number[]) => (bands.length === 1 ? `band ${bands[0]}` : `bands ${listAnd(bands.map(String))}`)
+
+/**
  * What the brightness tool shows for this object, in a few short sentences.
  *
  * The rule: only the tool's own same-colour comparison is used (`bandVerdicts`), never the
  * brightness of each visit's picture, which samples different colours in every visit. When a
  * band got brighter or fainter by that rule: by about how much (the median change of its
- * wavelength bins, as Expert's table gives it), between which months (the first and last visit
- * compared), and in which of SPHEREx's colours. When the rule found no change: "no clear change",
- * the rule's own verdict (Expert: "does not show a clear change"); a change under its 5 per cent
- * bar, or one most bins do not agree on, is not called a change, so it is not said to be absent
- * either. When it could decide nothing: why (overexposed, too faint, one visit only, or too few
- * photos of the same colour in two visits).
+ * wavelength bins, as Expert's table gives it), between which months (the two visits that band
+ * compared), and in which of SPHEREx's colours. Bands that compared different visits, or changed
+ * in opposite directions, are said in sentences of their own, each with its own months; when one
+ * colour group would then be named twice, the bands are named by number instead. When the rule
+ * found no change: "no clear change", the rule's own verdict (Expert: "does not show a clear
+ * change"); a change under its 5 per cent bar, or one most bins do not agree on, is not called a
+ * change, so it is not said to be absent either. When it could decide nothing: why (overexposed,
+ * too faint, one visit only, or too few photos of the same colour in two visits).
  */
 export function brightnessResult(data: LightcurveResponse): string[] {
-  const total = data.n_exposures ?? 0
+  const total = photosOfIt(data)
   const overexposed = data.status_counts?.saturated ?? 0
   const out: string[] = []
-  // "Most photos overexposed" is said first, whatever follows.
+  // "Most photos overexposed" is said first, whatever follows, with what the word means.
   const tooBright = total > 0 && overexposed > total / 2
-  if (tooBright) out.push(`It is too bright to measure directly: ${overexposed} of its ${total} photos are overexposed.`)
+  if (tooBright) {
+    out.push(
+      overexposed === total
+        ? `All ${total} of its photos are overexposed: it is too bright to measure directly.`
+        : `${overexposed} of its ${total} photos are overexposed: it is too bright there to measure directly.`,
+    )
+    out.push(OVEREXPOSED_MEANS)
+  }
 
   const bands = bandVerdicts(data)
   const decided = bands.filter((v) => v.verdict !== 'too few bins')
   const changed = decided.filter((v) => v.verdict === 'brighter' || v.verdict === 'fainter')
 
   if (changed.length > 0) {
-    // The months of the comparison: shared by every changed band, else those of the strongest change.
-    const strongest = changed.reduce((a, b) => (Math.abs(Math.log(1 + b.medianChange)) > Math.abs(Math.log(1 + a.medianChange)) ? b : a))
-    const same = changed.every((v) => v.firstEpoch === strongest.firstEpoch && v.lastEpoch === strongest.lastEpoch)
-    const from = visitMonth(data, strongest.firstEpoch)
-    const to = visitMonth(data, strongest.lastEpoch)
-    const up = changed.filter((v) => v.verdict === 'brighter')
-    const down = changed.filter((v) => v.verdict === 'fainter')
-    const how = up.length && down.length ? 'It changed' : up.length ? 'It got brighter' : 'It got fainter'
-    out.push(same ? `${how} between ${from} and ${to}.` : `${how} between visits, most between ${from} and ${to}.`)
-    for (const [group, words] of [
-      [up, brighterWords],
-      [down, fainterWords],
-    ] as const) {
-      if (!group.length) continue
-      const ratios = group.map((v) => 1 + v.medianChange)
-      const what = group.every((v) => v.measure === 'wing') ? 'the light just around it' : 'it'
-      out.push(`In ${colourWords(group.map((v) => v.detector))} ${what} became ${words(ratios)}.`)
+    const groups = changeGroups(changed)
+    const up = groups.some((g) => g.verdict === 'brighter')
+    const down = groups.some((g) => g.verdict === 'fainter')
+    const how = up && down ? 'It changed' : up ? 'It got brighter' : 'It got fainter'
+    const words = (g: ChangeGroup) => (g.verdict === 'brighter' ? brighterWords : fainterWords)(g.bands.map((v) => 1 + v.medianChange))
+    const what = (g: ChangeGroup) => (g.measure === 'wing' ? 'the light just around it' : 'it')
+    const months = (g: ChangeGroup) => {
+      const which = g.bands.map((v) => v.detector)
+      return monthsBetween(visitMonth(data, g.firstEpoch, which), visitMonth(data, g.lastEpoch, which))
+    }
+    const sameVisits = groups.every((g) => g.firstEpoch === groups[0].firstEpoch && g.lastEpoch === groups[0].lastEpoch)
+    if (sameVisits) {
+      // One pair of visits for all: said once, then each change in its colours. The months are
+      // those of every band compared, as before.
+      const all = changed.map((v) => v.detector)
+      out.push(`${how} ${monthsBetween(visitMonth(data, groups[0].firstEpoch, all), visitMonth(data, groups[0].lastEpoch, all))}.`)
+      const named = groups.map((g) => colourWords(g.bands.map((v) => v.detector)))
+      groups.forEach((g, i) => {
+        const where = named.filter((n) => n === named[i]).length > 1 ? bandWords(g.bands.map((v) => v.detector)) : named[i]
+        out.push(`In ${where} ${what(g)} became ${words(g)}.`)
+      })
+    } else {
+      // Different visits compared: each change with its own months. A colour group named in two
+      // of these sentences is named by its bands instead, so no group is said both to brighten and fade.
+      const groupsOf = (g: ChangeGroup) => GROUPS.filter((c) => g.bands.some((v) => groupOf(v.detector) === c))
+      const shared = (g: ChangeGroup) => groups.some((o) => o !== g && groupsOf(o).some((c) => groupsOf(g).includes(c)))
+      out.push(`${how} between its visits.`)
+      for (const g of groups) {
+        const which = g.bands.map((v) => v.detector)
+        const where = shared(g) ? bandWords(which) : colourWords(which)
+        out.push(`${capital(months(g))}, ${what(g)} got ${g.verdict} in ${where}.`)
+        out.push(`${capital(what(g))} became ${words(g)} there.`)
+      }
     }
     if (changed.some((v) => v.measure === 'wing')) out.push('Where it is overexposed, we measured the light in a ring just around it.')
     return out
@@ -206,7 +312,9 @@ export function brightnessResult(data: LightcurveResponse): string[] {
     const ring = decided.every((v) => v.measure === 'wing')
     out.push(
       ring
-        ? 'So we measured the light just around it, which showed no clear change between its visits.'
+        ? tooBright
+          ? 'So we measured the light just around it, which showed no clear change between its visits.'
+          : 'We measured the light just around it, which showed no clear change between its visits.'
         : 'It showed no clear change between its visits.',
     )
     return out
@@ -236,7 +344,7 @@ export const SPECTRUM_SPOT_ASK = 'A new spot has to be read from NASA’s archiv
 export const SPECTRUM_SPOT_BUTTON = 'Measure this spot'
 export const SPECTRUM_ERROR = 'Its colours could not be measured:'
 export const SPECTRUM_AXIS_X = 'Infrared colour (micrometres)'
-export const SPECTRUM_AXIS_Y = 'Brightness'
+export const SPECTRUM_AXIS_Y = 'Higher is brighter'
 /** The two rails over the chart (each label must fit the chart's left margin, as "too bright" does). */
 export const SPECTRUM_RAILS: Record<string, string> = { saturated: 'too bright', 'no value': 'no reading' }
 export const spectrumVisit = (epoch: number, start: string, end: string) => `Visit ${epoch}: ${dateSpan(start, end)}`
@@ -257,7 +365,9 @@ export function spectrumEmpty(data: SpectrumResponse, allHidden: boolean): strin
  * What the colour chart shows for this object. The rule: the tool names no dips or bumps in a
  * spectrum, so neither does this. It says only what the tool states: how many of the photos
  * could be measured, how many were overexposed (too bright for SPHEREx), and how many had a bad
- * pixel or another problem, from the answer's own counts.
+ * pixel or another problem, from the answer's own counts. When most were overexposed, where on
+ * the chart the few measured ones are; when most measured ones are under 3 times their own error
+ * (the page's "not seen" bar), that it is too faint to see in most of them.
  */
 export function spectrumResult(data: SpectrumResponse): string[] {
   const n = data.n_exposures ?? 0
@@ -266,12 +376,33 @@ export function spectrumResult(data: SpectrumResponse): string[] {
   const sat = counts.saturated ?? 0
   const rest = n - ok - sat
   if (n === 0) return ['SPHEREx has no photo of this spot yet.']
-  if (ok === n) return [`All ${n} of its photos could be measured.`]
-  if (ok === 0) return [sat === n ? `It is too bright: all ${n} of its photos are overexposed, so none could be measured.` : `None of its ${n} photos gave a clean measurement.`]
+  if (ok === n) return [`All ${n} of its photos could be measured.`, ...faintNote(data)]
+  if (ok === 0) {
+    return sat === n
+      ? [`It is too bright: all ${n} of its photos are overexposed, so none could be measured.`, OVEREXPOSED_MEANS]
+      : [`None of its ${n} photos gave a clean measurement.`]
+  }
+  // Nearly all overexposed (three quarters or more): said that way, with where the few measured ones are.
+  if (sat >= 0.75 * n) {
+    const out = [`It is so bright that it dazzles SPHEREx's camera: ${sat} of its ${n} photos are overexposed.`, OVEREXPOSED_MEANS]
+    const measured = (data.points ?? []).filter((p) => p.status === 'ok' && p.wavelength_um !== null).map((p) => p.wavelength_um as number)
+    const right = measured.length > 0 && Math.min(...measured) >= 3
+    out.push(`Only ${ok} could be measured${right ? ': the dots on the right, in its longest colours' : ''}.`)
+    if (rest > 0) out.push(`${rest} had a bad pixel or another problem.`)
+    return out
+  }
   const out = [`${ok} of its ${n} photos could be measured.`]
   if (sat > 0) out.push(`${sat} ${sat === 1 ? 'was' : 'were'} overexposed, because it is too bright there.`)
   if (rest > 0) out.push(`${rest} had a bad pixel or another problem.`)
-  return out
+  if (sat > 0) out.push(OVEREXPOSED_MEANS)
+  return [...out, ...faintNote(data)]
+}
+
+/** "In most of them it is too faint to see.": most clean readings under 3 times their own error. */
+function faintNote(data: SpectrumResponse): string[] {
+  const ok = (data.points ?? []).filter((p) => p.status === 'ok' && p.flux_mjy !== null && p.flux_err_mjy)
+  const faint = ok.filter((p) => (p.flux_mjy as number) < 3 * (p.flux_err_mjy as number)).length
+  return ok.length > 0 && faint > ok.length / 2 ? ['In most of them it is too faint to see.'] : []
 }
 
 // ---- Find changes (the blind search of a patch) --------------------------------------------
@@ -281,7 +412,7 @@ export const SEARCH_INTRO =
   'The computer compares every point of light in this patch between visits. Most things it finds are already known, or are false alarms.'
 export const SEARCH_WAITING = 'Searching this patch. It takes under a minute if its photos are here already, or a few minutes if not.'
 export const SEARCH_FAILED = 'The search could not finish:'
-export const SEARCH_LOOK = 'Look at it'
+export const SEARCH_LOOK = 'Show it on the picture'
 
 const MOVED = (o: SearchObject) => o.kind === 'mover'
 const KNOWN = ['known_mover', 'known_variable']
@@ -298,35 +429,66 @@ export function searchResult(result: SearchResult): string[] {
   if (noData(s)) return ['SPHEREx has no usable photos of this patch, so nothing could be searched.']
   const objects = result.objects
   const moved = objects.filter(MOVED).length
-  const changed = objects.length - moved
+  // A change with warning signs (the tool's "caution") is said as one that may have happened.
+  const changedSure = objects.filter((o) => !MOVED(o) && o.verdict !== 'caution').length
+  const changedUnsure = objects.filter((o) => !MOVED(o) && o.verdict === 'caution').length
   const known = objects.filter((o) => KNOWN.includes(o.catalogue_status.category)).length
   const candidates = objects.filter(isCandidate)
   const out = [`It tested ${count(s.sources_tested, 'point', 'points')} of light in this patch.`]
   if (!objects.length) out.push('Nothing moved or changed enough to pass its tests.')
   else {
     const m = moved === 0 ? 'Nothing moved' : `${count(moved, 'thing', 'things')} moved`
-    const c = changed === 0 ? 'nothing changed brightness' : `${count(changed, 'thing', 'things')} changed brightness`
-    out.push(`${m}, and ${c}.`)
+    if (changedUnsure === 0) out.push(`${m}, and ${changedSure === 0 ? 'nothing changed brightness' : `${count(changedSure, 'thing', 'things')} changed brightness`}.`)
+    else {
+      out.push(`${m}.`)
+      out.push(
+        changedSure === 0
+          ? `${count(changedUnsure, 'thing', 'things')} may have changed brightness, but ${changedUnsure === 1 ? 'it has' : 'they have'} warning signs.`
+          : `${count(changedSure, 'thing', 'things')} changed brightness, and ${changedUnsure} more may have: ${changedUnsure === 1 ? 'it has' : 'they have'} warning signs.`,
+      )
+    }
   }
   if (known > 0) out.push(known === objects.length ? (known === 1 ? 'It is already known in star catalogues.' : 'All of them are already known in star catalogues.') : `${known} ${known === 1 ? 'is' : 'are'} already known in star catalogues.`)
   if (candidates.length > 0) {
     const how = candidates.every(MOVED) ? 'moving' : candidates.some(MOVED) ? 'moving or changing' : 'changing'
     const n = candidates.length
     out.push(`${n} ${n === 1 ? 'is' : 'are'} not listed as ${how} in any catalogue we asked, so ${n === 1 ? 'it is' : 'each is'} only a candidate.`)
+    out.push(`Scientists may already have written about ${n === 1 ? 'it' : 'them'}: we did not search their papers.`)
     out.push(`Another telescope, or SPHEREx’s next visits, would be needed to confirm ${n === 1 ? 'it' : 'them'}.`)
   }
   const unchecked = objects.length - known - candidates.length
   if (unchecked > 0) out.push(`${unchecked} could not be checked against the catalogues.`)
-  if (result.rejected.length > 0) out.push(`${count(result.rejected.length, 'more was', 'more were')} set aside as false alarms.`)
+  if (result.rejected.length > 0) out.push(result.rejected.length === 1 ? '1 more was set aside as a false alarm.' : `${count(result.rejected.length, 'more was', 'more were')} set aside as false alarms.`)
   if (Object.keys(s.catalogues_failed).length > 0) out.push('Some catalogues did not answer, so this check is not complete.')
   return out
 }
 
+/** Each warning sign of the search (search.ts FLAG_WORDS) in a short plain sentence. */
+const PLAIN_FLAGS: Record<string, string> = {
+  saturated: 'It is so bright that it overflows the camera, so its place is less exact.',
+  halo: 'It sits in the glow of a much brighter star, which can fake a change.',
+  blended: 'Another star right beside it may mix its light in.',
+  wide: 'It looks wider than a star: it may be two things, or a galaxy.',
+  edge: 'It is near the edge of the picture, where measuring is harder.',
+  few_exposures: 'One of its visits has only a few photos.',
+  two_visits: 'Only two visits could be used, which is too few to be sure.',
+  follows_roll: 'The change may be light from a bright star nearby.',
+  one_roll_only: 'It may be a reflection inside the telescope.',
+  uncalibrated: 'The computer could not check how exact this measurement is.',
+}
+
+/** The warning signs of one object, in plain words; one sentence for any sign this page does not know. */
+export function flagWords(flags: string[]): string[] {
+  const known = flags.filter((f) => f in PLAIN_FLAGS).map((f) => PLAIN_FLAGS[f])
+  return flags.some((f) => !(f in PLAIN_FLAGS)) ? [...known, 'The computer has another reason to be less sure.'] : known
+}
+
 /** One numbered line per object, matching the numbered rings on the picture. */
 export function searchItem(o: SearchObject): string {
-  const what = MOVED(o) ? 'Moved' : 'Changed brightness'
+  const what = MOVED(o) ? 'Moved' : o.verdict === 'caution' ? 'May have changed brightness' : 'Changed brightness'
   const known = KNOWN.includes(o.catalogue_status.category) ? 'Already known' : isCandidate(o) ? 'Only a candidate' : 'Not checked against catalogues'
-  return `${what}. ${known}.${o.verdict === 'caution' ? ' Has warning signs, so take care.' : ''}`
+  const signs = o.verdict === 'caution' ? flagWords(o.flags) : []
+  return [`${what}.`, `${known}.`, ...(o.verdict === 'caution' && !signs.length ? ['The computer is less sure about this one.'] : signs)].join(' ')
 }
 
 // ---- Far-off planet (the distant-world search) ---------------------------------------------
@@ -349,10 +511,7 @@ export const WISE_0855_MJY = 0.45
 /** "about half as bright as WISE 0855", "about as bright as WISE 0855", "about 3 times as bright as WISE 0855". */
 export function faintWords(mjy: number): string {
   const q = mjy / WISE_0855_MJY
-  if (q <= 0.6) {
-    const f = FRACTIONS[Math.round(1 / q)] ?? 'less than a tenth'
-    return `about ${f} as bright as WISE 0855`
-  }
+  if (q <= 0.6) return `${aboutFraction(fraction(q) ?? 'half')} as bright as WISE 0855`
   if (q < 1.5) return 'about as bright as WISE 0855'
   if (q < 2.5) return 'about twice as bright as WISE 0855'
   return `about ${Math.round(q)} times as bright as WISE 0855`
@@ -373,14 +532,20 @@ export function shareWords(share: number): string {
   return SHARES.reduce((a, b) => (Math.abs(b[0] - share) < Math.abs(a[0] - share) ? b : a))[1]
 }
 
+/** "twice", "3 times": how many times as wide one patch is as another. */
+const timesWide = (k: number) => (Math.abs(k - 2) < 0.05 ? 'twice' : `${factor(k)} times`)
+
 /**
  * What the distant-world search found here. The rule: whether anything was found (the answer's
- * own status), how faint it could reach (its best limit: the row of its table with the faintest
- * brightness, said against WISE 0855, and the share of the picture that same row covered, so the
- * two numbers always belong together), and always that finding nothing here rules nothing out
- * elsewhere. A link is a candidate and needs another telescope.
+ * own status), how far away it can see one at all (the nearest distance of its table: a nearer
+ * planet jumps further than the patch is wide, so it is not searched for), how faint it could
+ * reach (its best limit: the row of its table with the faintest brightness, said against WISE
+ * 0855, and the share of the patch that same row covered, so the two numbers always belong
+ * together), and always that finding nothing here rules nothing out elsewhere. The share is of
+ * the patch searched, which is wider than the picture when the picture is small (`viewFov`). A
+ * link is a candidate and needs another telescope.
  */
-export function distantResult(r: DistantResult): string[] {
+export function distantResult(r: DistantResult, viewFov?: number): string[] {
   const out: string[] = []
   if (r.status === 'cannot_search') out.push('There are too few visits of this patch to search it yet.')
   else if (r.candidates.length > 0) {
@@ -391,8 +556,13 @@ export function distantResult(r: DistantResult): string[] {
   if (r.limit.length > 0 && r.status !== 'cannot_search') {
     // The faintest row (of equal ones, the one covering most of the picture): its limit and its share.
     const best = r.limit.reduce((a, b) => (b.faintest_mjy < a.faintest_mjy || (b.faintest_mjy === a.faintest_mjy && b.share_of_picture > a.share_of_picture) ? b : a))
+    const au = r.limit.map((row) => row.distance_au)
+    out.push(`It can only catch one between ${Math.min(...au).toLocaleString('en-US')} and ${Math.max(...au).toLocaleString('en-US')} times as far from the Sun as Earth.`)
+    out.push('A nearer planet would jump right out of the patch between visits.')
     out.push(`The faintest planet it could catch is ${faintWords(best.faintest_mjy)}.`)
-    out.push(`At best it could catch one that faint in about ${shareWords(best.share_of_picture)} of this picture.`)
+    const wider = viewFov !== undefined && r.fov > viewFov * 1.05
+    out.push(`At best it could catch one that faint in about ${shareWords(best.share_of_picture)} of the patch it searched.`)
+    if (wider && viewFov) out.push(`That patch is ${timesWide(r.fov / viewFov)} as wide as the picture.`)
   }
   if (r.failures.length > 0) out.push('Some parts of the search failed, so this answer may be incomplete.')
   if (!(r.catalogue.asked && r.catalogue.answered)) out.push('The list of known infrared objects did not answer, so known ones were not ruled out.')
@@ -445,7 +615,13 @@ export function smallBodiesResult(data: SmallBodiesResponse): string[] {
   const groups = groupByBody(data.bodies)
   const out: string[] = []
   if (data.message) out.push('This patch could not be checked for asteroids and comets.')
-  else if (!groups.length) out.push(`No known asteroid or comet was in this patch during any of the ${data.n_exposures_checked} photos we checked.`)
+  // When NASA did not answer every question, only the photos it answered for are spoken of.
+  else if (!groups.length)
+    out.push(
+      data.problems.length > 0
+        ? `No known asteroid or comet was in this patch in the photos NASA answered for.`
+        : `No known asteroid or comet was in this patch during any of the ${data.n_exposures_checked} photos we checked.`,
+    )
   else {
     const asteroids = groups.filter((g) => g[0]?.kind !== 'comet').length
     const comets = groups.length - asteroids
@@ -503,4 +679,68 @@ export function contextResult(surveyId: string, fov: number): string[] {
   const moon = fov / MOON_DEGREES
   const size = moon > 1.15 ? `about ${factor(moon)} times the width of the full Moon` : moon >= 0.9 ? 'about the width of the full Moon' : `about ${shareWords(moon)} of the width of the full Moon`
   return [...(survey ? [survey.sentence] : []), `The orange square is ${fov} degrees across, ${size}.`]
+}
+
+/**
+ * The middle year of each survey's pictures, for the objects that move: AllWISE combines WISE's
+ * photos of January 2010 to February 2011, and 2MASS observed from 1997 to 2001 (SURVEY_WORDS).
+ * DSS has none: its plates span decades.
+ */
+export const SURVEY_YEAR: Record<string, number> = { wise: 2010.5, '2mass': 1999 }
+/** SPHEREx's own visits, about when the page's positions are given for (resolve.ts: "moved to 2026"). */
+const SPHEREX_YEAR = 2026
+
+/** Where a target's catalogue motion puts it in `year`, in arcseconds east and north of `centre`. */
+export function placeIn(target: Pick<Target, 'ra' | 'dec' | 'pmra' | 'pmdec' | 'ref_epoch'>, year: number, centre: { ra: number; dec: number }) {
+  const dt = year - target.ref_epoch
+  const dec = target.dec + (((target.pmdec ?? 0) / 1000) * dt) / 3600
+  const ra = target.ra + (((target.pmra ?? 0) / 1000) * dt) / 3600 / Math.cos((target.dec * Math.PI) / 180)
+  const dRa = ((ra - centre.ra + 540) % 360) - 180
+  const east = dRa * Math.cos((centre.dec * Math.PI) / 180) * 3600
+  const north = (dec - centre.dec) * 3600
+  return { east, north, total: Math.hypot(east, north) }
+}
+
+/** An offset this large is plainly seen in the older picture (WISE's sharpness is about 6 arcseconds). */
+const SEEN_APART_ARCSEC = 30
+
+/**
+ * Then and now, for an object that moves: where its catalogue motion puts it in the older picture
+ * on screen, against the middle of the orange square (the centre of the view), and that it has
+ * moved that far since. Said only when the motion is known, the survey has one year, and the
+ * place differs by more than the older picture can blur; empty otherwise. Every number is the
+ * catalogue motion's, from the answer's own target.
+ */
+export function thenAndNow(
+  surveyId: string,
+  target: Target | null,
+  centre: { ra: number; dec: number },
+  name: string | null,
+  level: 'beginner' | 'expert',
+): string[] {
+  const year = SURVEY_YEAR[surveyId]
+  if (year === undefined || !target || target.pmra == null || target.pmdec == null) return []
+  const then = placeIn(target, year, centre)
+  const now = placeIn(target, SPHEREX_YEAR, centre)
+  const moved = Math.hypot(then.east - now.east, then.north - now.north)
+  if (then.total < SEEN_APART_ARCSEC || moved < SEEN_APART_ARCSEC) return []
+  const arcmin = (then.total / 60).toFixed(1)
+  const nearMiddle = now.total < 15
+  if (level === 'expert') {
+    const pa = Math.round(((((Math.atan2(then.east, then.north) * 180) / Math.PI) % 360) + 360) % 360) % 360
+    const pm = (Math.hypot(target.pmra, target.pmdec) / 1000).toFixed(2)
+    return [
+      `At ~${year} the catalogue motion (${pm}″/yr) puts the target ${arcmin}′ from the field centre at PA ${pa}°${nearMiddle ? `; at ${SPHEREX_YEAR}.0 it is at the centre` : ''}.`,
+    ]
+  }
+  const who = name ?? 'the object'
+  // The full Moon is about 31 arcminutes wide.
+  const share = moved / 60 / 31
+  const moon = share < 0.075 ? 'less than a tenth' : `about ${shareWords(share)}`
+  return [
+    // Where its motion puts it, not whether it shows: a faint one may not be seen in an older survey.
+    `When this picture was taken, about ${Math.floor(year)}, ${who} was about ${arcmin} arcminutes ${compassWord(then)} of the square's middle.`,
+    `It has moved ${nearMiddle ? 'that far' : `about ${(moved / 60).toFixed(1)} arcminutes`} since then: ${moon} of the full Moon's width.`,
+    ...(nearMiddle ? ['SPHEREx sees it in the middle of the square.'] : []),
+  ]
 }

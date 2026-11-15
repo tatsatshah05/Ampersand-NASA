@@ -14,14 +14,12 @@
 // bottom right (LevelDock).
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  addressOf,
   DEFAULT_SELECTION,
   readAddress,
   readStoredLevel,
   storeLevel,
   toFramesQuery,
   toolFrom,
-  TOOLS_ADDRESS,
   withTarget,
   withUi,
   writeAddress,
@@ -51,7 +49,7 @@ import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
 import { TrainingView } from './components/TrainingView'
 import { ToolsView } from './components/ToolsView'
-import { isToolsAddress } from './tools'
+import { isToolsAddress, toolsAddress } from './tools'
 import { Transport, VisitStrip, type Visit } from './components/Transport'
 import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
@@ -69,6 +67,7 @@ import { newSeed, trainingAddress } from './training'
 import { useFrames } from './useFrames'
 import { usePlayer, useResting } from './usePlayer'
 import {
+  expertVerdict,
   failuresSentence,
   flagsNote,
   frameLabel,
@@ -83,6 +82,7 @@ import {
 } from './wording'
 import { startBox, type Point, type ZoomBox } from './zoom'
 import './App.css'
+import './inspector.css'
 
 /** The circle /api/spectrum adds up: 2.5 SPHEREx pixels in radius (backend/photometry.py). */
 const SPECTRUM_APERTURE_ARCSEC = 2.5 * NATIVE_PIXEL_ARCSEC
@@ -131,6 +131,8 @@ export function Viewer() {
   // The tool the address asks for (tool=<key>), opened once the first pictures are ready.
   const [addressedTool] = useState(() => toolFrom(window.location.search))
   const pendingTool = useRef<ToolKey | null>(addressedTool)
+  // Counts the browser's Back and Forward, so the tool of the entry returned to is opened even when its view is already on screen.
+  const [popped, setPopped] = useState(0)
   // The practice round the bar's Practise link starts: chosen once, so the link holds still.
   const [practiceSeed] = useState(newSeed)
   // Issue #10: the Gaia stars of the view, placed on every visit's frame, and the view they belong to.
@@ -162,11 +164,9 @@ export function Viewer() {
   const [spokenFor, setSpokenFor] = useState<string | null>(null)
   const dataKey = data?.key ?? null
 
-  // Beginner's step guide: what the visitor has actually done. The player starts playing by
-  // itself, so only a press of theirs counts as flipping through the visits.
+  // Beginner's step guide: what the visitor has actually done. Every view opens still
+  // (usePlayer.ts), so the guide says to press Play or Blink, and only a press counts.
   const [progress, setProgress] = useState<Progress>(NO_PROGRESS)
-  // The player opens playing, so the visits flip by themselves; with reduced motion asked for it opens still and the guide says to press Play.
-  const [startedStill] = useState(prefersStillness)
   const mark = useCallback((what: keyof Progress) => setProgress((was) => (was[what] ? was : { ...was, [what]: true })), [])
   const { pause: pausePlayer, togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
   const togglePlay = useCallback(() => {
@@ -217,6 +217,12 @@ export function Viewer() {
     if (!sameTarget) {
       setSpectrum(null)
       setBrightness(null)
+    }
+    // The two searches belong to the patch they searched: its place and its size. A search of
+    // another patch must never be shown under this one (the bar and the address then fall back to Watch).
+    if (!sameTarget || next.fov !== was.fov) {
+      setSearch(null)
+      setSearchFound([])
       setDistant(null)
     }
     setSelection(next)
@@ -254,9 +260,17 @@ export function Viewer() {
     writeAddress(fromAddress.selection, 'replace')
     const onPop = () => {
       const read = readAddress(window.location.search, readStoredLevel())
+      // Every panel closes, and the tool this entry's address names opens again once its pictures are ready.
       setSpectrum(null)
       setBrightness(null)
+      setSearch(null)
+      setSearchFound([])
       setDistant(null)
+      setShowSmallBodies(false)
+      setShowContext(false)
+      setFocusTool(null)
+      pendingTool.current = toolFrom(window.location.search)
+      setPopped((n) => n + 1)
       setSelection(read.selection)
       setNotes(read.notes)
     }
@@ -378,13 +392,22 @@ export function Viewer() {
   const bench = useRef<HTMLElement>(null)
   const scrollBehavior = (): ScrollBehavior => (prefersStillness() ? 'auto' : 'smooth')
   // The panel just opened, which the page then scrolls to. `n` makes pressing the same button again scroll again.
-  const [opened, setOpened] = useState<{ tool: ToolKey; n: number } | null>(null)
-  const openTool = (tool: ToolKey) => {
-    setOpened((was) => ({ tool, n: (was?.n ?? 0) + 1 }))
+  // Opened from the keyboard, the focus goes to the panel's title, so the next Tab reaches its controls
+  // (a title is not a control, so the space bar still plays).
+  const [opened, setOpened] = useState<{ tool: ToolKey; n: number; focus: boolean } | null>(null)
+  const openTool = (tool: ToolKey, focus = false) => {
+    setOpened((was) => ({ tool, n: (was?.n ?? 0) + 1, focus }))
     setFocusTool(tool)
   }
   useEffect(() => {
-    if (opened) document.getElementById(`tool-${opened.tool}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+    if (!opened) return
+    const slot = document.getElementById(`tool-${opened.tool}`)
+    slot?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+    if (opened.focus && slot) {
+      const title = slot.querySelector<HTMLElement>('h2, h3') ?? slot
+      if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1')
+      title.focus({ preventScroll: true })
+    }
   }, [opened])
   /** Watch: the picture back in view, and the feature on screen. */
   const backToPicture = () => {
@@ -454,35 +477,50 @@ export function Viewer() {
   /**
    * What an item of the bar does on this screen: a tool opens its panel for the object on
    * screen (the same request its button in the side column used to make) and the page scrolls
-   * to it; Watch brings the picture back.
+   * to it; Watch brings the picture back. A panel already open for this object is only scrolled
+   * to: pressing its item again never sends its request again (a first measurement takes minutes).
    */
-  const openFeature = (key: 'watch' | ToolKey) => {
+  const openFeature = (key: 'watch' | ToolKey, how: 'keyboard' | 'pointer' = 'pointer') => {
     if (key === 'watch') {
       backToPicture()
       return
     }
     if (!ready) return
-    if (key === 'spectrum') setSpectrum({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
-    else if (key === 'brightness') setBrightness({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
-    else if (key === 'search') setSearch({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
-    else if (key === 'distant') setDistant({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
-    else if (key === 'smallbodies') setShowSmallBodies(true)
+    const forTarget = (r: SpectrumRequest | null) => r !== null && r.kind === 'target' && r.ra === ready.ra && r.dec === ready.dec
+    const forPatch = (q: { ra: number; dec: number; fov: number } | null) => q !== null && q.ra === ready.ra && q.dec === ready.dec && q.fov === selection.fov
+    if (key === 'spectrum') {
+      if (!forTarget(spectrum)) setSpectrum({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
+    } else if (key === 'brightness') {
+      if (!forTarget(brightness)) setBrightness({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
+    } else if (key === 'search') {
+      if (!forPatch(search)) {
+        setSearchFound([])
+        setSearch({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
+      }
+    } else if (key === 'distant') {
+      if (!forPatch(distant)) setDistant({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
+    } else if (key === 'smallbodies') setShowSmallBodies(true)
     else setShowContext(true)
-    openTool(key)
+    openTool(key, how === 'keyboard')
+  }
+  const closeSearch = () => {
+    setSearch(null)
+    setSearchFound([])
   }
   const openNow = useRef(openFeature)
   useEffect(() => {
     openNow.current = openFeature
   })
 
-  // The address's tool, once the first pictures are ready (the tools need them).
-  const hasPictures = ready !== null
+  // The address's tool, once the pictures of the view it names are ready (the tools need them):
+  // on arrival, and after Back or Forward.
+  const readyKey = fresh !== null && !busy ? fresh.key : null
   useEffect(() => {
     const tool = pendingTool.current
-    if (!tool || !hasPictures) return
+    if (!tool || readyKey === null) return
     pendingTool.current = null
     openNow.current(tool)
-  }, [hasPictures])
+  }, [readyKey, popped])
 
   // The address says which tool is on screen (tool=<key>), in place; none while Watch is.
   // While the address's own tool waits for the pictures, it is left as it is.
@@ -495,7 +533,8 @@ export function Viewer() {
   const links: FeatureLinks = {
     practise: withUi(trainingAddress(selection, practiceSeed), selection.ui),
     vote: withUi(WATCHLIST_ADDRESS, selection.ui),
-    tools: withUi(TOOLS_ADDRESS, selection.ui),
+    // The methods screen keeps the place the visitor came from, for its way back.
+    tools: withUi(toolsAddress({ ra: selection.ra, dec: selection.dec, name: shownName ?? selection.name }), selection.ui),
   }
 
   const visits: Visit[] = data ? data.frames.map((f) => ({ src: f.image, label: frameLabel(f, data), ...visitCaption(f, data) })) : []
@@ -520,6 +559,7 @@ export function Viewer() {
   const result = data && !expert ? overallResult(data) : null
   const seen = data && !expert ? seenLine(data) : null
   const underTable = data ? tableNotes(data, expert ? 'expert' : 'beginner') : []
+  const verdict = data && expert ? expertVerdict(data) : null
 
   return (
     <div className="app">
@@ -652,12 +692,16 @@ export function Viewer() {
 
           <aside className={expert ? 'inspector' : 'inspector beginner'} aria-label="What is on the picture">
             <div className="object">
-              {shownName && <h2 className="object-name">{shownName}</h2>}
-              <p className={shownName ? 'object-where' : 'object-where object-name'}>
-                <abbr title="right ascension">RA</abbr> {`${selection.ra.toFixed(5)}°, `}
-                <abbr title="declination">Dec</abbr> {`${selection.dec >= 0 ? '+' : '-'}${Math.abs(selection.dec).toFixed(5)}°`}
-                {expert && givenMotion !== null && `; moving ${givenMotion.toFixed(2)}″ a year`}
-              </p>
+              {/* A long name ("Young star in Serpens South") is set a size smaller, so it stays on one line and the column below it does not move. */}
+              {shownName && <h2 className={shownName.length > 20 ? 'object-name long-name' : 'object-name'}>{shownName}</h2>}
+              {/* The sky position is a scientist's line: Beginner shows it only when it is all the name there is (a typed position). */}
+              {(expert || !shownName) && (
+                <p className={shownName ? 'object-where' : 'object-where object-name'}>
+                  <abbr title="right ascension">RA</abbr> {`${selection.ra.toFixed(5)}°, `}
+                  <abbr title="declination">Dec</abbr> {`${selection.dec >= 0 ? '+' : '-'}${Math.abs(selection.dec).toFixed(5)}°`}
+                  {expert && givenMotion !== null && `; moving ${givenMotion.toFixed(2)}″ a year`}
+                </p>
+              )}
             </div>
 
             {/* Rare notes (about the address, the level, downloads that failed). They sit here, so the picture never moves for them. */}
@@ -703,6 +747,8 @@ export function Viewer() {
                   {infoButton('detection')}
                 </p>
               )}
+              {/* Expert: the whole run against the catalogue in one line, in a scientist's units, over the table. */}
+              {data && verdict && <p className="expert-verdict">{verdict}</p>}
               {data && <VisitTable data={data} current={player.current} expert={expert} disabled={busy} onShow={showVisit} follow={voice !== ''} />}
               {underTable.map((line) => (
                 <p key={line} className="table-note">
@@ -811,7 +857,7 @@ export function Viewer() {
                 </Fold>
               </>
             ) : (
-              <StepGuide progress={progress} still={startedStill} info={infoButton('steps')} />
+              <StepGuide progress={progress} info={infoButton('steps')} />
             )}
 
             <footer className="credits">
@@ -819,11 +865,6 @@ export function Viewer() {
                 Images: NASA/JPL-Caltech SPHEREx, from <abbr title="NASA/IPAC Infrared Science Archive">IRSA</abbr>. Stars:
                 ESA Gaia DR3.
               </p>
-              {expert && (
-                <p>
-                  <a href={`viewer.html${addressOf(selection)}`}>Open this view in the earlier single-page viewer</a>
-                </p>
-              )}
             </footer>
           </aside>
         </main>
@@ -847,7 +888,7 @@ export function Viewer() {
             <SearchPanel
               key={`${search.ra},${search.dec},${search.fov}`}
               query={search}
-              onClose={() => setSearch(null)}
+              onClose={closeSearch}
               onObjects={setSearchFound}
               onLook={lookAt}
               level={selection.ui}
@@ -879,7 +920,15 @@ export function Viewer() {
         {/* The same patch in other surveys, with its own Close beside its title like the other panels. */}
         {showContext && (
           <div className="tool-slot context-slot" id="tool-context">
-            <ContextView ra={selection.ra} dec={selection.dec} fov={selection.fov} level={selection.ui} onClose={() => setShowContext(false)} />
+            <ContextView
+              ra={selection.ra}
+              dec={selection.dec}
+              fov={selection.fov}
+              level={selection.ui}
+              onClose={() => setShowContext(false)}
+              target={data?.target ?? null}
+              name={shownName}
+            />
           </div>
         )}
       </div>

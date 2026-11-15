@@ -42,6 +42,7 @@ import { DISTANT_FAILED, DISTANT_INTRO, DISTANT_TITLE, DISTANT_WAITING, distantR
 import { PlainWords, ScienceFold } from './ScienceFold'
 import './SearchPanel.css'
 import './DistantPanel.css'
+import './Scroll.css'
 
 type Phase =
   | { state: 'running'; status: DistantStatus | null }
@@ -167,9 +168,6 @@ function Panel({ query, onClose, onCandidates, onLook, level: uiLevel = 'expert'
         ) : (
           <div role="status" className="search-progress">
             <p>{shown.status ? progressSentence(shown.status) : 'Starting the search…'}</p>
-            <div className="progress" aria-hidden="true">
-              <span />
-            </div>
             <p className="hint">{FIRST_TIME_NOTE}</p>
           </div>
         ))}
@@ -246,7 +244,7 @@ function Panel({ query, onClose, onCandidates, onLook, level: uiLevel = 'expert'
             </button>
           </div>
         )}
-        {real.state === 'done' && <PlainWords lines={distantResult(real.result)} />}
+        {real.state === 'done' && <PlainWords lines={distantResult(real.result, query.fov)} />}
         {sim && <SimBanner />}
         {real.state !== 'running' && <ScienceFold>{body}</ScienceFold>}
       </section>
@@ -297,6 +295,7 @@ export function Answer({ result, onLook }: { result: DistantResult; onLook?: (ra
       {result.limit.length > 0 && (
         <>
           <h3>How faint an object could be and still have been found</h3>
+          <div className="table-scroll">
           <table className="distant-table">
             <thead>
               <tr>
@@ -319,6 +318,7 @@ export function Answer({ result, onLook }: { result: DistantResult; onLook?: (ra
               ))}
             </tbody>
           </table>
+          </div>
           <p className="hint">
             The best detector and the better of the two passes are used at each distance. {PASS_NOTE} {SHARE_NOTE} Hover a row, or open the notes below, for it as a sentence.
           </p>
@@ -399,6 +399,7 @@ function CandidateCard({
         It jumps about {whole(c.jump_arcsec)} arcseconds between visits and drifts about {c.drift_arcsec_per_year.toFixed(1)} arcseconds a
         year.
       </p>
+      <div className="table-scroll">
       <table className="distant-table">
         <thead>
           <tr>
@@ -423,6 +424,7 @@ function CandidateCard({
           ))}
         </tbody>
       </table>
+      </div>
       {c.cautions.length > 0 && (
         <ul className="search-flags">
           {c.cautions.map((t) => (

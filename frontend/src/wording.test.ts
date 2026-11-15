@@ -11,11 +11,19 @@ import epsIndJson from './fixtures/frames/epsindib_request_d5.json'
 import rwAurJson from './fixtures/frames/rwaur_request_d5.json'
 import novaJson from './fixtures/frames/v572vel_d2.json'
 import wiseJson from './fixtures/frames/wise0855_request_d6.json'
+// Saved by the truth review (15 Nov 2026): a typed position with no known object, R Draconis in
+// detector 1, V462 Lupi in detector 3, WISE 0855 in detector 1.
+import noMatchJson from './fixtures/frames/nomatch241_d6.json'
+import rdraD1Json from './fixtures/frames/rdra_d1.json'
+import v462D3Json from './fixtures/frames/v462lup_d3.json'
+import wiseD1Json from './fixtures/frames/wise0855_d1.json'
 import {
+  BRIGHTNESS_LINE,
   brightnessMayBeTheChange,
   catalogueCheck,
   catalogueLine,
   compassWord,
+  expertVerdict,
   dateSpan,
   expertCells,
   flagsNote,
@@ -39,6 +47,10 @@ const epsInd = epsIndJson as unknown as FramesReady
 const rwAur = rwAurJson as unknown as FramesReady
 const nova = novaJson as unknown as FramesReady
 const wise = wiseJson as unknown as FramesReady
+const noMatch = noMatchJson as unknown as FramesReady
+const rdraD1 = rdraD1Json as unknown as FramesReady
+const v462D3 = v462D3Json as unknown as FramesReady
+const wiseD1 = wiseD1Json as unknown as FramesReady
 
 const plain = (d: FramesReady) => tableRows(d).map((r) => plainResult(r, d))
 const expert = (d: FramesReady) => tableRows(d).map((r) => expertCells(r, d))
@@ -67,7 +79,7 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
     // First and last measured places 10.40 arcseconds apart (CLAUDE.md, step 1: -2.21, +10.16).
     expect(overallResult(barnard)).toEqual({
       sentence: 'It moved 10.4 arcseconds north between August 2025 and August 2026.',
-      more: ['Gaia, a star catalogue, expected 10.3: the two agree.'],
+      more: ["Gaia's star map predicted 10.3 arcseconds: the two agree."],
     })
     // What that means is in the movement line's "i" (guide.ts), so the column stays short.
     expect(isDrifting(barnard)).toBe(true)
@@ -83,7 +95,8 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
     expect(tableNotes(barnard, 'beginner')).toEqual([])
   })
   it('gives Expert every number of every visit, two lines each', () => {
-    expect(tableCaption(barnard)).toBe('Shift since visit 1 in ″, east and north; + from Gaia.')
+    // "px" says whose pixel: SPHEREx's own, not the 2″ squares the picture is drawn on.
+    expect(tableCaption(barnard)).toBe('Shift since visit 1 in ″, east and north; + from Gaia. px: SPHEREx pixels of 6.15″.')
     expect(expert(barnard)).toEqual([
       { measured: 'start', total: '', predicted: '', differ: '', about: '21–30 Aug 2025 · 18 exp. · clear, >1000× · ±1″' },
       { measured: '−0.9, +5.9', total: '6.0', predicted: '+0.6, +5.6', differ: '1.5″ (0.25 px)', about: '15–22 Mar 2026 · 19 exp. · clear, >1000× · ±1″' },
@@ -94,9 +107,19 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
       'The core is overexposed in visits 1, 2 and 3, so each position is good to about 1″, not the much smaller error of the fit.',
     ])
   })
+  it("gives Expert the run against Gaia in one line, in a scientist's units", () => {
+    // East -2.21, north +10.16: PA 348 (the blind search's own bearing); Gaia's -0.8, +10.3: PA 356.
+    // The two 1-arcsecond position errors in quadrature: 1.4; the residual 1.44 is 1.0 sigma of it.
+    expect(expertVerdict(barnard)).toBe('Visit 1 → 3 (1.0 yr): measured 10.4 ± 1.4″ at PA 348°; Gaia DR3 predicts 10.3″ at PA 356°; residual 1.4″ (1.0σ): consistent.')
+    expect(expertVerdict(nova)).toBeNull() // nothing predicted
+    expect(expertVerdict(sum)).toBeNull()
+    // RW Aurigae barely moves: no position angle for a shift under a third of a pixel.
+    expect(expertVerdict(rwAur)).toMatch(/^Visit 1 → 3 \(1\.0 yr\): measured 0\.9 ± [\d.]+″; the given motion predicts 0\.0″; residual [\d.]+″ \([\d.]+σ\): consistent\.$/)
+  })
   it('says the row of a visit stepped to, for a screen reader', () => {
     expect(rowAnnouncement(barnard, 0)).toBe('Visit 1 of 3, August 2025: where it started.')
-    expect(rowAnnouncement(barnard, 1)).toBe('Visit 2 of 3, March 2026: moved 5.9 arcseconds north, 0.9 west.')
+    // The total first, as the table shows it (6.0), then its parts.
+    expect(rowAnnouncement(barnard, 1)).toBe('Visit 2 of 3, March 2026: moved 6.0 arcseconds (5.9 north, 0.9 west).')
   })
   it('keeps Beginner short: the block for Barnard is under 60 words', () => {
     const r = overallResult(barnard)
@@ -108,17 +131,20 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
 
 describe('a target given with its own motion (the name lookup)', () => {
   it('compares with the motion given, not with Gaia', () => {
-    expect(tableCaption(request)).toBe('Shift since visit 1 in ″, east and north; + from the motion given.')
-    expect(catalogueLine(request)).toBe('Its catalogue motion expected 10.3: the two agree.')
+    expect(tableCaption(request)).toBe('Shift since visit 1 in ″, east and north; + from the motion given. px: SPHEREx pixels of 6.15″.')
+    expect(catalogueLine(request)).toBe('Its catalogue motion predicted 10.3 arcseconds: the two agree.')
   })
 })
 
 describe('an object that stayed in place: RW Aurigae', () => {
   it('says no movement and why, never "it did not move" alone; brightness may be the change', () => {
+    // The catalogue's agreement ("it barely moves") is in the movement line's "i"; the column
+    // points to the Brightness tool instead, since what changed may be its brightness.
     expect(overallResult(rwAur)).toEqual({
       sentence: 'No movement seen between September 2025 and September 2026.',
-      more: ['Any shift was under a third of a pixel. Its catalogue motion expected 0.0: it barely moves.'],
+      more: [`Any shift was under a third of a pixel. ${BRIGHTNESS_LINE}`],
     })
+    expect(catalogueLine(rwAur)).toBe('Its catalogue motion predicted almost no shift: it barely moves.')
     // The movement line's "i" then points to the Brightness tool in the bar (guide.ts).
     expect(brightnessMayBeTheChange(rwAur)).toBe(true)
     expect(isDrifting(rwAur)).toBe(false)
@@ -131,7 +157,7 @@ describe('an object that stayed in place: RW Aurigae', () => {
       'The core is overexposed in visits 1 and 2, so each position is good to about 1″, not the much smaller error of the fit.',
       'Visits 1, 2 and 3: a star 1.6″ to 1.7″ away (Gaia G 12.2) is too close to separate from the target, so the position and brightness include its light.',
     ])
-    expect(rowAnnouncement(rwAur, 1)).toBe('Visit 2 of 3, March 2026: shifted 0.2 arcseconds south, 0.8 east, within measuring error.')
+    expect(rowAnnouncement(rwAur, 1)).toBe('Visit 2 of 3, March 2026: shifted 0.8 arcseconds (0.2 south, 0.8 east), within measuring error.')
   })
 })
 
@@ -139,11 +165,11 @@ describe('a view with no known object at the centre: Nova V572 Velorum, detector
   it('never calls the shift of the marked spot movement', () => {
     const r = overallResult(nova)
     expect(r.sentence).toBe('The marked spot shifted 6.8 arcseconds between June 2025 and June 2026.')
-    expect(r.more).toEqual(['No known object is listed at the centre, so this may be a different spot, not movement.'])
+    expect(r.more).toEqual([`No known object is listed at the centre, so this may be a different spot, not movement. ${BRIGHTNESS_LINE}`])
     expect(JSON.stringify([r, plain(nova)])).not.toMatch(/moved/)
     expect(tableNotes(nova, 'expert')).toContain('No known object is listed at the centre, so the shift in visits 2 and 3 may be a different spot, not movement.')
     expect(tableNotes(nova, 'expert')).toContain('No Gaia star near the centre, so there is no predicted motion to compare with.')
-    expect(rowAnnouncement(nova, 2)).toBe('Visit 3 of 3, June 2026: shifted 5.5 arcseconds south, 4.0 west, which may be a different spot.')
+    expect(rowAnnouncement(nova, 2)).toBe('Visit 3 of 3, June 2026: shifted 6.8 arcseconds (5.5 south, 4.0 west), which may be a different spot.')
   })
 })
 
@@ -178,7 +204,7 @@ describe('difference mode: each visit minus visit 1', () => {
       'Visit 1 is the one subtracted, so the shifts are measured from it.',
       "The positions were measured in each visit's own image, not in the difference.",
     ])
-    expect(rowAnnouncement(difference, 0)).toBe('Visit 2 of 3, March 2026: moved 5.9 arcseconds north, 0.9 west.')
+    expect(rowAnnouncement(difference, 0)).toBe('Visit 2 of 3, March 2026: moved 6.0 arcseconds (5.9 north, 0.9 west).')
   })
 })
 
@@ -190,6 +216,30 @@ describe('the sum of all visits', () => {
     expect(tableNotes(sum, 'expert')[0]).toBe('Every visit is in this one frame, so nothing moves in it.')
     expect(seenLine(sum)).toBe('Seen clearly in the sum of all visits.')
     expect(rowAnnouncement(sum, 0)).toBe('All visits added together, August 2025 to September 2026.')
+  })
+})
+
+describe('saved views the truth review found (15 Nov 2026)', () => {
+  it('no known object at the centre, a middle visit far off and the last one back: never "came back", always "may be a different spot"', () => {
+    // 241.70906, -52.20564, detector 6: visits 2 and 3 landed on other spots up to 23.8 arcseconds away.
+    const r = overallResult(noMatch)
+    expect(r.sentence).toBe('The marked spot shifted by up to 23.8 arcseconds between August 2025 and August 2026.')
+    expect(r.more[0]).toMatch(/^No known object is listed at the centre, so this may be a different spot, not movement\./)
+    expect(JSON.stringify(r)).not.toMatch(/came back|moved/)
+  })
+  it('R Draconis in detector 1: a middle visit over a third of a pixel is "within the measuring error", not "under a third of a pixel"', () => {
+    const r = overallResult(rdraD1)
+    expect(r.sentence).toBe('No movement seen between July 2025 and July 2026.')
+    expect(r.more[0]).toBe(`Any shift was within the measuring error. ${BRIGHTNESS_LINE}`)
+    expect(plain(rdraD1)).toContain('2.4')
+  })
+  it('V462 Lupi in detector 3: no known object and a 2.2-arcsecond shift, so "may be a different spot" stays', () => {
+    const r = overallResult(v462D3)
+    expect(r.sentence).toMatch(/^The marked spot shifted by up to 2\.2 arcseconds /)
+    expect(r.more[0]).toMatch(/^No known object is listed at the centre, so this may be a different spot, not movement\./)
+  })
+  it('WISE 0855 in detector 1: not seen in any visit, said without "all"', () => {
+    expect(seenLine(wiseD1)).toBe('Not seen in any of the 3 visits.')
   })
 })
 
@@ -212,7 +262,8 @@ describe('built cases', () => {
   it('a visit with no position: "not found", and the run is measured between the visits that have one', () => {
     expect(plain(lost)).toEqual(['start', 'not found', '10.4'])
     expect(expert(lost)[1].measured).toBe('not found')
-    expect(tableNotes(lost, 'beginner')).toEqual(['Not found in visit 2: no clear spot could be measured there.'])
+    // Why, from the backend's own reason (here: off the picture).
+    expect(tableNotes(lost, 'beginner')).toEqual(['Not found in visit 2: that place is at the edge of the picture, or has no data.'])
     expect(tableNotes(lost, 'expert')).toContain('Visit 2: no position could be measured. Visit details says why.')
     expect(overallResult(lost).sentence).toBe('It moved 10.4 arcseconds north between August 2025 and August 2026.')
     expect(rowAnnouncement(lost, 1)).toBe('Visit 2 of 3, March 2026: no position could be measured.')
@@ -234,12 +285,38 @@ describe('built cases', () => {
   it('more than four visits: one row each, the screen reader counts them all', () => {
     expect(tableRows(many)).toHaveLength(6)
     expect(plain(many).slice(3)).toEqual(['10.4', '10.4', '10.4'])
-    expect(rowAnnouncement(many, 5)).toBe('Visit 6 of 6, December 2027: moved 10.2 arcseconds north, 2.2 west.')
+    expect(rowAnnouncement(many, 5)).toBe('Visit 6 of 6, December 2027: moved 10.4 arcseconds (10.2 north, 2.2 west).')
     expect(seenLine(many)).toBe('Seen clearly in all 6 visits.')
   })
   it('a missing visit number is said with the visit’s place in the run', () => {
     const gap = { ...barnard, frames: [barnard.frames[0], barnard.frames[1], { ...barnard.frames[2], epoch: 4 }] }
-    expect(rowAnnouncement(gap, 2)).toBe('Visit 4, number 3 of 3, August 2026: moved 10.2 arcseconds north, 2.2 west.')
+    expect(rowAnnouncement(gap, 2)).toBe('Visit 4, number 3 of 3, August 2026: moved 10.4 arcseconds (10.2 north, 2.2 west).')
+  })
+  it('a difference view whose subtracted visit has no position says which visit the shifts start from', () => {
+    const blind = { ...difference, reference_frame: { ...difference.reference_frame, centroid: null } } as FramesReady
+    const notes = tableNotes(blind, 'expert')
+    expect(notes).not.toContain('Visit 1 is the one subtracted, so the shifts are measured from it.')
+    expect(notes[0]).toBe('Visit 1 is the one subtracted. It has no measured position, so the shifts are measured from visit 2.')
+  })
+  it('a large expected shift that agrees only because the error is large is not "it barely moves"', () => {
+    // Barnard's frames with both positions only good to 1.2 arcseconds and the shift cut to 2.5:
+    // within error of a 2.5-arcsecond prediction, which is more than a third of a pixel.
+    const scale = 2.5 / 10.4
+    type Place = { ra: number; dec: number }
+    const s0 = barnard.frames[0].centroid as Place
+    const p0 = barnard.frames[0].predicted as Place
+    const toward = <T extends Place>(at: T, from: Place): T => ({ ...at, ra: from.ra + (at.ra - from.ra) * scale, dec: from.dec + (at.dec - from.dec) * scale })
+    const shrunk: FramesReady = {
+      ...barnard,
+      frames: barnard.frames.map((f, i) =>
+        !f.centroid || i === 0
+          ? f
+          : ({ ...f, centroid: { ...toward(f.centroid, s0), err_arcsec: 1.2 }, predicted: f.predicted ? toward(f.predicted, p0) : f.predicted } as Frame),
+      ),
+    }
+    const line = catalogueLine(shrunk) ?? ''
+    expect(line).not.toMatch(/barely moves/)
+    expect(line).toMatch(/^Gaia's star map predicted 2\.\d arcseconds/)
   })
   it('the Flags legend speaks of every visit at once', () => {
     expect(flagsNote(barnard)).toBe(

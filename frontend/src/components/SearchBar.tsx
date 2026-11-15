@@ -26,6 +26,7 @@ import {
   type ResolvedName,
 } from '../resolve'
 import './SearchBar.css'
+import './TargetRow.css'
 
 /** What a search hands to the app: where to look and, when known, how the object there moves. */
 export interface SearchTarget {
@@ -88,8 +89,8 @@ const OWN_LOOKS: readonly OwnLook[] = [
     name: 'Young star in Serpens South',
     label: 'Serpens South',
     about:
-      'Flagged by our blind search: about five times brighter in 2026 than in 2025. Not listed as variable in the ' +
-      'catalogues we asked. A candidate, not a discovery.',
+      'Flagged by our blind search: about four to five times brighter in 2026 than in 2025 at the longest ' +
+      'wavelengths. Not listed as variable in the catalogues we asked. A candidate, not a discovery.',
     ra: 277.50547,
     dec: -2.06198,
     det: 6,
@@ -98,8 +99,8 @@ const OWN_LOOKS: readonly OwnLook[] = [
     name: 'Nova V462 Lupi',
     label: 'V462 Lupi',
     about:
-      'A star that erupted in June 2025, after SPHEREx began. Open "Spectrum of the target" to see its glowing gas ' +
-      'and the warm glow at long wavelengths, and "Brightness over time" to see it fade. Position from AAVSO.',
+      'A star that erupted in June 2025, after SPHEREx began. Press Colours (Spectrum) in the bar to see its glowing ' +
+      'gas and the warm glow at long wavelengths, and Brightness (Light curve) to see it fade. Position from AAVSO.',
     ra: 227.01362,
     dec: -40.14308,
     det: 6,
@@ -464,6 +465,10 @@ export function TargetButtons({ search, picked, shown }: { search: SearchState; 
       </div>
       <span className="target-divider" aria-hidden="true" />
       <div className="target-group" role="group" aria-label="What we turned this tool on ourselves">
+        {/* Said, not only in the tooltips: these three changed while SPHEREx was watching them. */}
+        <span className="target-group-label" title="Each of these changed in brightness between SPHEREx's visits">
+          Caught changing:
+        </span>
         {OWN_LOOKS.map((look) => button(look.name, look.about, look.label ?? look.name, () => search.pickLook(look)))}
       </div>
     </div>

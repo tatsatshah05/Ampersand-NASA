@@ -4,7 +4,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Aladin, Layer } from 'aladin-lite'
 import type { UiLevel } from '../address'
-import { CONTEXT_CREDIT, CONTEXT_FAILED, CONTEXT_INTRO, CONTEXT_NO_IMAGE, CONTEXT_PICK, CONTEXT_TITLE, SURVEY_WORDS, contextResult } from '../plain'
+import type { Target } from '../api'
+import { CONTEXT_CREDIT, CONTEXT_FAILED, CONTEXT_INTRO, CONTEXT_NO_IMAGE, CONTEXT_PICK, CONTEXT_TITLE, SURVEY_WORDS, contextResult, thenAndNow } from '../plain'
 import { PlainWords, ScienceFold } from './ScienceFold'
 
 // Each survey is a full HiPS address on a mirror, tried in order, so Aladin never has to look a
@@ -71,11 +72,15 @@ interface Props {
   level?: UiLevel
   /** When given, a Close button beside the title (as the other tool panels have). */
   onClose?: () => void
+  /** The object at the centre, with its catalogue motion when known: a moving one is somewhere else in an older picture. */
+  target?: Target | null
+  /** Its name on the page. */
+  name?: string | null
 }
 
 type AladinModule = typeof import('aladin-lite').default
 
-export function ContextView({ ra, dec, fov, level = 'expert', onClose }: Props) {
+export function ContextView({ ra, dec, fov, level = 'expert', onClose, target = null, name = null }: Props) {
   const plain = level === 'beginner'
   const divRef = useRef<HTMLDivElement>(null)
   const [viewer, setViewer] = useState<{
@@ -296,13 +301,20 @@ export function ContextView({ ra, dec, fov, level = 'expert', onClose }: Props) 
       {plain ? (
         <>
           <p className="plain-intro">{CONTEXT_INTRO}</p>
-          <PlainWords lines={contextResult(survey, fov)} />
+          <PlainWords lines={[...contextResult(survey, fov), ...thenAndNow(survey, target, { ra, dec }, name, 'beginner')]} />
         </>
       ) : (
-        <p className="hint">
-          Other surveys around the same spot. The <span className="key measured">orange box</span> is the SPHEREx field
-          shown in the picture above.
-        </p>
+        <>
+          <p className="hint">
+            Other surveys around the same spot. The <span className="key measured">orange box</span> is the SPHEREx field
+            shown in the picture above.
+          </p>
+          {thenAndNow(survey, target, { ra, dec }, name, 'expert').map((line) => (
+            <p key={line} className="hint">
+              {line}
+            </p>
+          ))}
+        </>
       )}
       {error ? <p className="status error">{plain ? CONTEXT_FAILED : error}</p> : <div ref={divRef} className="aladin" />}
       {plain ? (

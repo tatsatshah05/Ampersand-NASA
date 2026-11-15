@@ -1,8 +1,12 @@
 // The player's timer, and its rest while nobody can see the picture (D7).
 import { describe, expect, it } from 'vitest'
-import { nextIndex, ticks, watchSight, type SightPage } from './usePlayer'
+import { INITIAL_PLAYBACK, nextIndex, ticks, watchSight, type SightPage } from './usePlayer'
 
 describe('the timer', () => {
+  it('opens still on every machine: nothing moves until the visitor presses Play or Blink', () => {
+    expect(INITIAL_PLAYBACK).toBe('paused')
+    expect(ticks(INITIAL_PLAYBACK, 3, false)).toBe(false)
+  })
   it('runs only with something to flip, not paused, and someone looking', () => {
     expect(ticks('playing', 3, false)).toBe(true)
     expect(ticks('blinking', 3, false)).toBe(true)

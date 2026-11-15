@@ -1,0 +1,43 @@
+/* New parts of the side column (App.tsx), kept apart so the restyle can find them. Token-only. */
+
+/* Expert's one line over the table: the whole run against the catalogue, in a scientist's units. */
+.expert-verdict {
+  margin: 0 0 8px;
+  font-size: var(--size-body);
+  line-height: 1.45;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A tall window (900px and more): Expert's block takes the room the side column has spare under
+   its folds since "Measure and search" and the Sky context fold left, so the line over the table
+   and the cautions under it show without scrolling the block for most stars. */
+@media (min-width: 1000px) and (min-height: 860px) {
+  .bench > .inspector:not(.beginner) .readout-block {
+    height: 308px;
+  }
+
+  /* Beginner's block, likewise, up to the credits at the foot of the column. */
+  .bench > .inspector.beginner .readout-block {
+    height: clamp(300px, calc(100dvh - 440px), 452px);
+  }
+}
+
+/* A short window (1280x720): Beginner's block takes the spare room above the credits (they sit at
+   the foot of the column whatever the block's height), so the line pointing to Brightness and the
+   cautions under the table stay in view. */
+@media (min-width: 1000px) and (max-height: 800px) {
+  .bench > .inspector.beginner .readout-block {
+    height: clamp(300px, calc(100dvh - 370px), 440px);
+  }
+}
+
+/* Expert's column headings stay on one line each, so each lines up over its numbers. */
+.visit-table.expert thead th {
+  white-space: nowrap;
+}
+
+/* A long object name, a size smaller, so it keeps to one line in the side column. */
+.object-name.long-name {
+  font-size: 24px;
+}

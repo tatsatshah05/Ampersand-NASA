@@ -6,6 +6,10 @@
 // the timer rests. The state does not change, so Play or Pause keeps its label and nothing
 // on the page changes; when the picture is back in sight the visits carry on by themselves.
 // A visitor's own Pause is a state, so it stays paused.
+//
+// Every view opens paused on its first visit, on every machine: nothing on the page moves or
+// changes until the visitor presses Play, Blink, an arrow or a visit (three people who tried
+// the page could not read the side column while the film ran by itself).
 import { useCallback, useEffect, useState, type RefObject } from 'react'
 
 export type Playback = 'playing' | 'blinking' | 'paused'
@@ -17,8 +21,8 @@ export const SPEEDS = [
   { label: 'Fast', ms: 250 },
 ] as const
 
-const prefersStillness = () =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+/** How every view opens: still, on its first visit, until the visitor presses something. */
+export const INITIAL_PLAYBACK: Playback = 'paused'
 
 /** Whether the timer runs: something to flip between, not paused, and someone can see it. */
 export const ticks = (playback: Playback, count: number, resting: boolean): boolean => count >= 2 && playback !== 'paused' && !resting
@@ -33,8 +37,8 @@ export const nextIndex = (playback: Playback, index: number, count: number): num
  * `resting` the timer stops and nothing else changes (useResting says when).
  */
 export function usePlayer(framesKey: string, count: number, resting = false) {
-  // People who ask their system for less motion start paused; play is one key away.
-  const [playback, setPlayback] = useState<Playback>(() => (prefersStillness() ? 'paused' : 'playing'))
+  // Still until the visitor presses Play or Blink; play is one key away.
+  const [playback, setPlayback] = useState<Playback>(INITIAL_PLAYBACK)
   const [speedMs, setSpeedMs] = useState<number>(SPEEDS[1].ms)
   const [at, setAt] = useState({ key: framesKey, index: 0 })
   const current = at.key === framesKey && at.index < count ? at.index : 0

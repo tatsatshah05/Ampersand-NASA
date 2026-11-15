@@ -17,6 +17,7 @@ import {
   INFO_NAMES,
   infoFor,
   levelInfo,
+  coinWords,
   movementInfo,
   NO_PROGRESS,
   pictureInfo,
@@ -173,9 +174,13 @@ describe('the movement line', () => {
   })
   it('says which visits had no spot, and why, once', () => {
     const lost = data([frame(1), frame(2, { centroid: null, detection: 'none' }), frame(3)])
-    expect(movementInfo(lost).join(' ')).toContain('In visit 2 no clear spot could be measured.')
-    const far = data([frame(1), frame(2, { centroid: null, detection: 'clear' }), frame(3)])
-    expect(movementInfo(far).join(' ')).toContain('In visit 2 something bright is there, but too far from where this object should be.')
+    expect(movementInfo(lost).join(' ')).toContain('In visit 2, no clear spot could be measured there.')
+    // "Too far" only when the backend says so, never guessed from how clearly something is seen.
+    const far = data([frame(1), frame(2, { centroid: null, detection: 'clear', centroid_reason: 'The nearest source is 9.1 arcsec from the predicted position, too far to be the target.' }), frame(3)])
+    expect(movementInfo(far).join(' ')).toContain('In visit 2, a spot was found, but too far from where it should be.')
+    const odd = data([frame(1), frame(2, { centroid: null, detection: 'clear', centroid_reason: 'What is at the predicted position is not shaped like a star (width 30 arcsec).' }), frame(3)])
+    expect(movementInfo(odd).join(' ')).toContain('In visit 2, the spot there is not shaped like a star.')
+    expect(movementInfo(odd).join(' ')).not.toMatch(/too far/)
     expect(movementInfo(data([frame(1), frame(2, { centroid: null })])).join(' ')).toContain('Fewer than two visits have a clear spot here')
   })
   it('says a sum cannot move', () => {
@@ -317,5 +322,18 @@ describe('where a popover goes', () => {
     const at = placePopover({ left: 490, right: 514, top: 300, bottom: 324 }, { w: 340, h: 600 }, view)
     expect(at.top).toBeGreaterThanOrEqual(16)
     expect(at.top + 600).toBeLessThanOrEqual(700)
+  })
+})
+
+describe('an angle a newcomer can picture', () => {
+  it("Barnard's 10.4 arcseconds is a coin seen from about half a kilometre", () => {
+    // 2.4 cm at 476 m covers 10.4 arcseconds.
+    expect(coinWords(10.4)).toBe('That is about the width of a coin seen from 500 metres away.')
+    expect(coinWords(6.3)).toBe('That is about the width of a coin seen from 800 metres away.')
+    expect(coinWords(1)).toBe('That is about the width of a coin seen from 5 kilometres away.')
+    expect(movementInfo(barnardJson as unknown as FramesReady).join(' ')).toContain('That is about the width of a coin seen from 500 metres away.')
+  })
+  it('the steps explanation names the three that changed while SPHEREx watched', () => {
+    expect(stepsInfo().join(' ')).toContain('“Caught changing” changed while SPHEREx watched them')
   })
 })

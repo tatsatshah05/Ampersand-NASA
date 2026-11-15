@@ -47,6 +47,7 @@ import { PlayerControls } from './PlayerControls'
 import { Stage } from './Stage'
 import { LoadingCard, StatusCard } from './StatusCard'
 import './TrainingView.css'
+import './PracticeFold.css'
 
 const LEVEL_LABELS: Record<Level, string> = {
   easy: 'Easy (bright)',
@@ -153,7 +154,9 @@ export function TrainingView() {
 
   const rings = useMemo(() => data?.planted.positions.map(toPicture) ?? [], [data])
   const lastClick = progress.last && grid ? skyToPixel(progress.last.ra, progress.last.dec, grid) : null
-  const banner = data?.notice ?? FALLBACK_NOTICE
+  // The banner says SIMULATION in capitals; the backend's notice that follows starts with the
+  // same word, so it is said once.
+  const banner = (data?.notice ?? FALLBACK_NOTICE).replace(/^Simulation:\s*(\S)/i, (_, first: string) => first.toUpperCase())
 
   // The level is the app's: kept in the address and on this device, and carried by every link.
   const level = selection.ui
@@ -189,12 +192,16 @@ export function TrainingView() {
             Real SPHEREx images of this patch of sky, with one made-up object added to them. Find it by the way it moves
             between visits.
           </p>
-          <p className="how-to-look">
-            <strong>How to look.</strong> A real distant planet would not sit still like the stars. It swings back and
-            forth between visits, because the Earth moves round the Sun while it watches. So look for the dot that is in
-            a different place in each frame, while everything around it stays put. Play the frames or blink the first and
-            last, then click where you think it is in the frame on screen.
-          </p>
+          {/* Folded, so the picture comes sooner; one press opens it. */}
+          <details className="how-to-look-fold">
+            <summary>How to look</summary>
+            <p className="how-to-look">
+              A real distant planet would not sit still like the stars. It swings back and forth between visits, because
+              the Earth moves round the Sun while it watches. So look for the dot that is in a different place in each
+              frame, while everything around it stays put. Play the frames or blink the first and last, then click where
+              you think it is in the frame on screen.
+            </p>
+          </details>
           <div className="selectors training-controls" role="group" aria-label="Practice options">
             <label className="field">
               Difficulty

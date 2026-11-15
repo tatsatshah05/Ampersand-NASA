@@ -69,8 +69,9 @@ describe('the bar of features at the top', () => {
     const beginner = hrefs(viewerAt(''))
     expect(beginner).toHaveLength(3)
     expect(beginner[0]).toMatch(/^\?ra=269\.446267&dec=4\.768222.*&train=\d+&level=easy&ui=beginner$/)
-    expect(beginner.slice(1)).toEqual(['?watchlist=1&ui=beginner', '?tools=1&ui=beginner'])
-    expect(hrefs(viewerAt('?ui=expert')).slice(1)).toEqual(['?watchlist=1&ui=expert', '?tools=1&ui=expert'])
+    // The methods screen carries the place on screen, for its way back to it.
+    expect(beginner.slice(1)).toEqual(['?watchlist=1&ui=beginner', "?tools=1&ra=269.446267&dec=4.768222&name=Barnard%27s+Star&ui=beginner"])
+    expect(hrefs(viewerAt('?ui=expert')).slice(1)).toEqual(['?watchlist=1&ui=expert', "?tools=1&ra=269.446267&dec=4.768222&name=Barnard%27s+Star&ui=expert"])
   })
 
   it('has the search field at the start of the target row, before the star buttons, and the switch in the dock', () => {
@@ -123,8 +124,8 @@ describe('the page at each level', () => {
   it('Beginner has the steps; Expert has neither the steps nor any i button', () => {
     const beginner = viewerAt('')
     expect(beginner).toContain('class="guide-steps"')
-    expect(beginner).toContain('Press a star above')
-    expect(beginner).toContain('Press Blink or a visit')
+    expect(beginner).toContain('Pick any star')
+    expect(beginner).toContain('Press Play or Blink')
     expect(beginner).toContain('Read what changed')
     const expert = viewerAt('?ui=expert')
     expect(expert).not.toContain('class="guide')

@@ -43,6 +43,7 @@ import {
 import { PlainWords, ScienceFold } from './ScienceFold'
 import './SpectrumPanel.css'
 import './BrightnessPanel.css'
+import './Scroll.css'
 
 // Same visit colours as the spectrum panel (validated together on the panel background).
 const VISIT_COLOURS = ['#3987e5', '#d95926', '#199e70']
@@ -277,9 +278,8 @@ function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
   const [hover, setHover] = useState<{ detector: number; dot: Dot } | null>(null)
   const section = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    section.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [load.state])
+  // No scrolling here: the page scrolls to a panel once, when it is opened from the bar (App.tsx).
+  // An answer that arrives later must not pull the page back down after the visitor has moved on.
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -395,6 +395,7 @@ function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
           <SmallCharts chart={chart} measure={measure} hover={hover} onHover={setHover} />
 
           {summary.length > 0 && (
+            <div className="table-scroll">
             <table className="brightness-table">
               <caption>
                 Change from first to last visit, per detector. Each wavelength bin is compared with itself; the table
@@ -427,6 +428,7 @@ function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
 
           <div className="spectrum-foot">
@@ -610,7 +612,7 @@ function SmallCharts({ chart, measure, hover, onHover, plain = false }: { chart:
                 }}
               >
                 {plain ? (
-                  <b>{brightnessTip(hover.dot.value, hover.dot.err)}</b>
+                  <b>{brightnessTip(hover.dot.value, hover.dot.err, measure)}</b>
                 ) : (
                   <>
                     <b>

@@ -1,0 +1,211 @@
+{
+ "key": "7fa046de132af4e6",
+ "ra": 248.167233,
+ "dec": 66.755024,
+ "fov": 0.1,
+ "detector": 1,
+ "mode": "normal",
+ "size_px": 180,
+ "pixel_arcsec": 2,
+ "target": {
+  "source_id": null,
+  "ra": 248.167233,
+  "dec": 66.755024,
+  "pmra": -20.642811719160797,
+  "pmdec": 6.148818852711324,
+  "parallax": 1.2509180143740992,
+  "gmag": null,
+  "ref_epoch": 2026,
+  "origin": "request"
+ },
+ "gaia_error": null,
+ "centroid_is": "target",
+ "centroid_note": "centroid is the target, measured: it is there only if the target is detected at the predicted position (detection_sigma at least 3, or saturated) and a source shaped like a star is fitted within 3 arcsec of that position (or a quarter of its own width, for a saturated star located from its wings). Otherwise it is null and centroid_reason says why; nearest_source then holds what was found instead, if anything. centroid_offset_arcsec is centroid minus predicted (east, north, total).",
+ "detection_note": "detection_sigma: how strongly the target is detected in this frame, in multiples of the noise. The brightness of a star image of fixed width (detection_measure.star_fwhm_arcsec) centred exactly on the predicted position is fitted together with a constant sky and with every Gaia star within 25 arcsec, each held at its own catalogue place, so a neighbour's light is not counted as the target's. The same fit is made at every empty place of the frame (a grid 12 arcsec apart, at least 18 arcsec from any Gaia star and from the target); detection_sigma is the target's value minus their median, divided by their scatter (1.4826 times the median absolute deviation, after setting aside places more than 3 times that from the median, which hold sources no catalogue here lists), scaled up when a close neighbour shares the light. detection: 'clear' (5 or more), 'marginal' (3 to 5), 'none' (below 3), 'saturated' (the detector overflowed at the place: certainly detected, no value), 'unknown' (too few empty places or pixels to say). detection_measure.n_blank_as_strong counts the empty places that reach the same value: how often this frame shows as much where nothing is catalogued. centroid.snr is the fit's own height over the scatter left around the fit, kept for compatibility: it is NOT a detection strength (on empty sky it reaches 5 or more in up to a quarter of tries).",
+ "error_note": "centroid.err_arcsec is the position uncertainty. For most sources it is the fit's own (err_arcsec_fit). When saturated_core is true (a pixel within one star width of the fitted centre is saturated or bloom-flagged in at least one exposure; such pixels stay in the picture and in the fit, so the star is drawn), err_arcsec is instead about 1 arcsec in detectors 5 and 6 and 2 arcsec in detectors 1 to 4: what an independent check found for Barnard's Star whichever pixels were used, 10 to 40 times the fit's own figure.",
+ "blend_note": "blend lists the Gaia stars (G < 17) within one native pixel (6.15 arcsec) of the predicted position on the frame's date, nearest first: source_id, gmag, distance_arcsec, east_arcsec, north_arcsec. The target and such a star are one blob in SPHEREx's pixels, so the marker (centroid.blended) is pulled toward the star and the light there is partly the star's. flux_mjy is each one's brightness from the same fixed-position fit as detection_sigma, and light_share its part of the light fitted at the target and the blended stars together (values below zero count as zero): rough figures, from a fixed star width. Both are null where the target is saturated, or where a blended star is too close to tell apart (its image and the target's overlap by more than 90 per cent: closer than 2.5 to 2.8 arcsec). Nothing is subtracted from the picture or the measurements.",
+ "saturation_note": "Two different counts. saturated_pixels: picture pixels with no value in any exposure because the detector overflowed there (drawn white). photometry_saturated_exposures: how many of the frame's n_exposures have a saturated pixel inside the 15 arcsec circle in which /api/lightcurve measures (the target with the motion in the request, else the Gaia star within 3 arcsec of the centre, else the centre of the picture; see its `measured`), by its stricter rule: overflow within the first seconds, charge spilled from a saturated neighbour, or no reliable correction. Such pixels usually still hold a value, so the picture can look fine and show 0 saturated_pixels while no brightness can be measured in those exposures.",
+ "exposures_total_all_detectors": 548,
+ "failures": [],
+ "frames": [
+  {
+   "epoch": 1,
+   "date_start": "2025-06-06",
+   "date_end": "2025-07-22",
+   "mjd_mean": 60866.23466436197,
+   "date_mean": "2025-07-10",
+   "n_exposures": 23,
+   "wavelength_um": [
+    0.7445399761199951,
+    1.1217083930969238
+   ],
+   "flagged_fraction": 0.05289399806542535,
+   "saturated_pixels": 20,
+   "photometry_saturated_exposures": 23,
+   "rejected_readings": 157,
+   "centroid": {
+    "ra": 248.16825948530303,
+    "dec": 66.7545327006471,
+    "x": 88.77077652176702,
+    "y": 90.38433283328774,
+    "err_arcsec": 2,
+    "err_arcsec_fit": 0.1994968035217712,
+    "saturated_core": true,
+    "snr": 12.140078115570368,
+    "fwhm_arcsec": 15.48399587359578,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": 1.449327901532699,
+    "north": -1.7667473005474221,
+    "total": 2.285158066776296
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 248.1672394080099,
+    "dec": 66.75502346378615,
+    "x": 89.49544778859307,
+    "y": 89.50096518473077
+   },
+   "detection_sigma": 78091.85,
+   "detection": "saturated",
+   "detection_measure": {
+    "status": "saturated",
+    "sigma": 78091.85,
+    "flux_mjy": 4959.76723,
+    "noise_mjy": 0.06351,
+    "blank_median_mjy": -0.02088,
+    "n_blank_places": 490,
+    "n_blank_set_aside": 182,
+    "n_blank_as_strong": 0,
+    "n_neighbours_fitted": 0,
+    "star_fwhm_arcsec": 9.1,
+    "at": "predicted"
+   },
+   "blend": []
+  },
+  {
+   "epoch": 2,
+   "date_start": "2025-10-17",
+   "date_end": "2025-11-20",
+   "mjd_mean": 60979.79235425929,
+   "date_mean": "2025-10-31",
+   "n_exposures": 45,
+   "wavelength_um": [
+    0.736363410949707,
+    1.109626054763794
+   ],
+   "flagged_fraction": 0.04624468228594747,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 45,
+   "rejected_readings": 34,
+   "centroid": {
+    "ra": 248.16699316727113,
+    "dec": 66.75497284685277,
+    "x": 89.67037606717886,
+    "y": 89.59207533738135,
+    "err_arcsec": 2,
+    "err_arcsec_fit": 0.16595327534219437,
+    "saturated_core": true,
+    "snr": 13.601150810422128,
+    "fwhm_arcsec": 15.940457820655773,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.3435699977989095,
+    "north": -0.18207333947088955,
+    "total": 0.3888329259895881
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 248.16723498355486,
+    "dec": 66.7550234227804,
+    "x": 89.49859089464769,
+    "y": 89.5010389952843
+   },
+   "detection_sigma": 137968.28,
+   "detection": "clear",
+   "detection_measure": {
+    "status": "measured",
+    "sigma": 137968.28,
+    "flux_mjy": 2671.57129,
+    "noise_mjy": 0.01936,
+    "blank_median_mjy": -0.01291,
+    "n_blank_places": 479,
+    "n_blank_set_aside": 193,
+    "n_blank_as_strong": 0,
+    "n_neighbours_fitted": 0,
+    "star_fwhm_arcsec": 9.1,
+    "at": "predicted"
+   },
+   "blend": []
+  },
+  {
+   "epoch": 3,
+   "date_start": "2026-07-06",
+   "date_end": "2026-07-16",
+   "mjd_mean": 61232.36950786297,
+   "date_mean": "2026-07-11",
+   "n_exposures": 24,
+   "wavelength_um": [
+    0.7449386119842529,
+    1.122481346130371
+   ],
+   "flagged_fraction": 0.05362904028691367,
+   "saturated_pixels": 28,
+   "photometry_saturated_exposures": 24,
+   "rejected_readings": 30,
+   "centroid": {
+    "ra": 248.16773096842488,
+    "dec": 66.75493059731812,
+    "x": 89.14624491473383,
+    "y": 89.66812341489761,
+    "err_arcsec": 2,
+    "err_arcsec_fit": 0.3426003809087247,
+    "saturated_core": true,
+    "snr": 7.074921328844308,
+    "fwhm_arcsec": 23.69670243390419,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": 0.7191145749761254,
+    "north": -0.3404703403816711,
+    "total": 0.7956417690284394
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 248.16722483147424,
+    "dec": 66.75502517241267,
+    "x": 89.50580287081895,
+    "y": 89.4978896568292
+   },
+   "detection_sigma": 45823.16,
+   "detection": "saturated",
+   "detection_measure": {
+    "status": "saturated",
+    "sigma": 45823.16,
+    "flux_mjy": 2746.91321,
+    "noise_mjy": 0.05995,
+    "blank_median_mjy": -0.01659,
+    "n_blank_places": 506,
+    "n_blank_set_aside": 166,
+    "n_blank_as_strong": 0,
+    "n_neighbours_fitted": 0,
+    "star_fwhm_arcsec": 9.1,
+    "at": "predicted"
+   },
+   "blend": []
+  }
+ ],
+ "credit": "NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive (IRSA); ESA Gaia DR3",
+ "stretch": {
+  "kind": "asinh",
+  "vmin": -0.5259139498379952,
+  "vmax": 2235.5045335772743,
+  "soft": 0.9779503469276901,
+  "unit": "MJy/sr"
+ }
+}

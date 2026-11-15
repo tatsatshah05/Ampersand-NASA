@@ -107,8 +107,10 @@
 }
 
 /* A tool before the first pictures have arrived: there, but not yet to be pressed. */
+/* Not yet to be pressed (the first pictures are on their way): the same grey as the other items,
+   never lighter than --muted, with no hover. */
 .feature-item[aria-disabled='true'] {
-  opacity: 0.45;
+  color: var(--muted);
   cursor: default;
 }
 

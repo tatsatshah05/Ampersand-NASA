@@ -3,7 +3,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { FeatureBar, type FeatureLinks } from './components/FeatureBar'
-import { feature, FEATURES, isToolKey, TOOL_KEYS, type FeatureKey } from './features'
+import { feature, FEATURES, isToolKey, scrollToShow, TOOL_KEYS, type FeatureKey } from './features'
 
 // The words a newcomer must not meet (the same list as the checks of the Beginner panels).
 const SCIENTISTS_WORDS = /\b(sigma|flux|fluxes|epoch|epochs|detector|detectors|centroid|centroids|mJy|aperture|photometry|ephemeris|S\/N)\b|σ/
@@ -117,5 +117,17 @@ describe('the bar', () => {
       '?ui=expert&amp;tool=context',
     ])
     expect(all.find((i) => i.attrs.includes('aria-current="page"'))?.text).toBe('Watchlist')
+  })
+})
+
+describe('keeping the current item in view inside the bar', () => {
+  it('scrolls the bar only when the item is cut off, and never past its start', () => {
+    // A 390px bar: an item fully inside needs nothing.
+    expect(scrollToShow({ left: 0, width: 390, scrollLeft: 0 }, { left: 100, width: 80 })).toBeNull()
+    // An item past the right edge: just enough to show it, with a small margin.
+    expect(scrollToShow({ left: 0, width: 390, scrollLeft: 0 }, { left: 646, width: 212 })).toBe(646 + 212 - 390 + 8)
+    // An item scrolled off to the left: back to it, not below zero.
+    expect(scrollToShow({ left: 0, width: 390, scrollLeft: 500 }, { left: -477, width: 61 })).toBe(500 - 477 - 8)
+    expect(scrollToShow({ left: 0, width: 390, scrollLeft: 4 }, { left: -4, width: 61 })).toBe(0)
   })
 })

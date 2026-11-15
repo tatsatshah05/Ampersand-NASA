@@ -57,7 +57,7 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
 
   if (!expert) {
     return (
-      <table className="visit-table" ref={table} aria-label="Every visit, and how far it had moved since the start">
+      <table className="visit-table" ref={table} aria-label="Every visit, and how far its marked spot was from its first place">
         <colgroup>
           <col className="c-visit" />
           <col className="c-moved" />
@@ -65,7 +65,8 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
         <thead>
           <tr>
             <th scope="col">Visit</th>
-            <th scope="col">Moved (arcseconds)</th>
+            {/* "Shift", not "Moved": the sentence over the table says when a shift is not movement. */}
+            <th scope="col">Shift (arcseconds)</th>
           </tr>
         </thead>
         <tbody>

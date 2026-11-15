@@ -67,9 +67,10 @@ describe('polling', () => {
 
 describe('progress', () => {
   it('says which detector and how many are done', () => {
-    expect(D.progressSentence(status({ detector_now: 6, detectors_done: 1, seconds: 12.4 }))).toBe('Searching detector 6: 1 of 2 done, 12 seconds so far.')
+    expect(D.progressSentence(status({ detector_now: 6, detectors_done: 1, seconds: 12.4 }))).toBe('Searching 2 detectors one after another.')
+    expect(D.progressSentence(status({ detector_now: 5, detectors_done: 0, seconds: 3 }))).toBe('Searching 2 detectors one after another.')
     expect(D.progressSentence(status({ status: 'queued' }))).toContain('Waiting')
-    expect(D.progressSentence(status({ detectors_done: 2, seconds: 61 }))).toBe('Checking the catalogue, 61 seconds so far.')
+    expect(D.progressSentence(status({ detectors_done: 2, seconds: 61 }))).toBe('Checking the catalogue.')
   })
   it('warns that a new patch takes minutes', () => {
     expect(D.FIRST_TIME_NOTE).toContain('a few minutes')

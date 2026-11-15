@@ -7,8 +7,9 @@
 // on their way the tools are there but cannot be pressed yet (aria-disabled). On the other
 // screens the same items are links back to the Viewer, opening it with that tool. The three
 // screens are always links, and every link carries the level.
+import { useLayoutEffect, useRef } from 'react'
 import type { UiLevel } from '../address'
-import { FEATURES, type FeatureKey, type ToolKey } from '../features'
+import { FEATURES, scrollToShow, type FeatureKey, type ToolKey } from '../features'
 import { releaseFocusAfterPointer } from '../focus'
 import './FeatureBar.css'
 
@@ -24,15 +25,27 @@ interface Props {
   level: UiLevel
   current: FeatureKey
   links: FeatureLinks
-  /** On the Viewer: open a tool, or go back to the picture ('watch'). */
-  onOpen?: (key: 'watch' | ToolKey) => void
+  /** On the Viewer: open a tool, or go back to the picture ('watch'); `how` says whether it was pressed from the keyboard. */
+  onOpen?: (key: 'watch' | ToolKey, how: 'keyboard' | 'pointer') => void
   /** On the Viewer: false while the first pictures are still loading (the tools wait for them). */
   ready?: boolean
 }
 
 export function FeatureBar({ level, current, links, onOpen, ready = true }: Props) {
+  const nav = useRef<HTMLElement>(null)
+  // The current item is kept in view inside the bar (on a phone the bar scrolls sideways):
+  // the bar's own scrollLeft moves, so the page itself never scrolls for it.
+  useLayoutEffect(() => {
+    const bar = nav.current
+    const item = bar?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (!bar || !item) return
+    const b = bar.getBoundingClientRect()
+    const i = item.getBoundingClientRect()
+    const to = scrollToShow({ left: b.left, width: bar.clientWidth, scrollLeft: bar.scrollLeft }, { left: i.left, width: i.width })
+    if (to !== null) bar.scrollLeft = to
+  }, [current, level])
   return (
-    <nav className="feature-bar" aria-label="Features">
+    <nav className="feature-bar" aria-label="Features" ref={nav}>
       <ul className="feature-list">
         {FEATURES.map((f) => {
           const label = f.label[level]
@@ -63,7 +76,8 @@ export function FeatureBar({ level, current, links, onOpen, ready = true }: Prop
                 type="button"
                 aria-disabled={inert || undefined}
                 onClick={(e) => {
-                  if (!inert) onOpen(key)
+                  // A click from Enter or Space has no pointer position (detail 0).
+                  if (!inert) onOpen(key, e.detail === 0 ? 'keyboard' : 'pointer')
                   releaseFocusAfterPointer(e.currentTarget)
                 }}
               >

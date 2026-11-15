@@ -265,14 +265,14 @@ export function patchSentence(fov: number): string {
 export const FIRST_TIME_NOTE =
   "The first search of a new patch takes a few minutes, because the images are read from NASA's archive. A patch whose images are already here is much quicker."
 
-/** Progress while the search runs. */
+/**
+ * Progress while the search runs, in words that hold still: the stage only, never a count of
+ * seconds or detectors, so nothing on the page ticks while the visits play.
+ */
 export function progressSentence(s: DistantStatus): string {
   if (s.status === 'queued') return 'Waiting for another search to finish before this one starts.'
-  const seconds = Math.round(s.seconds)
-  const taken = `${plural(seconds, 'second', 'seconds')} so far`
-  if (s.detector_now !== null) return `Searching detector ${s.detector_now}: ${s.detectors_done} of ${s.detectors_total} done, ${taken}.`
-  if (s.detectors_done >= s.detectors_total && s.detectors_total > 0) return `Checking the catalogue, ${taken}.`
-  return `Starting, ${taken}.`
+  if (s.detectors_done >= s.detectors_total && s.detectors_total > 0) return 'Checking the catalogue.'
+  return `Searching ${s.detectors_total > 0 ? plural(s.detectors_total, 'detector', 'detectors') : 'the detectors'} one after another.`
 }
 
 /** The pass, in words. */

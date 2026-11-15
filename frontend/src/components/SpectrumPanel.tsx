@@ -27,6 +27,7 @@ import {
 } from '../plain'
 import { PlainWords, ScienceFold } from './ScienceFold'
 import './SpectrumPanel.css'
+import './Scroll.css'
 
 // Visits 1 to 3 get a colour each (checked to stay distinguishable with colour-blindness
 // on the panel background; a fourth colour does not pass, so later visits share a grey).
@@ -238,11 +239,8 @@ function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
   const [hover, setHover] = useState<Mark | null>(null)
   const section = useRef<HTMLElement>(null)
 
-  // Bring the panel into view when it opens, and again when the chart arrives and makes
-  // it taller.
-  useEffect(() => {
-    section.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [load.state])
+  // No scrolling here: the page scrolls to a panel once, when it is opened from the bar (App.tsx).
+  // An answer that arrives later must not pull the page back down after the visitor has moved on.
 
   useEffect(() => {
     if (!confirmed) return
@@ -294,7 +292,7 @@ function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
         <>
           <p className="spectrum-what">
             This spot has to be fetched from NASA's archive in every SPHEREx exposure (a few hundred downloads), which
-            takes a few minutes the first time. The target of the view is quick: use "Spectrum of the target".
+            takes a few minutes the first time. The target of the view is quick: press Spectrum in the bar at the top.
           </p>
           <button type="button" onClick={() => setConfirmed(true)}>
             Measure this spot
@@ -408,6 +406,8 @@ function SpectrumChart({ chart, hover, onHover, plain = false, empty }: { chart:
   }
   const message = plain ? empty : chart.empty
   return (
+    // In a narrow window the chart keeps a size its words can be read at and scrolls sideways inside the panel.
+    <div className="chart-scroll">
     <div className="spectrum-plot">
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -431,9 +431,12 @@ function SpectrumChart({ chart, hover, onHover, plain = false, empty }: { chart:
         {chart.ticks.map((t) => (
           <g key={t.text}>
             <line x1={M.l} x2={W - M.r} y1={t.y} y2={t.y} className={t.zero ? 'spectrum-axis' : 'spectrum-grid'} />
-            <text x={M.l - 8} y={t.y + 4} textAnchor="end">
-              {t.text}
-            </text>
+            {/* Beginner reads "higher is brighter" from the axis; the numbers (in mJy) are Expert's. */}
+            {!plain && (
+              <text x={M.l - 8} y={t.y + 4} textAnchor="end">
+                {t.text}
+              </text>
+            )}
           </g>
         ))}
         {[1, 2, 3, 4, 5].map((w) => (
@@ -503,6 +506,7 @@ function SpectrumChart({ chart, hover, onHover, plain = false, empty }: { chart:
           </div>
         </div>
       )}
+    </div>
     </div>
   )
 }

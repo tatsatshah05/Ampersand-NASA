@@ -1,0 +1,14 @@
+/* Wide things in a narrow window scroll sideways inside their panel, never the page (B5).
+   .chart-scroll keeps the colour chart at a size its words can be read at (its 12px text is
+   drawn at no less than about 11px); .table-scroll holds Expert's wide tables. Token-free: no
+   colours here. */
+.chart-scroll,
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.chart-scroll > .spectrum-plot {
+  min-width: 700px;
+}

@@ -43,9 +43,8 @@ function Panel({ query, onClose, level }: Props & { level: UiLevel }) {
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const section = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    section.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [load.state])
+  // No scrolling here: the page scrolls to a panel once, when it is opened from the bar (App.tsx).
+  // An answer that arrives later must not pull the page back down after the visitor has moved on.
 
   useEffect(() => {
     const ctrl = new AbortController()

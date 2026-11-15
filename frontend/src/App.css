@@ -198,6 +198,30 @@
   min-width: 160px;
 }
 
+/* Quiet ways off the page: grey words that turn black on hover (Dev's rule; the methods screen
+   uses it for its way back and its next-tool links). */
+.quiet {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--size-body);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--quick) var(--ease);
+}
+
+.quiet:hover:not(:disabled) {
+  color: var(--ink);
+  background: transparent;
+  text-decoration: none;
+}
+
 /* ---- the bench: plate and inspector ---------------------------------------------------- */
 
 .bench {
@@ -1998,6 +2022,17 @@ main.watchlist {
   padding-bottom: calc(16px + var(--dock-room));
 }
 
+/* The methods screen (ToolsView) has the same bar on top and the same room at its foot. */
+main.tools {
+  --dock-room: 56px;
+  padding-bottom: calc(16px + var(--dock-room));
+}
+
+/* Whatever scrolls to an element (Tab, a jump link) keeps it clear of the dock at the bottom right. */
+html {
+  scroll-padding-bottom: 64px;
+}
+
 @media (max-width: 999px) {
   .topbar.screen-topbar {
     height: auto;
@@ -2041,7 +2076,8 @@ main.training .frame-label {
   main.training {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
-    padding: 24px 16px 40px;
+    /* The foot keeps the dock's room here too, so the last line scrolls clear of the switch. */
+    padding: 24px 16px calc(16px + var(--dock-room));
   }
 
   .viewer,

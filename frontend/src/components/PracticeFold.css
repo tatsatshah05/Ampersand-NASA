@@ -1,0 +1,21 @@
+/* The practice screen's "How to look" (TrainingView.tsx), folded so the picture comes sooner.
+   Plain and token-only: the summary reads as a line of the page's own text with a hairline. */
+.how-to-look-fold {
+  margin: 0 0 16px;
+  max-width: 64ch;
+}
+
+.how-to-look-fold > summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.how-to-look-fold > summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.how-to-look-fold[open] > summary {
+  margin-bottom: 8px;
+}

@@ -144,9 +144,6 @@ function Panel({ query, onClose, onLook, onObjects, level = 'expert' }: Props) {
       {phase.state === 'running' && (
         <div role="status" className="search-progress">
           <p>{phase.status ? progressSentence(phase.status) : 'Starting the search…'}</p>
-          <div className="progress" aria-hidden="true">
-            <span />
-          </div>
           <p className="hint">A patch whose images are already here takes 20 to 50 seconds; otherwise several minutes.</p>
         </div>
       )}

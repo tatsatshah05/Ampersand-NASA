@@ -10,7 +10,7 @@
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady } from './api'
 import { times } from './detection'
 import { measuredRows, realShiftBar, shiftBetween, visitRows } from './motion'
-import { brightnessMayBeTheChange, catalogueCheck, isDrifting, listVisits, monthYear, monthYearLong } from './wording'
+import { brightnessMayBeTheChange, catalogueCheck, isDrifting, listVisits, monthYear, monthYearLong, NOT_FOUND_WORDS, notFoundWhy, type NotFoundWhy } from './wording'
 
 // ---- the step guide ------------------------------------------------------------------------
 
@@ -34,17 +34,17 @@ export interface Step {
   state: StepState
 }
 
-const STEP_LABELS = ['Press a star above', 'Press Blink or a visit', 'Read what changed'] as const
-/** Step 2 for someone whose system asks for less motion: the pictures start still. */
-const STILL_STEP_2 = 'Press Play to flip the visits'
+// Every view opens still (usePlayer.ts), so step 2 is to press Play or Blink. Step 1 says "any" (of the row at the top):
+// a star is already on screen when the page opens, and any other one in the row will do.
+const STEP_LABELS = ['Pick any star', 'Press Play or Blink', 'Read what changed'] as const
 
 /** The three steps. Done ones are those the visitor did; "now" is the first one not done. */
-export function guideSteps(progress: Progress, still = false): Step[] {
+export function guideSteps(progress: Progress): Step[] {
   const done = [progress.chose, progress.flipped, progress.read]
   const now = done.indexOf(false)
-  return STEP_LABELS.map((was, i) => ({
+  return STEP_LABELS.map((label, i) => ({
     n: (i + 1) as 1 | 2 | 3,
-    label: i === 1 && still ? STILL_STEP_2 : was,
+    label,
     state: done[i] ? 'done' : i === now ? 'now' : 'later',
   }))
 }
@@ -94,7 +94,7 @@ const allFrames = (data: FramesReady): Pick<Frame, 'date_start' | 'date_end' | '
 /** The three steps, and the bar at the top that the last line points to. */
 export function stepsInfo(): string[] {
   return [
-    'This page shows how one patch of sky changed between SPHEREx’s visits. The first five buttons are well-known objects, used as tests. Nothing here is a new find.',
+    'This page shows how one patch of sky changed between SPHEREx’s visits. The first five buttons are well-known objects, used as tests. The three after “Caught changing” changed while SPHEREx watched them. Nothing here is a new find.',
     'The bar at the top lists every tool, one after another. Brightness, Colours and the next four open under the picture. Watch brings you back.',
     'Practise, Vote and Three tools open pages of their own. Practise hides a made-up moving object in real photos. Vote shows what our computer search found. None of those finds is confirmed.',
   ]
@@ -177,17 +177,13 @@ export function movementInfo(data: FramesReady | null): string[] {
   if (!data) return [how, unit]
   if (data.mode === 'sum') return [how, `${unit} Here every visit is added into one picture, so nothing can move in it.`]
   const rows = visitRows(data)
-  // The visits with no position, said once: something bright too far away, or no clear spot at all.
+  // The visits with no position, said once for each reason the backend gave (wording.ts notFoundWhy).
   const lost = rows.filter((r) => !r.frame.centroid)
-  const bright = (d: string | null | undefined) => d === 'clear' || d === 'marginal' || d === 'saturated'
-  const tooFar = lost.filter((r) => bright(r.frame.detection)).map((r) => r.frame.epoch ?? 0)
-  const noSpot = lost.filter((r) => !bright(r.frame.detection)).map((r) => r.frame.epoch ?? 0)
-  const gaps = [
-    tooFar.length ? `In ${listVisits(tooFar)} something bright is there, but too far from where this object should be.` : '',
-    noSpot.length ? `In ${listVisits(noSpot)} no clear spot could be measured.` : '',
-  ]
-    .filter(Boolean)
-    .map((g) => ` ${g}`)
+  const gaps = (Object.keys(NOT_FOUND_WORDS) as NotFoundWhy[])
+    .map((why) => {
+      const these = lost.filter((r) => notFoundWhy(r.frame) === why).map((r) => r.frame.epoch ?? 0)
+      return these.length ? ` In ${listVisits(these)}, ${NOT_FOUND_WORDS[why]}.` : ''
+    })
     .join('')
   const measured = measuredRows(rows)
   if (measured.length < 2) return [how, `${unit}${gaps} Fewer than two visits have a clear spot here, so no movement can be measured.`]
@@ -207,7 +203,9 @@ export function movementInfo(data: FramesReady | null): string[] {
     ]
   }
   const here =
-    shift.total < 0.05 ? 'Here it is in the same place as at the start.' : `Here it moved ${shift.total.toFixed(1)} arcseconds, ${pixelsOf(shift.total)}.`
+    shift.total < 0.05
+      ? 'Here it is in the same place as at the start.'
+      : `Here it moved ${shift.total.toFixed(1)} arcseconds, ${pixelsOf(shift.total)}.${shift.total >= 1 ? ` ${coinWords(shift.total)}` : ''}`
   const care =
     shift.total >= realShiftBar(from, to)
       ? 'That is more than the measuring error, so it is less likely to be just a mistake.'
@@ -219,6 +217,16 @@ export function movementInfo(data: FramesReady | null): string[] {
       }${isDrifting(data) ? ' This nearby object really is drifting across the sky.' : ''}`
     : ''
   return [how, `${unit} ${when} ${here} ${care}${catalogue}${gaps}`, ...brightness]
+}
+
+/**
+ * An angle as something to picture: "That is about the width of a coin seen from 500 metres
+ * away." A coin about 2.4 centimetres wide covers `arcsec` arcseconds at this distance.
+ */
+export function coinWords(arcsec: number): string {
+  const metres = 0.024 / ((arcsec * Math.PI) / 648000)
+  const far = metres < 1000 ? `${Math.round(metres / 50) * 50} metres` : `${Number((metres / 1000).toPrecision(metres < 10000 ? 2 : 1))} kilometres`
+  return `That is about the width of a coin seen from ${far} away.`
 }
 
 /** Where to look when what changed may be the brightness, not the place. */

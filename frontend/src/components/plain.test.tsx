@@ -130,8 +130,12 @@ describe('Find changes in Beginner', () => {
     expectPlain(html)
     expect(html).toContain(SEARCH_WAITING)
     expect(html).not.toContain('class="progress"')
-    // Expert keeps its progress line and bar.
-    expect(renderToStaticMarkup(<SearchPanel query={{ ra: 1, dec: 2, fov: 0.1 }} onClose={noop} onLook={noop} onObjects={noop} />)).toContain('class="progress"')
+    // Expert keeps its progress line, but no moving bar either: nothing on the page moves by itself
+    // while the visits play (the words-hold-still rule), and the line names the stage only.
+    const expertHtml = renderToStaticMarkup(<SearchPanel query={{ ra: 1, dec: 2, fov: 0.1 }} onClose={noop} onLook={noop} onObjects={noop} />)
+    expect(expertHtml).toContain('class="search-progress"')
+    expect(expertHtml).not.toContain('class="progress"')
+    expect(expertHtml).not.toMatch(/seconds so far/)
   })
 })
 

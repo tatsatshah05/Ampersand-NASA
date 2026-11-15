@@ -126,3 +126,15 @@ export function feature(key: FeatureKey): Feature {
   if (!found) throw new Error(`No feature called ${key}`)
   return found
 }
+
+/**
+ * Where the bar must scroll (inside itself, never the page) to show its current item whole, or
+ * null when it already shows it. Narrow windows scroll the bar sideways; wide ones never need it.
+ */
+export function scrollToShow(bar: { left: number; width: number; scrollLeft: number }, item: { left: number; width: number }): number | null {
+  const margin = 8
+  const from = item.left - bar.left
+  if (from >= 0 && from + item.width <= bar.width) return null
+  const want = from < 0 ? bar.scrollLeft + from - margin : bar.scrollLeft + from + item.width - bar.width + margin
+  return Math.max(0, want)
+}

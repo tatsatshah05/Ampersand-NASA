@@ -8,6 +8,7 @@ import { chooseUiLevel, DEFAULT_SELECTION, readStoredLevel, storeLevel, TOOLS_AD
 import { newSeed, trainingAddress } from '../training'
 import { FeatureBar, type FeatureLinks } from './FeatureBar'
 import { LevelDock } from './LevelDock'
+import { ScienceFold } from './ScienceFold'
 import {
   answeredSentence,
   candidateSentence,
@@ -38,6 +39,8 @@ import {
   neowiseSentence,
   NOTE_MAX,
   ORDER_SENTENCE,
+  PLAIN_INTRO,
+  PLAIN_TABS,
   pictureUrl,
   TABS,
   tallySentence,
@@ -118,6 +121,22 @@ export function WatchlistView() {
   }
 
   const tab = tabs[group]
+  const tabWords = level === 'beginner' ? PLAIN_TABS : TABS
+  const about = (
+    <>
+      <p className="intro">{INTRO}</p>
+      <p className="intro">{ORDER_SENTENCE}</p>
+      <p className="hint">
+        {patches !== null && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
+        A search of a new patch takes minutes.
+      </p>
+      <p>
+        <a className="button-link" href={EXPORT_CSV_URL} download>
+          For scientists: download the whole list (CSV)
+        </a>
+      </p>
+    </>
+  )
   return (
     <>
       <header className="topbar screen-topbar">
@@ -127,17 +146,19 @@ export function WatchlistView() {
       <main className="watchlist">
         <header>
           <h1>Vote on what the search found</h1>
-          <p className="intro">{INTRO}</p>
-          <p className="intro">{ORDER_SENTENCE}</p>
-          <p className="hint">
-            {patches !== null && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
-            A search of a new patch takes minutes.
-          </p>
-          <p>
-            <a className="button-link" href={EXPORT_CSV_URL} download>
-              For scientists: download the whole list (CSV)
-            </a>
-          </p>
+          {level === 'beginner' ? (
+            <>
+              {PLAIN_INTRO.map((line) => (
+                <p key={line} className="intro">
+                  {line}
+                </p>
+              ))}
+              {/* The machine's own words about the order, the votes and the list, for those who want them. */}
+              <ScienceFold>{about}</ScienceFold>
+            </>
+          ) : (
+            about
+          )}
         </header>
 
         <div className="tabs" role="tablist" aria-label="Groups">
@@ -150,11 +171,11 @@ export function WatchlistView() {
               className={g === group ? 'tab on' : 'tab'}
               onClick={() => setGroup(g)}
             >
-              {TABS[g].label} {counts ? `(${counts[g]})` : ''}
+              {tabWords[g].label} {counts ? `(${counts[g]})` : ''}
             </button>
           ))}
         </div>
-        <p className="hint tab-explain">{TABS[group].explain}</p>
+        <p className="hint tab-explain">{tabWords[group].explain}</p>
 
         {tab.error && (
           <p role="alert" className="notice">
