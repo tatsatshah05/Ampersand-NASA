@@ -6,17 +6,28 @@
 .search-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.search-head h2 {
+  margin: 0;
 }
 
 .search-summary {
-  font-size: 1.05rem;
-  margin: 8px 0;
+  max-width: 64ch;
+  margin: 16px 0 8px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
 }
 
 .search-catalogues {
-  margin: 4px 0 12px;
+  margin: 4px 0 20px;
+  max-width: 76ch;
+  font-size: 15px;
   color: var(--muted);
 }
 
@@ -26,47 +37,69 @@
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 12px;
+  gap: 16px;
 }
 
+/* One find: a grey tile; a candidate worth a look has a black outline. */
 .search-card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--radius-tile);
+  padding: 16px 20px;
   min-width: 0;
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1.47;
   overflow-wrap: anywhere;
 }
 
 .search-card.candidate {
-  border-color: var(--notice);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--ink);
 }
 
 .search-card p {
-  margin: 6px 0;
+  margin: 8px 0;
+}
+
+/* On a grey tile, a grey button would vanish: white instead. */
+.search-card button {
+  background: var(--bg);
+}
+
+.search-card button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.search-card.candidate button,
+.search-card.simulated button {
+  background: var(--surface);
 }
 
 .search-card-head {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: flex-start;
 }
 
+/* The number, as on the picture's ring; its ring is the marks' yellow, darkened for white. */
 .search-badge {
   flex: none;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: 2px solid var(--notice);
+  border: 2px solid var(--chart-saturated);
+  background: var(--bg);
   display: grid;
   place-items: center;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--size-body);
+  font-variant-numeric: tabular-nums;
 }
 
 .search-kind {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: var(--size-body);
 }
 
 .search-headline {
@@ -75,45 +108,62 @@
 }
 
 .search-verdict {
+  display: inline-block;
   margin-left: 8px;
-  padding: 0 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  font-size: 0.8rem;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  font-size: var(--size-small);
+  font-weight: 600;
+  line-height: 22px;
+  vertical-align: 1px;
 }
 
 .search-verdict.caution {
   color: var(--notice);
-  border-color: var(--notice);
+  background: var(--notice-bg);
+  box-shadow: none;
+}
+
+.search-verdict.clean {
+  color: var(--success);
+  background: var(--success-bg);
+  box-shadow: none;
 }
 
 .search-verdict.candidate-tag {
-  color: var(--notice);
+  color: var(--on-ink);
+  background: var(--ink);
+  box-shadow: none;
 }
 
 .search-candidate {
-  border-left: 3px solid var(--notice);
-  padding-left: 10px;
+  border-left: 3px solid var(--ink);
+  padding-left: 12px;
 }
 
 .search-flags {
-  margin: 6px 0;
+  margin: 8px 0;
   padding-left: 20px;
 }
 
 .search-rejected,
 .search-limits {
-  margin-top: 12px;
+  margin-top: 20px;
+  font-size: 15px;
 }
 
 .search-rejected summary,
 .search-limits summary {
+  font-weight: 600;
   cursor: pointer;
 }
 
 .search-failed,
 .search-empty {
-  margin: 8px 0;
+  margin: 12px 0;
 }
 
 /* Markers on the picture: a ring and a number, with a dark edge so they show on white and black. */

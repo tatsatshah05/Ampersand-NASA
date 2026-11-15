@@ -1,8 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-// One typeface for the whole page: Atkinson Hyperlegible, drawn for legibility, in its two weights.
-import '@fontsource/atkinson-hyperlegible/400.css'
-import '@fontsource/atkinson-hyperlegible/700.css'
+// The page uses the system's own face (SF Pro on a Mac), so there is no font to load.
 import './index.css'
 import App from './App.tsx'
 

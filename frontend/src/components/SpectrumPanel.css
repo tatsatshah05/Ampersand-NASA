@@ -1,5 +1,6 @@
 /* Spectrum panel (issue #11). Text stays in the page's text colours and never takes a
-   data colour; the coloured mark beside it carries the identity. */
+   data colour; the coloured mark beside it carries the identity. On white: grey axes and
+   labels, hairline grid, the marks in hues that hold 3:1 against the page. */
 .spectrum {
   grid-column: 1 / -1;
 }
@@ -7,31 +8,57 @@
 .spectrum-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.spectrum-head h2 {
+  margin: 0;
 }
 
 .spectrum-what {
-  margin: 4px 0;
+  margin: 6px 0;
+  max-width: 76ch;
   color: var(--muted);
+  font-size: 15px;
+  line-height: 1.47;
 }
 
+/* One button per visit: the legend, and the way to compare visits. A visit in the chart is a
+   black pill; one left out is a grey pill with its dot faded. */
 .spectrum-visits {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0 4px;
+  gap: 8px;
+  margin: 16px 0 8px;
 }
 
 .spectrum-visits button {
-  font-size: 0.88rem;
-  padding: 4px 10px;
-  opacity: 0.45;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px 0 12px;
+  font-size: var(--size-body);
+  color: var(--muted);
+}
+
+.spectrum-visits button:hover:not(:disabled) {
+  color: var(--text);
 }
 
 .spectrum-visits button[aria-pressed='true'] {
-  opacity: 1;
-  border-color: var(--muted);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.spectrum-visits button[aria-pressed='true']:hover:not(:disabled) {
+  background: var(--ink-hover);
+  color: var(--on-ink);
+}
+
+.spectrum-visits button[aria-pressed='false'] i {
+  opacity: 0.35;
 }
 
 .spectrum-visits i {
@@ -39,27 +66,31 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-right: 6px;
+  margin-right: 8px;
+  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.9);
 }
 
 .spectrum-plot {
   position: relative;
   max-width: 760px;
+  margin-top: 8px;
 }
 
 .spectrum-plot svg {
   display: block;
   width: 100%;
   height: auto;
+  overflow: visible;
 }
 
 .spectrum-plot text {
   fill: var(--muted);
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .spectrum-plot text.spectrum-rail {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .spectrum-plot text.spectrum-empty {
@@ -68,11 +99,11 @@
 }
 
 .spectrum-grid {
-  stroke: var(--border);
+  stroke: var(--line);
 }
 
 .spectrum-axis {
-  stroke: #666c78;
+  stroke: var(--muted);
 }
 
 /* A thin ring in the panel colour keeps overlapping dots apart. */
@@ -82,26 +113,31 @@
 
 .spectrum-ring {
   fill: none;
-  stroke: var(--text);
+  stroke: var(--ink);
   stroke-width: 1.5;
 }
 
+/* The tooltip: a small white card with a soft shadow. */
 .spectrum-tip {
   position: absolute;
   pointer-events: none;
-  background: #000;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 9px;
-  font-size: 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  font-size: var(--size-body);
+  line-height: 1.43;
   white-space: nowrap;
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .spectrum-tip b {
   display: block;
   color: var(--text);
-  font-size: 1.1em;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .spectrum-tip i {
@@ -115,20 +151,28 @@
 
 .spectrum-foot {
   max-width: 760px;
-  font-size: 0.88rem;
+  margin-top: 12px;
+  font-size: var(--size-body);
+  line-height: 1.5;
   color: var(--muted);
 }
 
 .spectrum-foot p {
-  margin: 6px 0;
+  margin: 8px 0;
 }
 
 .spectrum-foot details {
-  margin-top: 6px;
+  margin-top: 8px;
+}
+
+.spectrum-foot summary {
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 /* Stars whose light is inside the measuring circle: the reader should not miss it. */
 .stars-in-circle {
   border-left: 3px solid currentColor;
-  padding-left: 0.6rem;
+  padding-left: 12px;
 }
