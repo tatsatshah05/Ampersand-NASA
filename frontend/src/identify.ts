@@ -404,6 +404,29 @@ export function readableName(name: string): string {
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
 const sameName = (a: string, b: string) => norm(a) === norm(b) || norm(readableName(a)) === norm(readableName(b))
 
+/** A name made of words only (letters, spaces, apostrophes, hyphens): "Altair", "Barnard's star". */
+const isWords = (s: string) => /^\p{L}[\p{L}' -]*$/u.test(s) && s.replace(/[^\p{L}]/gu, '').length >= 3
+/** Each all-lower-case word capitalised, as a name is written; words that already hold a capital ("RW") are left alone. */
+const asName = (s: string) => s.replace(/(^|[ -])(\p{Ll})(?=\p{Ll}*(?:['’]\p{Ll}+)?(?:[ -]|$))/gu, (_, lead: string, first: string) => lead + first.toUpperCase())
+
+/**
+ * The name to show for an object found by a name the visitor typed. SIMBAD's own identifier is
+ * exact, but it can be an abbreviation nobody types ("alf Aql" for Altair, "eps Ind B"). So:
+ * the name typed, written as a name, when it was typed in words ("altair" -> "Altair"); SIMBAD's
+ * identifier spelled out when that is what was typed or when a catalogue number was typed
+ * ("eps Ind B" -> "Epsilon Indi B"); SIMBAD's identifier as it is otherwise ("M 31").
+ * `simbad` is the identifier without its catalogue prefix (resolve.ts, plainName).
+ */
+export function nameToShow(typed: string, simbad: string): string {
+  const asked = typed.replace(/\s+/g, ' ').trim()
+  const spelled = readableName(simbad)
+  const abbreviated = spelled !== simbad // a Greek-letter, variable-star or numbered designation
+  if (norm(asked) === norm(simbad)) return abbreviated ? spelled : isWords(simbad) ? asName(simbad) : simbad
+  if (abbreviated && norm(asked) === norm(spelled)) return spelled
+  if (isWords(asked)) return asName(asked)
+  return spelled
+}
+
 // ------------------------------------------------------------------ what the card says
 
 /** Generic SIMBAD types, where the spectral type says more about what the thing is. */

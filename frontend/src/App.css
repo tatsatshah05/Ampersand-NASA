@@ -337,6 +337,38 @@
   background: rgb(0 0 0 / 0.72);
 }
 
+/* Loading: the drawing of the stepping star leads, the words follow it, centred and calm. The
+   box is nearly opaque, so the marks of the picture under it do not show through the drawing. */
+.plate-status.loading .plate-status-text {
+  width: min(100%, 40ch);
+  padding: 18px 24px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+}
+
+/* The explanation waits a couple of seconds, in room that is kept for it from the start. */
+.plate-status-more.waiting {
+  visibility: hidden;
+}
+
+.plate-status-more {
+  transition: opacity 0.3s ease;
+}
+
+.plate-status.loading .plate-status-title {
+  margin-top: 2px;
+}
+
+.plate-status.loading .elapsed {
+  margin-bottom: 0;
+  font-size: var(--size-small, 13px);
+}
+
+.stage-status.loading .status-card {
+  text-align: center;
+}
+
 .plate-status-text p {
   margin: 0 0 10px;
   color: var(--muted);
@@ -356,24 +388,6 @@
 
 .plate-status button {
   pointer-events: auto;
-}
-
-.plate-progress {
-  position: absolute;
-  top: var(--mat);
-  left: var(--mat);
-  right: var(--mat);
-  height: 2px;
-  overflow: hidden;
-  background: rgb(255 255 255 / 0.08);
-}
-
-.plate-progress span {
-  display: block;
-  width: 30%;
-  height: 100%;
-  background: var(--text);
-  animation: travel 1.4s ease-in-out infinite alternate;
 }
 
 @keyframes appear {
@@ -397,13 +411,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .plate-status,
-  .plate-progress span {
+  .plate-status {
     animation: none;
-  }
-
-  .plate-progress span {
-    display: none;
   }
 }
 
@@ -452,6 +461,21 @@
   }
 
   .before-after .before-after-when {
+    display: none;
+  }
+}
+
+/* On a phone three visits fit the row without one being cut off: each tile gives up its tiny
+   picture (the big picture above is the one that matters) and shares the width. A fourth
+   visit and more still scroll sideways. */
+@media (max-width: 600px) {
+  .visit-strip .visit {
+    min-width: 84px;
+    gap: 0;
+    padding: 8px 10px;
+  }
+
+  .visit-strip .visit img {
     display: none;
   }
 }

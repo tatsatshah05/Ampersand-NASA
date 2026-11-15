@@ -37,6 +37,7 @@ import {
   widthWords,
   withError,
   type IdentifyResult,
+  nameToShow,
 } from './identify'
 import { portraitLayout } from './portrait'
 
@@ -358,5 +359,29 @@ describe('reading level', () => {
     }
     expect(colourDrawn(r)).toBe('dark')
     expect(beginnerFacts(r)[1].text).toContain(`That is ${TOO_COOL}.`)
+  })
+})
+
+describe('the name shown for a typed search', () => {
+  it('is the name the visitor typed in words, written as a name, not the catalogue abbreviation', () => {
+    expect(nameToShow('altair', 'alf Aql')).toBe('Altair')
+    expect(nameToShow('Altair', 'alf Aql')).toBe('Altair')
+    expect(nameToShow('proxima centauri', 'Proxima Centauri')).toBe('Proxima Centauri')
+    expect(nameToShow('andromeda galaxy', 'M 31')).toBe('Andromeda Galaxy')
+  })
+  it("keeps SIMBAD's spelling of a name in words, capitalised as a name", () => {
+    expect(nameToShow('barnards star', "Barnard's star")).toBe("Barnard's Star")
+    expect(nameToShow("Barnard's Star", "Barnard's star")).toBe("Barnard's Star")
+  })
+  it('spells out an abbreviation when that is what was typed, or when a catalogue number was typed', () => {
+    expect(nameToShow('eps Ind B', 'eps Ind B')).toBe('Epsilon Indi B')
+    expect(nameToShow('Epsilon Indi B', 'eps Ind B')).toBe('Epsilon Indi B')
+    expect(nameToShow('HD 187642', 'alf Aql')).toBe('Alpha Aquilae')
+    expect(nameToShow('rw aurigae', 'RW Aur')).toBe('RW Aurigae')
+    expect(nameToShow('R Dra', 'R Dra')).toBe('R Draconis')
+  })
+  it('leaves a catalogue name as SIMBAD gives it', () => {
+    expect(nameToShow('WISE 0855-0714', 'WISE J085510.83-071442.5')).toBe('WISE J085510.83-071442.5')
+    expect(nameToShow('m31', 'M 31')).toBe('M 31')
   })
 })

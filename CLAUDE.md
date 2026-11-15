@@ -1196,6 +1196,13 @@ Rules of the page:
   last. It holds the finishing pass on the side column, the table of visits, the steps and the "i" popovers.
 - Beginner's words follow `guide.ts`: plain and short, no "sigma", "flux", "epoch", "detector", "centroid" or "mJy"
   outside a closed fold (`features_check.js` scans for them), never "discovery" or "new planet".
+- **While a view loads** (`components/StatusCard.tsx`, `LoadingStar.tsx`): the box over the picture shows a small
+  drawing of a star stepping across three places with the amber "measured here" ring following it, the name being
+  loaded, and after two seconds why a first load is slow and the seconds so far. The drawing is decoration, never
+  data, and stands still with "reduce motion". The box keeps one size from the start. While ANOTHER object loads, the
+  side column hides the last object's words behind one line, "Loading the pictures of ...".
+- **The name shown for a typed search** is the one the visitor knows (`identify.ts`, `nameToShow`): "Altair", not
+  SIMBAD's "alf Aql"; an abbreviation is spelled out ("eps Ind B" becomes "Epsilon Indi B").
 
 The sweep's three candidates, in three lines (detail, numbers and evidence: `docs/sweep.md`; the ruling:
 `docs/sweep/vetting/ruling.json`; every search for an earlier report and the checklist for a person:

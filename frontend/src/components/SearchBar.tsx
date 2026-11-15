@@ -26,6 +26,7 @@ import {
   ResolveError,
   type ResolvedName,
 } from '../resolve'
+import { nameToShow } from '../identify'
 import './SearchBar.css'
 
 /** What a search hands to the app: where to look and, when known, how the object there moves. */
@@ -193,10 +194,15 @@ function motionText(found: ResolvedName): string {
   return ` It has moved ${amount} arcsec since 2000.`
 }
 
-function foundText(found: ResolvedName): string {
+/** `typed`: the name that was looked up, so the message uses the name the page shows (identify.ts, nameToShow). */
+function foundText(found: ResolvedName, typed: string): string {
   const where = `RA ${formatRaDeg(found.ra)}°, Dec ${formatDecDeg(found.dec)}°`
   const source = found.source ? ` Source: ${found.source}.` : ''
-  return `Found ${plainName(found.name)} at ${where}.${motionText(found)}${source}`
+  const catalogued = plainName(found.name)
+  const shown = nameToShow(typed, catalogued)
+  // The catalogue's own identifier is still said once when the page shows another name for it.
+  const who = shown === catalogued ? shown : `${shown} (${catalogued} in the catalogue)`
+  return `Found ${who} at ${where}.${motionText(found)}${source}`
 }
 
 /** Called with what a search found, and the target button's name when it came from one (or a typed name that is one). */
@@ -272,11 +278,12 @@ function useSkySearch(onSelect: OnSelect): SearchState {
     }
     if (mine !== latest.current) return
     pending.current = null
-    setStatus({ kind: 'found', text: pressed && preset ? `Found ${preset.name}.` : foundText(found) })
+    setStatus({ kind: 'found', text: pressed && preset ? `Found ${preset.name}.` : foundText(found, name) })
     const target: SearchTarget = {
       ra: found.ra,
       dec: found.dec,
-      name: plainName(found.name),
+      // The name the visitor knows it by, not SIMBAD's abbreviation ("Altair", not "alf Aql"): identify.ts, nameToShow.
+      name: nameToShow(name, plainName(found.name)),
       pmra: found.pmra,
       pmdec: found.pmdec,
       parallax: found.parallax,

@@ -124,3 +124,9 @@
 .training .viewer {
   scroll-margin-top: 60px;
 }
+
+/* Room under the last line, so it can be scrolled clear of the Beginner | Expert switch that
+   floats at the bottom right. */
+.training {
+  padding-bottom: 88px;
+}
