@@ -1215,6 +1215,30 @@ ends 16 px short of the bar's end in Beginner, 36 in Expert; at 1263, a 1280 win
 last pill overruns by under 1 px). The Beginner | Expert switch is fixed at the bottom right
 (`components/LevelDock.tsx`).
 
+The features stay in view, and the guided tour (2026-11-15, branch `agent/demo-tour`; asked for by the team lead for the
+presentation):
+- The ten features are no longer a bar that scrolls away. In a window 1000 px or wider `nav.feature-bar` is a list down
+  the left edge, fixed while the page scrolls (`polish.css`, "the ten features stay in view": `--rail-w` 184 px, 168 px
+  below 1440 px, and `#root` is padded by it); narrower, it is a strip fixed along the top (`--bar-h` 42 px, `#root`
+  padded at the top, the practice screen's SIMULATION banner sticks under it). Same markup, order and marks; every item
+  carries `data-feature=<key>`. A fixed element is placed against an ancestor with a backdrop filter, so `.topbar` has
+  none any more. The row of stars is one step tighter below 1440 px so that all eleven names fit from 1280 px up. The
+  page's sentences say "in the list of features", not "in the bar at the top". `features_check.js` now checks the list
+  at the left edge (or the strip at the top) and that the features are still in view with each tool open.
+- The tour: `?demo=1` (or `?demo=<n>`, removed from the address at once) or the "Tour" button fixed at the bottom left
+  (hidden under 700 px) starts it; `frontend/src/tour.ts` holds the 24 steps and all logic, `components/Tour.tsx` and
+  `Tour.css` draw a ring round the thing to press and a card (step n of 24, title, "Press: ...", what it shows; Back,
+  Next, End tour; Right and Left arrows, Escape). The step is kept in `sessionStorage` (`spherex-tour-step`), so it
+  survives the page loads between screens. Every step has its own address: Next and Back first bring the page there
+  (so a presenter who has wandered off is brought back), Next presses the ringed thing for the presenter, pressing it
+  oneself also moves on, and a link that leads to the next step's place ("Watch it appear" on any card) moves the
+  tour on instead of being pulled back. It covers the opening view, the words beside the picture, the player, the
+  visits, Beginner and Expert, the search, the star buttons, Barnard's Star against Gaia, each of the ten features,
+  "Pick a patch of sky", a candidate's card and view, and the credits. It only opens places whose answers are
+  pre-built (the star buttons' own addresses, `?train=1&level=easy`): its requests were compared with those the
+  buttons and tools make. Its words follow Beginner's rules, and a step that says "candidate" must contain
+  `finds.ts` `CANDIDATE_LINE` (`tour.test.ts`). When it is not running it adds nothing but the "Tour" button.
+
 Rules of the page:
 - **The words hold still while the visits play.** The side column has one sentence about the whole run and one table
   of all visits. While the pictures play or blink, no visible word changes, in either level, with every fold open or a

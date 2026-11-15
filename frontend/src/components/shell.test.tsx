@@ -231,7 +231,8 @@ describe('the page with a view loaded', () => {
       ['Small bodies', 'Small bodies: known asteroids and comets'],
       ['Object card', 'Catalogue identity and parameters of the object'],
     ]) {
-      expect(top).toMatch(new RegExp(`<button class="feature-item" title="${title}[^"]*" type="button"><span class="feature-text" data-text="${label}">`))
+      // Each item also carries its key (data-feature), by which the guided tour finds it at either level.
+      expect(top).toMatch(new RegExp(`<button class="feature-item" title="${title}[^"]*" data-feature="[a-z]+" type="button"><span class="feature-text" data-text="${label}">`))
     }
     expect(top).not.toContain('aria-disabled')
     expect(html).not.toContain('Measure and search')

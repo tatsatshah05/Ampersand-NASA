@@ -475,10 +475,11 @@
   }
 }
 
-@media (min-width: 1000px) and (max-width: 1419px) {
+/* (1603 px since the features became a list at the left, 184 px wide: the row has that much less.) */
+@media (min-width: 1000px) and (max-width: 1603px) {
   .targets .searchbar {
-    flex-basis: 172px;
-    min-width: 150px;
+    flex-basis: 150px;
+    min-width: 130px;
   }
 
   .target {
@@ -492,6 +493,28 @@
 
   .target-divider {
     margin: 0 4px;
+  }
+}
+
+/* One step tighter below 1440 px, where the list at the left leaves the row under 1256 px: at 1280 px
+   all eleven names are still in view. Narrower than that the row scrolls inside itself, as before. */
+@media (min-width: 1000px) and (max-width: 1439px) {
+  .targets {
+    gap: 8px;
+  }
+
+  .targets .searchbar {
+    flex-basis: 118px;
+    min-width: 108px;
+  }
+
+  .target {
+    padding: 0 5px;
+    font-size: 12.5px;
+  }
+
+  .target-divider {
+    margin: 0 2px;
   }
 }
 
@@ -590,4 +613,114 @@
     linear-gradient(var(--bg) 40%, transparent) top / 100% 28px no-repeat local,
     linear-gradient(transparent, var(--bg) 60%) bottom / 100% 28px no-repeat local,
     linear-gradient(transparent, var(--surface-hover)) bottom / 100% 16px no-repeat scroll;
+}
+
+/* ---- the ten features stay in view ------------------------------------------------------- */
+/* Asked for on 2026-11-15: to go from one feature of a star to another without scrolling back up
+   to the bar. In a wide window the bar is a list down the left edge that stays where it is while
+   the page scrolls, and the page keeps to the right of it. In a narrow window the bar is a strip
+   fixed along the top, and the page starts under it. Same ten items, same order, same marks.
+
+   A fixed element is placed against the nearest ancestor with a backdrop filter instead of the
+   window, so the top bar gives up its blur: nothing ever scrolled under it, so nothing is lost. */
+:root {
+  --rail-w: 184px;
+  --bar-h: 42px;
+}
+
+/* A little narrower in a laptop-width window, where the row of stars needs the room. */
+@media (max-width: 1439px) {
+  :root {
+    --rail-w: 168px;
+  }
+}
+
+.topbar {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--bg);
+}
+
+@media (min-width: 1000px) {
+  #root {
+    padding-left: var(--rail-w);
+  }
+
+  .topbar .feature-bar {
+    position: fixed;
+    z-index: 30;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--rail-w);
+    height: auto;
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* At the foot, room for the "Tour" button that is fixed in this corner. */
+    padding: 60px 12px 72px;
+    background: var(--bg);
+    border-right: 1px solid var(--line);
+  }
+
+  .topbar .feature-list {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .topbar .feature-li {
+    display: block;
+  }
+
+  .topbar .feature-item {
+    display: flex;
+    width: 100%;
+    height: 34px;
+    padding: 0 12px;
+    justify-content: flex-start;
+  }
+
+  /* The divider before the three screens of their own: a line across instead of one down. */
+  .topbar .feature-first-screen::before {
+    display: block;
+    width: auto;
+    height: 1px;
+    margin: 8px 12px;
+  }
+}
+
+@media (max-width: 999px) {
+  #root {
+    padding-top: var(--bar-h);
+  }
+
+  .topbar:has(.feature-bar) {
+    padding-bottom: 12px;
+  }
+
+  .topbar .feature-bar {
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--bar-h);
+    margin: 0;
+    padding: 0 8px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* The practice screen's banner stays in view under the strip, never behind it. */
+  .sim-banner {
+    top: var(--bar-h);
+  }
+
+  /* A tool that is opened lands under the strip, not behind it (the page scrolls to its slot), and so
+     does the top of the page when "Watch" brings the picture back. */
+  .tool-slot,
+  .shell {
+    scroll-margin-top: var(--bar-h);
+  }
 }

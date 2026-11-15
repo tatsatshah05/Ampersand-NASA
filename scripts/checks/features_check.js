@@ -1,5 +1,6 @@
-// Is every feature in one bar at the top, and does the Beginner | Expert switch at the bottom
-// right change how everything is written?
+// Is every feature in one bar that stays in view (a list down the left edge of a wide window, a strip along
+// the top of a narrow one), and does the Beginner | Expert switch at the bottom right change how everything
+// is written?
 // node features_check.js <playwright-core path> <base url> <out dir>
 //
 // The request this guards (the team lead, 14 Nov 2026): "where are the different features we are
@@ -82,7 +83,12 @@ async function setLevel(page, label) {
       const bar = await page.evaluate(`(${barItems.toString()})()`);
       check(!!bar, `${tag}: there is a navigation bar named "Features"`);
       if (!bar) { await page.close(); continue; }
-      check(bar.top >= 0 && bar.bottom <= 120, `${tag}: the bar is at the top of the page (from ${Math.round(bar.top)} to ${Math.round(bar.bottom)} px)`);
+      // RULE CHANGED (15 Nov 2026). The team lead: "can we have the 10 things about that star ... on the side bar so
+      // that one can jump from one to another without keeping on going up and down". In a window 1000 px or wider
+      // the features are a list down the left edge; narrower, a strip along the top. Both stay where they are when
+      // the page scrolls: checked below, each time a tool has been pressed and the page has scrolled to it.
+      if (w >= 1000) check(bar.left >= -0.5 && bar.left <= 1 && bar.right <= 240 && bar.top <= 1, `${tag}: the features are a list down the left edge (from ${Math.round(bar.left)} to ${Math.round(bar.right)} px across)`);
+      else check(bar.top >= 0 && bar.bottom <= 120, `${tag}: the bar is at the top of the page (from ${Math.round(bar.top)} to ${Math.round(bar.bottom)} px)`);
       const want = FEATURES.map((f) => f[mode]);
       const got = bar.items.map((i) => i.text);
       check(JSON.stringify(got) === JSON.stringify(want), `${tag}: the bar lists every feature in order, in this level's words${JSON.stringify(got) === JSON.stringify(want) ? '' : ` (shows: ${got.join(' | ')}; wanted: ${want.join(' | ')})`}`);
@@ -111,6 +117,9 @@ async function setLevel(page, label) {
         const state = await page.evaluate(`[(${barItems.toString()})(), (${panelWords.toString()})()]`);
         const cur = state[0].items.find((i) => i.current && i.current !== 'false');
         check(!!cur && cur.text === f[mode], `${tag}: pressing "${f[mode]}" marks it as the current feature${cur ? '' : ' (nothing marked)'}`);
+        // The request of 15 Nov: the features are still there to press after the page has scrolled to the tool.
+        const inView = !!cur && cur.left >= -0.5 && cur.right <= w + 0.5 && state[0].top >= -1 && state[0].top <= 1;
+        check(inView, `${tag}: with "${f[mode]}" open the features are still in view (the bar's top edge is at ${Math.round(state[0].top)} px of the window)`);
         const panel = state[1].find((p) => p.id === 'tool-' + f.key) || state[1][state[1].length - 1];
         check(!!panel && panel.text.length > 40, `${tag}: pressing "${f[mode]}" opens its panel${panel ? '' : ' (no panel found; panels on the page: ' + state[1].map((p) => p.id).join(', ') + ')'}`);
         if (panel && mode === 'beginner') {
@@ -120,7 +129,12 @@ async function setLevel(page, label) {
       }
       // 4. Back to the picture.
       await page.locator('nav[aria-label="Features"] :is(a, button)', { hasText: new RegExp('^' + FEATURES[0][mode].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }).first().click();
-      await page.waitForTimeout(900);
+      // REPAIRED (15 Nov 2026): the page scrolls back smoothly, and with the features in a list at the left the
+      // panels are narrower and the page longer, so the way back takes more than the 900 ms this used to wait
+      // (the picture was 15 px short of the window's top at 900 ms and in place at 1.5 s). Wait until the page
+      // has stopped scrolling, 4 s at most; the rule (the picture is back in view) is as it was.
+      await page.waitForTimeout(300);
+      await page.evaluate(() => new Promise((done) => { let last = window.scrollY, still = 0; const t0 = Date.now(); const tick = () => { still = window.scrollY === last ? still + 1 : 0; last = window.scrollY; if (still >= 6 || Date.now() - t0 > 4000) done(null); else setTimeout(tick, 50); }; tick(); }));
       const home = await page.evaluate(`[(${barItems.toString()})(), (() => { const r = document.querySelector('.stage').getBoundingClientRect(); return r.top >= -1 && r.top < window.innerHeight * 0.6; })()]`);
       const cur0 = home[0].items.find((i) => i.current && i.current !== 'false');
       check(!!cur0 && cur0.text === FEATURES[0][mode] && home[1], `${tag}: pressing "${FEATURES[0][mode]}" brings the picture back into view and marks it current`);

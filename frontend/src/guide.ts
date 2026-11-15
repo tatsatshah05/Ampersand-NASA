@@ -56,7 +56,7 @@ export function guideSteps(progress: Progress): Step[] {
 export const stepName = (step: Step): string =>
   `Step ${step.n}, ${step.state === 'done' ? 'done' : step.state === 'now' ? 'you are here' : 'still to do'}`
 
-export const GO_FURTHER = 'Then try the other tools in the bar at the top.'
+export const GO_FURTHER = 'Then try the other tools in the list of features.'
 
 // ---- the small "i" buttons -----------------------------------------------------------------
 
@@ -99,7 +99,7 @@ const allFrames = (data: FramesReady): Pick<Frame, 'date_start' | 'date_end' | '
 export function stepsInfo(): string[] {
   return [
     'This page shows how one patch of sky changed between SPHEREx’s visits. The first three buttons are candidates our own search found: nobody has confirmed them yet. The next five are well-known objects, used as tests. The last three changed while SPHEREx watched them.',
-    'The bar at the top lists every tool, one after another. Brightness, Colours and the next four open under the picture. Watch brings you back.',
+    'The list of features has every tool, one after another. Brightness, Colours and the next four open under the picture. Watch brings you back.',
     'Practise, Observe anomalies and Three tools open pages of their own. Practise hides a made-up moving object in real photos. Observe anomalies shows what our searches saw change. None of those finds is confirmed.',
   ]
 }
@@ -234,7 +234,7 @@ export function coinWords(arcsec: number): string {
 }
 
 /** Where to look when what changed may be the brightness, not the place. */
-export const BRIGHTNESS_POINTER = 'To see if it got brighter or fainter, press Brightness in the bar at the top.'
+export const BRIGHTNESS_POINTER = 'To see if it got brighter or fainter, press Brightness in the list of features.'
 
 /** The line about how clearly the object is seen, in every visit at once. */
 export function detectionInfo(data: FramesReady | null): string[] {
@@ -316,7 +316,7 @@ export function brightStarInfo(bright: BrightStar[] | null | undefined): string[
 /** The Beginner | Expert switch. */
 export function levelInfo(): string[] {
   return [
-    'Both levels have every tool in the bar at the top. Beginner says what each one shows in plain words. Expert shows it as scientists read it, with every number in view.',
+    'Both levels have every tool in the list of features. Beginner says what each one shows in plain words. Expert shows it as scientists read it, with every number in view.',
     'Expert also adds other infrared colours, a picture of what changed, and one sum of all visits. Your choice is remembered on this device.',
   ]
 }

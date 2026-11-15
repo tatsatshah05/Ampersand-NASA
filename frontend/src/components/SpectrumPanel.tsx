@@ -292,7 +292,7 @@ function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
         <>
           <p className="spectrum-what">
             This spot has to be fetched from NASA's archive in every SPHEREx exposure (a few hundred downloads), which
-            takes a few minutes the first time. The target of the view is quick: press Spectrum in the bar at the top.
+            takes a few minutes the first time. The target of the view is quick: press Spectrum in the list of features.
           </p>
           <button type="button" onClick={() => setConfirmed(true)}>
             Measure this spot

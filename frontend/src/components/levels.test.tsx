@@ -120,7 +120,7 @@ describe('the page at each level', () => {
   it('Beginner points to the bar in the guide, and the switch says both levels have every tool', () => {
     const html = viewerAt('')
     expect(html).toContain(`class="guide-further">${GO_FURTHER}<`)
-    expect(GO_FURTHER).toBe('Then try the other tools in the bar at the top.')
+    expect(GO_FURTHER).toBe('Then try the other tools in the list of features.')
     expect(html).toContain('aria-label="About Beginner and Expert"')
     expect(levelInfo().join(' ')).toContain('Both levels have every tool')
     expect(EXPERT_ADDS).toContain('the six detectors, the difference and sum views and the overlays')

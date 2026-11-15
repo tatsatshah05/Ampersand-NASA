@@ -81,11 +81,11 @@ describe('the steps', () => {
     expect(stepName(guideSteps({ chose: true, flipped: false, read: false })[0])).toBe('Step 1, done')
   })
   it('end by pointing to the other tools, in the bar at the top', () => {
-    expect(GO_FURTHER).toBe('Then try the other tools in the bar at the top.')
+    expect(GO_FURTHER).toBe('Then try the other tools in the list of features.')
   })
   it('explain the bar, not the two links it replaced, and keep saying no find is confirmed', () => {
     const text = stepsInfo().join(' ')
-    expect(text).toContain('The bar at the top lists every tool')
+    expect(text).toContain('The list of features has every tool')
     expect(text).toContain('Practise, Observe anomalies and Three tools open pages of their own.')
     expect(text).toContain('None of those finds is confirmed.')
     // The first three buttons are our own candidates: said to be unconfirmed, never a find.
@@ -216,7 +216,7 @@ describe('the bright-star warning and the switch', () => {
   })
   it('the switch says both levels have every tool, written differently, and what only Expert adds', () => {
     const text = levelInfo().join(' ')
-    expect(text).toContain('Both levels have every tool in the bar at the top.')
+    expect(text).toContain('Both levels have every tool in the list of features.')
     expect(text).toContain('plain words')
     expect(text).toContain('Expert also adds other infrared colours, a picture of what changed, and one sum of all visits.')
     expect(text).toContain('remembered on this device')
@@ -287,7 +287,7 @@ describe('what the side column says in its "i" instead (real saved answers)', ()
     expect(movementInfo(rwAur)).toContain(BRIGHTNESS_POINTER)
     expect(movementInfo(rwAur).join(' ')).not.toContain('drifting')
     expect(movementInfo(nova)).toContain(BRIGHTNESS_POINTER)
-    expect(BRIGHTNESS_POINTER).toBe('To see if it got brighter or fainter, press Brightness in the bar at the top.')
+    expect(BRIGHTNESS_POINTER).toBe('To see if it got brighter or fainter, press Brightness in the list of features.')
   })
   it('the bright-star warning on the page is one sentence and keeps its caution; the "i" says exactly where', () => {
     const middle = [{ gmag: 6.37, distance_arcmin: 0, inside_picture: true }]

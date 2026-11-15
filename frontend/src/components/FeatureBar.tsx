@@ -53,6 +53,8 @@ export function FeatureBar({ level, current, links, onOpen, ready = true }: Prop
           const common = {
             className: f.kind === 'screen' ? 'feature-item feature-screen' : 'feature-item',
             title: f.about[level],
+            // For the guided tour (tour.ts), which finds an item by its key whatever the level's words are.
+            'data-feature': f.key,
             'aria-current': here ? ('page' as const) : undefined,
           }
           const text = (
