@@ -416,7 +416,7 @@ export function SearchField({ search }: { search: SearchState }) {
           value={text}
           onChange={(e) => search.edit(e.target.value)}
           aria-label="Search by name or coordinates"
-          placeholder="Search a star or coordinates"
+          placeholder="Search the sky"
           maxLength={200}
           autoComplete="off"
           autoCapitalize="none"
