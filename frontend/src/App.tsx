@@ -396,9 +396,8 @@ export function Viewer() {
               )}
             </Stage>
             <p id="stage-help" className="hint">
-              Scroll or pinch to zoom, drag to move,{expert && ' click a spot to measure its spectrum.'}{' '}
-              The space bar plays and
-              pauses and the arrow keys step. With the image selected, + and - zoom and Shift with an arrow key
+              Scroll or pinch to zoom, drag to move{expert ? ', click a spot to measure its spectrum' : ''}. The space bar
+              plays and pauses and the arrow keys step. With the image selected, + and - zoom and Shift with an arrow key
               moves it. North is up and east is left. A flat white patch is too bright to measure
               {expert ? '; hatching is sky with no data.' : '.'}
             </p>
