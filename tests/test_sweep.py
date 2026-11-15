@@ -176,6 +176,14 @@ def test_one_image_cannot_confirm_when_two_are_asked_for(measured, images):
     assert sweep.change_test(e[1][:1], e[0], min_bright=1)["passes"]
 
 
+def test_a_saturated_measurement_is_never_evidence_of_absence(measured, images):
+    e = _epochs(measured, images)
+    lower_limits = [{**m, "status": "saturated"} for m in e[0]]
+    result = sweep.change_test(e[1], lower_limits)
+    assert not result["passes"] and result["reason"] == "no data"
+    assert sweep.change_test(lower_limits, e[0], min_bright=2)["passes"] is False    # and 0 mJy is not bright
+
+
 def test_an_unusable_measurement_is_never_a_pass(measured, images):
     e = _epochs(measured, images)
     broken = [{**m, "status": "flagged", "flux": None, "err": None} for m in e[0]]

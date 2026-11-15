@@ -463,11 +463,14 @@ def change_test(bright: list[dict[str, Any]], faint: list[dict[str, Any]], min_m
     faint-side image must be at most that image's brightness over `ratio`, or absent: below
     `absent_sigma` times its own noise while the bright side is also at least ten times that
     noise. An unusable measurement (flagged, off the image) is not used; with no usable one on
-    a side the answer is "no data" and never a pass. `min_bright` is the number of usable images the
+    a side the answer is "no data" and never a pass. On the faint side only fully measured images
+    count: a saturated one gives a lower limit, which says nothing about being faint. `min_bright` is the
+    number of usable images the
     bright side needs: 1 for a plain two-visit comparison, 2 to have the source confirmed by a second image.
     """
     b = [m for m in bright if is_valid(m)]
-    f = [m for m in faint if is_valid(m)]
+    # A saturated measurement is a lower limit: evidence that a source is bright, never that it is absent.
+    f = [m for m in faint if is_valid(m) and m["status"] == "ok"]
     out: dict[str, Any] = {"passes": False, "n_bright": len(b), "n_faint": len(f), "ratio": None}
     if len(b) < min_bright or not f:
         out["reason"] = "no data"
@@ -574,6 +577,25 @@ def k_mjy(mag: float | None) -> float | None:
     return None if mag is None else 666.7e3 * 10 ** (-0.4 * float(mag))
 
 
+def irac2_mjy(mag: float | None) -> float | None:
+    """A Spitzer IRAC 4.5 micrometre magnitude (zero point 179.7 Jy) as millijanskys."""
+    return None if mag is None else 179.7e3 * 10 ** (-0.4 * float(mag))
+
+
+def brightness_text(row: dict[str, Any]) -> str:
+    """The infrared and optical brightness a catalogue row lists, in words ("W2 13.54 = 0.04 mJy, Ks 13.77")."""
+    parts = []
+    if row.get("w2") is not None:
+        parts.append(f"W2 {row['w2']:.2f} mag = {w2_mjy(row['w2']):.2f} mJy")
+    if row.get("irac2") is not None:
+        parts.append(f"[4.5] {row['irac2']:.2f} mag = {irac2_mjy(row['irac2']):.2f} mJy")
+    if row.get("k") is not None:
+        parts.append(f"Ks {row['k']:.2f}")
+    if row.get("gmag") is not None:
+        parts.append(f"G {row['gmag']:.2f}")
+    return ", ".join(parts) or "no brightness listed"
+
+
 def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float], near_arcsec: float = 6.2,
              far_arcsec: float = 12.0) -> dict[str, Any]:
     """Sort a survivor by what the catalogues say at its position.
@@ -616,6 +638,8 @@ def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float]
         flux = w2_mjy(w2)
         if flux is not None and flux >= bright_mjy / 5.0:
             pre.append(f"{row['name']} ({cat}) W2 {w2:.2f} mag = {flux:.0f} mJy, already bright")
+        elif cat == "GLIMPSE" and (gf := irac2_mjy(row.get("irac2"))) is not None and gf >= bright_mjy / 5.0:
+            pre.append(f"{row['name']} (GLIMPSE) [4.5] {row['irac2']:.2f} mag = {gf:.0f} mJy, already bright")
         elif row.get("variable"):
             pre.append(f"{row['name']} ({cat}) is listed as variable ({row.get('type')})")
         elif cat == "2MASS" and (kf := k_mjy(row.get("k"))) is not None and kf >= bright_mjy / 5.0:
@@ -627,8 +651,7 @@ def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float]
         reasons.append(f"no row within {near_arcsec:g} arcsec in any catalogue asked")
     else:
         for off, row in within:
-            reasons.append(f"{row['name']} ({row.get('catalogue')}) at {off:.1f} arcsec, far fainter or no infrared "
-                           "brightness listed")
+            reasons.append(f"{row['name']} ({row.get('catalogue')}) at {off:.1f} arcsec: {brightness_text(row)}")
     return {"kind": "candidate", "reasons": reasons}
 
 
