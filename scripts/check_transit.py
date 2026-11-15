@@ -141,6 +141,17 @@ def plot_depths(blocks: list[tuple[str, dict]], path: Path, title: str) -> None:
     c.render().save(path)
 
 
+APERTURE_KEYS = (
+    "depth",
+    "formal_err",
+    "empirical_err",
+    "empirical_sigma",
+    "fake_share_as_deep",
+    "slide_peak_h",
+    "n_in",
+)
+
+
 def summarise(res: dict) -> dict:
     """Result without the large arrays (the folded readings), for results.json."""
     out = json.loads(json.dumps(res, default=float))
@@ -193,6 +204,10 @@ def main() -> int:
     # ---- A1
     w62 = run(WASP62, (1, 2, 3, 4, 5, 6), args, probe("cutouts", "WASP-62"), 0.1)
     w62h = run(WASP62, (5,), args, probe("cutouts", "WASP-62"), 0.1, accept_halo=True)
+    w62ap = {
+        str(a): run(WASP62, (5,), args, probe("cutouts", "WASP-62"), 0.1, aperture_px=a, comparison_stars=False)
+        for a in (1.5, 2.0, 3.0, 3.5)
+    }
     d5 = w62["detectors"]["5"]
     exp = w62["expected_depth"]
     a1 = {
@@ -210,6 +225,10 @@ def main() -> int:
     results["acceptance"]["A1"] = a1
     results["wasp62"] = summarise(w62)
     results["wasp62_halo_accepted"] = summarise(w62h)
+    results["wasp62_aperture_radius_px"] = {
+        a: {k: v for k, v in summarise(r)["detectors"]["5"].items() if k in APERTURE_KEYS}
+        for a, r in w62ap.items()
+    }
     plot_fold(
         w62,
         "5",

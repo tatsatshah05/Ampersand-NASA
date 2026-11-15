@@ -41,7 +41,7 @@ from . import astrometry, photometry, pipeline, s3fetch, spherex
 
 log = logging.getLogger(__name__)
 
-VERSION = 1
+VERSION = 2
 CACHE = spherex.CACHE / "transits"
 COLLECTIONS = ("spherex_dr1", "spherex_qr3", "spherex_dr1_deep", "spherex_qr3_deep")
 
@@ -57,7 +57,8 @@ FAKE_EXCLUDE = (0.5, 1.0, 1.5, 2.0, 3.0)  # fake periods this close to a simple 
 FAKE_EXCLUDE_TOL = 0.02
 FAKE_OFFSETS = (0.0, 0.25, 0.5, 0.75)  # phase offsets tried at every fake period
 MIN_FAKE_IN_TRANSIT = 30
-SLIDE_HOURS = tuple(float(h) for h in np.arange(-12.0, 12.01, 1.5))
+SLIDE_HOURS = tuple(float(h) for h in np.arange(-8.0, 8.01, 0.5))
+SLIDE_MIN_READINGS = 15  # a slide box with fewer readings than this is not fitted
 YEAR_SPLIT_BJD = 2461041.5  # 2026-01-01
 MIN_IN_TRANSIT = 15  # fewer in-transit readings than this and a detector is not fitted
 # Analysis choices the judges flagged, each re-run on the same readings (the default is the first line of the table).
@@ -144,7 +145,8 @@ def template_divide(wl: np.ndarray, flux: np.ndarray, use: np.ndarray, k: int = 
 def design(
     cols: dict[str, np.ndarray], shape: np.ndarray, detrend: str = "quadratic", subpixel: bool = True
 ) -> np.ndarray:
-    """Columns: constant, detector-position terms, sub-pixel phase, minus the transit shape."""
+    """Columns: constant, detector-position terms, sub-pixel offset terms (dx, dy, dx^2, dy^2, dx*dy about
+    the pixel centre), minus the transit shape."""
     x = (cols["X"] - cols["X"].mean()) / (cols["X"].std() + 1e-9)
     y = (cols["Y"] - cols["Y"].mean()) / (cols["Y"].std() + 1e-9)
     parts = [np.ones(len(x))]
@@ -153,7 +155,8 @@ def design(
     if detrend == "quadratic":
         parts += [x * x, y * y, x * y]
     if subpixel:
-        parts += [cols["fx"] - 0.5, cols["fy"] - 0.5]
+        fx, fy = cols["fx"], cols["fy"]  # offset from the nearest pixel centre, in [-0.5, 0.5]
+        parts += [fx, fy, fx * fx, fy * fy, fx * fy]
     parts.append(-shape)
     return np.vstack(parts).T
 
@@ -169,7 +172,7 @@ def fit_depth(rel: np.ndarray, A: np.ndarray, sigma: float) -> tuple[float, floa
 
 
 def fake_ephemerides(period: float) -> list[tuple[float, float]]:
-    """(fake period, phase offset) pairs: periods 1.5 to 9 d, phase offset 0 and 0.5,
+    """(fake period, phase offset) pairs: periods 1.5 to 9 d, the phase offsets in FAKE_OFFSETS,
     skipping periods within 2 per cent of 1/2, 1, 3/2, 2 and 3 times the real one."""
     out = []
     for pf in np.arange(FAKE_PERIODS[0], FAKE_PERIODS[1] + 1e-9, FAKE_PERIODS[2]):
@@ -373,6 +376,8 @@ def measure_cutout(
                 "wl": wl,
                 "x": x - nx / 2,
                 "y": y - ny / 2,
+                "px": x - round(x),  # sub-pixel offset from the nearest pixel centre
+                "py": y - round(y),
                 "ovf": int(core["overflow_pixels"]),
                 "flags": core["flags"],
                 "crpix": crpix,
@@ -431,8 +436,8 @@ def columns(rows: Sequence[dict], which: int, ra: float, dec: float) -> dict[str
         "wl": np.array([x["wl"] for x in t], float),
         "X": np.array([-x["crpix"][0] for x in t], float),
         "Y": np.array([-x["crpix"][1] for x in t], float),
-        "fx": np.array([x["x"] % 1 for x in t], float),
-        "fy": np.array([x["y"] % 1 for x in t], float),
+        "fx": np.array([x["px"] for x in t], float),
+        "fy": np.array([x["py"] for x in t], float),
         "ovf": np.array([x["ovf"] for x in t], int),
         "ok": ok,
     }
@@ -522,14 +527,22 @@ def analyse_detector(
         noise_factor=emp / err if err > 0 else float("nan"),
     )
 
-    # slide the assumed transit time
+    # slide the assumed transit time. Readings were kept only within NEAR_TRANSIT_DAYS of a transit, so
+    # only offsets that keep the box inside that window are fitted, and a box needs SLIDE_MIN_READINGS.
+    # The peak is the offset with the largest depth over its formal error.
     slide = []
+    limit_h = 24.0 * NEAR_TRANSIT_DAYS - t14_h / 2.0
     for dh in SLIDE_HOURS:
+        if abs(dh) > limit_h:
+            continue
         sh = trapezoid(time_from_mid(bjd - dh / 24.0, period, t0), t14_h, rprs)
+        if (sh[keep] > 0).sum() < SLIDE_MIN_READINGS:
+            continue
         d, e, _ = fit_depth(rel[keep], design(sub, sh[keep], detrend, subpixel), sig)
         slide.append({"offset_h": dh, "depth": d, "formal_err": e})
     res["time_slide"] = slide
-    res["slide_peak_h"] = float(SLIDE_HOURS[int(np.nanargmax([s["depth"] for s in slide]))])
+    zs = [s["depth"] / s["formal_err"] if s["formal_err"] > 0 else np.nan for s in slide]
+    res["slide_peak_h"] = float(slide[int(np.nanargmax(zs))]["offset_h"]) if np.isfinite(zs).any() else float("nan")
 
     # each year (split at 2026-01-01) on its own, with its own sigma and detrending
     years = {}
@@ -682,7 +695,7 @@ def transit_check(
             positions,
             aperture_px=aperture_px,
             accept_halo=accept_halo,
-            cache_file=cache_dir / "results" / f"rows_{tag}_{d}_{len(sel)}.json",
+            cache_file=cache_dir / "results" / f"rows_v{VERSION}_{tag}_{d}_{len(sel)}.json",
         )
         if not rows:
             out["detectors"][str(d)] = {"status": "no readings"}
@@ -864,6 +877,12 @@ def colour_test(res: dict[str, Any], min_in_transit: int = 30) -> dict[str, Any]
                 "difference": use[a]["depth"] - use[b]["depth"],
                 "error": float(np.hypot(use[a]["empirical_err"], use[b]["empirical_err"])),
             }
+    # Detectors 1/4, 2/5 and 3/6 sit behind a dichroic and take the same exposures, so within such a pair
+    # the two depths are of the same sky at the same moment and differ only in wavelength. Any other pair
+    # saw different transits, and its difference mixes epoch with wavelength.
+    for key in pairs:
+        a, b = (int(v) for v in key.split("-"))
+        pairs[key]["same_exposures"] = (a, b) in ((1, 4), (2, 5), (3, 6))
     return {
         "detectors": ds,
         "tested": True,

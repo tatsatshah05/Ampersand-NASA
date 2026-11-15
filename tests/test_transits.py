@@ -53,8 +53,8 @@ def test_fit_recovers_labelled_synthetic_depth():
     cols = {
         "X": rng.uniform(0, 1000, n),
         "Y": rng.uniform(0, 1000, n),
-        "fx": rng.uniform(0, 1, n),
-        "fy": rng.uniform(0, 1, n),
+        "fx": rng.uniform(-0.5, 0.5, n),
+        "fy": rng.uniform(-0.5, 0.5, n),
     }
     shape = np.zeros(n)
     shape[:60] = 1.0
@@ -101,11 +101,31 @@ def test_analyse_detector_on_pure_noise_has_no_depth_beyond_errors():
         "wl": rng.uniform(3.8, 4.4, n),
         "X": rng.uniform(-900, -800, n),
         "Y": rng.uniform(-600, -500, n),
-        "fx": rng.uniform(0, 1, n),
-        "fy": rng.uniform(0, 1, n),
+        "fx": rng.uniform(-0.5, 0.5, n),
+        "fy": rng.uniform(-0.5, 0.5, n),
         "ovf": np.zeros(n, int),
         "ok": np.ones(n, bool),
     }
     r = T.analyse_detector(c, 4.4119, 2460800.3, 3.79, 0.11, extras=False)
     assert r["status"] == "ok"
     assert abs(r["depth"]) < 4 * r["formal_err"]
+
+
+def test_subpixel_terms_symmetric_about_pixel_centre():
+    """Unit test of arithmetic (made-up numbers): the design has dx, dy, dx^2, dy^2, dx*dy columns."""
+    n = 50
+    cols = {k: np.linspace(-0.4, 0.4, n) for k in ("fx", "fy", "X", "Y")}
+    a = T.design(cols, np.zeros(n), detrend="none", subpixel=True)
+    assert a.shape == (n, 7)
+    assert np.allclose(a[:, 3], cols["fx"] ** 2)
+
+
+def test_colour_test_marks_dichroic_pairs():
+    """Unit test of arithmetic (made-up numbers): only 1-4, 2-5 and 3-6 share exposures."""
+    det = {
+        str(d): {"status": "ok", "depth": 0.01, "empirical_err": 0.003, "n_in": 40, "formal_err": 0.002}
+        for d in (1, 3, 4)
+    }
+    ct = T.colour_test({"detectors": det})
+    assert ct["pairs"]["1-4"]["same_exposures"] is True
+    assert ct["pairs"]["1-3"]["same_exposures"] is False
