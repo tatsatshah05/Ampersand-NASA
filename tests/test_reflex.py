@@ -4,6 +4,7 @@ Every made-up input below is labelled 'synthetic arithmetic test, not data'. Not
 SPHEREx data, nothing is written to the cache, and no result of the project rests on it.
 The real-data known answer (Eris) is scripts/check_reflex.py.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -37,10 +38,10 @@ def test_integer_shift_stack_puts_all_weight_in_one_pixel():
     jn = np.round(0.5 * np.arange(n_exp)).astype(int) - 3
     cube = np.zeros((n_exp, n, n))
     for i in range(n_exp):
-        cube[i, 20 + jn[i], 20 + ie[i]] = 1.0       # value at (y + jn, x + ie) for the stack pixel (20, 20)
+        cube[i, 20 + jn[i], 20 + ie[i]] = 1.0  # value at (y + jn, x + ie) for the stack pixel (20, 20)
     num, den = reflex.stack_integer(cube, np.ones_like(cube), ie, jn)
     assert num[20, 20] == n_exp
-    assert num.sum() == n_exp                       # nothing anywhere else
+    assert num.sum() == n_exp  # nothing anywhere else
     assert den[20, 20] == n_exp
 
 
@@ -54,7 +55,7 @@ def test_straight_line_removed_from_parallax_curve():
         assert np.all(np.abs(basis.T @ fnl[:, k]) < 1e-6 * np.abs(fnl[:, k]).max() * len(t) + 1e-9)
     f = reflex.distant.parallax_factor(reflex.distant._earth(t), RA, DEC) * reflex.ARCSEC_PER_RADIAN
     assert np.allclose(fnl + flin, f)
-    assert np.ptp(fnl[:, 0]) > 500            # the lever on distance: arcsec per 1/AU (Eris's visit: 1580)
+    assert np.ptp(fnl[:, 0]) > 500  # the lever on distance: arcsec per 1/AU (Eris's visit: 1580)
 
 
 def test_snr_normalisation_of_pure_noise():
@@ -82,5 +83,5 @@ def test_drift_box_is_centred_on_the_reflex_rate():
     ce, cn, rad = reflex.drift_box(0.01, 400.0, -300.0, 50.0)
     assert (ce, cn) == (4.0, -3.0)
     assert 1.0 < rad <= reflex.DRIFT_RADIUS_MAX
-    ce2, cn2, _ = reflex.drift_box(-0.01, 400.0, -300.0, 50.0)       # reversed Earth: reversed centre
+    ce2, cn2, _ = reflex.drift_box(-0.01, 400.0, -300.0, 50.0)  # reversed Earth: reversed centre
     assert (ce2, cn2) == (-4.0, 3.0)
