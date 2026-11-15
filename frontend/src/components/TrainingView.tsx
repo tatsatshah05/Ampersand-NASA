@@ -22,6 +22,7 @@ import {
 } from '../address'
 import { WATCHLIST_ADDRESS } from '../watchlist'
 import { FeatureBar, type FeatureLinks } from './FeatureBar'
+import { TourStart } from './TourStart'
 import { LevelDock } from './LevelDock'
 import { keyBelongsToControl, releaseFocusAfterPointer } from '../focus'
 import { toPicture } from '../motion'
@@ -187,6 +188,7 @@ export function TrainingView() {
       <header className="topbar screen-topbar">
         <p className="brand">SPHEREx sky-change viewer</p>
         <FeatureBar level={level} current="practise" links={links} />
+        <TourStart />
       </header>
       <main className="training">
         <header>

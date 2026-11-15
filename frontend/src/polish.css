@@ -660,8 +660,7 @@
     display: block;
     overflow-x: hidden;
     overflow-y: auto;
-    /* At the foot, room for the "Tour" button that is fixed in this corner. */
-    padding: 60px 12px 72px;
+    padding: 60px 12px 24px;
     background: var(--bg);
     border-right: 1px solid var(--line);
   }

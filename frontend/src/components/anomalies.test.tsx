@@ -269,6 +269,13 @@ describe('the screen', () => {
     expect(html).not.toContain('role="tablist"')
   })
 
+  it('has the Demo mode button in its top bar, as every screen does', () => {
+    const html = screen('?watchlist=1&ui=beginner')
+    const top = html.slice(html.indexOf('<header class="topbar'), html.indexOf('</header>'))
+    expect(top).toContain('class="tour-start"')
+    expect(top).toContain('>Demo mode</button>')
+  })
+
   it('puts a single chosen patch’s results under the picker, before the three candidates', () => {
     const html = screen('?watchlist=1&ui=beginner&region=253.180380_-44.676970_0.1000')
     const order = ['Pick a patch of sky', 'Found by searching this patch', 'role="tablist"', 'Not reported anywhere we could find']

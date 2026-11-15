@@ -17,6 +17,7 @@ import {
   readStep,
   saveStep,
   STEPS,
+  TOUR_START_EVENT,
   type Step,
   withoutDemo,
 } from '../tour'
@@ -109,9 +110,10 @@ export function Tour() {
   const back = () => {
     if (step !== null) go(prevStep(step), false)
   }
-  const acts = useRef({ next, back, end })
+  const start = () => go(0, false)
+  const acts = useRef({ next, back, end, start })
   useEffect(() => {
-    acts.current = { next, back, end }
+    acts.current = { next, back, end, start }
   })
 
   // Showing a step: bring the page to where it needs it, then find what it rings.
@@ -226,20 +228,22 @@ export function Tour() {
     }
   }, [step])
 
-  if (step === null) {
-    return (
-      <button
-        type="button"
-        className="tour-start"
-        onClick={() => {
-          saveStep(0)
-          go(0, false)
-        }}
-      >
-        Tour
-      </button>
-    )
-  }
+  // The way in is the "Demo mode" button of the top bar (TourStart.tsx), which is outside this component.
+  useEffect(() => {
+    const start = () => {
+      saveStep(0)
+      acts.current.start()
+    }
+    window.addEventListener(TOUR_START_EVENT, start)
+    return () => window.removeEventListener(TOUR_START_EVENT, start)
+  }, [])
+  // While the tour runs the page says so, and that button is hidden (Tour.css).
+  useEffect(() => {
+    if (step === null) delete document.documentElement.dataset.tour
+    else document.documentElement.dataset.tour = 'on'
+  }, [step])
+
+  if (step === null) return null
 
   const s = STEPS[step]
   const level = levelNow()

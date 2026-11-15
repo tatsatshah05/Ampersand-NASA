@@ -46,6 +46,7 @@ import { findPatch, openWatched, searchThisPatch, type Patch } from '../watchPat
 import { newSeed, trainingAddress } from '../training'
 import { CandidateCards } from './CandidateCards'
 import { FeatureBar, type FeatureLinks } from './FeatureBar'
+import { TourStart } from './TourStart'
 import { LevelDock } from './LevelDock'
 import { RegionPicker } from './RegionPicker'
 import { ScienceFold } from './ScienceFold'
@@ -433,6 +434,7 @@ export function WatchlistView() {
       <header className="topbar screen-topbar">
         <p className="brand">SPHEREx sky-change viewer</p>
         <FeatureBar level={level} current="vote" links={links} />
+        <TourStart />
       </header>
       <main className="watchlist">
         <header>

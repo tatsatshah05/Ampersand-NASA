@@ -34,6 +34,7 @@ import { BrightnessPanel } from './components/BrightnessPanel'
 import { ContextView } from './components/ContextView'
 import { ObjectCard } from './components/ObjectCard'
 import { FeatureBar, type FeatureLinks } from './components/FeatureBar'
+import { TourStart } from './components/TourStart'
 import { FieldStars } from './components/FieldStars'
 import { isMarginal } from './detection'
 import { VisitDetails } from './components/VisitDetails'
@@ -643,6 +644,7 @@ export function Viewer() {
         <header className="topbar">
           <h1 className="brand">SPHEREx sky-change viewer</h1>
           <FeatureBar level={selection.ui} current={current} links={links} onOpen={openFeature} ready={ready !== null} />
+          <TourStart />
         </header>
 
         {/* Issue #6: what to look at, in one row: a name or coordinates, or a target button. What they find goes to applyTarget. */}

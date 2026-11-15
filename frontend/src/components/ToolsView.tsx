@@ -32,6 +32,7 @@ import { chooseUiLevel, readAddress, readStoredLevel, storeLevel, TOOLS_ADDRESS,
 import { newSeed, trainingAddress } from '../training'
 import { WATCHLIST_ADDRESS } from '../watchlist'
 import { FeatureBar, type FeatureLinks } from './FeatureBar'
+import { TourStart } from './TourStart'
 import { LevelDock } from './LevelDock'
 import './ToolsView.css'
 
@@ -93,6 +94,7 @@ export function ToolsView() {
       <header className="topbar screen-topbar">
         <p className="brand">SPHEREx sky-change viewer</p>
         <FeatureBar level={level} current="tools" links={links} />
+        <TourStart />
       </header>
       <ToolsPage reflex={reflex} colourwalk={colourwalk} transits={transits} back={back} onRetry={retry} level={level} />
       <LevelDock level={level} onChange={changeLevel} />

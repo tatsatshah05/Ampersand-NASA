@@ -453,3 +453,11 @@ export function linkLeadsOn(i: number, href: string, level: UiLevel): boolean {
     return false
   }
 }
+
+// ---------- the way in ----------
+
+/** The button in the top bar of every screen (TourStart.tsx), by the name the presenter asked for. */
+export const DEMO_BUTTON = 'Demo mode'
+export const DEMO_BUTTON_ABOUT = 'A guided walk through every feature: it shows what to press and what each thing does.'
+/** What that button sends to the window; Tour.tsx starts the tour when it hears it. */
+export const TOUR_START_EVENT = 'spherex-tour-start'

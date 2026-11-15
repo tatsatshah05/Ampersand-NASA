@@ -1227,8 +1227,9 @@ presentation):
   none any more. The row of stars is one step tighter below 1440 px so that all eleven names fit from 1280 px up. The
   page's sentences say "in the list of features", not "in the bar at the top". `features_check.js` now checks the list
   at the left edge (or the strip at the top) and that the features are still in view with each tool open.
-- The tour: `?demo=1` (or `?demo=<n>`, removed from the address at once) or the "Tour" button fixed at the bottom left
-  (hidden under 700 px) starts it; `frontend/src/tour.ts` holds the 24 steps and all logic, `components/Tour.tsx` and
+- The tour: `?demo=1` (or `?demo=<n>`, removed from the address at once) or the "Demo mode" button at the right end of
+  the top bar of every screen (`components/TourStart.tsx`; it sends `TOUR_START_EVENT`, and is hidden while the tour
+  runs) starts it; `frontend/src/tour.ts` holds the 24 steps and all logic, `components/Tour.tsx` and
   `Tour.css` draw a ring round the thing to press and a card (step n of 24, title, "Press: ...", what it shows; Back,
   Next, End tour; Right and Left arrows, Escape). The step is kept in `sessionStorage` (`spherex-tour-step`), so it
   survives the page loads between screens. Every step has its own address: Next and Back first bring the page there
@@ -1239,7 +1240,7 @@ presentation):
   "Pick a patch of sky", a candidate's card and view, and the credits. It only opens places whose answers are
   pre-built (the star buttons' own addresses, `?train=1&level=easy`): its requests were compared with those the
   buttons and tools make. Its words follow Beginner's rules, and a step that says "candidate" must contain
-  `finds.ts` `CANDIDATE_LINE` (`tour.test.ts`). When it is not running it adds nothing but the "Tour" button.
+  `finds.ts` `CANDIDATE_LINE` (`tour.test.ts`). When it is not running it adds nothing but the "Demo mode" button.
 
 Rules of the page:
 - **The words hold still while the visits play.** The side column has one sentence about the whole run and one table

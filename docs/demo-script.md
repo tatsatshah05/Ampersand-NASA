@@ -3,7 +3,7 @@
 > **The guided tour (added 15 November).** `<SITE>/?demo=1` starts a tour of 24 steps that follows this script:
 > it rings the thing to press, says what it shows, and has Back, Next and End tour (or the Right and Left arrow
 > keys and Escape). Next presses the ringed thing for you and brings the page back if you have wandered off, so
-> it can be used as the running order of the demo. The "Tour" button at the bottom left starts it too. The ten
+> it can be used as the running order of the demo. The **Demo mode** button at the top right of every screen starts it too. The ten
 > features are now a list down the left edge of the window (on a phone, a strip along the top) that stays in
 > view, so where this script says "in the bar", look there.
 

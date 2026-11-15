@@ -235,6 +235,8 @@ describe('the page with a view loaded', () => {
       expect(top).toMatch(new RegExp(`<button class="feature-item" title="${title}[^"]*" data-feature="[a-z]+" type="button"><span class="feature-text" data-text="${label}">`))
     }
     expect(top).not.toContain('aria-disabled')
+    // The way into the guided tour is in the top bar of every screen, by the name the presenter uses.
+    expect(top).toMatch(/<button type="button" class="tour-start" title="[^"]+">Demo mode<\/button>/)
     expect(html).not.toContain('Measure and search')
     expect(html).not.toContain('tool-buttons')
     // The two folds, closed, with nothing inside them in the page until opened; the sky context is a tool panel now.
