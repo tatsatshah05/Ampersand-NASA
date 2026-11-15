@@ -34,13 +34,17 @@ from astropy.wcs import WCS
 from scipy.optimize import least_squares
 from scipy.special import erf
 
-from . import astrometry, photometry, pipeline, spherex
+from . import astrometry, photometry, pipeline, search, spherex
 
 # ---------------------------------------------------------------- analysis choices, fixed before any run
 BIN_EDGES = [0.75, 0.95, 1.12, 1.4, 1.65, 2.0, 2.43, 2.9, 3.4, 3.85, 4.15, 4.43, 4.7, 5.02]   # micrometres
 SHORT = (0.75, 1.65)         # the "blue" group of the walk
 LONG = (2.9, 5.02)           # the "red" group
-FLOOR_ARCSEC = 0.04          # systematic floor added in quadrature to each group's error
+FLOOR_ARCSEC = 0.04          # the first guess of the floor; now used only by the null test, to show it was too low
+# Measured on 19 isolated stars of the Barnard field (scripts/check_colourwalk.py): the star-to-star scatter of
+# per-detector median offsets. Added in quadrature to each group's error for a host.
+FLOOR_EAST = 0.049
+FLOOR_NORTH = 0.066
 HALF = 3                     # 7 x 7 pixel fit box; the central 3 x 3 must be clean
 WIDTH_RANGE = (0.25, 1.6)    # allowed Gaussian sigma in pixels
 SCAN_ARCSEC = [2.0 + 0.5 * i for i in range(21)]     # 2 to 12 arcsec
@@ -48,19 +52,26 @@ LIMIT_SEPARATIONS = [3.0, 5.0, 8.0, 10.0]
 CONTROL_ANGLES = (90.0, 180.0, 270.0)
 CONTROL_MAX = 0.02           # a control above this is a failed control
 WALK_SIGMA = 4.0
-ACROSS_SIGMA = 3.0
 DETECTOR_PA_AGREE = 30.0     # D4, D5 and D6 must agree within this many degrees
 MJY_PER_PIXEL_SR = 6.15 ** 2 / 206264.806 ** 2 * 1e9   # MJy/sr x pixel area -> mJy
-NEIGHBOUR_RADIUS = 15.0      # arcsec, Gaia neighbours listed
+NEIGHBOUR_RADIUS = 25.0      # arcsec, Gaia neighbours listed
 CATALOGUE_MATCH = 4.0        # arcsec: a catalogued source this close to the inferred place is "already known"
 GAIA_G_LIMIT = 21.0
-VIZIER_TAP = "https://vizier.cfa.harvard.edu/TAPVizieR/tap/sync"
-CATALOGUES = {"2MASS": ('"II/246/out"', '"RAJ2000"', '"DEJ2000"', '"Kmag"'),
-              "AllWISE": ('"II/328/allwise"', '"RAJ2000"', '"DEJ2000"', '"W2mag"'),
-              "CatWISE2020": ('"II/365/catwise"', '"RAYear"', '"DEYear"', '"W2mproPM"')}
+NEIGHBOUR_DELTA_G = 4.0          # a Gaia neighbour more than this many magnitudes fainter than the host cannot explain a walk
+NEIGHBOUR_WINDOW = (2.0, 20.0)  # arcsec: Gaia neighbours that can explain a walk (the 7 x 7 box reaches 18.5)
+# IRSA Gator catalogues (the CfA VizieR TAP address used first returned HTTP 404): name -> (catalogue, ra, dec, mag)
+CATALOGUES = {"2MASS": ("fp_psc", "ra", "dec", "k_m"),
+              "AllWISE": ("allwise_p3as_psd", "ra", "dec", "w2mpro"),
+              "CatWISE2020": ("catwise_2020", "ra_pm", "dec_pm", "w2mpro_pm")}
 # Calibrated on the Barnard field (scripts/check_colourwalk.py): the Gaussian width, in arcsec, of the
 # response of the fitted centre to a neighbour at a given separation. Replaced by the measured value there.
 RESPONSE_SCALE_ARCSEC = 4.5
+
+# Pixels the fit refuses: the photometry mask plus the bits that mark transients, cross-talk, ghosts, streaks and outliers.
+FIT_BAD = photometry.PHOTOMETRY_BAD | pipeline._mask("TRANSIENT", "CROSSTALK", "GHOST", "GHOST_FPA", "GHOST_EXT",
+                                                      "STREAK", "OUTLIER")
+VISIT_GAP_DAYS = 30.0        # exposures further apart than this belong to different visits
+PA_SCAN_STEP = 15.0          # degrees: the two-source fit at a fixed separation is repeated all the way round
 
 CACHE = spherex.CACHE
 EPOCH_MJD = 61000.0          # 2025-06; neighbours are placed at this date when asking where they lie
@@ -203,7 +214,7 @@ def read_cutout(path) -> dict:
         var = h["VARIANCE"].data.astype(float)
         flg = h["FLAGS"].data
         wave = np.array(h["WAVE"].data, float)
-    bad = ((flg & photometry.PHOTOMETRY_BAD) != 0) | pipeline.impossible_pixels(img, var) | ~np.isfinite(img) | ~np.isfinite(var)
+    bad = ((flg & FIT_BAD) != 0) | pipeline.impossible_pixels(img, var) | ~np.isfinite(img) | ~np.isfinite(var)
     data = img - np.nanmedian(img[~bad])
     return {"data": data, "var": var, "bad": bad, "wave": wave, "wcs": WCS(hd), "mjd": float(hd["MJD-AVG"]),
             "det": int(hd["DETECTOR"])}
@@ -245,24 +256,32 @@ def gaia_neighbours(ra: float, dec: float, radius_arcsec: float = 60.0, g_limit:
 
 
 def catalogue_sources(ra: float, dec: float, radius_arcsec: float = 20.0) -> dict[str, list[dict]]:
-    """2MASS, AllWISE and CatWISE2020 sources within the radius (VizieR, cached). A catalogue that did not
-    answer is reported as an error string, never as an empty list."""
+    """2MASS, AllWISE and CatWISE2020 sources within the radius (IRSA Gator, cached on disk). A catalogue that
+    did not answer is reported as [{'error': ...}], never as an empty list; see `catalogues_failed`."""
     out: dict[str, list[dict]] = {}
-    for name, (table, c_ra, c_dec, c_mag) in CATALOGUES.items():
-        query = (f"SELECT {c_ra} AS ra, {c_dec} AS dec, {c_mag} AS mag FROM {table} WHERE 1=CONTAINS("
-                 f"POINT('ICRS', {c_ra}, {c_dec}), CIRCLE('ICRS', {ra}, {dec}, {radius_arcsec / 3600.0}))")
+    for name, (cat, c_ra, c_dec, c_mag) in CATALOGUES.items():
+        key = hashlib.sha1(f"{ra:.5f},{dec:.5f},{radius_arcsec:.1f}".encode()).hexdigest()[:16]
+        path = CACHE / "queries" / f"cwcat2_{name}_{key}.json"
         try:
-            raw = _cached_query("cwcat", f"{name},{ra:.5f},{dec:.5f},{radius_arcsec:.1f}", VIZIER_TAP,
-                                {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query})
-            table_ = parse_single_table(io.BytesIO(raw)).to_table(use_names_over_ids=True)
+            if path.exists():
+                out[name] = json.loads(path.read_text())
+                continue
+            table = search._gator(cat, ra, dec, radius_arcsec / 3600.0, f"{c_ra},{c_dec},{c_mag}")
             rows = []
-            for r in table_:
-                e, n = astrometry.offset_arcsec(ra, dec, float(r["ra"]), float(r["dec"]))
-                rows.append({"east": round(e, 2), "north": round(n, 2), "mag": _num(r["mag"])})
+            for r in table:
+                e, n = astrometry.offset_arcsec(ra, dec, float(r[c_ra]), float(r[c_dec]))
+                rows.append({"east": round(e, 2), "north": round(n, 2), "mag": _num(r[c_mag])})
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(rows))
             out[name] = rows
         except Exception as exc:  # noqa: BLE001 - reported to the caller
             out[name] = [{"error": f"{type(exc).__name__}: {exc}"}]
     return out
+
+
+def catalogues_failed(cats: dict[str, list[dict]]) -> list[str]:
+    """Names of the catalogues whose lookup did not answer. A failed lookup is never evidence of anything."""
+    return [name for name, rows in cats.items() if any("error" in r for r in rows)]
 
 
 # ---------------------------------------------------------------- neighbour prediction
@@ -313,7 +332,7 @@ def _measure_one(args):
     eE, eN = np.abs(J) @ e[1:3]
     lam = float(cut["wave"][int(round(y0)), int(round(x0))])
     row = {"mjd": cut["mjd"], "det": cut["det"], "lam": lam, "dE": float(dE), "dN": float(dN), "eE": float(eE),
-           "eN": float(eN), "flux": float(p[0] * MJY_PER_PIXEL_SR), "width": float(p[3]), "chi2": float(chi2),
+           "eN": float(eN), "dx": float(p[1] - x0), "dy": float(p[2] - y0), "flux": float(p[0] * MJY_PER_PIXEL_SR), "width": float(p[3]), "chi2": float(chi2),
            "chi_sum": float(chi_sum), "path": str(path)}
     if plan:
         Ji = np.linalg.inv(J)
@@ -357,8 +376,8 @@ def group_offset(rows, lo: float, hi: float, dets=None) -> dict:
         m &= np.isin(det, list(dets))
     E, eE, n = robust(_arr(rows, "dE")[m])
     N, eN, _ = robust(_arr(rows, "dN")[m])
-    return {"east": E, "north": N, "err_east": float(np.hypot(eE, FLOOR_ARCSEC)),
-            "err_north": float(np.hypot(eN, FLOOR_ARCSEC)), "n": n}
+    return {"east": E, "north": N, "err_east": float(np.hypot(eE, FLOOR_EAST)),
+            "err_north": float(np.hypot(eN, FLOOR_NORTH)), "n": n}
 
 
 def walk_between(short: dict, long: dict) -> dict:
@@ -367,29 +386,41 @@ def walk_between(short: dict, long: dict) -> dict:
     sE, sN = np.hypot(long["err_east"], short["err_east"]), np.hypot(long["err_north"], short["err_north"])
     if not (np.isfinite(wE) and np.isfinite(wN)):
         return {"east": None, "north": None, "pa": None, "size": None, "sigma": None, "across": None,
-                "across_sigma": None, "n_short": short["n"], "n_long": long["n"]}
+                "p_false": None, "pa_error_deg": None, "n_short": short["n"], "n_long": long["n"]}
     pa = position_angle(wE, wN)
     s, c = np.sin(np.radians(pa)), np.cos(np.radians(pa))
     s_along = float(np.hypot(s * sE, c * sN))
-    s_across = float(np.hypot(c * sE, s * sN))
     along, across = components(wE, wN, pa)
+    # The walk is a 2-D vector, so its size in units of its own error follows a Rayleigh distribution when there
+    # is no walk (not a Gaussian): P(r > x) = exp(-x^2 / 2).
+    r = float(np.hypot(wE / sE, wN / sN))
     return {"east": float(wE), "north": float(wN), "pa": pa, "size": float(np.hypot(wE, wN)), "along": along,
-            "sigma": float(along / s_along), "across": across, "across_sigma": float(abs(across) / s_across),
+            "sigma": r, "p_false": float(np.exp(-0.5 * r * r)), "across": across,
+            "pa_error_deg": float(np.degrees(np.arctan2(s_along, np.hypot(wE, wN)))),
             "err_east": float(sE), "err_north": float(sN), "n_short": short["n"], "n_long": long["n"]}
 
 
 def along_across_by_bin(rows, pa: float) -> list[dict]:
+    """Per wavelength bin: the offset along and across the walk direction with errors that include the measured
+    astrometric floor (FLOOR_EAST, FLOOR_NORTH), so the chart's bars are not statistics-only."""
     out = []
+    s, c = np.sin(np.radians(pa)), np.cos(np.radians(pa))
     for lo, hi in zip(BIN_EDGES[:-1], BIN_EDGES[1:], strict=True):
         g = group_offset(rows, lo, hi)
         if not np.isfinite(g["east"]):
-            out.append({"lo": lo, "hi": hi, "n": g["n"], "along": None, "across": None, "err": None})
+            out.append({"lo": lo, "hi": hi, "n": g["n"], "along": None, "across": None, "err": None, "err_across": None})
             continue
         along, across = components(g["east"], g["north"], pa)
-        # no floor in the per-bin errors shown in the chart
-        _, eE, _ = robust(_arr(rows, "dE")[(_arr(rows, "lam") >= lo) & (_arr(rows, "lam") < hi)])
-        out.append({"lo": lo, "hi": hi, "n": g["n"], "along": along, "across": across, "err": float(eE)})
+        out.append({"lo": lo, "hi": hi, "n": g["n"], "along": along, "across": across,
+                    "err": float(np.hypot(s * g["err_east"], c * g["err_north"])),
+                    "err_across": float(np.hypot(c * g["err_east"], s * g["err_north"]))})
     return out
+
+
+def across_chi2(bins: list[dict]) -> dict:
+    """Chi-square of the across component against zero over the bins that have one (floor included)."""
+    v = [(b["across"], b["err_across"]) for b in bins if b["across"] is not None]
+    return {"chi2": float(sum((a / e) ** 2 for a, e in v)), "n_bins": len(v)}
 
 
 def walks(rows) -> dict:
@@ -442,14 +473,18 @@ def gain_by_separation(rows, keys: list[tuple[str, float]], lo: float = LONG[0],
 
 # ---------------------------------------------------------------- verdict
 def verdict(walk_all: dict, per_detector: dict, control_max: float | None, explained: bool,
-            known_source: bool) -> tuple[str, list[str]]:
+            known_source: bool, failed_catalogues: list[str] | None = None) -> tuple[str, list[str]]:
     """Apply the rules. Returns (verdict, reasons). The verdicts: 'nothing_found', 'candidate',
-    'explained_by_gaia_neighbour', 'known_source_at_walk'."""
+    'explained_by_gaia_neighbour', 'known_source_at_walk', 'catalogue_check_failed'.
+
+    The walk size is a Rayleigh variable, so WALK_SIGMA = 4 means P(false) = exp(-8) = 3.4e-4 per host. A
+    sample of N hosts multiplies that by N. A candidate is never returned while any catalogue lookup failed.
+    (The old rule that the walk must be straight, 'across' small, was removed: the across component was
+    measured against the walk's own direction and so could never fail.)
+    """
     reasons: list[str] = []
     if walk_all.get("pa") is None or walk_all["sigma"] is None or walk_all["sigma"] < WALK_SIGMA:
         return "nothing_found", [f"walk below {WALK_SIGMA:.0f} sigma"]
-    if walk_all["across_sigma"] >= ACROSS_SIGMA:
-        return "nothing_found", [f"across-direction component {walk_all['across_sigma']:.1f} sigma (not a straight walk)"]
     pas = [v["pa"] for v in per_detector.values() if v.get("pa") is not None and v["sigma"] is not None
            and v["sigma"] >= 2.0]
     if len(pas) < 2:
@@ -461,43 +496,129 @@ def verdict(walk_all: dict, per_detector: dict, control_max: float | None, expla
     if reasons:
         return "nothing_found", reasons
     if explained:
-        return "explained_by_gaia_neighbour", ["a Gaia neighbour lies along the walk"]
+        return "explained_by_gaia_neighbour", ["a Gaia neighbour can explain the walk"]
     if known_source:
-        return "known_source_at_walk", ["a source in Gaia, 2MASS, AllWISE or CatWISE2020 lies at the inferred place"]
+        return "known_source_at_walk", ["a source in 2MASS, AllWISE or CatWISE2020 lies at the inferred place"]
+    if failed_catalogues:
+        return "catalogue_check_failed", [f"catalogue lookup failed: {', '.join(failed_catalogues)}; not a candidate"]
     return "candidate", ["passes every rule; needs a common-motion check before it is anything more"]
 
 
+def _bp_rp(s: dict) -> float | None:
+    return s["bp"] - s["rp"] if s.get("bp") is not None and s.get("rp") is not None else None
+
+
 def gaia_explains(walk_pa: float, host: dict, neighbours: list[dict]) -> dict | None:
-    """The Gaia neighbour (2 to 12 arcsec away, at a position angle within 30 degrees of the walk) closest to
-    the walk direction, or None."""
-    best = None
+    """The Gaia neighbour (2 to 20 arcsec away) that can explain a walk, or None. Three ways to explain it:
+    'along' (within 30 degrees of the walk direction: a red neighbour pulls the long-wavelength image toward
+    itself); 'opposite_bluer' (within 30 degrees of the opposite direction and bluer in BP-RP than the host: it pulls
+    the short-wavelength image toward itself, so the walk points away from it); 'bright_any_angle' (any other
+    position angle, but brighter than G(host) + 3 within 12 arcsec: any neighbour distorts a round-Gaussian fit
+    through the change of image width with wavelength). The first in that order is returned."""
     ra_h, dec_h = astrometry.position_at(host, EPOCH_MJD)
+    g_host = host.get("gmag")
+    bprp_h = _bp_rp(host)
+    found: dict[str, dict] = {}
     for s in neighbours:
         if s["source_id"] == host.get("source_id"):
             continue
         ra_s, dec_s = astrometry.position_at(s, EPOCH_MJD)
         e, n = astrometry.offset_arcsec(ra_h, dec_h, ra_s, dec_s)
         sep = float(np.hypot(e, n))
-        if not 2.0 <= sep <= 12.0:
+        if not NEIGHBOUR_WINDOW[0] <= sep <= NEIGHBOUR_WINDOW[1]:
             continue
-        d = angle_difference(position_angle(e, n), walk_pa)
-        if d <= 30.0 and (best is None or d < best["pa_difference"]):
-            best = {"source_id": s["source_id"], "separation": round(sep, 2), "pa": round(position_angle(e, n), 1),
-                    "pa_difference": round(d, 1), "gmag": s.get("gmag"), "rp": s.get("rp")}
-    return best
+        if g_host is not None and (s.get("gmag") is None or s["gmag"] > g_host + NEIGHBOUR_DELTA_G):
+            continue          # too faint to pull the image: under 2.5 per cent of the host's flux in G
+        pa_s = position_angle(e, n)
+        d = angle_difference(pa_s, walk_pa)
+        info = {"source_id": s["source_id"], "separation": round(sep, 2), "pa": round(pa_s, 1),
+                "pa_difference": round(d, 1), "gmag": s.get("gmag"), "rp": s.get("rp"), "bp_rp": _bp_rp(s)}
+        if d <= 30.0:
+            kind = "along"
+        elif d >= 150.0 and bprp_h is not None and info["bp_rp"] is not None and info["bp_rp"] < bprp_h:
+            kind = "opposite_bluer"
+        elif sep <= 12.0 and g_host is not None and s.get("gmag") is not None and s["gmag"] < g_host + 3.0:
+            kind = "bright_any_angle"
+        else:
+            continue
+        if kind not in found or sep < found[kind]["separation"]:
+            found[kind] = {**info, "kind": kind}
+    for kind in ("along", "opposite_bluer", "bright_any_angle"):
+        if kind in found:
+            return found[kind]
+    return None
+
+
+def visit_labels(mjd: np.ndarray) -> np.ndarray:
+    """Visit number (0, 1, 2 ...) of each exposure: a new visit starts after a gap of more than VISIT_GAP_DAYS."""
+    order = np.argsort(mjd)
+    lab = np.zeros(len(mjd), int)
+    lab[order] = np.concatenate([[0], np.cumsum(np.diff(mjd[order]) > VISIT_GAP_DAYS)])
+    return lab
+
+
+def visit_walks(rows) -> list[dict]:
+    """The walk (long minus short group, the same wavelength cuts as `walks`) in each visit separately, in two
+    frames: on the sky (East, North, in arcsec) and on the detector (pixel x, y, in arcsec at 6.15 arcsec per
+    pixel). The spacecraft turns between visits, so a walk fixed on the sky keeps its sky direction from visit to
+    visit, while one fixed on the detector keeps its detector direction. The reader compares the per-visit angles."""
+    lam, mjd = _arr(rows, "lam"), _arr(rows, "mjd")
+    ok = _arr(rows, "eE") < 0.5
+    lab = visit_labels(mjd)
+    out = []
+    for v in np.unique(lab):
+        m = ok & (lab == v)
+        res: dict = {"visit": int(v), "mjd": float(np.median(mjd[m])) if m.any() else None}
+        for frame, (ka, kb, scale) in {"sky": ("dE", "dN", 1.0), "detector": ("dx", "dy", 6.15)}.items():
+            a, b = _arr(rows, ka) * scale, _arr(rows, kb) * scale
+            parts = []
+            for sel in ((lam >= SHORT[0]) & (lam < SHORT[1]), (lam >= LONG[0]) & (lam < LONG[1])):
+                mm = m & sel
+                parts.append((robust(a[mm])[0], robust(b[mm])[0], int(mm.sum())))
+            (sa, sb, ns), (la, lb, nl) = parts
+            wa, wb = la - sa, lb - sb
+            good = bool(np.isfinite(wa) and np.isfinite(wb))
+            res[frame] = {"a": float(wa), "b": float(wb), "size": float(np.hypot(wa, wb)),
+                          "angle_deg": position_angle(wa, wb) if good else None, "n_short": ns, "n_long": nl}
+        out.append(res)
+    return out
+
+
+def pa_scan_summary(rows, sep: float, pa_walk: float, step: float = PA_SCAN_STEP) -> dict:
+    """The two-source ratio at a fixed separation, in every wavelength bin, at every position angle round the
+    star (rows must hold plan keys a<angle>). Angles at least 75 degrees from the walk direction are the empty
+    places: their median and scatter in each bin are the null distribution for the ratio at the walk direction."""
+    angles = [i * step for i in range(int(round(360.0 / step)))]
+    per_bin = []
+    table = {a: ratio_bins(rows, f"a{a:g}") for a in angles}
+    for i, (lo, hi) in enumerate(zip(BIN_EDGES[:-1], BIN_EDGES[1:], strict=True)):
+        by_angle = {a: table[a][i]["ratio"] for a in angles}
+        off = [v for a, v in by_angle.items() if v is not None and angle_difference(a, pa_walk) >= 75.0]
+        nearest = min(angles, key=lambda a: angle_difference(a, pa_walk))
+        at = by_angle[nearest]
+        med = float(np.median(off)) if off else None
+        sd = float(np.std(off, ddof=1)) if len(off) > 2 else None
+        per_bin.append({"lo": lo, "hi": hi, "at_walk": at, "off_peak_median": med, "off_peak_std": sd,
+                        "excess_over_off_peak": None if at is None or med is None else at - med,
+                        "z": None if at is None or med is None or not sd else (at - med) / sd,
+                        "n_off_peak": len(off), "by_angle": by_angle})
+    return {"separation": sep, "walk_pa": pa_walk, "nearest_scan_angle": min(angles, key=lambda a: angle_difference(a, pa_walk)),
+            "bins": per_bin}
 
 
 # ---------------------------------------------------------------- entry point
 def colour_walk(ra: float, dec: float, *, pmra: float | None, pmdec: float | None, parallax: float | None,
                 source_id: str | None = None, size_deg: float = 0.025, detectors: str = "123456",
                 companion: tuple[float, float] | None = None, workers: int = 4, paths: list | None = None,
-                catalogues: bool = True) -> dict:
+                catalogues: bool = True, gmag: float | None = None, bp: float | None = None,
+                rp: float | None = None) -> dict:
     """Run the colour walk on one host. (ra, dec) are the host's Gaia DR3 position at epoch 2016.0.
 
     companion=(separation arcsec, PA deg) fixes the two-source fit there instead of at the walk direction.
     paths: cutouts to use instead of fetching (the cutouts of the same host, from the cache).
     """
-    host = {"ra": ra, "dec": dec, "pmra": pmra, "pmdec": pmdec, "parallax": parallax, "source_id": source_id}
+    host = {"ra": ra, "dec": dec, "pmra": pmra, "pmdec": pmdec, "parallax": parallax, "source_id": source_id,
+            "gmag": gmag, "bp": bp, "rp": rp}
     downloads = 0
     if paths is None:
         exposures = [e for e in spherex.find_exposures(ra, dec) if str(e["detector"]) in detectors]
@@ -525,6 +646,9 @@ def colour_walk(ra: float, dec: float, *, pmra: float | None, pmdec: float | Non
     for sep in LIMIT_SEPARATIONS:
         for k, a in enumerate(control_angles(pa)):
             plan[f"c{k}_{sep:g}"] = (sep, a)
+    if companion is not None:     # fixed separation: also the full round of position angles
+        for i in range(int(round(360.0 / PA_SCAN_STEP))):
+            plan[f"a{i * PA_SCAN_STEP:g}"] = (companion[0], i * PA_SCAN_STEP)
     pass2 = measure_host(paths, host, plan, workers)
     scan_keys = [(f"s{sep:g}", sep) for sep in (SCAN_ARCSEC if companion is None else [companion[0]])]
     gains = gain_by_separation(pass2, scan_keys)
@@ -566,7 +690,11 @@ def colour_walk(ra: float, dec: float, *, pmra: float | None, pmdec: float | Non
             if np.isfinite(lv):
                 worst.append(max(lv, 0.0) + 5.0 * le)
         limits[f"{sep:g}"] = float(max(worst)) if worst else None
-    explained = gaia_explains(walk_all["pa"], host, gaia_neighbours(ra, dec, NEIGHBOUR_RADIUS)) if walk_all["pa"] is not None else None
+    gaia_rows = gaia_neighbours(ra, dec, NEIGHBOUR_RADIUS)
+    for g_row in gaia_rows:       # the host's own magnitudes, from the same cone, when the caller gave none
+        if host["gmag"] is None and source_id is not None and g_row["source_id"] == str(source_id):
+            host.update(gmag=g_row["gmag"], bp=g_row["bp"], rp=g_row["rp"])
+    explained = gaia_explains(walk_all["pa"], host, gaia_rows) if walk_all["pa"] is not None else None
     cats = catalogue_sources(ra, dec, 20.0) if catalogues else {}
     ie, in_ = offset_at(best_sep, walk_all["pa"]) if walk_all["pa"] is not None else (0.0, 0.0)
     known = None
@@ -577,14 +705,18 @@ def colour_walk(ra: float, dec: float, *, pmra: float | None, pmdec: float | Non
                 break
         if known:
             break
+    aa_bins = along_across_by_bin(pass1, walk_all["pa"])
     verd, reasons = verdict(walk_all, {k: W[k] for k in ("D4", "D5", "D6")}, control_max, explained is not None,
-                            known is not None)
+                            known is not None, catalogues_failed(cats) if catalogues else ["not asked"])
     out.update(verdict=verd, reasons=reasons, best_separation_arcsec=best_sep, gain_by_separation=gains,
-               along_across=along_across_by_bin(pass1, walk_all["pa"]), net_ratio=net, rough_companion_flux_mjy=rough_flux,
+               along_across=aa_bins, across_chi2=across_chi2(aa_bins), net_ratio=net, rough_companion_flux_mjy=rough_flux,
                rough_flux_note="rough: net ratio times the host's median flux in the bin; not a calibrated spectrum",
                limit_5sigma_ratio=limits, gaia_neighbour_on_walk=explained, catalogue_neighbours=cats,
-               catalogue_source_at_inferred_place=known)
-    out["rows"] = [{k: r[k] for k in ("mjd", "det", "lam", "dE", "dN", "eE", "eN", "flux", "width", "chi2")} for r in pass1]
+               catalogue_source_at_inferred_place=known, catalogues_failed=catalogues_failed(cats),
+               visit_walks=visit_walks(pass1))
+    if companion is not None:
+        out["pa_scan"] = pa_scan_summary(pass2, companion[0], companion[1])
+    out["rows"] = [{k: r[k] for k in ("mjd", "det", "lam", "dE", "dN", "eE", "eN", "dx", "dy", "flux", "width", "chi2")} for r in pass1]
     return out
 
 

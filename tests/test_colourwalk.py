@@ -86,7 +86,6 @@ def test_verdict_rules():
     v = cw.verdict
     assert v(_walk(), _dets([195, 205, 210]), 0.01, False, False)[0] == "candidate"
     assert v(_walk(sigma=3.0), _dets([195, 205, 210]), 0.01, False, False)[0] == "nothing_found"
-    assert v(_walk(across_sigma=3.5), _dets([195, 205, 210]), 0.01, False, False)[0] == "nothing_found"
     assert v(_walk(), _dets([100, 205, 210]), 0.01, False, False)[0] == "nothing_found"
     assert v(_walk(), _dets([195, 205, 210]), 0.03, False, False)[0] == "nothing_found"
     assert v(_walk(), _dets([195, 205, 210]), 0.01, True, False)[0] == "explained_by_gaia_neighbour"
