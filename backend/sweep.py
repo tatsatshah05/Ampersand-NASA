@@ -72,6 +72,7 @@ DETECT_MJY = 30.0               # peaks fainter than this are not looked for
 DETECT_SIGMA = 8.0              # and must stand this far above the local scatter
 MERGE_ARCSEC = 9.0              # detections in different images closer than this are one source
 SAT_MERGE_PX = 3.0
+SAT_SELF_PX = 2.0               # a saturated clump this close (12 arcsec) to a source is its own core
 MAX_FLAGGED_SHARE = 0.2         # share of the aperture that may be flagged (left out and scaled up)
 RATIO = 10.0                    # "at least ten times brighter"
 ABSENT_SIGMA = 3.0              # "absent" means below this times the local noise
@@ -792,7 +793,10 @@ def veto(s: int, sources: list[dict[str, Any]], meas: list[list[dict[str, Any]]]
         c = clumps[i]
         if c.size:
             d = np.hypot(c[:, 0] - px[i, s], c[:, 1] - py[i, s])
-            if ((d > 2 * SAT_MERGE_PX) & (d < SAT_RESIDUE_PX)).any():
+            # In an image where the source has a saturated core of its own (a clump within SAT_SELF_PX) the
+            # other clumps around are its own bloom; otherwise any saturated clump within SAT_RESIDUE_PX
+            # (a wing, bloom or glare) means the light may not be the source's.
+            if not (d <= SAT_SELF_PX).any() and (d < SAT_RESIDUE_PX).any():
                 return "saturation_residue"
     return ghost_risk(s, bright_images, strength, px, py)
 
@@ -804,13 +808,14 @@ def ghost_risk(s: int, bright_images: list[int], strength: np.ndarray, px: np.nd
     somewhere else on the detector in the second image the reflection moves on the sky. A source
     that is at the same sky position in two images in which the bright star is at least
     GHOST_MOVE_PX apart on the detector is not that star's reflection. Near a very bright star
-    (GHOST_FLUX_MJY or saturated, within GHOST_RADIUS_PX) and without such a pair of images, the
+    (GHOST_FLUX_MJY or saturated, between SAT_RESIDUE_PX and GHOST_RADIUS_PX away: closer in is its own glare,
+    which the saturation-residue check handles) and without such a pair of images, the
     source is set aside as "ghost_risk".
     """
     n = strength.shape[1]
     for i in bright_images:
         near = [t for t in range(n) if t != s and strength[i, t] >= GHOST_FLUX_MJY
-                and math.hypot(px[i, t] - px[i, s], py[i, t] - py[i, s]) < GHOST_RADIUS_PX]
+                and SAT_RESIDUE_PX <= math.hypot(px[i, t] - px[i, s], py[i, t] - py[i, s]) < GHOST_RADIUS_PX]
         for t in near:
             if not any(j != i and math.hypot(px[j, t] - px[i, t], py[j, t] - py[i, t]) >= GHOST_MOVE_PX
                        for j in bright_images):

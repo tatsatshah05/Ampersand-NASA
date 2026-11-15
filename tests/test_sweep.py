@@ -338,3 +338,31 @@ def test_infrared_magnitudes_to_millijanskys():
     assert sweep.w2_mjy(0.0) == pytest.approx(171787.0)             # zero magnitude: 171.787 Jy
     assert sweep.w2_mjy(None) is None
     assert sweep.k_mjy(0.0) == pytest.approx(666700.0)
+
+
+# ------------------------------------------------------------------ the glare of a saturated nova (V0691 Ser)
+
+V0691 = (279.74438, -3.86389)       # the nova, saturated at 11.8 Jy in September 2025
+GLARE = (279.73756, -3.86269)       # 4 pixels from its core: its wing, not a source
+
+
+def test_the_wing_of_a_saturated_nova_is_not_a_candidate():
+    """Real 0.12 degree cutouts of the tile's six images. The first sweep let the wing through, because the
+    saturation-residue check took a saturated clump 4 pixels away for the source's own core."""
+    chosen = json.loads((DATA / "v0691" / "chosen_images.json").read_text())
+    imgs = []
+    for name, exp in sorted(chosen.items(), key=lambda kv: kv[1]["mjd"]):
+        im = sweep.Img.load(DATA / "v0691" / name, exp)
+        im.prepare()
+        imgs.append(im)
+    sources = [{"ra": V0691[0], "dec": V0691[1]}, {"ra": GLARE[0], "dec": GLARE[1]}]
+    meas = [[im.measure(s["ra"], s["dec"]) for s in sources] for im in imgs]
+    meta = [{"obs_id": im.obs_id, "epoch": im.epoch, "role": im.role, "mjd": im.mjd, "shape": im.shape}
+            for im in imgs]
+    clumps = [np.array([[d["x"], d["y"]] for d in im.detect() if d["saturated"]]).reshape(-1, 2) for im in imgs]
+    assert any(c.size for c in clumps)
+    out = sweep.evaluate(sources, meas, meta, clumps, [0.0] * len(imgs))
+    assert out["tally"]["survivors"] == 1
+    assert [(round(s["ra"], 3), round(s["dec"], 3)) for s in out["survivors"]] == [(279.744, -3.864)]
+    assert out["tally"]["killed_saturation_residue"] == 1
+    assert out["killed"]["killed_saturation_residue"] == [1]

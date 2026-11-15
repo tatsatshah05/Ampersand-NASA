@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 import traceback
 from pathlib import Path
@@ -33,6 +34,7 @@ LONGITUDES = [0.0] + [s * v for v in range(3, 31, 3) for s in (1, -1)]
 ROWS = (0.0, -2.5, 2.5)
 CENTRES = [(float(lo) % 360.0, b) for b in ROWS for lo in LONGITUDES]
 GB_MAX_DISK_GB = 6.0
+MIN_FREE_GB = 14.0      # stop when the disk would have less than 12 GB free: a tile needs about 0.7 GB in flight
 
 
 def tile_name(index: int) -> str:
@@ -44,6 +46,10 @@ def tile_position(index: int) -> tuple[float, float]:
     lo, b = CENTRES[index]
     c = SkyCoord(lo, b, unit="deg", frame="galactic").icrs
     return float(c.ra.deg), float(c.dec.deg)
+
+
+def free_gb() -> float:
+    return shutil.disk_usage(spherex.CACHE).free / 1e9
 
 
 def disk_gb() -> float:
@@ -88,6 +94,9 @@ def main() -> int:
     for i in todo[:args.max_tiles]:
         if disk_gb() > GB_MAX_DISK_GB:
             log(f"the sweep's cache is over {GB_MAX_DISK_GB} GB: stopping")
+            break
+        if free_gb() < MIN_FREE_GB:
+            log(f"only {free_gb():.1f} GB of disk is free (limit {MIN_FREE_GB} GB): stopping; rerun to resume")
             break
         ra, dec = tile_position(i)
         try:
