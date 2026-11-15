@@ -30,6 +30,7 @@ import hashlib
 import io
 import json
 import re
+import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -44,7 +45,7 @@ from astropy.wcs.utils import proj_plane_pixel_area
 
 from . import photometry, pipeline, smallbodies, spherex
 
-VERSION = 1                            # part of every cache key: raise it when an answer changes
+VERSION = 3                            # part of every cache key: raise it when an answer changes
 CACHE_DIR = spherex.CACHE / "follow"
 CUTOUT_DIR = CACHE_DIR / "cutouts"     # kept apart from the shared cutouts of the viewer
 CREDIT = ("Orbits: NASA/JPL Solar System Dynamics (Horizons). Images: NASA/JPL-Caltech SPHEREx, NASA/IPAC IRSA.")
@@ -242,6 +243,17 @@ def _sia_point(ra: float, dec: float, t1: float, t2: float) -> list[dict]:
     return rows
 
 
+def _retry(fn, *args, times: int = 4, pause: float = 60.0):
+    """Call fn; when the archive cannot be reached, wait a minute and try again (the network may have dropped)."""
+    for attempt in range(times):
+        try:
+            return fn(*args)
+        except spherex.ArchiveError:
+            if attempt == times - 1:
+                raise
+            time.sleep(pause)
+
+
 def find_candidates(stretches: list[dict], progress: Callable[[str, int, int], None] | None = None) -> list[dict]:
     """Every exposure the image search lists for the ends of the stretches, once each, oldest first."""
     jobs = []
@@ -252,7 +264,7 @@ def find_candidates(stretches: list[dict], progress: Callable[[str, int, int], N
     seen: dict[tuple[str, int], dict] = {}
     done = 0
     with ThreadPoolExecutor(SIA_THREADS) as pool:
-        for rows in pool.map(lambda j: _sia_point(*j), jobs):
+        for rows in pool.map(lambda j: _retry(_sia_point, *j), jobs):
             for e in rows:
                 seen.setdefault((e["obs_id"], e["detector"]), e)
             done += 1
@@ -512,6 +524,16 @@ def follow_body(name: str, stop: str | None = None, progress: Callable[[str, int
 
     # the same sky place in exposures of other days
     groups = clusters(usable)
+
+    def _list(c: tuple[float, float]) -> None:
+        try:
+            _retry(spherex.find_exposures, *c)
+        except spherex.ArchiveError:
+            pass                     # reported below, where the list is needed
+
+    say("asking the archive which exposures cover each place", 0, len(groups))
+    with ThreadPoolExecutor(SIA_THREADS) as pool:      # each of these searches takes 20 s or more
+        list(pool.map(_list, [(usable[g[0]]["pred"]["ra"], usable[g[0]]["pred"]["dec"]) for g in groups]))
     others_for: dict[int, list[tuple[dict, Path]]] = {}
     fetch_jobs: list[tuple[dict, float, float, Path]] = []
     for gi, g in enumerate(groups):
@@ -549,7 +571,7 @@ def follow_body(name: str, stop: str | None = None, progress: Callable[[str, int
             "radius_large_km": round(LARGE_PX * pipeline.NATIVE_ARCSEC * KM_PER_ARCSEC_AU * p["delta_au"]),
             "status": "not_fetched", "wavelength_um": None, "bandwidth_um": None, "flux_mjy": None, "err_mjy": None,
             "flux_large_mjy": None, "err_large_mjy": None, "noise_mjy": None, "noise_large_mjy": None,
-            "sigma": None, "other_days": None, "flags": [],
+            "sigma": None, "sigma_noise": None, "other_days": None, "flags": [], "file": str(f),
         }
         if ok is not None:
             try:
@@ -560,10 +582,14 @@ def follow_body(name: str, stop: str | None = None, progress: Callable[[str, int
                 point["status_large"] = m["status_large"]
                 if m["status"] == "ok":
                     point.update(local_noise(c, p["ra"], p["dec"]))
-                    point["sigma"] = round(m["flux_mjy"] / m["err_mjy"], 2)
+                    point["sigma"] = round(m["flux_mjy"] / m["err_mjy"], 2)     # over the full error (with 3% systematic)
+                    noise = point["noise_mjy"]
+                    point["sigma_noise"] = round(m["flux_mjy"] / noise, 1) if noise else None   # over the empty-place scatter
                     meas = []
+                    point["other_files"] = []
                     for o, of in others_for.get(n, []):
                         if fetched.get(of):
+                            point["other_files"].append(str(of))
                             mo = measure_at(load_cutout(fetched[of]), p["ra"], p["dec"])
                             meas.append({"status": mo["status"], "flux_mjy": mo["flux_mjy"], "err_mjy": mo["err_mjy"]})
                     v = fixed_source_verdict(m["flux_mjy"], meas)
