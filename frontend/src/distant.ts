@@ -386,3 +386,24 @@ export function followAddress(c: Candidate): string | null {
   const s = withTarget(base, { ra: c.follow.ra, dec: c.follow.dec, pmra: c.follow.pmra, pmdec: c.follow.pmdec, parallax: c.follow.parallax, det: c.detector })
   return s ? addressOf(s) : null
 }
+
+/**
+ * The practice screen showing the same planted object the search was run on: the same
+ * patch, detector, level and seed give the same object there (backend/training.py).
+ * Null for a real answer.
+ */
+export function practiceAddress(result: DistantResult): string | null {
+  const planted = result.planted
+  if (!result.simulation || !planted) return null
+  return addressOf({
+    ...DEFAULT_SELECTION,
+    name: null, // the default selection is Barnard's Star by name; this patch is not it
+    ui: 'expert',
+    ra: result.ra,
+    dec: result.dec,
+    fov: result.fov,
+    det: planted.detector,
+    train: planted.seed,
+    level: planted.level,
+  })
+}

@@ -400,7 +400,7 @@ export function Viewer() {
                     />
                   )}
                   {expert && search && searchFound.length > 0 && <SearchMarkers objects={searchFound} grid={grid} scale={scale} />}
-                  {expert && distant && distantFound.candidates.length > 0 && (
+                  {expert && distant && distantFound.candidates.length > 0 && !distantFound.simulation && (
                     <DistantMarkers
                       candidates={distantFound.candidates}
                       grid={grid}

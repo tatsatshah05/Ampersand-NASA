@@ -170,3 +170,19 @@ describe('the link that follows a candidate', () => {
     expect(s).toMatchObject({ ra: candidate.follow.ra, dec: candidate.follow.dec, pmra: 8943.5, pmdec: -5255.5, parallax: 80621.6, det: 5, ui: 'expert', fov: 0.1 })
   })
 })
+
+describe('the link from a simulation to the practice screen', () => {
+  it('opens the same patch, detector, level and seed, and exists only for a simulation', () => {
+    const sim = (found as unknown as D.DistantStatus).result!
+    const address = D.practiceAddress(sim)!
+    const p = new URLSearchParams(address)
+    expect(p.get('train')).toBe(String(sim.planted!.seed))
+    expect(p.get('level') ?? 'easy').toBe(sim.planted!.level)
+    expect(Number(p.get('ra'))).toBeCloseTo(sim.ra, 5)
+    expect(Number(p.get('dec'))).toBeCloseTo(sim.dec, 5)
+    expect(Number(p.get('fov'))).toBe(sim.fov)
+    expect(Number(p.get('det') ?? 5)).toBe(sim.planted!.detector)
+    expect(p.get('name')).toBeNull() // not the default selection's name
+    expect(D.practiceAddress((real as unknown as D.DistantStatus).result!)).toBeNull()
+  })
+})

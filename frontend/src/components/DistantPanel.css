@@ -118,3 +118,8 @@
   stroke-width: 3px;
   stroke-linejoin: round;
 }
+
+/* Candidates are rare and each carries a table: one full-width card per row. */
+.distant-list {
+  grid-template-columns: 1fr;
+}

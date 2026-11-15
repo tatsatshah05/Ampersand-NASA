@@ -41,8 +41,32 @@ describe('the planted object, found', () => {
     expect(h).toContain('Planted at 2,559 times the Earth-Sun distance')
     expect(h).toContain('Candidate: about 2,558 times the Earth-Sun distance (between 2,534 and 2,583)')
     expect(h).toContain('It is seen in one detector only.')
+  })
+  it('points to the practice screen, and offers nothing that opens the real pictures', () => {
+    // The real pictures do not hold a planted object, so a view that "follows it" would follow nothing.
+    expect(h).toContain('See this planted object on the practice screen')
+    expect(h).toContain('train=1')
+    expect(h).not.toContain('Open a view that follows it')
+    expect(h).not.toContain('Look at the first position')
+    expect(h).toContain('It is not a real candidate.')
+  })
+})
+
+describe('a real candidate', () => {
+  // No real search has produced one, so the found practice answer is relabelled as real for this test only.
+  const asReal = JSON.parse(JSON.stringify(found)) as { simulation: boolean; result: Record<string, unknown> }
+  asReal.simulation = false
+  asReal.result.simulation = false
+  asReal.result.answer = '1 candidate(s). The strongest fits an object about 2,558 times as far from the Sun as the Earth is.'
+  delete asReal.result.planted
+  delete asReal.result.notice
+  const h = html(asReal)
+  it('is called a candidate, with a link that opens a view following it', () => {
+    expect(h).toContain('A candidate, not a finding')
     expect(h).toContain('Open a view that follows it')
     expect(h).toContain('ui=expert')
+    expect(h).not.toContain('SIMULATION')
+    expect(h).not.toContain('practice screen')
   })
 })
 

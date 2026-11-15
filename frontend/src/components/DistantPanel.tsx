@@ -11,6 +11,7 @@ import {
   catalogueSentence,
   chanceSentence,
   followAddress,
+  practiceAddress,
   limitSentence,
   mjy,
   patchSentence,
@@ -222,11 +223,17 @@ export function Answer({ result, onLook }: { result: DistantResult; onLook?: (ra
           <p>
             <strong>What the search said.</strong> {simulationSentence(result)}
           </p>
+          <p>
+            <a href={practiceAddress(result) ?? undefined} target="_blank" rel="noopener noreferrer">
+              See this planted object on the practice screen
+            </a>{' '}
+            and try to spot it yourself. It is not in the real pictures above.
+          </p>
         </div>
       )}
 
       {result.candidates.length > 0 && (
-        <ol className="search-list">
+        <ol className="search-list distant-list">
           {result.candidates.map((c, i) => (
             <CandidateCard key={`${c.detector}-${c.distance_au}-${i}`} candidate={c} number={i + 1} simulation={result.simulation} onLook={onLook} />
           ))}
@@ -374,9 +381,14 @@ function CandidateCard({
           {t}
         </p>
       ))}
-      <p className="search-candidate">A candidate, not a finding: nothing here has been confirmed by another telescope.</p>
+      {simulation ? (
+        <p className="search-candidate">This is the search's answer for a planted practice object. It is not a real candidate.</p>
+      ) : (
+        <p className="search-candidate">A candidate, not a finding: nothing here has been confirmed by another telescope.</p>
+      )}
+      {/* The buttons below open the real pictures, which do not hold a planted object: not offered in a simulation. */}
       <div className="distant-actions">
-        {onLook && first && (
+        {onLook && first && !simulation && (
           <button
             type="button"
             onClick={(e) => {
@@ -387,7 +399,7 @@ function CandidateCard({
             Look at the first position
           </button>
         )}
-        {href && (
+        {href && !simulation && (
           <a href={href} target="_blank" rel="noopener noreferrer">
             Open a view that follows it
           </a>
