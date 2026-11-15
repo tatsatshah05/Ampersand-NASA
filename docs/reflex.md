@@ -54,7 +54,14 @@ module docstring before the known answer was scored.
   field (190.0, +5.0). All were removed by the "still there in another visit" test (the same place is 0.07 to 0.34 mJy in
   the other visits). The raw S/N threshold of 8 is therefore NOT a clean decision line by itself: the other-visit test
   does the work. Any new candidate must pass it.
-- Field centre moved 2 arcmin east and 1.5 north (not "looking where it was"): see `results.json` key `eris_shift`.
+- Field centre moved 2 arcmin east and 1.5 north (so the result is not "we looked where it was"): Eris is still the
+  strongest source, 2.0 arcsec from JPL, S/N 15.6 (D1 13.4, D2 9.8, D3 7.0), drift (3.85, -3.44), delta S^2 vs infinity 55.
+  But the distance comes out 118 AU, 23% above JPL's 95.5; its 1 sigma interval (105 to 118) does NOT contain the truth, its
+  2 sigma interval (91 to 143) does. Two further lines fail the acceptance test: a reversed-Earth peak of 8.4 at the
+  edge of the field (48, -216 arcsec from the centre, edge of a 234 arcsec half-width) is above the threshold. So: the
+  detection and the place are robust to the field centre; the distance carries a systematic of 10 to 25% high, which
+  the quoted 1 sigma interval does not cover. Quote the 2 sigma interval and "about 100 to 120 AU for a body that JPL
+  puts at 95.5", never a precise distance.
 - Shuffled exposure times in blank fields: see `results.json` key `blank_fields` if present; the runs were slow on a
   heavily loaded machine and may be incomplete. Not done: a threshold from a proper blank-field distribution (three
   to five fields), Makemake (the old box did not cover it; the new reflex-centred box is untested on it).
@@ -76,7 +83,10 @@ not know of this having been done with SPHEREx data", not "never done".
 - Tested positive on one object (Eris), one field, low ecliptic latitude, sparse sky. Not tested in crowded or Galactic-plane
   fields, where fixed-sky subtraction leaves residuals.
 - Distance needs a visit of at least 8 days; shorter ones give a detection only. Leverage goes as duration squared.
-  The 1 sigma interval is narrow; quote the 2 sigma interval (83 to 154 AU for Eris).
+  The 1 sigma interval is too narrow (it missed the truth when the field was shifted); quote the 2 sigma interval
+  (83 to 154 AU for Eris at the original centre, 91 to 143 AU shifted).
+- Peaks at the very edge of the field (within about 20 arcsec) are the weakest part of the search; the 8.4
+  reversed-Earth peak of the shifted run is one. The module does not yet drop them.
 - When the exposure list for a patch spans more than one real visit (field 190, +5: 43 days), the "visit" is two
   merged observations and the distance leverage is meaningless. The default picks the longest group; check
   `visit.duration_days`.
@@ -89,8 +99,8 @@ A second visit: the fit from one visit predicts where the body is in the next (E
 body at 100 AU should be at that place, with a consistent distance. Then CatWISE and optical archives at that place.
 
 ## Words for the demo
-Say: "Without being told where Eris is, one 15-day SPHEREx visit finds it 1.4 arcsec from where JPL says it is, and
-the bend in its path puts it at about 105 AU (JPL: 95.5; 2 sigma 83 to 154). A body infinitely far away is ruled out
+Say: "Without being told where Eris is, one 15-day SPHEREx visit finds it 1.4 arcsec from where JPL says it is (2.0 with
+the field shifted), and the bend in its path puts it at about 105 to 118 AU (JPL: 95.5; 2 sigma 83 to 154). A body infinitely far away is ruled out
 at about 6.8 sigma. We do not know of this having been done with SPHEREx data."
 Do not say: discovery, first, new planet, Planet Nine search or test, "finds Planet X", that it beats WISE or Pan-STARRS,
 that the distance is precise, or that it works anywhere in the sky (one field has passed).
