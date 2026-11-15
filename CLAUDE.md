@@ -951,8 +951,8 @@ The three sweep candidates as ruled (2026-11-15; four independent reviewers each
 `docs/sweep/vetting/` (`ruling.json` is the authority), plain account in `docs/sweep.md`, unsent report texts in
 `docs/sweep/report-draft.md`). "Candidate" = a real source we found in no catalogue or report we checked; nobody has
 confirmed it; never "discovery", never "new" without that qualifier, no classification as fact. Nothing has been reported.
-- A, Sagittarius, RA 270.80408 Dec -23.46818 (18:03:12.98 -23:28:05.4): absent to 2025-09-10 (D6 fits -5.5 to -2.4 mJy,
-  limit about 10-14), 2,419-2,926 mJy at 4.4-5.0 um on 2026-03-20 to 04-01 (partly saturated), 670-803 on 2026-08-25 to
+- A, Sagittarius, RA 270.80408 Dec -23.46818 (18:03:12.98 -23:28:05.4): absent to 2025-09-10 (not detected; limit about
+  10-14 mJy with the neighbour modelled), 2,419-2,926 mJy at 4.4-5.0 um on 2026-03-20 to 04-01 (partly saturated), 670-803 on 2026-08-25 to
   09-02; more than 100 times (at least 170 on fits, 60 without a model). Probably a dusty eruption of unknown kind (best guess
   an obscured nova). Steady neighbour 2MASS 18031245-2327467 (W2 6.49 = 437 mJy) 20 arcsec away.
 - B, Scorpius, RA 253.18038 Dec -44.67697 (16:52:43.29 -44:40:37.1): absent to 2025-09-15 (3-sigma 2.5-4.0 mJy), first
