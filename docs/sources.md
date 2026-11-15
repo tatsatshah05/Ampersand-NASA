@@ -166,6 +166,13 @@ beyond the real frames they are drawn on.
 | WiseView and Backyard Worlds | slide 3 | Caselden et al. 2018; Kuchner et al. 2017 |
 | R Draconis and RW Aurigae variability | the brightness tool | AAVSO International Database |
 
+## Pictures in the pitch deck
+
+| Picture | Where | Source |
+|---|---|---|
+| SPHEREx All Sky Map 2025 (stars, hot gas and dust), dimmed | behind every slide | NASA/JPL-Caltech; SPHEREx at Caltech, Astropix `spherex20251218a`, https://www.astropix.org/image/spherex/spherex20251218a (3000 px JPG, downloaded 2026-11-15) |
+| Candidate B before and after (August 2025, March 2026), detector 6 | slide 1 | our own `/api/frames` pictures from SPHEREx DR1 (doi:10.26131/IRSA678), cropped to 2.4 arcmin, one display curve for both |
+
 ## Part 5. Software
 
 Astropy (Astropy Collaboration 2013, 2018, 2022), NumPy (Harris et al. 2020), SciPy (Virtanen et al. 2020),

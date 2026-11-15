@@ -7,6 +7,7 @@ import json
 import re
 import unicodedata
 import warnings
+from time import monotonic
 
 import astropy.units as u
 import numpy as np
@@ -25,6 +26,16 @@ GAIA_TAP = "https://gea.esac.esa.int/tap-server/tap/sync"
 # in the archive.
 GAIA_COPY = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"
 GAIA_COPY_COLUMNS = ("Source", "RA_ICRS", "DE_ICRS", "pmRA", "pmDE", "Plx", "Gmag")
+# How ESA's archive is asked. On 2026-11-15 it failed by never accepting the connection (its
+# name resolved, then nothing), and every view of a new star waited out three 30 s tries first:
+# 98 s measured, and four 40 s tries for a new name. So connecting gets a short limit of its
+# own (a healthy archive still has the caller's full time to send its answer), and once every
+# try has failed the archive is left alone for ten minutes: each caller has somewhere else to
+# go (CfA's copy for a field's stars, SIMBAD's values for a name).
+GAIA_CONNECT_S = 5.0
+GAIA_TRIES = 2
+GAIA_LEFT_ALONE_S = 600.0
+_gaia_down_until = 0.0    # on the clock of time.monotonic(); 0 means not known to be down
 GAIA_EPOCH = 2016.0  # reference epoch of Gaia DR3 positions (Julian year)
 # SIMBAD's TAP service. The CfA mirror is first because the Strasbourg original was
 # answering every request with HTTP 404 "Page unavailable" on 2026-11-14.
@@ -47,13 +58,27 @@ def _num(v) -> float | None:
     return None if v is None or np.ma.is_masked(v) or not np.isfinite(v) else float(v)
 
 
+def _gaia_archive(query: str, timeout: float) -> bytes:
+    """One ADQL query on ESA's Gaia archive. Fails at once while the archive is being left alone."""
+    global _gaia_down_until
+    if monotonic() < _gaia_down_until:
+        raise ArchiveError(f"no answer from {GAIA_TAP} a few minutes ago, so it was not asked again")
+    try:
+        return http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query},
+                        tries=GAIA_TRIES, timeout=(GAIA_CONNECT_S, timeout))
+    except ArchiveError:
+        _gaia_down_until = monotonic() + GAIA_LEFT_ALONE_S
+        raise
+
+
 def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0, *,
               tries: int = 10, timeout: float = 90) -> list[dict]:
     """Gaia DR3 sources within radius_deg of (ra, dec), brightest first. Cached on disk.
 
     Positions are at epoch 2016.0. A fast star can be arcminutes from where it is
     today, so callers should search wider than the field they want to cover.
-    `tries` and `timeout` only matter when the answer is not cached yet.
+    `tries` and `timeout` only matter when the answer is not cached yet, and `tries` only for
+    CfA's copy: ESA's archive gets GAIA_TRIES.
     """
     key = hashlib.sha1(f"{ra:.5f},{dec:.5f},{radius_deg:.4f},{g_limit}".encode()).hexdigest()[:16]
     cache_file = CACHE / "queries" / f"gaia_{key}.json"
@@ -65,11 +90,9 @@ def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0, *
         f"CIRCLE('ICRS', {ra}, {dec}, {radius_deg})) AND phot_g_mean_mag < {g_limit} "
         "ORDER BY phot_g_mean_mag")
     try:
-        # A few tries only: the copy below holds the same table, so waiting out ten long
-        # timeouts on an archive that takes no connections helps nobody.
-        raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query},
-                       tries=min(tries, 3), timeout=min(timeout, 30))
-        sources = _gaia_rows(raw)
+        # The copy below holds the same table, so waiting long on an archive that takes no
+        # connections helps nobody.
+        sources = _gaia_rows(_gaia_archive(query, timeout=min(timeout, 30)))
     except ArchiveError as archive_error:
         try:
             raw = http_get(GAIA_COPY, {"-source": "I/355/gaiadr3", "-c": f"{ra} {dec}", "-c.rd": f"{radius_deg}",
@@ -118,8 +141,7 @@ def gaia_source(source_id: str) -> dict | None:
         raise ValueError("a Gaia source identifier is all digits")
     query = ("SELECT source_id, ra, dec, pmra, pmdec, parallax, phot_g_mean_mag, radial_velocity "
              f"FROM gaiadr3.gaia_source WHERE source_id = {source_id}")
-    raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query},
-                   tries=4, timeout=40)
+    raw = _gaia_archive(query, timeout=40)
     table = parse_single_table(io.BytesIO(raw)).to_table(use_names_over_ids=True)
     rows = _gaia_rows(raw)
     if not rows:
