@@ -45,7 +45,7 @@ import './BrightnessPanel.css'
 
 // Same visit colours as the spectrum panel (validated together on the panel background).
 const VISIT_COLOURS = ['#3987e5', '#d95926', '#199e70']
-const LATER_COLOUR = '#9a9a94'
+const LATER_COLOUR = 'var(--chart-later)'
 const visitColour = (epoch: number) => VISIT_COLOURS[epoch - 1] ?? LATER_COLOUR
 
 // One small chart, in SVG units.

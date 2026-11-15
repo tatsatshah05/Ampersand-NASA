@@ -1,6 +1,8 @@
 /* The search box in the top bar (issue #6). Every class starts with "searchbar" so nothing
    here touches the rest of the page; the target buttons are styled with the page (App.css).
-   Colours are the page's own variables from index.css. */
+   Colours are the page's own variables from index.css.
+
+   A grey pill with the magnifier inside it; in use, it turns white with a black ring. */
 
 .searchbar {
   position: relative;
@@ -9,21 +11,32 @@
 
 .searchbar-row {
   display: flex;
+  align-items: center;
   min-width: 0;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--surface);
+  transition:
+    background-color var(--quick) var(--ease),
+    box-shadow var(--quick) var(--ease);
+}
+
+.searchbar-row:focus-within {
+  background: var(--bg);
+  box-shadow: 0 0 0 2px var(--focus);
 }
 
 .searchbar-input {
   flex: 1 1 auto;
   min-width: 0;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 4px 0 16px;
   font-size: var(--size-body);
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-right: 0;
-  border-radius: 5px 0 0 5px;
-  /* Without this, Safari draws a search field as a rounded pill and ignores the above. */
+  background: transparent;
+  border: 0;
+  border-radius: 999px 0 0 999px;
+  /* Without this, Safari draws a search field of its own and ignores the above. */
   -webkit-appearance: none;
   appearance: none;
 }
@@ -33,25 +46,44 @@
   opacity: 1;
 }
 
-.searchbar-input:hover {
-  background: var(--surface-hover);
+/* The ring round the whole pill shows the focus. */
+.searchbar-input:focus-visible {
+  outline: none;
+}
+
+/* The browser's clear button, drawn as a small grey disc with a cross. */
+.searchbar-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0 2px 0 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%2386868b'/%3E%3Cpath d='M5.4 5.4l5.2 5.2M10.6 5.4l-5.2 5.2' stroke='%23fff' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / 100% no-repeat;
+  cursor: pointer;
 }
 
 .searchbar-submit {
   flex: none;
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+  margin-right: 2px;
   padding: 0;
-  border-radius: 0 5px 5px 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
 }
 
-.searchbar-input:focus-visible,
+.searchbar-submit:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
 .searchbar-submit:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: -1px;
-  position: relative;
+  outline-offset: -2px;
+  color: var(--ink);
 }
 
 /* Under the box, laid over the page so nothing moves: the hint while the box is in use, a
@@ -60,16 +92,19 @@
   display: none;
   position: absolute;
   z-index: 40;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   left: 0;
-  width: max(100%, 420px);
+  width: max(100%, 440px);
   max-width: calc(100vw - 32px);
-  padding: 9px 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: 6px;
-  background: var(--surface);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.6);
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.1),
+    0 2px 6px rgb(0 0 0 / 0.05);
   font-size: var(--size-body);
+  line-height: 1.7;
 }
 
 .searchbar:focus-within .searchbar-pop,
@@ -93,14 +128,14 @@
   color: var(--text);
 }
 
-/* Text a person can type as it stands. */
+/* Text a person can type as it stands: plain words in a pale tile. */
 .searchbar-example {
-  padding: 1px 5px;
+  padding: 2px 8px;
   font-family: inherit;
-  font-size: 0.95em;
+  font-size: 1em;
   color: var(--text);
-  background: rgb(255 255 255 / 0.08);
-  border-radius: 4px;
+  background: var(--surface);
+  border-radius: 6px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }

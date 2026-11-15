@@ -1,0 +1,208 @@
+/* The finishing pass on the parts that arrived after the restyle: the result sentence, the
+   table of visits, the three steps, the "i" buttons and what they open. Look only, through
+   the tokens of index.css. It is loaded last (main.tsx) and kept in its own file so that
+   work going on in App.css does not have to be merged with it. */
+
+/* ---- the strip of visits: the ring and the bold label change at the same instant --------- */
+
+/* The tile's ring used to fade over 180 ms while the label changed at once, so for a moment
+   one visit wore the ring and another the bold: twice a second while blinking. */
+.visit,
+.visit .visit-name,
+.visit .visit-when {
+  transition: none;
+}
+
+/* ---- Beginner: the result, then what backs it ------------------------------------------- */
+
+.inspector .result-sentence {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.inspector .result-more {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.inspector .seen-line {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---- the table of visits ---------------------------------------------------------------- */
+
+/* Beginner's table has two columns and room to breathe. Expert's has five in the same width:
+   its column widths and paddings are tuned in App.css and are left exactly as they are. */
+.visit-table:not(.expert) {
+  font-size: 14px;
+}
+
+.visit-table thead th {
+  padding-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.visit-table:not(.expert) th,
+.visit-table:not(.expert) td {
+  padding: 8px 10px 8px 0;
+}
+
+.visit-table:not(.expert) tbody tr > :first-child {
+  padding-left: 10px;
+}
+
+.visit-row-button {
+  white-space: nowrap;
+}
+
+.visit-row-when {
+  font-size: 13px;
+}
+
+/* The visit on the picture: a soft tile with rounded ends and its name in bold. No bar of
+   colour down the side; weight and the tile say it. */
+.visit-row[aria-current='true'] > :first-child,
+.visit-rows[aria-current='true'] > tr > :first-child {
+  border-left-color: transparent;
+}
+
+.visit-row[aria-current='true'] > :first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.visit-row[aria-current='true'] > :last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.visit-rows[aria-current='true'] > tr:first-child > :first-child {
+  border-radius: 10px 0 0 0;
+}
+
+.visit-rows[aria-current='true'] > tr:first-child > :last-child {
+  border-radius: 0 10px 0 0;
+}
+
+.visit-rows[aria-current='true'] > tr:last-child > :first-child {
+  border-radius: 0 0 0 10px;
+}
+
+.visit-rows[aria-current='true'] > tr:last-child > :last-child {
+  border-radius: 0 0 10px 10px;
+}
+
+.visit-row[aria-current='true'] .visit-row-button,
+.visit-rows[aria-current='true'] .visit-row-button {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Expert: the line about each visit and the note under the table stay readable greys. */
+.visit-row-about td {
+  color: var(--muted);
+}
+
+.table-note {
+  color: var(--muted);
+}
+
+/* ---- the three steps -------------------------------------------------------------------- */
+
+.guide-steps li {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.guide-n {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Where the visitor is: a black disc and a bold line. What is done: a grey disc. */
+.guide-steps li[data-state='now'] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.guide-steps li[data-state='now'] .guide-n {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.guide-steps li[data-state='done'] {
+  color: var(--text);
+}
+
+.guide-steps li[data-state='done'] .guide-n {
+  border-color: var(--surface-press);
+  background: var(--surface-press);
+  color: var(--text);
+}
+
+.guide-further {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.guide-further .info-button {
+  margin: 0;
+}
+
+/* ---- the "i" buttons and what they open ------------------------------------------------- */
+
+.info-button {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.info-button:hover:not(:disabled),
+.info-button:focus-visible,
+.info-button[aria-expanded='true'] {
+  border-color: var(--ink);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* A white card with a hairline and a soft shadow, as a note laid on the page. One opened from
+   the picture inherits the picture's own dark set and stays dark glass. */
+.info-popover {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  font-size: 14px;
+  line-height: 1.47;
+  box-shadow:
+    0 12px 40px rgb(0 0 0 / 0.14),
+    0 2px 6px rgb(0 0 0 / 0.06);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .info-button {
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease;
+  }
+}
