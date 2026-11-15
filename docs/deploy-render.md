@@ -74,12 +74,14 @@ What Standard means:
 - **The pre-built views open at once**, as on any plan (0.3 seconds for the opening
   view's data, measured).
 - **A position nobody has asked for** is fetched from NASA's archive and built on one
-  processor. Measured once, on the build before the Gaia fix below was deployed: Proxima
-  Centauri, detector 5, 0.1 degrees, 63 exposures, 153 seconds (a laptop: about 15);
-  asked again, 0.3 seconds. On that build the name of a star not yet looked up (Wolf 359)
-  had not answered after 90 seconds: ESA's Gaia server took no connections that day and
-  the build lacked the short connection limit (`astrometry._gaia_archive`, on `main`
-  since the push that set the plan).
+  processor: about a minute and a half from typing a new star's name to its pictures (a
+  laptop: about 15 seconds). Measured once, on the build of `b1e9bec`, with ESA's Gaia
+  server taking no connections: Wolf 359's name answered in 13 seconds (SIMBAD's values,
+  with a note that Gaia did not answer) and its view (detector 5, 0.1 degrees, 45
+  exposures) in 75 seconds; asked again, 0.4 seconds. On the build before it, which
+  lacked the short connection limit for Gaia (`astrometry._gaia_archive`), Proxima
+  Centauri's view (63 exposures) took 153 seconds and Wolf 359's name had not answered
+  after 90.
 - **A new search of a patch** (Find changes, Far-off planet): not tried on Render.
 - **No disk.** Everything fetched after the build, and every vote, is lost when the
   service restarts or is deployed again. The pre-built results come back with every
