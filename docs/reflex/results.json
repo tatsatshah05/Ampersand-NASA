@@ -1,0 +1,1060 @@
+{
+ "eris": {
+  "centre": [
+   27.37815,
+   -0.11998
+  ],
+  "answer": "1 known distant body recovered blind(s); the strongest has S/N 14.8 with a distance of about 111 AU (epoch bootstrap 68% range 100.0 to 142.9 AU; at 95% the far side is unbounded). A candidate at most, not a discovery. Detects movers from 50 AU outward. A distance needs S/N x (1/d) large enough: in a 15-day visit within about 120 AU at the S/N 8 threshold and about 200 AU for an Eris-bright body; within about half that in a 10-day visit (scaled from the measured Eris profile). Farther bodies are detected but not ranged. One visit reaches only about 0.6 magnitudes fainter than Eris: about V 19.3 for an Eris-coloured body, about V 20.7 for a Sedna-coloured one (scaled from Eris at S/N 14.3 and Sedna at forced S/N 7.5). That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X.",
+  "visit": {
+   "mjd_first": 60866.085821,
+   "mjd_last": 60881.439791,
+   "duration_days": 15.35,
+   "n_exposures": 57,
+   "n_used": 57,
+   "mjd_t0": 60877.296038909,
+   "distance_leverage_arcsec_per_inv_au": [
+    1580,
+    604
+   ],
+   "median_of_difference_maps_mjy": -0.00018046637184816338
+  },
+  "n_trials": 24439,
+  "control": {
+   "best_reversed_snr": 6.404559431890559,
+   "place_east_north_arcsec": [
+    -72.0,
+    -231.0
+   ],
+   "n_reversed_trials": 13322,
+   "n_reversed_above_threshold": 0
+  },
+  "limit": {
+   "threshold_snr": 8.0,
+   "stacked_mean_noise_mjy_formal": 0.00405,
+   "noise_ratio_measured_to_formal": 1.029,
+   "faintest_mean_flux_mjy_matched_filter_scale": 0.0333,
+   "faintest_mean_flux_mjy_aperture_scale": 0.049,
+   "completeness": "50 per cent level (a source of this flux is found about half the time), not a hard limit",
+   "flux_scale_note": "matched-filter fluxes are about 0.68 of aperture-photometry fluxes (13 stars of the Eris field, reviewer measurement); the aperture-scale figure divides by that and is not re-measured per field",
+   "detectors": [
+    1,
+    2,
+    3
+   ],
+   "searched_area_deg2": 0.0169,
+   "ranging_note": "Detects movers from 50 AU outward. A distance needs S/N x (1/d) large enough: in a 15-day visit within about 120 AU at the S/N 8 threshold and about 200 AU for an Eris-bright body; within about half that in a 10-day visit (scaled from the measured Eris profile). Farther bodies are detected but not ranged.",
+   "note": "One visit reaches only about 0.6 magnitudes fainter than Eris: about V 19.3 for an Eris-coloured body, about V 20.7 for a Sedna-coloured one (scaled from Eris at S/N 14.3 and Sedna at forced S/N 7.5). That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X."
+  },
+  "top_peaks": [
+   {
+    "snr": 14.695,
+    "inv_d": 0.009,
+    "ve": 3.659,
+    "vn": -3.536,
+    "east": -3.0,
+    "north": 0.0,
+    "n_trials": 9703
+   },
+   {
+    "snr": 6.789,
+    "inv_d": 0.019,
+    "ve": 0.826,
+    "vn": -5.757,
+    "east": -27.0,
+    "north": -21.0,
+    "n_trials": 14
+   },
+   {
+    "snr": 6.475,
+    "inv_d": 0.019,
+    "ve": -1.174,
+    "vn": -0.257,
+    "east": -81.0,
+    "north": -231.0,
+    "n_trials": 9
+   },
+   {
+    "snr": 6.137,
+    "inv_d": 0.009,
+    "ve": -2.841,
+    "vn": -5.536,
+    "east": 6.0,
+    "north": 3.0,
+    "n_trials": 75
+   },
+   {
+    "snr": 6.024,
+    "inv_d": 0.018,
+    "ve": 12.945,
+    "vn": -12.369,
+    "east": 75.0,
+    "north": -78.0,
+    "n_trials": 25
+   }
+  ],
+  "candidate": {
+   "ra": 27.378296,
+   "dec": -0.119667,
+   "mjd_t0": 60877.296038909,
+   "offset_arcsec": [
+    0.52,
+    1.13
+   ],
+   "offset_p0_arcsec": [
+    -1.55,
+    0.34
+   ],
+   "drift_arcsec_day": [
+    4.109,
+    -3.326
+   ],
+   "snr": 14.8,
+   "coarse_snr": 14.69,
+   "mean_flux_mjy_matched_filter_scale": 0.0698,
+   "per_detector": {
+    "D1": {
+     "n_exposures": 19,
+     "flux_mjy": 0.1047,
+     "flux_error_mjy": 0.0089,
+     "snr": 11.93
+    },
+    "D2": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0664,
+     "flux_error_mjy": 0.0087,
+     "snr": 7.68
+    },
+    "D3": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0488,
+     "flux_error_mjy": 0.0076,
+     "snr": 6.4
+    }
+   },
+   "n_detectors_with_2sigma": 3,
+   "still_there": [
+    {
+     "mjd": [
+      61035.5,
+      61060.2
+     ],
+     "n": 54,
+     "flux_mjy": -0.0005,
+     "error_mjy": 0.0039,
+     "there": false
+    },
+    {
+     "mjd": [
+      61232.7,
+      61243.4
+     ],
+     "n": 56,
+     "flux_mjy": -0.0018,
+     "error_mjy": 0.004,
+     "there": false
+    }
+   ],
+   "track_checks": {
+    "top3_share": 0.132,
+    "chi2_dof": 1.85,
+    "usable_span_days": 13.66,
+    "n_usable": 46
+   },
+   "at_field_edge": false,
+   "delta_s2_infinite": 47.8,
+   "snr_at_infinity": 13.08,
+   "reversed_earth_snr_mirror_distance": 8.71,
+   "distance_measured": true,
+   "epoch_resampling": {
+    "n_epochs": 14,
+    "leave_one_epoch_out_delta_s2": [
+     17.2,
+     40.3,
+     46.7,
+     39.0,
+     47.3,
+     45.5,
+     49.7,
+     51.6,
+     47.6,
+     43.3,
+     53.8,
+     47.8,
+     36.3,
+     47.8
+    ],
+    "leave_one_epoch_out_min_delta_s2": 17.2,
+    "leave_one_epoch_out_inv_d_sigma": 0.00062,
+    "n_bootstrap": 40,
+    "bootstrap_distance_au_68": [
+     100.0,
+     142.9
+    ],
+    "bootstrap_distance_au_95": [
+     76.5,
+     null
+    ],
+    "bootstrap_share_unbounded": 0.05,
+    "grid_step": 0.001
+   },
+   "profile": {
+    "inv_d": [
+     -0.012,
+     -0.011,
+     -0.01,
+     -0.009,
+     -0.008,
+     -0.007,
+     -0.006,
+     -0.005,
+     -0.004,
+     -0.003,
+     -0.002,
+     -0.001,
+     0.0,
+     0.001,
+     0.002,
+     0.003,
+     0.004,
+     0.005,
+     0.006,
+     0.007,
+     0.008,
+     0.009,
+     0.01,
+     0.011,
+     0.012,
+     0.013,
+     0.014,
+     0.015,
+     0.016,
+     0.017,
+     0.018,
+     0.019,
+     0.02
+    ],
+    "snr": [
+     9.09,
+     8.84,
+     8.69,
+     8.71,
+     8.67,
+     8.65,
+     8.63,
+     8.5,
+     8.39,
+     8.38,
+     8.23,
+     7.7,
+     8.37,
+     9.78,
+     9.93,
+     10.78,
+     11.45,
+     14.32,
+     14.59,
+     14.7,
+     14.75,
+     14.8,
+     14.79,
+     14.77,
+     14.7,
+     14.5,
+     14.48,
+     14.32,
+     14.1,
+     13.89,
+     13.67,
+     13.43,
+     13.21
+    ]
+   },
+   "basic_vetting_passed": true,
+   "distance_au": 111.1,
+   "interval_2sigma_au_statistical_only": [
+    81.9,
+    156.2
+   ],
+   "interval_note": "Distance intervals: the 2 sigma interval from the S/N profile is statistical only and about 2 to 3 times too narrow; the epoch bootstrap interval is the one to quote.",
+   "known_body": [],
+   "known_distant_body": [
+    {
+     "name": "136199 Eris",
+     "separation_arcsec": 1.2,
+     "vmag": 18.655
+    }
+   ],
+   "known_distant_check_errors": [],
+   "verdict": "known distant body (136199 Eris, JPL Horizons within 60 arcsec): known-answer, not a candidate"
+  },
+  "scored_against_jpl": {
+   "separation_arcsec": 1.24,
+   "observer_distance_au": 95.5061410823939,
+   "jpl_linear_drift": [
+    3.914,
+    -3.606
+   ]
+  },
+  "checks": {
+   "A1 within 4 arcsec of JPL": true,
+   "A2 S/N >= 12": true,
+   "A4 epoch-bootstrap 68% range contains JPL distance, best within 25%": false,
+   "A5 delta S^2 vs infinity >= 25 (all exposures)": true,
+   "A5b delta S^2 vs infinity >= 9 with any one epoch left out": true,
+   "A6 drift within 0.5 arcsec/day of JPL's": true
+  },
+  "information_not_scored": {
+   "other_peaks_at_or_above_8": [],
+   "best_reversed_earth_snr_away_from_it": 6.404559431890559,
+   "bootstrap_95_range_au": [
+    76.5,
+    null
+   ],
+   "bootstrap_95_contains_jpl": true,
+   "reversed_peaks_vetted": []
+  },
+  "passed": false,
+  "runtime_s": 284.4
+ },
+ "sedna_centre": [
+  61.78652,
+  8.82802
+ ],
+ "sedna": {
+  "centre": [
+   61.78652,
+   8.82802
+  ],
+  "answer": "Nothing moving above S/N 8 survived the vetting in 0.0169 square degrees, 50 to about 1000 AU, one visit: stacked mean flux limit 0.0346 mJy on the matched-filter scale (about 0.051 mJy on the aperture scale) at the 50 per cent completeness level, D1/D2/D3. The S/N 8 threshold itself is not calibrated against blank fields. One visit reaches only about 0.6 magnitudes fainter than Eris: about V 19.3 for an Eris-coloured body, about V 20.7 for a Sedna-coloured one (scaled from Eris at S/N 14.3 and Sedna at forced S/N 7.5). That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X.",
+  "n_trials": 24439,
+  "top_peaks": [
+   {
+    "snr": 10.411,
+    "inv_d": 0.003,
+    "ve": -1.014,
+    "vn": -1.832,
+    "east": 78.0,
+    "north": 183.0,
+    "n_trials": 2025
+   },
+   {
+    "snr": 7.811,
+    "inv_d": 0.016,
+    "ve": -0.588,
+    "vn": -6.724,
+    "east": 87.0,
+    "north": 180.0,
+    "n_trials": 1653
+   },
+   {
+    "snr": 7.609,
+    "inv_d": 0.015,
+    "ve": 0.421,
+    "vn": -8.125,
+    "east": 87.0,
+    "north": 195.0,
+    "n_trials": 1809
+   },
+   {
+    "snr": 7.295,
+    "inv_d": 0.019,
+    "ve": -3.104,
+    "vn": -7.922,
+    "east": 99.0,
+    "north": 198.0,
+    "n_trials": 556
+   },
+   {
+    "snr": 7.08,
+    "inv_d": 0.015,
+    "ve": 8.921,
+    "vn": -8.125,
+    "east": -48.0,
+    "north": 45.0,
+    "n_trials": 655
+   }
+  ],
+  "control": {
+   "best_reversed_snr": 6.684008749069639,
+   "place_east_north_arcsec": [
+    -3.0,
+    -84.0
+   ],
+   "n_reversed_trials": 13322,
+   "n_reversed_above_threshold": 0
+  },
+  "forced_along_jpl": {
+   "n_used": 58,
+   "all": {
+    "snr": 7.51,
+    "n_exposures": 58
+   },
+   "D1": {
+    "snr": 3.89,
+    "n_exposures": 20
+   },
+   "D2": {
+    "snr": 4.95,
+    "n_exposures": 19
+   },
+   "D3": {
+    "snr": 3.07,
+    "n_exposures": 19
+   }
+  },
+  "n_candidates": 1,
+  "passed": true,
+  "n_exposures_in_visit": 57
+ },
+ "eris_shift": {
+  "centre": [
+   27.411483406417283,
+   -0.14498
+  ],
+  "answer": "1 known distant body recovered blind(s); the strongest has S/N 15.6 with a distance of about 118 AU (epoch bootstrap 68% range 90.9 to 138.1 AU; at 95% the far side is unbounded). A candidate at most, not a discovery. Detects movers from 50 AU outward. A distance needs S/N x (1/d) large enough: in a 15-day visit within about 120 AU at the S/N 8 threshold and about 200 AU for an Eris-bright body; within about half that in a 10-day visit (scaled from the measured Eris profile). Farther bodies are detected but not ranged. One visit reaches only about 0.6 magnitudes fainter than Eris: about V 19.3 for an Eris-coloured body, about V 20.7 for a Sedna-coloured one (scaled from Eris at S/N 14.3 and Sedna at forced S/N 7.5). That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X.",
+  "visit": {
+   "mjd_first": 60866.085821,
+   "mjd_last": 60881.439791,
+   "duration_days": 15.35,
+   "n_exposures": 57,
+   "n_used": 57,
+   "mjd_t0": 60877.296038909,
+   "distance_leverage_arcsec_per_inv_au": [
+    1580,
+    604
+   ],
+   "median_of_difference_maps_mjy": -0.00014863732290841482
+  },
+  "n_trials": 24439,
+  "control": {
+   "best_reversed_snr": 8.352847462770582,
+   "place_east_north_arcsec": [
+    -48.0,
+    -216.0
+   ],
+   "n_reversed_trials": 13322,
+   "n_reversed_above_threshold": 1
+  },
+  "limit": {
+   "threshold_snr": 8.0,
+   "stacked_mean_noise_mjy_formal": 0.00401,
+   "noise_ratio_measured_to_formal": 1.031,
+   "faintest_mean_flux_mjy_matched_filter_scale": 0.0331,
+   "faintest_mean_flux_mjy_aperture_scale": 0.049,
+   "completeness": "50 per cent level (a source of this flux is found about half the time), not a hard limit",
+   "flux_scale_note": "matched-filter fluxes are about 0.68 of aperture-photometry fluxes (13 stars of the Eris field, reviewer measurement); the aperture-scale figure divides by that and is not re-measured per field",
+   "detectors": [
+    1,
+    2,
+    3
+   ],
+   "searched_area_deg2": 0.0169,
+   "ranging_note": "Detects movers from 50 AU outward. A distance needs S/N x (1/d) large enough: in a 15-day visit within about 120 AU at the S/N 8 threshold and about 200 AU for an Eris-bright body; within about half that in a 10-day visit (scaled from the measured Eris profile). Farther bodies are detected but not ranged.",
+   "note": "One visit reaches only about 0.6 magnitudes fainter than Eris: about V 19.3 for an Eris-coloured body, about V 20.7 for a Sedna-coloured one (scaled from Eris at S/N 14.3 and Sedna at forced S/N 7.5). That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X."
+  },
+  "top_peaks": [
+   {
+    "snr": 15.065,
+    "inv_d": 0.009,
+    "ve": 3.676,
+    "vn": -3.549,
+    "east": -123.0,
+    "north": 90.0,
+    "n_trials": 7710
+   },
+   {
+    "snr": 7.9,
+    "inv_d": 0.007,
+    "ve": 0.792,
+    "vn": -1.158,
+    "east": -60.0,
+    "north": -219.0,
+    "n_trials": 1
+   },
+   {
+    "snr": 7.441,
+    "inv_d": 0.013,
+    "ve": -3.172,
+    "vn": -12.222,
+    "east": 189.0,
+    "north": 93.0,
+    "n_trials": 493
+   },
+   {
+    "snr": 7.35,
+    "inv_d": 0.018,
+    "ve": 0.98,
+    "vn": -10.395,
+    "east": -54.0,
+    "north": -195.0,
+    "n_trials": 123
+   },
+   {
+    "snr": 7.068,
+    "inv_d": 0.018,
+    "ve": 6.48,
+    "vn": -6.895,
+    "east": 168.0,
+    "north": 81.0,
+    "n_trials": 1
+   }
+  ],
+  "candidate": {
+   "ra": 27.378151,
+   "dec": -0.119663,
+   "mjd_t0": 60877.296038909,
+   "offset_arcsec": [
+    -119.99,
+    91.14
+   ],
+   "offset_p0_arcsec": [
+    -121.95,
+    90.4
+   ],
+   "drift_arcsec_day": [
+    3.847,
+    -3.439
+   ],
+   "snr": 15.63,
+   "coarse_snr": 15.06,
+   "mean_flux_mjy_matched_filter_scale": 0.0693,
+   "per_detector": {
+    "D1": {
+     "n_exposures": 19,
+     "flux_mjy": 0.1035,
+     "flux_error_mjy": 0.0078,
+     "snr": 13.39
+    },
+    "D2": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0678,
+     "flux_error_mjy": 0.0068,
+     "snr": 9.77
+    },
+    "D3": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0466,
+     "flux_error_mjy": 0.0068,
+     "snr": 7.0
+    }
+   },
+   "n_detectors_with_2sigma": 3,
+   "still_there": [
+    {
+     "mjd": [
+      61035.5,
+      61060.2
+     ],
+     "n": 50,
+     "flux_mjy": 0.0011,
+     "error_mjy": 0.004,
+     "there": false
+    },
+    {
+     "mjd": [
+      61232.7,
+      61243.4
+     ],
+     "n": 55,
+     "flux_mjy": -0.0026,
+     "error_mjy": 0.004,
+     "there": false
+    }
+   ],
+   "track_checks": {
+    "top3_share": 0.128,
+    "chi2_dof": 2.07,
+    "usable_span_days": 13.66,
+    "n_usable": 45
+   },
+   "at_field_edge": false,
+   "delta_s2_infinite": 54.6,
+   "snr_at_infinity": 13.78,
+   "reversed_earth_snr_mirror_distance": 9.56,
+   "distance_measured": true,
+   "epoch_resampling": {
+    "n_epochs": 14,
+    "leave_one_epoch_out_delta_s2": [
+     22.8,
+     44.4,
+     48.9,
+     40.2,
+     53.5,
+     52.5,
+     56.0,
+     57.1,
+     53.1,
+     46.5,
+     59.8,
+     54.5,
+     40.6,
+     54.7
+    ],
+    "leave_one_epoch_out_min_delta_s2": 22.8,
+    "leave_one_epoch_out_inv_d_sigma": 0.00038,
+    "n_bootstrap": 40,
+    "bootstrap_distance_au_68": [
+     90.9,
+     138.1
+    ],
+    "bootstrap_distance_au_95": [
+     52.6,
+     null
+    ],
+    "bootstrap_share_unbounded": 0.05,
+    "grid_step": 0.001
+   },
+   "profile": {
+    "inv_d": [
+     -0.012,
+     -0.011,
+     -0.01,
+     -0.009,
+     -0.008,
+     -0.007,
+     -0.006,
+     -0.005,
+     -0.004,
+     -0.003,
+     -0.002,
+     -0.001,
+     0.0,
+     0.001,
+     0.002,
+     0.003,
+     0.004,
+     0.005,
+     0.006,
+     0.007,
+     0.008,
+     0.009,
+     0.01,
+     0.011,
+     0.012,
+     0.013,
+     0.014,
+     0.015,
+     0.016,
+     0.017,
+     0.018,
+     0.019,
+     0.02
+    ],
+    "snr": [
+     9.07,
+     9.44,
+     9.5,
+     9.55,
+     9.48,
+     9.5,
+     9.48,
+     9.4,
+     9.28,
+     9.2,
+     8.98,
+     8.52,
+     9.47,
+     10.81,
+     11.05,
+     11.54,
+     12.23,
+     15.22,
+     15.39,
+     15.53,
+     15.6,
+     15.63,
+     15.55,
+     15.52,
+     15.45,
+     15.39,
+     15.28,
+     15.08,
+     14.85,
+     14.57,
+     14.24,
+     14.04,
+     13.82
+    ]
+   },
+   "basic_vetting_passed": true,
+   "distance_au": 117.6,
+   "interval_2sigma_au_statistical_only": [
+    89.1,
+    147.3
+   ],
+   "interval_note": "Distance intervals: the 2 sigma interval from the S/N profile is statistical only and about 2 to 3 times too narrow; the epoch bootstrap interval is the one to quote.",
+   "known_body": [],
+   "known_distant_body": [
+    {
+     "name": "136199 Eris",
+     "separation_arcsec": 1.1,
+     "vmag": 18.655
+    }
+   ],
+   "known_distant_check_errors": [],
+   "verdict": "known distant body (136199 Eris, JPL Horizons within 60 arcsec): known-answer, not a candidate"
+  },
+  "scored_against_jpl": {
+   "separation_arcsec": 1.14,
+   "observer_distance_au": 95.5061410823939,
+   "jpl_linear_drift": [
+    3.914,
+    -3.606
+   ]
+  },
+  "checks": {
+   "A1 within 4 arcsec of JPL": true,
+   "A2 S/N >= 12": true,
+   "A4 epoch-bootstrap 68% range contains JPL distance, best within 25%": true,
+   "A5 delta S^2 vs infinity >= 25 (all exposures)": true,
+   "A5b delta S^2 vs infinity >= 9 with any one epoch left out": true,
+   "A6 drift within 0.5 arcsec/day of JPL's": true
+  },
+  "information_not_scored": {
+   "other_peaks_at_or_above_8": [],
+   "best_reversed_earth_snr_away_from_it": 8.352847462770582,
+   "bootstrap_95_range_au": [
+    52.6,
+    null
+   ],
+   "bootstrap_95_contains_jpl": true,
+   "reversed_peaks_vetted": [
+    {
+     "snr": 8.35,
+     "place_arcsec": [
+      -48.0,
+      -216.0
+     ],
+     "inv_d": -0.02,
+     "n_detectors_with_2sigma": 0,
+     "still_there_in_other_visit": true,
+     "at_field_edge": true,
+     "track_checks": {
+      "top3_share": 0.58,
+      "chi2_dof": 3.59,
+      "usable_span_days": 13.66,
+      "n_usable": 41
+     },
+     "survives_the_vetting_a_candidate_gets": false
+    }
+   ]
+  },
+  "passed": true,
+  "runtime_s": 285.7
+ },
+ "null_runs": {
+  "rows": [
+   {
+    "field": "Eris field",
+    "visit_mjd": [
+     60866.09,
+     60881.44
+    ],
+    "n_exposures": 57,
+    "shuffled_times_control_of_the_real_visit": true,
+    "status": "nothing_found",
+    "duration_days": 15.35,
+    "max_forward_raw_snr": 7.18,
+    "max_reversed_raw_snr": 7.0069238189317815,
+    "n_forward_peaks_at_or_above_threshold": 0,
+    "forward_verdicts": [],
+    "forward_distance_measured": [],
+    "reversed_peaks_at_or_above_threshold": [],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   },
+   {
+    "field": "Eris field",
+    "visit_mjd": [
+     61035.64,
+     61060.09
+    ],
+    "n_exposures": 62,
+    "shuffled_times_control_of_the_real_visit": false,
+    "status": "nothing_found",
+    "duration_days": 24.45,
+    "max_forward_raw_snr": 9.777,
+    "max_reversed_raw_snr": 7.3067878414777585,
+    "n_forward_peaks_at_or_above_threshold": 2,
+    "forward_verdicts": [
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so"
+    ],
+    "forward_distance_measured": [
+     false,
+     false
+    ],
+    "reversed_peaks_at_or_above_threshold": [],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   },
+   {
+    "field": "Eris field",
+    "visit_mjd": [
+     61232.83,
+     61243.35
+    ],
+    "n_exposures": 62,
+    "shuffled_times_control_of_the_real_visit": false,
+    "status": "nothing_found",
+    "duration_days": 10.52,
+    "max_forward_raw_snr": 7.164,
+    "max_reversed_raw_snr": 8.248896249053127,
+    "n_forward_peaks_at_or_above_threshold": 0,
+    "forward_verdicts": [],
+    "forward_distance_measured": [],
+    "reversed_peaks_at_or_above_threshold": [
+     {
+      "snr": 8.25,
+      "place_arcsec": [
+       228.0,
+       159.0
+      ],
+      "inv_d": -0.013999999999999995,
+      "n_detectors_with_2sigma": 0,
+      "still_there_in_other_visit": true,
+      "at_field_edge": true,
+      "track_checks": {
+       "top3_share": 0.352,
+       "chi2_dof": 3.11,
+       "usable_span_days": 8.83,
+       "n_usable": 39
+      },
+      "survives_the_vetting_a_candidate_gets": false
+     },
+     {
+      "snr": 8.08,
+      "place_arcsec": [
+       -225.0,
+       204.0
+      ],
+      "inv_d": -0.015499999999999996,
+      "n_detectors_with_2sigma": 1,
+      "still_there_in_other_visit": true,
+      "at_field_edge": true,
+      "track_checks": {
+       "top3_share": 0.375,
+       "chi2_dof": 7.19,
+       "usable_span_days": 10.52,
+       "n_usable": 47
+      },
+      "survives_the_vetting_a_candidate_gets": false
+     }
+    ],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   },
+   {
+    "field": "Sedna field",
+    "visit_mjd": [
+     60905.56,
+     60926.14
+    ],
+    "n_exposures": 58,
+    "shuffled_times_control_of_the_real_visit": true,
+    "status": "nothing_found",
+    "duration_days": 20.59,
+    "max_forward_raw_snr": 8.029,
+    "max_reversed_raw_snr": 7.306813986327538,
+    "n_forward_peaks_at_or_above_threshold": 1,
+    "forward_verdicts": [
+     "still there in another visit at the same place: a fixed or variable so"
+    ],
+    "forward_distance_measured": [
+     false
+    ],
+    "reversed_peaks_at_or_above_threshold": [],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   },
+   {
+    "field": "Sedna field",
+    "visit_mjd": [
+     61065.72,
+     61097.49
+    ],
+    "n_exposures": 57,
+    "shuffled_times_control_of_the_real_visit": false,
+    "status": "nothing_found",
+    "duration_days": 31.78,
+    "max_forward_raw_snr": 17.93,
+    "max_reversed_raw_snr": 8.415903144148814,
+    "n_forward_peaks_at_or_above_threshold": 5,
+    "forward_verdicts": [
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so"
+    ],
+    "forward_distance_measured": [
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    "reversed_peaks_at_or_above_threshold": [
+     {
+      "snr": 8.42,
+      "place_arcsec": [
+       -12.0,
+       183.0
+      ],
+      "inv_d": -0.016999999999999998,
+      "n_detectors_with_2sigma": 1,
+      "still_there_in_other_visit": true,
+      "at_field_edge": false,
+      "track_checks": {
+       "top3_share": 0.251,
+       "chi2_dof": 1.68,
+       "usable_span_days": 7.61,
+       "n_usable": 36
+      },
+      "survives_the_vetting_a_candidate_gets": false
+     }
+    ],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   },
+   {
+    "field": "Sedna field",
+    "visit_mjd": [
+     61267.78,
+     61281.16
+    ],
+    "n_exposures": 57,
+    "shuffled_times_control_of_the_real_visit": false,
+    "status": "nothing_found",
+    "duration_days": 13.38,
+    "max_forward_raw_snr": 11.181,
+    "max_reversed_raw_snr": 7.486198895964126,
+    "n_forward_peaks_at_or_above_threshold": 2,
+    "forward_verdicts": [
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so"
+    ],
+    "forward_distance_measured": [
+     false,
+     false
+    ],
+    "reversed_peaks_at_or_above_threshold": [],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   }
+  ]
+ },
+ "null_runs_3": {
+  "rows": [
+   {
+    "plan_index": 3,
+    "field": "Sedna field",
+    "visit_mjd": [
+     60905.56,
+     60926.14
+    ],
+    "n_exposures": 58,
+    "shuffled_times_control_of_the_real_visit": true,
+    "status": "nothing_found",
+    "duration_days": 20.59,
+    "max_forward_raw_snr": 8.029,
+    "max_reversed_raw_snr": 7.306813986327538,
+    "n_forward_peaks_at_or_above_threshold": 1,
+    "forward_verdicts": [
+     "still there in another visit at the same place: a fixed or variable so"
+    ],
+    "forward_distance_measured": [
+     false
+    ],
+    "reversed_peaks_at_or_above_threshold": [],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   }
+  ]
+ },
+ "null_runs_5": {
+  "rows": [
+   {
+    "plan_index": 5,
+    "field": "Sedna field",
+    "visit_mjd": [
+     61267.78,
+     61281.16
+    ],
+    "n_exposures": 57,
+    "shuffled_times_control_of_the_real_visit": false,
+    "status": "nothing_found",
+    "duration_days": 13.38,
+    "max_forward_raw_snr": 11.181,
+    "max_reversed_raw_snr": 7.486198895964126,
+    "n_forward_peaks_at_or_above_threshold": 2,
+    "forward_verdicts": [
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so"
+    ],
+    "forward_distance_measured": [
+     false,
+     false
+    ],
+    "reversed_peaks_at_or_above_threshold": [],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   }
+  ]
+ },
+ "null_runs_4": {
+  "rows": [
+   {
+    "plan_index": 4,
+    "field": "Sedna field",
+    "visit_mjd": [
+     61065.72,
+     61097.49
+    ],
+    "n_exposures": 57,
+    "shuffled_times_control_of_the_real_visit": false,
+    "status": "nothing_found",
+    "duration_days": 31.78,
+    "max_forward_raw_snr": 17.93,
+    "max_reversed_raw_snr": 8.415903144148814,
+    "n_forward_peaks_at_or_above_threshold": 5,
+    "forward_verdicts": [
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so",
+     "still there in another visit at the same place: a fixed or variable so"
+    ],
+    "forward_distance_measured": [
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    "reversed_peaks_at_or_above_threshold": [
+     {
+      "snr": 8.42,
+      "place_arcsec": [
+       -12.0,
+       183.0
+      ],
+      "inv_d": -0.016999999999999998,
+      "n_detectors_with_2sigma": 1,
+      "still_there_in_other_visit": true,
+      "at_field_edge": false,
+      "track_checks": {
+       "top3_share": 0.251,
+       "chi2_dof": 1.68,
+       "usable_span_days": 7.61,
+       "n_usable": 36
+      },
+      "survives_the_vetting_a_candidate_gets": false
+     }
+    ],
+    "n_reversed_surviving_vetting": 0,
+    "searched_area_deg2": 0.0169
+   }
+  ]
+ }
+}
