@@ -906,3 +906,14 @@ Novae of 2025 (2026-11-14, `scripts/check_nova.py`, `docs/novae.md`; outputs in 
   (day +334 to +347, no OVERFLOW pixel); blackbody 580 K then 430 K. V1935 Cen: no excess measurable.
 - In crowded fields (V1935 Cen, V7994 Sgr) the brightness before the eruption is negative at 2.4 to 5 micrometres
   (-2 to -7 mJy): the sky ring over-subtracts, so an excess below about 5 to 10 mJy cannot be seen there.
+
+Second hunt and the watchlist (2026-11-14 evening; `docs/search.md`, `docs/watchlist.md`)
+- 14 more young-star fields, 82 objects: 60 already listed, 20 unlisted brightness changes, no
+  mover that survives. A mover must now move the same way in every detector (rule added after a
+  blend in NGC 7129; Barnard's Star, WISE 0855 and Epsilon Indi B agree to 0.0, 0.6 and 0.4).
+- Watchlist (`/api/watchlist`, `?watchlist=1`): 32 need eyes, 83 known, 19 set aside, from 22
+  patches. NEOWISE second opinion on the 32: 14 also changed, 14 steady, 3 cannot say, and one
+  is a mover, which the check does not cover.
+- Strongest new candidate: W40 young star at RA 277.82381, Dec -2.14663, halved between September
+  2025 and March 2026 in five detectors; NEOWISE factor 3.7 at 3.4 microns over 21 visits. A
+  candidate, with the same limits as the Serpens South star.

@@ -499,6 +499,45 @@ flag), changing in five detectors (11.8 sigma combined). Three "movers" at 5.0 t
 rejected as faint diffuse blobs (17 to 23 arcsec wide against 9 to 10); by eye they are blobs
 with nothing moving. Nothing else reached the bar in 962 sources.
 
+## The second hunt: 14 more young-star fields (evening of 14 November)
+
+Run unattended with `scripts/search_fields.py`, six detectors, 0.2 degrees each: Rho Ophiuchi
+(two fields), IC 348, NGC 2264, Corona Australis, Lupus 3, Taurus L1495, NGC 7129, IC 5146, two
+fields in Orion, W40 in Aquila, Chamaeleon II and a field next to Serpens South. Five of them were
+searched a second time because the network failed part-way through the first run.
+
+| | |
+|---|---|
+| Fields searched | 14 (12 with at least one object) |
+| Objects reported | 82 |
+| Already listed as variable, or a catalogued mover | 60 |
+| Brightness changes in objects not listed as variable | 20 |
+| "Movers" no catalogue explains | 2, both blends: see below |
+| Rejected by rule | 14 |
+
+- **No mover survived.** One of the two (NGC 7129) moved 8.3 arcsec a year in one colour and 0.4 in
+  another and is now rejected by the same-motion-in-every-colour rule above. The other (NGC 2264, a
+  listed variable star's position, one detector, two visits) stays flagged "caution" and is not
+  claimed.
+- **Most of what it flags in these fields is real and already known**: 60 of 82. That is the search
+  working, not a find.
+- **The 20 unlisted changes were each given a second opinion from NEOWISE** (`backend/neowise.py`,
+  the same check as for the Serpens South star, now automatic in the watchlist). With the first
+  hunt's candidates that makes 32 on the watchlist's "needs eyes" list; for 14 of them NEOWISE
+  also saw the spot change between 2014 and 2024, for 14 it saw it steady, for 3 it cannot say,
+  and one is the "mover" above, to which this check does not apply.
+- **The strongest new one: a young star in W40, RA 277.82381, Dec -2.14663** (SIMBAD: 2MASS
+  J18311772-0208474, a young stellar object). It **halved** between September 2025 and March 2026
+  (0.51 times as bright, the same way in all 16 wavelength channels compared), reaching 5 times
+  the noise in five detectors (2 to 6) and 15.5 combined. NEOWISE measured the same spot between
+  131 and 490 mJy at 3.4 microns (a factor of 3.7) and 178 and 588 mJy at 4.6 microns (3.3) over
+  21 visits, one of them partly saturated. None of Gaia DR3, SIMBAD's object type, AAVSO VSX or
+  AllWISE's flag lists it as variable. The same limits apply as for the Serpens South star: W40
+  is a well-studied cluster, surveys of young-star variability very likely include it, their
+  tables were not checked, and neither telescope can say which star of a close group changed.
+  Not yet looked at by eye beyond its watchlist picture.
+- Everything is on the watchlist (`docs/watchlist.md`), with pictures, for people to look at.
+
 ## False alarms, all fields together
 
 | Fields | Searches | Sources tested (motion / brightness) | Objects reported | Real and already listed | Candidates surviving every test | Unresolved (cannot confirm or kill) | False alarms found by eye |
