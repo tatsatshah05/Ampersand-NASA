@@ -494,8 +494,11 @@ Cadence and counts at Barnard's Star
 Gaia
 - `https://gea.esac.esa.int/tap-server/tap/sync` with `REQUEST=doQuery&LANG=ADQL&
   FORMAT=votable&QUERY=...` on `gaiadr3.gaia_source` answers in about 3.5 s.
-- On 2026-11-15 that server took no connections at all. `astrometry.gaia_cone` now tries it
-  3 times (30 s each) and then asks the same table at CfA's copy of VizieR
+- On 2026-11-15 that server took no connections at all (its name resolved, the connection hung).
+  ESA is asked through `astrometry._gaia_archive`: 2 tries with 5 s to connect, and after a failure
+  it is left alone for ten minutes (a name then gets SIMBAD's values at once, with a note). Before,
+  three 30 s tries made every view of a new star wait 98 s (Altair, measured); now the first new
+  field takes 15 s and the next 2 s. `astrometry.gaia_cone` then asks the same table at CfA's copy of VizieR
   (`https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?-source=I/355/gaiadr3`, columns Source,
   RA_ICRS, DE_ICRS, pmRA, pmDE, Plx, Gmag, `-out.max=unlimited`). For four cached cones
   (Barnard's Star, V462 Lup, V572 Vel, Serpens South; 1,850 stars) the copy gave the same stars

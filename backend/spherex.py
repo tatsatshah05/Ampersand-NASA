@@ -57,8 +57,12 @@ class BadRequest(ValueError):
     any other error is the server's fault and is answered with 500."""
 
 
-def http_get(url: str, params: dict | None = None, tries: int = 10, timeout: float = 90) -> bytes:
+def http_get(url: str, params: dict | None = None, tries: int = 10,
+             timeout: float | tuple[float, float] = 90) -> bytes:
     """GET with a concurrency cap and retries.
+
+    `timeout` is in seconds: one number for connecting and for each wait on the answer, or a
+    pair (connect, answer) when a dead server should be given up on sooner than a slow one.
 
     IRSA's front proxy answers roughly one request in three with an immediate
     502, in bursts, so a failed request is normal and is retried with backoff.

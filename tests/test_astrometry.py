@@ -260,6 +260,85 @@ def test_gaia_cone_says_so_when_neither_answers(monkeypatch: pytest.MonkeyPatch,
     assert not list(tmp_path.rglob("gaia_*.json"))
 
 
+# What CfA's copy sends for one star (Barnard's Star), for the tests of a dead archive below.
+ONE_STAR_FROM_THE_COPY = "\n".join([
+    "Source\tRA_ICRS\tDE_ICRS\tpmRA\tpmDE\tPlx\tGmag", "\tdeg\tdeg\tmas/yr\tmas/yr\tmas\tmag",
+    "-------------------\t---------------\t---------------\t---------\t---------\t---------\t---------",
+    "4472832130942575872\t269.44850253009\t+04.73942500000\t -801.551\t10362.394\t 546.9759\t 8.193497",
+    "",
+]).encode()
+
+
+def dead_archive(monkeypatch: pytest.MonkeyPatch, tmp_path) -> tuple[list[tuple[str, dict]], list[float]]:
+    """ESA's archive fails every time, CfA's copy answers. Returns the calls made and a clock to move."""
+    calls: list[tuple[str, dict]] = []
+    clock = [1000.0]
+
+    def fake_http_get(url: str, params: dict | None = None, **options: object) -> bytes:
+        calls.append((url, options))
+        if url == astrometry.GAIA_TAP:
+            raise astrometry.ArchiveError(f"ConnectTimeout from {url}")
+        return ONE_STAR_FROM_THE_COPY
+
+    monkeypatch.setattr(astrometry, "http_get", fake_http_get)
+    monkeypatch.setattr(astrometry, "CACHE", tmp_path)
+    monkeypatch.setattr(astrometry, "monotonic", lambda: clock[0])
+    return calls, clock
+
+
+def test_gaia_cone_leaves_a_dead_archive_alone_for_ten_minutes(monkeypatch: pytest.MonkeyPatch, tmp_path):
+    """On 2026-11-15 every view of a new star waited 98 s on an archive that took no connections.
+
+    Once it has failed, the next new fields go straight to the copy; later it is tried again.
+    """
+    calls, clock = dead_archive(monkeypatch, tmp_path)
+    asked = lambda: [url for url, _ in calls]   # noqa: E731
+
+    altair = astrometry.gaia_cone(297.699747, 8.871104, 0.135)
+    vega = astrometry.gaia_cone(279.234735, 38.783689, 0.135)     # another field, not on disk either
+    assert asked() == [astrometry.GAIA_TAP, astrometry.GAIA_COPY, astrometry.GAIA_COPY]
+    assert [s["source_id"] for s in altair] == [s["source_id"] for s in vega] == ["4472832130942575872"]
+
+    clock[0] += 9 * 60
+    astrometry.gaia_cone(101.287155, -16.716116, 0.135)
+    assert asked()[3:] == [astrometry.GAIA_COPY]
+
+    clock[0] += 2 * 60        # eleven minutes after it failed: it may be back, so it is asked again
+    astrometry.gaia_cone(213.915300, 19.182409, 0.135)
+    assert asked()[4:] == [astrometry.GAIA_TAP, astrometry.GAIA_COPY]
+
+
+def test_a_dead_gaia_archive_costs_seconds_not_minutes(monkeypatch: pytest.MonkeyPatch, tmp_path):
+    """The archive failed by never accepting the connection, so that step gets a short limit of its own.
+
+    A healthy archive still has the full 30 s to send its answer.
+    """
+    calls, _ = dead_archive(monkeypatch, tmp_path)
+    astrometry.gaia_cone(297.699747, 8.871104, 0.135, tries=3, timeout=30)    # as build_frames asks
+    url, options = calls[0]
+    assert url == astrometry.GAIA_TAP
+    timeout = options["timeout"]
+    assert isinstance(timeout, tuple), "one number limits connecting and answering alike: 30 s a try on a dead archive"
+    connect, answer = timeout
+    assert options["tries"] * connect <= 10
+    assert answer == 30
+
+
+def test_name_lookup_does_not_wait_for_an_archive_just_found_dead(monkeypatch: pytest.MonkeyPatch, tmp_path):
+    """A name with a Gaia identifier used to wait four 40 s tries before SIMBAD's values were used."""
+    calls, _ = dead_archive(monkeypatch, tmp_path)
+    with pytest.raises(astrometry.ArchiveError):
+        astrometry.gaia_source("4472832130942575872")
+    (url, options), = calls
+    connect, answer = options["timeout"]
+    assert url == astrometry.GAIA_TAP and options["tries"] * connect <= 10 and answer == 40
+
+    with pytest.raises(astrometry.ArchiveError):          # asked again at once: nobody is called
+        astrometry.gaia_source("4472832130942575872")
+    astrometry.gaia_cone(297.699747, 8.871104, 0.135)     # and a field's stars come from the copy
+    assert [url for url, _ in calls[1:]] == [astrometry.GAIA_COPY]
+
+
 # SIMBAD's `basic` row for an object, in the column order of astrometry._BASIC.
 BARNARD_IN_SIMBAD = [1, "NAME Barnard's star", 269.4520769586187, 4.693364966576667, -801.551, 10362.394, 546.9759,
                      "BY*", "2020yCat.1350....0G", "2020yCat.1350....0G"]

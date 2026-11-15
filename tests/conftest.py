@@ -124,6 +124,19 @@ def network(network_log: list[str]) -> list[str]:
     return network_log
 
 
+@pytest.fixture(autouse=True)
+def gaia_archive_not_known_to_be_down(network_log: list[str]) -> None:
+    """Each test starts with ESA's Gaia archive not marked as down.
+
+    The backend leaves that archive alone for ten minutes after it fails (astrometry._gaia_archive),
+    and in the tests the blocked network makes it fail all the time: without this, whether a test
+    asks the archive would depend on which test ran before it.
+    """
+    from backend import astrometry
+
+    astrometry._gaia_down_until = 0.0
+
+
 @pytest.fixture(scope="session")
 def client(network_log: list[str]) -> Iterator[TestClient]:
     """The FastAPI app, called in-process: no server and no port."""
