@@ -94,7 +94,8 @@ const validDec = (v: number | null): v is number => v !== null && v >= -90 && v 
 const validFov = (v: number | null): v is number => v !== null && v > FOV_ABOVE && v <= FOV_MAX
 const validDetector = (v: number | null): v is number => v !== null && Number.isInteger(v) && v >= 1 && v <= 6
 const validMotion = (v: number | null): v is number => v !== null && Math.abs(v) <= 1e5
-const validParallax = (v: number | null): v is number => v !== null && Math.abs(v) <= 1e4
+// A body 300 times the Earth-Sun distance away has a parallax of about 690,000 mas, so the limit is generous.
+const validParallax = (v: number | null): v is number => v !== null && Math.abs(v) <= 3e6
 
 function cleanName(raw: string | null | undefined): string | null {
   if (!raw) return null
@@ -255,6 +256,12 @@ export function readAddress(search: string, stored: string | null = null): { sel
     else if (levelRaw !== null) notes.push(`The address asks for a level called ${quote(levelRaw)}. The levels are easy, medium and hard, so easy is used.`)
   } else if (trainRaw !== null) {
     notes.push(`The address asks for a practice round with train=${quote(trainRaw)}, which is not a whole number from 0 up, so the ordinary view is shown.`)
+  }
+
+  // Beginner shows the normal view, as changeLevel does: its words describe that one.
+  if (new URLSearchParams(search).get('ui') === 'beginner' && s.mode !== 'normal') {
+    s.mode = 'normal'
+    notes.push('Beginner shows the normal view, so that is used.')
   }
 
   return { selection: s, notes }

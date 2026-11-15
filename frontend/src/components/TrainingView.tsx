@@ -22,6 +22,7 @@ import {
   type TrainingFrame,
 } from '../training'
 import { usePlayer } from '../usePlayer'
+import { listVisits } from '../wording'
 import { startBox, type ZoomBox } from '../zoom'
 import { MotionLayer } from './MotionLayer'
 import { PlayerControls } from './PlayerControls'
@@ -48,6 +49,13 @@ const fresh = (round: string): Progress => ({ round, misses: 0, foundInTries: nu
 
 const frameLabel = (f: TrainingFrame, difference: boolean) =>
   `Visit ${f.epoch}, ${f.date_mean}${difference ? ' (minus the first visit)' : ''}`
+
+/** All the visits at once, for the line that must not change while they play. */
+const allVisitsLabel = (frames: TrainingFrame[], difference: boolean) => {
+  const which = listVisits(frames.map((f) => f.epoch))
+  const span = frames.length > 1 ? `, ${frames[0].date_mean} to ${frames[frames.length - 1].date_mean}` : `, ${frames[0]?.date_mean ?? ''}`
+  return `${which.charAt(0).toUpperCase()}${which.slice(1)}${span}${difference ? ' (each minus the first visit)' : ''}`
+}
 
 export function TrainingView() {
   const [selection, setSelection] = useState<Selection>(() => readAddress(window.location.search).selection)
@@ -254,12 +262,13 @@ export function TrainingView() {
 
         {data && frame && (
           <section className="now training-now" aria-label="The frame on screen and the game">
-            <div aria-live={player.playback === 'paused' ? 'polite' : 'off'}>
-              <p className="frame-label">
-                {player.playback === 'blinking' && <span className="tag">{player.current === 0 ? 'First' : 'Last'}</span>}
-                {frameLabel(frame, difference)}
-              </p>
-            </div>
+            {/* Every visit, said once: the words hold still while the visits play, and the ticks
+                under the slider mark the one on screen. A screen reader hears the visit on screen
+                only when paused (that is, after stepping or choosing one), never while playing. */}
+            <p className="frame-label">{allVisitsLabel(data.frames, difference)}</p>
+            <p className="sr-only" aria-live="polite">
+              {player.playback === 'paused' ? frameLabel(frame, difference) : ''}
+            </p>
 
             <PlayerControls
               frames={data.frames.map((f) => ({ label: frameLabel(f, difference), tick: `${f.epoch}` }))}

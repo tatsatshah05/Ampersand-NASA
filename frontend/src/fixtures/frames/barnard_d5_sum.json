@@ -1,0 +1,76 @@
+{
+ "key": "3ce67664deb0d3a4",
+ "ra": 269.446267,
+ "dec": 4.768222,
+ "fov": 0.1,
+ "detector": 5,
+ "mode": "sum",
+ "size_px": 180,
+ "pixel_arcsec": 2.0,
+ "target": {
+  "origin": "gaia_nearest",
+  "ref_epoch": 2016.0,
+  "source_id": "4472832130942575872",
+  "ra": 269.44850252543836,
+  "dec": 4.739420051112412,
+  "pmra": -801.5509783684709,
+  "pmdec": 10362.394206546573,
+  "parallax": 546.975939730948,
+  "gmag": 8.193974494934082
+ },
+ "gaia_error": null,
+ "registration": "sky",
+ "failures": [],
+ "frames": [
+  {
+   "epoch": null,
+   "epochs_combined": [
+    1,
+    2,
+    3
+   ],
+   "date_start": "2025-08-21",
+   "date_end": "2026-09-22",
+   "mjd_mean": 61119.328190757835,
+   "date_mean": "2026-03-20",
+   "n_exposures": 62,
+   "wavelength_um": [
+    3.803985595703125,
+    4.429477214813232
+   ],
+   "flagged_fraction": 0.021815083033977726,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 60,
+   "rejected_readings": 362,
+   "centroid": {
+    "ra": 269.4462742146756,
+    "dec": 4.768872819485865,
+    "x": 89.48705854057988,
+    "y": 88.32852492531445,
+    "err_arcsec": 1.0,
+    "err_arcsec_fit": 0.1095777166291076,
+    "saturated_core": true,
+    "snr": 20.595209375620797,
+    "fwhm_arcsec": 13.830975594614701,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.3531126266365408,
+    "north": 0.1849139971959346,
+    "total": 0.3985996907288504
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 269.446372642252,
+    "dec": 4.768821454486644,
+    "x": 89.31050221969242,
+    "y": 88.42098190942465
+   },
+   "detection_sigma": 78826.7,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/3ce67664deb0d3a4/sum.png"
+  }
+ ]
+}

@@ -11,8 +11,8 @@ import './SpectrumPanel.css'
 // Visits 1 to 3 get a colour each (checked to stay distinguishable with colour-blindness
 // on the panel background; a fourth colour does not pass, so later visits share a grey).
 const VISIT_COLOURS = ['#3987e5', '#d95926', '#199e70']
-const LATER_COLOUR = '#9a9a94'
-const SATURATED_COLOUR = '#fab219'
+const LATER_COLOUR = 'var(--chart-later)'
+const SATURATED_COLOUR = 'var(--chart-saturated)'
 const NO_VALUE_COLOUR = '#77776f'
 const visitColour = (epoch: number) => VISIT_COLOURS[epoch - 1] ?? LATER_COLOUR
 
@@ -329,7 +329,7 @@ function Panel({ request, onClose }: Props) {
               <rect width={W} height={H} fill="transparent" />
               {chart.bands.map((b) => (
                 <g key={b.label}>
-                  {b.shaded && <rect x={b.x} y={M.t} width={b.width} height={PH} fill="#fff" fillOpacity={0.035} />}
+                  {b.shaded && <rect x={b.x} y={M.t} width={b.width} height={PH} fill="var(--chart-band)" />}
                   <text x={b.x + b.width / 2} y={13} textAnchor="middle">
                     {b.label}
                   </text>

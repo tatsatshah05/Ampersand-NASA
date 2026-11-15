@@ -2,19 +2,29 @@
 .watchlist {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 32px 24px 64px;
 }
 
 .watchlist .intro {
-  max-width: 80ch;
+  max-width: 72ch;
+  line-height: 1.47;
+}
+
+.watchlist header > p:first-child {
+  margin: 0 0 8px;
+  font-size: var(--size-body);
 }
 
 .watchlist .button-link {
-  display: inline-block;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--size-body);
   text-decoration: none;
 }
 
@@ -22,21 +32,33 @@
   background: var(--control-hover);
 }
 
+/* The groups: pills in a row, the open one black. */
 .tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 32px;
+}
+
+.tab {
+  height: 36px;
+  padding: 0 16px;
 }
 
 .tab.on,
 .vote-buttons button.on {
-  background: #26406e;
-  border-color: var(--focus);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
-.tab-explain {
+.tab.on:hover:not(:disabled),
+.vote-buttons button.on:hover:not(:disabled) {
+  background: var(--ink-hover);
+}
+
+.hint.tab-explain {
   max-width: 80ch;
+  margin-bottom: 20px;
 }
 
 .cards {
@@ -45,65 +67,86 @@
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
-  gap: 12px;
+  gap: 20px;
 }
 
 .wl-card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 20px 24px 24px;
   min-width: 0;
   overflow-wrap: anywhere;
   background: var(--panel);
+  font-size: 15px;
+  line-height: 1.47;
+}
+
+.wl-card > p {
+  margin: 10px 0;
 }
 
 .wl-card.known,
 .wl-card.artefact {
   opacity: 0.95;
   border-style: dashed;
+  border-color: var(--line-strong);
 }
 
 .wl-kind {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
+  font-size: var(--size-read);
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .rank {
   color: var(--muted);
   margin-right: 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 .wl-badge {
+  display: inline-block;
   margin-left: 8px;
-  padding: 1px 8px;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid var(--border);
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--size-small);
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: 0;
+  vertical-align: 2px;
+  border: 0;
 }
 
 .wl-badge.clean {
-  color: #8be0a4;
+  color: var(--success);
+  background: var(--success-bg);
 }
 
 .wl-badge.caution {
   color: var(--notice);
+  background: var(--notice-bg);
 }
 
 .wl-badge.candidate-tag {
-  color: var(--focus);
+  color: var(--on-ink);
+  background: var(--ink);
 }
 
+/* The strip of pictures: dark, as the pictures are. */
 .strip {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 4px;
+  border-radius: 10px;
   background: #121212;
 }
 
 .strip-wrap {
   overflow-x: auto;
+  border-radius: 10px;
 }
 
 .strip-wrap .strip {
@@ -111,59 +154,93 @@
 }
 
 .no-picture {
-  border: 1px dashed var(--border);
-  padding: 10px;
-  border-radius: 4px;
+  border: 1px dashed var(--line-strong);
+  padding: 12px 14px;
+  border-radius: 12px;
 }
 
 .wl-headline {
-  font-size: 1.05rem;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
 }
 
 .wl-candidate {
-  border-left: 3px solid var(--focus);
-  padding-left: 8px;
+  border-left: 3px solid var(--ink);
+  padding-left: 12px;
 }
 
 .wl-flags {
-  margin: 4px 0;
+  margin: 8px 0;
   padding-left: 20px;
   color: var(--notice);
 }
 
 .wl-neowise {
-  border-left: 3px solid var(--notice);
-  padding-left: 8px;
+  border-left: 3px solid var(--line-strong);
+  padding-left: 12px;
+}
+
+.wl-vote {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
 }
 
 .vote-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin: 10px 0;
 }
 
 .note {
   display: block;
-  margin-top: 8px;
+  margin-top: 12px;
+  font-size: var(--size-body);
   color: var(--muted);
 }
 
 .note textarea {
   display: block;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 6px;
   font: inherit;
+  font-size: 15px;
   color: var(--text);
   background: var(--control);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
   resize: vertical;
+  transition: background-color var(--quick) var(--ease);
+}
+
+.note textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.note textarea:focus-visible {
+  background: var(--bg);
+  outline: 2px solid var(--focus);
+  outline-offset: 0;
+}
+
+.wl-vote details {
+  margin-top: 10px;
+  font-size: var(--size-body);
+}
+
+.wl-vote summary {
+  font-weight: 600;
+  cursor: pointer;
 }
 
 @media (max-width: 480px) {
   .watchlist {
-    padding: 16px;
+    padding: 24px 16px 48px;
   }
   .vote-buttons button {
     flex: 1 1 100%;

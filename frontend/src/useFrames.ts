@@ -1,17 +1,24 @@
 // Loading the frames for a view. A newer request cancels the one before it, and a view
 // counts as loaded only once every picture in it is ready to show, so playing never
-// reveals a half-loaded frame.
+// reveals a half-loaded frame. While a new view loads, the last one that loaded is kept,
+// so the page can leave its pictures on screen (dimmed) instead of emptying the picture.
 import { useEffect, useState } from 'react'
 import { fetchFrames, hasFrames, type FramesReady } from './api'
 
 export type Load =
-  | { state: 'loading' }
+  /**
+   * Not answered yet. `previous` is the last view that loaded (null when there is none,
+   * or the last request failed), for showing while this one comes. `slow` turns true once
+   * the request has taken longer than KEEP_PREVIOUS_MS: until then the previous pictures
+   * can stay as they are, so that a view that comes back at once does not flash.
+   */
+  | { state: 'loading'; previous: FramesReady | null; slow: boolean }
   | { state: 'ready'; data: FramesReady }
   /** The server answered with no pictures; `message` is its reason. */
   | { state: 'empty'; message: string }
   | { state: 'error'; message: string }
 
-type Settled = Exclude<Load, { state: 'loading' }>
+export type Settled = Exclude<Load, { state: 'loading' }>
 
 /** Fetch and decode a picture ahead of showing it. */
 function preload(src: string): Promise<void> {
@@ -22,10 +29,21 @@ function preload(src: string): Promise<void> {
 
 /**
  * A view that has been made before comes back within a few hundredths of a second. For
- * this long after asking, the previous pictures stay up, so that flipping between
- * detectors or modes does not flash a "loading" message each time.
+ * this long after asking, the previous pictures stay up undimmed, so that flipping
+ * between detectors or modes does not flash a "loading" message each time.
  */
-const KEEP_PREVIOUS_MS = 250
+export const KEEP_PREVIOUS_MS = 250
+
+/**
+ * What to show for request `key`, given the last answer that arrived (`settled`, for this
+ * request or an earlier one) and the request that has been waited on for longer than
+ * KEEP_PREVIOUS_MS (`slow`). Kept apart from the hook so it can be tested without a browser.
+ */
+export function loadFor(settled: { key: string; load: Settled } | null, key: string, slow: string | null): Load {
+  if (settled?.key === key) return settled.load
+  const previous = settled?.load.state === 'ready' ? settled.load.data : null
+  return { state: 'loading', previous, slow: slow === key }
+}
 
 /**
  * The frames at `url` (see framesUrl in api.ts). `attempt` is a counter: raising it
@@ -69,9 +87,5 @@ export function useFrames(url: string, attempt: number): Load {
     }
   }, [key, url])
 
-  if (settled?.key === key) return settled.load
-  // Not answered yet. For a moment the pictures already on screen stay; after that, or
-  // when there are none, it is loading.
-  if (settled?.load.state === 'ready' && slow !== key) return settled.load
-  return { state: 'loading' }
+  return loadFor(settled, key, slow)
 }

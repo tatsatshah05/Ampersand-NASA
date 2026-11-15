@@ -42,6 +42,14 @@ infrared cameras, together covering 0.75 to 5.0 micrometres.
   or changes brightness between visits, without being told what to look for, and checks
   each candidate against known artefacts and five catalogues. Results are in
   [docs/search.md](docs/search.md).
+- **Distant-world search.** The button "Search for a distant world (Planet X)" (the endpoint
+  is `/api/distant`) looks for an object far out in the solar system. Such an object does
+  not creep across the picture: it jumps by arcminutes between visits, because SPHEREx sees
+  it from opposite sides of the Earth's orbit, and the size of the jump gives its distance.
+  The search links sources that come and go along the line the Earth's motion dictates, and
+  answers with candidates or with how bright an object at each distance would have had to
+  be to be found. It can be tried on a planted practice object, marked as a simulation.
+  Results are in [docs/distant.md](docs/distant.md).
 - **Practice mode.** "Practise: find a planted object" adds ONE made-up moving object to
   real frames so a visitor can learn what a mover looks like. It is a simulation: a banner
   that cannot be closed and the word SIMULATION in every picture say so, and it has its
@@ -89,6 +97,15 @@ Measured 2026-11-14 on real data; independently re-measured by a second session.
   light in detectors 5 and 6 rises and falls by a factor of about 2 to 3 in step with the
   246-day cycle AAVSO observers record; the same measure on the non-varying Barnard's
   Star stays flat to about 5 per cent. [docs/verification.md](docs/verification.md) section 3.
+- **Distant-world search.** No candidate in any field searched, in either detector, and no
+  link when the same search is run with the Earth's motion reversed (the control for chance).
+  Around WISE 0855 an object between 1,000 and 30,000 times the Earth-Sun distance brighter
+  than about 0.2 mJy at 3.8 to 5 micrometres would have been found; a 0.5 degree picture
+  reaches in to 500 times the Earth-Sun distance at 0.23 mJy. Made-up objects planted in the
+  real images were found 177 times out of the 205 that were bright enough in three
+  visits, with the distance right to about a per cent, and nothing else was ever linked.
+  This is not deeper than existing searches of WISE data and is no new limit on Planet Nine.
+  [docs/distant.md](docs/distant.md).
 - **Blind search.** Given only field centres, it found Barnard's Star, WISE 0855 and
   Epsilon Indi B moving and RW Aurigae changing, each labelled already known. In 30
   searches on the five challenge fields it reported 5 objects, all of them the targets,
@@ -161,13 +178,13 @@ The earlier single-file viewer is still served at `/viewer.html`
 
 ```
 pip install -r backend/requirements.txt -r backend/requirements-dev.txt
-pytest                    # 192 tests, about 10 seconds, no network
+pytest                    # 264 tests, about 30 seconds, no network
 ruff check .
 mypy
 cd frontend
 npm run lint
 npm run typecheck
-npm test                  # 240 tests
+npm test                  # 350 tests
 ```
 
 The Python tests use real SPHEREx images kept in `tests/data/` and block every outgoing
@@ -189,6 +206,7 @@ All endpoints are `GET`. Positions are in degrees; `detector` is 1 to 6.
 | `/api/lightcurve` | Brightness of an object against time, grouped by wavelength bin |
 | `/api/spectrum` | Brightness of an object against wavelength, one point per exposure |
 | `/api/search?ra=&dec=&fov=&detectors=` | The blind search, run in the background one at a time: ask again every few seconds until `status` is `done` or `failed` (until then it is `queued` or `running`) |
+| `/api/distant?ra=&dec=&fov=&detectors=` | The distant-world search, run in the background like `/api/search`: candidates with their distance, or the limit at each distance. With `plant=easy` (and `seed=`, `plant_detector=`) it is a SIMULATION on the practice round's object |
 | `/api/training` | SIMULATION: real frames with one made-up moving object, for practice. Never mixed into `/api/frames` |
 
 ## Where the documents are
@@ -199,6 +217,7 @@ All endpoints are `GET`. Positions are in degrees; `detector` is 1 to 6.
 | [docs/results.md](docs/results.md) | The five test targets, frame by frame, with the problems found |
 | [docs/verification.md](docs/verification.md) | Independent re-measurement of WISE 0855, RW Aurigae, R Draconis and Barnard's Star; it corrects some earlier claims |
 | [docs/search.md](docs/search.md) | The blind search: method, false alarms, candidates, the NEOWISE check, what it cannot find |
+| [docs/distant.md](docs/distant.md) | The distant-world ("Planet X") search: why a far object jumps, the method, planted-object tests, limits per field |
 | [docs/deploy.md](docs/deploy.md) | How to deploy |
 | [docs/project-page.md](docs/project-page.md) | Text for the Space Apps project page |
 | [docs/demo-script.md](docs/demo-script.md) | Shot list for the demo video |

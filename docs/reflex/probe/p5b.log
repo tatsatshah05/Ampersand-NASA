@@ -1,0 +1,67 @@
+(a) JPL track, 114 exposures over 15.35 d: fitted distance 95.69 AU, drift (1.26, 2.59) arcsec/day, rms residual 0.020 arcsec; non-linear part of the parallax at that distance: peak-to-peak 16.5 E, 6.3 N arcsec
+    Horizons observer distance (delta, AU) at the middle of the visit: 2025-Jul-21 07:06:16.992, , , 95.5061412266925,-27.7628569,
+matched-filter maps: 181 in 3 s, grid 157x157 at 3.0 arcsec
+/private/tmp/claude-501/-Users-tatsatshah-Desktop-NASA-Hackathon/e2154c4f-727c-492d-9989-335ebc92c626/scratchpad/invent/distant-planet/p5_reflex.py:114: RuntimeWarning: Mean of empty slice
+  tmpl = np.nanmean([maps[o][1] for _, o in cands], axis=0)
+/private/tmp/claude-501/-Users-tatsatshah-Desktop-NASA-Hackathon/e2154c4f-727c-492d-9989-335ebc92c626/scratchpad/invent/distant-planet/p5_reflex.py:115: RuntimeWarning: Mean of empty slice
+  tv = np.nanmean([maps[o][2] for _, o in cands], axis=0) / len(cands)
+57 visit-1 exposures used, detectors (1, 2, 3)
+non-linear parallax per (1/AU): peak-to-peak 1580 E, 604 N arcsec
+JPL place at t0: east 0.0 north 0.0 arcsec from the centre
+44649 trial tracks in 168 s
+top 8 trials (S/N, 1/d, v_east, v_north, east, north):
+   14.7  1/d=0.0075 (d=133)  v=(4.0, -3.5)  at (-3, 0)  3 arcsec from JPL
+   14.6  1/d=0.0150 (d=67)  v=(4.0, -3.5)  at (-3, 0)  3 arcsec from JPL
+   14.6  1/d=0.0060 (d=167)  v=(4.0, -3.5)  at (0, 0)  0 arcsec from JPL
+   14.6  1/d=0.0090 (d=111)  v=(4.0, -3.5)  at (-3, 0)  3 arcsec from JPL
+   14.5  1/d=0.0105 (d=95)  v=(4.0, -3.5)  at (-3, 0)  3 arcsec from JPL
+   14.5  1/d=0.0120 (d=83)  v=(4.0, -3.5)  at (-3, 0)  3 arcsec from JPL
+   14.5  1/d=0.0090 (d=111)  v=(4.5, -3.5)  at (0, 0)  0 arcsec from JPL
+   14.4  1/d=0.0135 (d=74)  v=(4.0, -3.5)  at (-3, 0)  3 arcsec from JPL
+best with Earth's motion reversed (control): (12.823234611966493, np.float64(-0.0014999999999999736), np.float64(4.0), np.float64(-3.5), np.float64(0.0), np.float64(0.0)) 
+best with 1/d>0: (14.667843253905959, np.float64(0.007500000000000034), np.float64(4.0), np.float64(-3.5), np.float64(-3.0), np.float64(0.0)) 
+best at d=inf: (13.187023588817736, np.float64(2.7755575615628914e-17), np.float64(4.0), np.float64(-3.5), np.float64(0.0), np.float64(0.0))
+best trial peaking within 8 arcsec of JPL: (14.667843253905959, np.float64(0.007500000000000034), np.float64(4.0), np.float64(-3.5), np.float64(-3.0), np.float64(0.0))
+S/N within 6 arcsec of JPL's place, best over drift, against 1/d:
+   1/d -0.0300  d -33  S/N 9.0  v=(-5.5, -6.5)
+   1/d -0.0285  d -35  S/N 9.4  v=(-4.0, -6.0)
+   1/d -0.0270  d -37  S/N 9.5  v=(-6.0, -6.5)
+   1/d -0.0255  d -39  S/N 9.5  v=(-5.0, -5.5)
+   1/d -0.0240  d -42  S/N 9.4  v=(-4.0, -6.0)
+   1/d -0.0225  d -44  S/N 9.2  v=(3.0, -3.5)
+   1/d -0.0210  d -48  S/N 9.3  v=(-2.0, -2.0)
+   1/d -0.0195  d -51  S/N 10.0  v=(-4.0, -7.0)
+   1/d -0.0180  d -56  S/N 10.4  v=(-4.5, -6.5)
+   1/d -0.0165  d -61  S/N 10.3  v=(4.0, -3.5)
+   1/d -0.0150  d -67  S/N 10.6  v=(3.5, -3.0)
+   1/d -0.0135  d -74  S/N 10.5  v=(4.0, -3.5)
+   1/d -0.0120  d -83  S/N 10.7  v=(4.0, -3.0)
+   1/d -0.0105  d -95  S/N 10.6  v=(4.0, -3.5)
+   1/d -0.0090  d -111  S/N 10.6  v=(4.5, -3.5)
+   1/d -0.0075  d -133  S/N 10.8  v=(4.0, -3.5)
+   1/d -0.0060  d -167  S/N 11.2  v=(4.0, -3.5)
+   1/d -0.0045  d -222  S/N 11.4  v=(3.5, -3.5)
+   1/d -0.0030  d -333  S/N 11.8  v=(3.5, -3.5)
+   1/d -0.0015  d -667  S/N 12.8  v=(4.0, -3.5)
+   1/d +0.0000  d inf  S/N 13.2  v=(4.0, -3.5)
+   1/d +0.0015  d 667  S/N 13.7  v=(4.0, -3.5)
+   1/d +0.0030  d 333  S/N 14.2  v=(4.0, -3.5)
+   1/d +0.0045  d 222  S/N 13.7  v=(4.5, -3.5)
+   1/d +0.0060  d 167  S/N 14.6  v=(4.0, -3.5)
+   1/d +0.0075  d 133  S/N 14.7  v=(4.0, -3.5)
+   1/d +0.0090  d 111  S/N 14.6  v=(4.0, -3.5)
+   1/d +0.0105  d 95  S/N 14.5  v=(4.0, -3.5)
+   1/d +0.0120  d 83  S/N 14.5  v=(4.0, -3.5)
+   1/d +0.0135  d 74  S/N 14.4  v=(4.0, -3.5)
+   1/d +0.0150  d 67  S/N 14.6  v=(4.0, -3.5)
+   1/d +0.0165  d 61  S/N 14.1  v=(4.0, -3.5)
+   1/d +0.0180  d 56  S/N 14.0  v=(4.0, -3.5)
+   1/d +0.0195  d 51  S/N 13.6  v=(4.0, -3.5)
+   1/d +0.0210  d 48  S/N 12.5  v=(4.5, -3.5)
+   1/d +0.0225  d 44  S/N 12.1  v=(4.5, -3.5)
+   1/d +0.0240  d 42  S/N 11.3  v=(4.5, -3.5)
+   1/d +0.0255  d 39  S/N 11.3  v=(4.5, -3.5)
+   1/d +0.0270  d 37  S/N 11.0  v=(4.5, -4.0)
+   1/d +0.0285  d 35  S/N 10.7  v=(4.5, -4.0)
+   1/d +0.0300  d 33  S/N 10.3  v=(4.5, -3.0)
+best S/N of any trial peaking more than 20 arcsec from Eris: (7.509165407229506, np.float64(0.02550000000000005), np.float64(0.5), np.float64(-5.5), np.float64(-30.0), np.float64(-18.0))

@@ -592,9 +592,13 @@ No mover without a catalogue counterpart survived anywhere.
   Indi B) does better. Ordinary stars move far less than 1 arcsec/yr: only the nearest or fastest
   objects can be found.
 - **Too fast.** A source that moves more than 8 arcsec between one visit and the next (about 16
-  arcsec/yr with visits six months apart) is not followed as one object; each of its places shows
-  up as a source that appeared or vanished, i.e. as a brightness change. Anything that moves
-  within a visit (asteroids, comets) is averaged away or removed as a glitch.
+  arcsec/yr with visits six months apart) is not followed as one object by this search; each of
+  its places shows up as a source that appeared or vanished, i.e. as a brightness change. One
+  kind of fast object is now covered by a second search: a body far out in the solar system,
+  which jumps by 12 arcsec to 14 arcminutes between visits in the direction the Earth's motion
+  dictates (`/api/distant`, [distant.md](distant.md)). A fast object of any other kind is still
+  not followed, and anything that moves within a visit (asteroids, comets) is averaged away or
+  removed as a glitch.
 - **Too small a change.** 5 sigma needs about 8 to 13 per cent for sources brighter than 2 mJy,
   30 per cent at 0.5 to 2 mJy and about a doubling below 0.5 mJy; never less than 10 per cent (25
   per cent for the ring around a saturated star, which is only measured in detectors 5 and 6).

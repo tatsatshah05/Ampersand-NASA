@@ -1,56 +1,176 @@
+/* The page's colours, type and controls.
+
+   Light, black and white, in the manner of Apple's own pages: a white page, quiet grey
+   tiles (--surface) for fields and secondary buttons, hairlines between sections, black
+   text, and black (--ink) for the one primary action and for "this one" in a choice.
+
+   The picture itself is dark and its faint sources matter, so it sits in a black frame
+   (App.css, .plate and .stage) that carries its own dark set of these same tokens; the
+   controls drawn on the picture keep working unchanged.
+
+   Two colours carry data and nothing in the chrome uses them:
+   --measured (amber) is what was measured in the picture, the thing that moved;
+   --gaia (cyan) is what the catalogue predicts.
+   They are the colours of the marks drawn on the picture. On white, their legend swatches
+   and coloured words use the darker --measured-key and --gaia-key, which keep the hue.
+   --notice, --error and --success keep their own jobs, as dark text on a pale tint. */
 :root {
-  --bg: #0d0f14;
-  --panel: #171a22;
-  --text: #e7e9ee;
-  --muted: #9aa1ad;
-  --border: #2b303b;
-  --control: #232734;
-  --control-hover: #2d3242;
-  /* Colours that say where a position comes from. Each also has its own shape on the picture. */
-  --gaia: #38d6e8; /* predicted from a catalogued motion */
-  --measured: #ff8a3d; /* measured in the picture */
-  --start: #ffffff; /* the first measured position */
-  --notice: #f0c36a;
-  --error: #ff7b7b;
-  --focus: #9cc2ff;
-  color-scheme: dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
+  --bg: #ffffff;
+  --surface: #f5f5f7;
+  --surface-hover: #e8e8ed;
+  --surface-press: #d2d2d7;
+  --line: #e5e5ea;
+  --line-strong: #d2d2d7;
+  --text: #1d1d1f;
+  --muted: #6e6e73; /* 5.1:1 on white, 4.7:1 on --surface: the lightest grey used for text */
+  --ink: #000000; /* the primary action and the chosen item */
+  --on-ink: #ffffff;
+  --ink-hover: #2d2d30;
+
+  --measured: #ff8a3d; /* measured in the picture: marks on the picture only */
+  --measured-hover: #ff9d5c;
+  --gaia: #38d6e8; /* predicted from a catalogued motion: marks on the picture only */
+  --start: #ffffff; /* the first measured position, on the picture */
+  --measured-key: #bf5410; /* the same amber, dark enough for white (4.7:1) */
+  --gaia-key: #007c8c; /* the same cyan, dark enough for white (4.9:1) */
+
+  --notice: #8a5300;
+  --notice-bg: #fff7e6;
+  --error: #c5001a;
+  --error-bg: #fff0f0;
+  --success: #166e3c;
+  --success-bg: #edf7f0;
+  --focus: #000000;
+
+  /* Charts: series that must hold 3:1 on white. */
+  --chart-later: #86868b;
+  --chart-saturated: #b07d00;
+  --chart-band: #f5f5f7;
+
+  /* Older names, still used by the panels and the practice and watchlist screens. */
+  --panel: var(--bg);
+  --border: var(--line);
+  --control: var(--surface);
+  --control-hover: var(--surface-hover);
+
+  /* Type: the system face, which on a Mac is Apple's own (SF Pro). */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Segoe UI', Roboto, Arial,
+    sans-serif;
+  --size-small: 12px; /* captions only: a date under a thumbnail, a credit line */
+  --size-body: 14px; /* secondary text */
+  --size-read: 17px; /* body text in reading areas */
+  --size-result: 21px; /* the sentence that states the result */
+  --size-title: 32px; /* the object's name */
+
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --quick: 180ms;
+  --radius-control: 10px;
+  --radius-tile: 14px;
+  --radius-card: 18px;
+
+  color-scheme: light;
+  font-family: var(--font);
+  line-height: 1.47;
+  font-weight: 400;
   color: var(--text);
   background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* The root size stays the browser's, so the panels' rem sizes keep their meaning. */
 body {
   margin: 0;
+  font-size: var(--size-body);
   background: var(--bg);
 }
 
+h1,
+h2,
+h3 {
+  font-weight: 600;
+}
+
+strong,
+b {
+  font-weight: 600;
+}
+
+/* Links are black. One inside a sentence keeps a faint grey underline, or it could not be told
+   from the words around it; the underline turns black on hover. Links that look like buttons
+   (.quiet, .button-link) have none. */
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--quick) var(--ease);
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+button,
+select,
+input,
+textarea {
+  font: inherit;
+}
+
+/* Secondary buttons: a grey pill, black words. */
 button,
 select {
-  font: inherit;
   color: var(--text);
-  background: var(--control);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 12px;
+  background-color: var(--surface);
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: var(--size-body);
+  line-height: 1.3;
 }
 
 button {
   cursor: pointer;
+  transition:
+    background-color var(--quick) var(--ease),
+    color var(--quick) var(--ease),
+    box-shadow var(--quick) var(--ease);
+}
+
+/* A menu: a grey field with a chevron of its own, not the browser's. */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 36px;
+  padding: 0 34px 0 14px;
+  border-radius: var(--radius-control);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75l4.5 4.5 4.5-4.5' fill='none' stroke='%231d1d1f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 11px 7px;
+  cursor: pointer;
+  transition: background-color var(--quick) var(--ease);
 }
 
 button:hover:not(:disabled),
 select:hover:not(:disabled) {
-  background: var(--control-hover);
+  background-color: var(--surface-hover);
+}
+
+button:active:not(:disabled) {
+  background-color: var(--surface-press);
 }
 
 button:disabled,
 select:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -60,25 +180,84 @@ select:disabled {
   outline-offset: 2px;
 }
 
-/* An on/off button: a tick box before the words, so that "on" is not told by colour alone. */
+/* An on/off button: a tick box before the words, so that "on" is not told by colour alone.
+   Off: a grey pill with an empty box. On: a black pill with a white tick. */
 button.toggle::before {
   content: '';
   display: inline-block;
-  width: 0.85em;
-  height: 0.85em;
-  margin-right: 0.5em;
-  vertical-align: -0.08em;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  vertical-align: -2px;
   border: 1.5px solid var(--muted);
-  border-radius: 3px;
+  border-radius: 4px;
+  transition:
+    border-color var(--quick) var(--ease),
+    background-color var(--quick) var(--ease);
 }
 
 button.toggle[aria-pressed='true'] {
-  border-color: var(--muted);
+  background-color: var(--ink);
+  color: var(--on-ink);
+}
+
+button.toggle[aria-pressed='true']:hover:not(:disabled) {
+  background-color: var(--ink-hover);
 }
 
 button.toggle[aria-pressed='true']::before {
-  border-color: var(--text);
-  background: var(--text)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.3l2.4 2.4 4.6-5.2' fill='none' stroke='%230d0f14' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+  border-color: transparent;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.6 7.4l2.9 2.9 5.9-6.6' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     center / 100% no-repeat;
+}
+
+/* Folded notes: a small chevron that turns, not the browser's triangle. (The inspector's
+   folds draw theirs on the right, App.css .fold.) */
+details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+details:not(.fold) > summary::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 12px 0 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  vertical-align: 2px;
+  transition: transform var(--quick) var(--ease);
+}
+
+details[open]:not(.fold) > summary::before {
+  transform: rotate(45deg);
+  vertical-align: 3px;
+}
+
+/* Read by screen readers, not shown. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

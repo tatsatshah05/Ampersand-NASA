@@ -1,11 +1,13 @@
-// Issue #6: one box for "where in the sky?".
+// Issue #6: one box for "where in the sky?", and the row of target buttons.
 //
 // Text that reads as coordinates is turned into a position here (coords.ts). Anything
 // else is looked up as a name by the backend (resolve.ts), so a named object's position
-// and motion are always the catalogue's, moved to 2026: there are no sky positions in
-// this file. Either way the result goes to `onSelect`, and one line under the box says
-// what was found.
+// and motion are always the catalogue's, moved to 2026: the only sky positions in this
+// file are the fixed ones of OWN_LOOKS. Either way the result goes to `onSelect`, and a
+// line under the box says what was found. The box sits in the page's top bar and the
+// buttons in the row under it; useSkySearch holds what both share.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { releaseFocusAfterPointer } from '../focus'
 import {
   COORD_EXAMPLES,
   formatDecDeg,
@@ -60,7 +62,7 @@ const PRESETS: readonly Preset[] = [
   { name: 'Epsilon Indi B', about: 'A pair of brown dwarfs beside a bright star' },
   {
     name: 'WISE 0855',
-    about: 'A very cold brown dwarf that only the longest-wavelength detector (6) can see',
+    about: 'A very cold brown dwarf that only the longest infrared colour can see',
     det: 6,
     also: ['WISE 0855-0714'],
   },
@@ -71,7 +73,10 @@ const PRESETS: readonly Preset[] = [
 // Not challenge targets: objects this project looked at with its own tools (docs/search.md,
 // docs/novae.md). Fixed positions, the ones scripts/warm_cache.py prepares.
 interface OwnLook {
+  /** The target's name on the page, and its button's accessible name. */
   name: string
+  /** A shorter text for the button, when the name is too long for the row; `name` is still what it is called. */
+  label?: string
   about: string
   ra: number
   dec: number
@@ -81,6 +86,7 @@ interface OwnLook {
 const OWN_LOOKS: readonly OwnLook[] = [
   {
     name: 'Young star in Serpens South',
+    label: 'Serpens South',
     about:
       'Flagged by our blind search: about five times brighter in 2026 than in 2025. Not listed as variable in the ' +
       'catalogues we asked. A candidate, not a discovery.',
@@ -90,6 +96,7 @@ const OWN_LOOKS: readonly OwnLook[] = [
   },
   {
     name: 'Nova V462 Lupi',
+    label: 'V462 Lupi',
     about:
       'A star that erupted in June 2025, after SPHEREx began. Open "Spectrum of the target" to see its glowing gas ' +
       'and the warm glow at long wavelengths, and "Brightness over time" to see it fade. Position from AAVSO.',
@@ -99,6 +106,7 @@ const OWN_LOOKS: readonly OwnLook[] = [
   },
   {
     name: 'Nova V572 Velorum',
+    label: 'V572 Velorum',
     about:
       'A star that erupted in June 2025 during one of SPHEREx\'s visits: faint before, too bright to measure after. ' +
       'Position from AAVSO.',
@@ -188,8 +196,28 @@ function foundText(found: ResolvedName): string {
   return `Found ${plainName(found.name)} at ${where}.${motionText(found)}${source}`
 }
 
-export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => void }) {
-  const id = useId()
+/** Called with what a search found, and the target button's name when it came from one (or a typed name that is one). */
+export type OnSelect = (target: SearchTarget, picked?: string) => void
+
+/** The search's state, shared by the box in the top bar and the row of target buttons. */
+export interface SearchState {
+  text: string
+  status: Status
+  edit: (text: string) => void
+  submit: () => void
+  pickPreset: (preset: Preset) => void
+  pickLook: (look: OwnLook) => void
+}
+
+/**
+ * Holds the search and hands it to `children`, which put the box (SearchField) and the
+ * target buttons (TargetButtons) where they belong on the page.
+ */
+export function SkySearch({ onSelect, children }: { onSelect: OnSelect; children: (search: SearchState) => ReactNode }) {
+  return <>{children(useSkySearch(onSelect))}</>
+}
+
+function useSkySearch(onSelect: OnSelect): SearchState {
   const [text, setText] = useState('')
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
@@ -245,7 +273,7 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
       parallax: found.parallax,
     }
     if (preset?.det !== undefined) target.det = preset.det
-    onSelectNow.current(target)
+    onSelectNow.current(target, preset?.name)
   }
 
   function search(typed: string, preset?: Preset) {
@@ -273,7 +301,7 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
         kind: 'found',
         text: `Coordinates read as RA ${formatRaDeg(ra)}°, Dec ${formatDecDeg(dec)}° (${sexagesimal}).`,
       })
-      onSelect({ ra, dec }) // no motion: nothing is known about what is at a typed position
+      onSelectNow.current({ ra, dec }) // no motion: nothing is known about what is at a typed position
       return
     }
     if (name.length > MAX_NAME_LENGTH) {
@@ -295,10 +323,45 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
     void lookUp(name, mine, preset ?? presetNamed(name))
   }
 
+  return {
+    text,
+    status,
+    edit: (next) => {
+      setText(next)
+      if (status.kind === 'error') setStatus({ kind: 'idle' }) // the message was about the old text
+    },
+    submit: () => search(text),
+    pickPreset: (preset) => {
+      setText(preset.name)
+      search(preset.name, preset)
+    },
+    pickLook: (look) => {
+      begin()
+      setText(look.name)
+      setStatus({ kind: 'idle' })
+      onSelectNow.current({ ra: look.ra, dec: look.dec, name: look.name, det: look.det }, look.name)
+    },
+  }
+}
+
+/** The target button for a target shown under `name` (the catalogue's or the button's), if one is. */
+function targetNamed(name: string | null): string | null {
+  if (!name) return null
+  return presetNamed(name)?.name ?? OWN_LOOKS.find((look) => sameName(look.name, name))?.name ?? null
+}
+
+/**
+ * The search box. What it found or what went wrong shows in a small box under it while
+ * it is in use, laid over the page so nothing moves; screen readers hear the same from
+ * two live regions that are always there.
+ */
+export function SearchField({ search }: { search: SearchState }) {
+  const id = useId()
+  const { text, status } = search
   const hintId = `${id}-hint`
   const errorId = `${id}-error`
-  const presetsId = `${id}-presets`
-  const findId = `${id}-find`
+  // Shown whatever has the focus: a lookup on its way, and a message about what went wrong.
+  const showAlways = status.kind === 'working' || status.kind === 'error'
 
   return (
     <form
@@ -308,23 +371,18 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
       noValidate
       onSubmit={(e) => {
         e.preventDefault() // Enter in the box, or the Search button
-        search(text)
+        search.submit()
       }}
     >
-      <label className="searchbar-label" htmlFor={`${id}-input`}>
-        Search by name or coordinates
-      </label>
       <div className="searchbar-row">
         <input
           id={`${id}-input`}
           className="searchbar-input"
           type="search"
           value={text}
-          onChange={(e) => {
-            setText(e.target.value)
-            if (status.kind === 'error') setStatus({ kind: 'idle' }) // the message was about the old text
-          }}
-          placeholder={`Barnard's Star, or ${COORD_EXAMPLES[0]}`}
+          onChange={(e) => search.edit(e.target.value)}
+          aria-label="Search by name or coordinates"
+          placeholder="Search a star or coordinates"
           maxLength={200}
           autoComplete="off"
           autoCapitalize="none"
@@ -334,71 +392,75 @@ export function SearchBar({ onSelect }: { onSelect: (target: SearchTarget) => vo
           aria-invalid={status.kind === 'error' || undefined}
           aria-describedby={status.kind === 'error' ? errorId : status.kind === 'idle' ? hintId : undefined}
         />
-        <button className="searchbar-submit" type="submit">
-          Search
+        <button className="searchbar-submit" type="submit" aria-label="Search" title="Search">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M10.4 10.4L14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
         </button>
       </div>
 
-      <div className="searchbar-feedback">
-        {status.kind === 'idle' && (
+      <div className="searchbar-pop" data-show={showAlways || undefined}>
+        {status.kind === 'idle' ? (
           <p id={hintId} className="searchbar-hint">
             Type a name such as <Example>Barnard's Star</Example> or a position, RA then Dec, such as{' '}
             <Example>{COORD_EXAMPLES[0]}</Example> or <Example>{COORD_EXAMPLES[1]}</Example>
           </p>
+        ) : (
+          <p aria-hidden="true" className={status.kind === 'error' ? 'searchbar-error' : 'searchbar-status'} data-busy={status.kind === 'working' || undefined}>
+            {status.text}
+            {status.kind === 'error' && <span className="searchbar-fix"> {status.fix}</span>}
+          </p>
         )}
-        {/* Both always present, so screen readers announce what appears in them. */}
-        <p className="searchbar-status" role="status" data-busy={status.kind === 'working' || undefined}>
-          {(status.kind === 'working' || status.kind === 'found') && status.text}
-        </p>
-        <p id={errorId} className="searchbar-error" role="alert">
+      </div>
+
+      {/* Both always present, so screen readers announce what appears in them. */}
+      <div className="sr-only">
+        <p role="status">{(status.kind === 'working' || status.kind === 'found') && status.text}</p>
+        <p id={errorId} role="alert">
           {status.kind === 'error' && (
             <>
-              {status.text} <span className="searchbar-fix">{status.fix}</span>
+              {status.text} {status.fix}
             </>
           )}
         </p>
       </div>
-
-      <div className="searchbar-presets" role="group" aria-labelledby={presetsId}>
-        <span id={presetsId} className="searchbar-presets-label">
-          Or pick one of the challenge's test targets:
-        </span>
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.name}
-            className="searchbar-preset"
-            type="button"
-            title={preset.about}
-            onClick={() => {
-              setText(preset.name)
-              search(preset.name, preset)
-            }}
-          >
-            {preset.name}
-          </button>
-        ))}
-      </div>
-
-      <div className="searchbar-presets" role="group" aria-labelledby={findId}>
-        <span id={findId} className="searchbar-presets-label">
-          Or look at what we turned this tool on ourselves:
-        </span>
-        {OWN_LOOKS.map((look) => (
-          <button
-            key={look.name}
-            className="searchbar-preset"
-            type="button"
-            title={look.about}
-            onClick={() => {
-              setText(look.name)
-              setStatus({ kind: 'idle' })
-              onSelect({ ra: look.ra, dec: look.dec, name: look.name, det: look.det })
-            }}
-          >
-            {look.name}
-          </button>
-        ))}
-      </div>
     </form>
+  )
+}
+
+/**
+ * The challenge's five test targets, then what this project turned the tool on itself.
+ * The button whose target is on screen is marked: `picked` is the button that was pressed
+ * for it, when one was; otherwise the one named `shown` (the name the target is shown under).
+ */
+export function TargetButtons({ search, picked, shown }: { search: SearchState; picked: string | null; shown: string | null }) {
+  const current = picked ?? targetNamed(shown)
+  const button = (name: string, about: string, label: string, onClick: () => void) => (
+    <button
+      key={name}
+      className="target"
+      type="button"
+      title={about}
+      aria-label={label === name ? undefined : name}
+      aria-current={current === name ? 'true' : undefined}
+      onClick={(e) => {
+        onClick()
+        releaseFocusAfterPointer(e.currentTarget)
+      }}
+    >
+      {label}
+    </button>
+  )
+  return (
+    <div className="target-list">
+      <div className="target-group" role="group" aria-label="The challenge's test targets">
+        {PRESETS.map((preset) => button(preset.name, preset.about, preset.name, () => search.pickPreset(preset)))}
+      </div>
+      <span className="target-divider" aria-hidden="true" />
+      <div className="target-group" role="group" aria-label="What we turned this tool on ourselves">
+        {OWN_LOOKS.map((look) => button(look.name, look.about, look.label ?? look.name, () => search.pickLook(look)))}
+      </div>
+    </div>
   )
 }

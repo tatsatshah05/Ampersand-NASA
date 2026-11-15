@@ -1,0 +1,140 @@
+/* Distant-world search. Builds on SearchPanel.css (cards, badges, flags) and the page's .panel, .hint, .notice. */
+.distant h3 {
+  margin: 28px 0 8px;
+  font-size: var(--size-read);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.distant-answer {
+  font-weight: 600;
+}
+
+.distant-table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+}
+
+.distant-table th,
+.distant-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 20px 8px 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.distant-table th {
+  font-size: var(--size-body);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.distant-counts {
+  margin: 8px 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* The planted truth of a simulation: set off by a black bar, as the banner is black. */
+.distant-truth {
+  border-left: 3px solid var(--ink);
+  padding-left: 14px;
+  margin: 12px 0;
+}
+
+.distant-truth p {
+  margin: 6px 0;
+}
+
+.distant-practice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: var(--size-body);
+}
+
+.distant-practice label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.distant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+/* The banner: solid black with white words, inside the panel. Two classes, so it wins over the
+   practice screen's sticky banner whatever order the stylesheets load in. */
+.sim-banner.distant-sim {
+  position: static;
+  margin: 16px 0 20px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--ink);
+  color: var(--on-ink);
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.sim-banner.distant-sim strong {
+  color: var(--on-ink);
+  letter-spacing: 0;
+}
+
+.search-card.simulated {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* Markers on the picture: rings joined by a thin line; the visit on screen is bolder. A simulation is orange. */
+.distant-markers {
+  --mark: #7ee0ff;
+}
+
+.distant-markers.simulated {
+  --mark: #ff9626;
+}
+
+.distant-ring {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 1.5px;
+  opacity: 0.8;
+}
+
+.distant-ring.now {
+  stroke-width: 3px;
+  opacity: 1;
+}
+
+.distant-line {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 1px;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+}
+
+.distant-label {
+  fill: var(--mark);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #000;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Candidates are rare and each carries a table: one full-width card per row. */
+.distant-list {
+  grid-template-columns: 1fr;
+}
