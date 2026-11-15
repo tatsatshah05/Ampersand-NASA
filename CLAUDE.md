@@ -1072,3 +1072,77 @@ The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the refe
   allowed sentence for a candidate (`findAt`, within 5 arcsec) or one hedged line elsewhere. It never fires without
   a target, with a blended Gaia neighbour, with saturation at the place in a "not seen" visit, near the picture's
   edge, or when a "not seen" visit is too shallow for the brightness seen elsewhere to have been clear in it.
+
+## The page as of 2026-11-15: addresses, rules and checks (read before changing the frontend)
+
+What a session needs that the code does not say in one place. Written from `Dev` at `500e7fd`.
+
+The page's address (`frontend/src/address.ts`, `readAddress`; every unusable value falls back and is named in a note):
+- `ra`, `dec` (both or neither), `fov` (above 0.02, at most 0.5), `det` (1 to 6; older links say `detector`), `mode`
+  (normal, difference, sum), `reference` (difference: first, mean), `track` (sum: sky, target), `name` (display only),
+  `pmra`, `pmdec` (both, at most 1e5 mas/yr) and `parallax` (at most 3e6 mas), read only with a usable position.
+- `ui=beginner|expert`. Without it: an address with a mode, detector or field of view other than the defaults opens in
+  Expert; otherwise the level stored in the browser (`spherex-ui-level`), and Beginner on a first visit. Links between
+  screens always say `ui=` (`withUi`). `ui=beginner` forces mode normal.
+- `tool=brightness|spectrum|search|distant|smallbodies|context`: the tool open under the picture (`features.ts`
+  `TOOL_KEYS`; absent while Watch is on screen). Written in place with `replaceState` (`writeTool`).
+- `train=<whole number>` with `level=easy|medium|hard`: the practice screen (simulation). With no position it uses
+  Barnard's Star; the bar's Practise link carries the view's position and a random seed.
+- Screens of their own: `?watchlist=1` (`watchlist.ts`, `isWatchlistAddress`) and `?tools=1` (`tools.ts`,
+  `isToolsAddress`), each with the same bar.
+- No position at all: the landing view, Candidate B held still (`LANDING`: `pmra=0&pmdec=0`, detector 6).
+
+Routes (`backend/app.py`, `backend/watchlist_api.py`) besides those under Endpoints: `GET /api/identify?ra=&dec=`
+(`radius` in arcsec, default `identify.DEFAULT_RADIUS_ARCSEC`; `epoch`, default 2026.0): what Gaia DR3 and SIMBAD know
+at a place, for What is it?; a catalogue that does not answer is named in `unreachable`. `GET /api/search` (blind
+search, in the background, `status` queued, running, done or failed). `GET /api/smallbodies?ra=&dec=&fov=&detector=`
+(JPL). `GET /api/training` (simulation). `GET /api/watchlist` (`group`, `kind`, `limit`, `offset`, header `X-Voter`),
+`/api/watchlist/export.csv`, `/api/watchlist/export.json`, `/api/watchlist/{id}`, `POST /api/watchlist/{id}/vote`,
+`/api/watchlist/{id}/picture.png`. The frontend is served at `/`, with `/lab/` (the Three tools files, made by
+`scripts/export_lab.py`).
+
+The bar (`frontend/src/features.ts`, `components/FeatureBar.tsx`), ten items, Beginner / Expert: Watch / Viewer,
+Brightness / Light curve, Colours / Spectrum, Find changes / Blind search, Far-off planet / Planet X search, Asteroids /
+Small bodies, What is it? / Object card, Practise / Training, Vote / Watchlist, Three tools / Methods. The ninth is being
+renamed Observe anomalies / Anomalies (branch `agent/anomalies`, not merged when this was written; its design: a first
+group "Not reported anywhere we could find" with the three candidates, then "Choose a region"; in progress there:
+`GET /api/watchlist/regions` and `frontend/public/anomalies/sweep.json` made by `scripts/export_anomalies.py`). The
+Beginner | Expert switch is fixed at the bottom right (`components/LevelDock.tsx`).
+
+Rules of the page:
+- **The words hold still while the visits play.** The side column has one sentence about the whole run and one table
+  of all visits. While the pictures play or blink, no visible word changes, in either level, with every fold open or a
+  Beginner "i" open; only a mark of the visit on screen moves. Words change only when the visitor does something. Do
+  not write a sentence about "the visit on screen". `scripts/checks/stilltext_check.js` guards it.
+- **Colour comes only from the tokens** of `frontend/src/index.css` (`var(--...)`): black and white, `--ink` for the
+  one primary action and the chosen item, amber `--measured` and cyan `--gaia` only for what was measured and what a
+  catalogue predicts (on white, `--measured-key` and `--gaia-key`). The picture's black frame carries its own dark set
+  of the same tokens (`App.css`, `.plate`, `.stage`). Some older rules still hold raw values (marks on the picture);
+  add no more.
+- **`polish.css` loads last** (`main.tsx` imports it after `App`), so it wins over the component stylesheets. Keep it
+  last. It holds the finishing pass on the side column, the table of visits, the steps and the "i" popovers.
+- Beginner's words follow `guide.ts`: plain and short, no "sigma", "flux", "epoch", "detector", "centroid" or "mJy"
+  outside a closed fold (`features_check.js` scans for them), never "discovery" or "new planet".
+
+The sweep's three candidates, in three lines (detail, numbers and evidence: `docs/sweep.md`; the ruling:
+`docs/sweep/vetting/ruling.json`; every search for an earlier report and the checklist for a person:
+`docs/sweep/searches-for-earlier-reports.md`; draft reports, NOT sent: `docs/sweep/report-draft.md`):
+- A, Sagittarius, RA 270.80408 Dec -23.46818: not detected in Aug-Sep 2025, more than 100 times brighter by late March 2026.
+- B, Scorpius, RA 253.18038 Dec -44.67697: not detected in Aug-Sep 2025, at least 250 times brighter by August 2026 (the landing view).
+- C, Norma, RA 241.70906 Dec -52.20564: not detected in Jul-Aug 2025, at least 30 times brighter in Feb-Mar 2026, faded again by Aug 2026.
+All three are candidates: found in no catalogue or report we checked, confirmed by nobody, reported to nobody. A wider
+search after the ruling (more than 30 catalogues and alert lists each, each tested on a known object) and a keyword
+search of the Astronomer's Telegrams found no earlier report. No person has yet read the telegrams in full, NASA ADS has
+had only its control and one search, and SIMBAD at CDS was down, so a person must still work through the checklist.
+The app's own sentences about them are in `frontend/src/finds.ts`, quoted in `docs/sweep.md` (`finds.test.ts`).
+
+Checks that guard the page (each takes `<playwright-core path> <base url> <out dir>`; all three passed on `500e7fd`):
+- `scripts/checks/stilltext_check.js`: the words hold still while the visits play (the rule above).
+- `scripts/checks/features_check.js`: the bar, its order and labels at both levels, the switch, Beginner's words. It
+  keeps its own copy of the ten labels: change it together with `features.ts`. The copy in the repository already
+  expects Observe anomalies / Anomalies for the ninth item, so it fails on that item until that screen is merged.
+- `layout_check.js` (the page fits the window; nothing moves when the visit or the star changes) is not in the
+  repository. On 2026-11-15 it was in a temporary folder,
+  `/private/tmp/claude-501/-Users-tatsatshah-Desktop-NASA-Hackathon/f9f1be33-c465-4da8-a5bb-6363d5f480f1/scratchpad/layout_check.js`.
+How to run them: `scripts/checks/README.md`. After deploying, the warm-up of every place the page opens or links to:
+`docs/deploy.md`, "After deploying: warm-up".

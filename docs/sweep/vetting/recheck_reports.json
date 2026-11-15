@@ -1,0 +1,573 @@
+{
+ "verdict": {
+  "per_candidate": [
+   {
+    "candidate": "A: RA 270.80408, Dec -23.46818 (18:03:12.98 -23:28:05.4), l 6.712, b -0.635, in Sagittarius",
+    "earlier_report_found": "no",
+    "what_can_be_said": "We checked more than 30 public catalogues and alert lists, each tested on a known object, and found no earlier report of a new or brightening object at Candidate A's position in Sagittarius; some sources, including the full text of The Astronomer's Telegram and NASA's Astrophysics Data System, have not yet been searched, so this does not prove that no one else has seen it.",
+    "searches_that_worked": "Second round, 2026-11-15, 07:01-07:36 UTC. Each search had a passing control:\n- 22 VizieR tables on the CfA mirror, with cones of 1 arcmin, 10 arcmin and 1 deg. They cover:\n  - the VVV/UGPS eruptive and high-amplitude lists (Contreras Pena 2017a/b, Lucas 2017, VVV V4);\n  - VIVACE, SPICY and Park 2021 NEOWISE YSOs;\n  - Gaia DR3 variability and science alerts, ASAS-SN variables, GCVS and NSV;\n  - VSX (2026-10-18 copy; control: the 2025 nova V7994 Sgr);\n  - eight nova/CV catalogues.\n  Nothing within 30 arcsec. The nearest are a VIVACE eclipsing binary at 33.8 arcsec and a Gaia/VSX long-period variable at 43 arcsec. No nova within 1 deg; the nearest is V5588 Sgr (2011) at 1.68 deg.\n- vsnet-alert: 159 messages from Aug 2025 to Nov 2026, with 58 bodies read. The nearest event is V4371 Oph, 8.65 deg away.\n- MAXI: 161 flash reports since Aug 2025, none within 3.6 deg.\n- Fermi-LAT nova list (28 Oct 2026): the nearest is V8056 Sgr, 4.60 deg away.\n- CBET titles to 14 Nov 2026: all 2025-26 Sgr designations are 4.6-12.6 deg away.\n- Mukai's confirmed-nova list (11 Nov 2026), 23 entries for 2025-26: the nearest is ASASSN-26fc = AT 2026abbx, 2.56 deg away.\n- BAA circulars VSSC 208-209 and open-web searches on A's names and coordinates: nothing.\n- Partly: Wikipedia (bright novae only) and the Guo et al. 2024 arXiv table (nearest 1.53 deg).\n\nFirst round (earlier ruling, 04:12-05:45 UTC), with controls:\n- TNS at 60 arcsec and 1 deg: no results. The nearest 2025-26 entry is AT 2025qzs, a CV candidate 37 arcmin away.\n- AAVSO VSX live: only an unrelated type-L star 43.9 arcsec away.\n- ASAS-SN transients, CBAT TOCP and Mukai's lists: nothing within 1 deg.\n- ZTF brokers ALeRCE, ANTARES and Fink: the nearest object is 35.9 arcsec away and unrelated.\n- ATel titles of 942 telegrams plus 22 keyword searches: the nearest Sgr nova or infrared transient is at least 4.6 deg away.\n- Karambelkar et al. 2026 and Li, Wang & Lin 2026: A is not in them.",
+    "still_unchecked": "- ATel full text and NASA ADS: deliberately left for a person and not searched by anyone. The first round read ATel titles only. Telegrams worth opening:\n  - 17688, 17689, 17698, 17700 (Fermi J1820-1648);\n  - 17743 (PRIME26aaabsh);\n  - 17945 (PRIME26ahygn);\n  - 17989, 17995 (V8055 Sgr);\n  - 18122 (V8056 Sgr).\n- SIMBAD at CDS: HTTP 404 at 07:01, 07:24, 07:32 and 07:34 UTC. The IDIA and CfA mirrors fail the 2025-nova control, so SIMBAD counts as not searched.\n- AAVSO Alert and Special Notices: not opened.\n- Full tables of Lucas et al. 2024 (222 rows) and Contreras Pena et al. 2024: they exist only as supplements and were not read.\n- Not usable: the CBAT nova list (ends 2010), VSOLJ (last updated 2023), and the BAA 'Nova Sagittarii 2026' thread (members only).\n- Not done: CBET full texts (subscription), TNS AstroNotes, the Fermi FAVA light curve at A (a form), vsnet-outburst and vsnet-chat, and PRIME/WINTER internal lists.\n- Loose ends:\n  - 'Nova Sgr 2026 No. 1 and No. 2' were not matched by name, but every confirmed 2025-26 nova on Mukai's list is at least 2.56 deg away.\n  - The saved copy of Mukai's unconfirmed list is dated 12 Jan 2026.\n- TNS and CBAT TOCP should be re-run on the day of publication."
+   },
+   {
+    "candidate": "B: RA 253.18038, Dec -44.67697 (16:52:43.29 -44:40:37.1), l 341.089, b -0.416, in Scorpius",
+    "earlier_report_found": "no",
+    "what_can_be_said": "We checked more than 30 public catalogues and alert lists, each tested on a known object, and found no earlier report of a new or brightening object at Candidate B's position in Scorpius; some sources, including the full text of The Astronomer's Telegram and NASA's Astrophysics Data System, have not yet been searched, so this does not prove that no one else has seen it.",
+    "searches_that_worked": "Second round, 2026-11-15, 07:04-07:23 UTC. Each search had a passing control:\n- 31 VizieR tables on the CfA mirror, with cones of 1 arcmin, 10 arcmin and 1 deg. They cover:\n  - the VVV eruptive and high-amplitude lists (Lucas 2017, Contreras Pena 2017a/b, 2019 and 2020, VVV V4, VIVACE, VVV long-period variables, VVV/WISE Miras);\n  - SPICY and its WISE-variability table, plus the NEOWISE YSO, RMS and ATLASGAL variability tables, SPRITEs and Teixeira 2018;\n  - Gaia DR3 variability, ASAS-SN variables, GCVS and NSV;\n  - six nova/CV catalogues.\n  I re-read all 31 answer files. Each is HTTP 200, each control was re-found at about 0 arcsec, and nothing lies within 30 arcsec. The nearest are SPICY 43146 (Class III young star) at 33.3 arcsec, a Gaia RR Lyrae star at 37.2 arcsec and a VIVACE eclipsing binary at 53.6 arcsec. The only nova within 1 deg is V1662 Sco (2018), 44.6 arcmin away.\n- vsnet-alert: 159 subjects from Aug 2025 to Nov 2026, plus 32 bodies. Nothing in Scorpius or its neighbours within 11 deg.\n- MAXI: 161 reports since Aug 2025. The nearest are bursts from the known X-ray burster 4U 1705-440, 2.4 deg away.\n- Fermi-LAT nova list: none near B.\n- BAA forum (8 pages) and circulars VSSC 205-209: nothing near B.\n- Guo et al. 2024 (arXiv, 33 positions): the nearest is VVV-WIT-13, known before 2025, 73 arcmin away.\n- Open-web searches (J-name, Galactic name, 'Nova Sco 2025/2026', V1726-V1728 Sco): nothing. The newest Scorpius designation is V1725 Sco (2024).\n- Partly: Wikipedia, and the UCL copy of Lucas et al. 2024 (10 of 222 rows; nearest 4.1 deg).\n\nFirst round (earlier ruling), with controls:\n- TNS at 60 arcsec and 60 arcmin: only 2023 Gaia alerts within 1 deg.\n- CBAT TOCP to 13 Nov 2026: the nearest entry is V1662 Sco, 44.6 arcmin away.\n- Mukai: the nearest 2025-26 nova is 15.3 deg away.\n- VSX, live and the 2026-10-18 copy: nothing within 37 arcsec.\n- ASAS-SN transients: the nearest is 44.6 arcmin away.\n- A VizieR all-catalogue 30-arcsec cone and about 40 catalogues within 33 arcsec: nothing.\n- ATel titles 16940-18156 (1,217 telegrams): none about this place.\n- Karambelkar et al. 2026 and Li, Wang & Lin 2026: they list other positions.",
+    "still_unchecked": "- ATel full text and NASA ADS: deliberately left for a person and not searched by anyone. The first round read ATel titles only.\n- SIMBAD at CDS: HTTP 404 at all five tries, 07:01-07:25 UTC. The control could not run, so SIMBAD counts as not searched.\n- AAVSO Alert Notices: a Cloudflare robot check (HTTP 403) blocked them, and they were not retried.\n- The full 222-row Lucas et al. 2024 table: it exists only in the MNRAS supplement. OUP shows a robot check, and the INAF copies need a login. This is low priority: VVV lists only a faint star (Ks 17.1) 2.5 arcsec from B.\n- An unlocated forum comment about a 'Nova Scorpii 2025' (John Seach) gives no position. No 2025-26 Scorpius nova is on Mukai's list or among the Aug 2025-Nov 2026 CBET titles, and the searcher thinks it means V1935 Cen. A person can settle it in ATel by searching 'Seach'.\n- Not done: CBET texts, Lasair (needs a token), VVV-WIT beyond VVV-WIT-13, and the VSOLJ search form. The CBAT nova list is stale (it ends in 2010).\n- Blind to this field: ZTF, Rubin/LSST brokers, KMTNet and MOA. Gaia alerts ended in January 2025.\n- TNS and CBAT TOCP should be re-run on the day of publication."
+   },
+   {
+    "candidate": "C: RA 241.70906, Dec -52.20564 (16:06:50.17 -52:12:20.3), l 330.413, b -0.082, in Norma",
+    "earlier_report_found": "no",
+    "what_can_be_said": "We checked more than 30 public catalogues and alert lists, each tested on a known object, and found no earlier report of a new or brightening object at Candidate C's position in Norma (two ordinary variable stars catalogued before 2025 lie 12 and 15 arcseconds away and are different stars); some sources, including the full text of The Astronomer's Telegram and NASA's Astrophysics Data System, have not yet been searched, so this does not prove that no one else has seen it.",
+    "searches_that_worked": "Second round, 2026-11-15, 07:03-07:37 UTC. Each search had a passing control:\n- 25 VizieR catalogues on the CfA mirror, with cones of 1 arcmin, 10 arcmin and 1 deg. Their IDs came from the IVOA registry, because the mirror's keyword search is broken. They cover:\n  - the VVV eruptive and high-amplitude lists, VIVACE, V4 and Teixeira 2018;\n  - SPICY, two YSO-variability tables and Park 2021;\n  - Gaia DR3 variability (all tables), ASAS-SN variables, GCVS and NSV;\n  - VSX (2026-10-18). Its controls were V462 Lup by cone and the 2026 novae V419 Mus and V2104 Aql by name; I confirmed all three in the saved answers.\n  - eight nova catalogues and the eROSITA Galactic X-ray transients.\n  Within 30 arcsec there are only Gaia DR3 5933349095879173504 (RS type, 0.1 mag, 11.95 arcsec) and VIVACE 1221624 (contact binary, period 0.637 d, 15.46 arcsec). Both were catalogued before 2025, both are periodic, and both are different stars from C, whose position is good to 0.3-0.5 arcsec. No nova within 1 deg.\n- vsnet-alert: 159 subjects from Aug 2025 to Nov 2026, plus 10 bodies. The nearest events are the HP Nor dwarf-nova outburst (3.39 deg) and IK Nor (4.17 deg).\n- MAXI news and source list:\n  - MAXI J1609-487 (Oct 2026), 3.46 deg away;\n  - MAXI J1543-564 (Dec 2025), 5.43 deg away;\n  - nothing within MAXI's error of C.\n- Fermi-LAT nova list: the nearest is V1935 Cen, 14.2 deg away.\n- CBET titles, Aug 2025 to Nov 2026: no Norma nova; every Galactic nova is at least 14.19 deg away.\n- AAVSO campaigns (partly) and AAVSO forum alerts: no Norma event.\n- Wikipedia: no Norma nova since 2002.\n- Open-web searches: nothing. No Norma designation has been given after V567 Nor.\n- BAA circulars VSSC 205-209 (saved by B's searcher; I searched them for Norma): no mention.\n- Partly:\n  - the SIMBAD mirrors, which hold pre-2025 objects only; the nearest is the Herschel cold-dust clump HIGALBM G330.4120-00.0823 at 3.65 arcsec;\n  - the Lucas and Guo 2024 arXiv tables (nearest 1.16 deg).\n\nFirst round (earlier ruling), with controls:\n- TNS at 60 arcsec and 1 deg: nothing from 2025-26 within 1 deg. The nearest entry of any year is AT 2022oyv, 0.37 deg away.\n- VSX: no nova among the 7,729 objects within 1 deg.\n- VizieR all-catalogue cones of 12 and 60 arcsec: no variability entry.\n- CBAT TOCP and Mukai: the nearest is V556 Nor (2018), 1.74 deg away.\n- ASAS-SN transients: the nearest is 0.87 deg away.\n- ATel titles and opening lines of 847 telegrams: none within 5 deg.\n- Karambelkar et al. 2026, Li, Wang & Lin 2026 and Li & Wang 2024: the nearest listed object is 2.67 deg away.",
+    "still_unchecked": "- ATel full text and NASA ADS: deliberately left for a person and not searched by anyone. Telegrams worth opening:\n  - 17552, 17559, 17560, 17569 (the Dec 2025 Norma X-ray transient, MAXI J1543-564);\n  - 18123 and 18136 (MAXI J1609-487);\n  - 17963, 17971 and 17974.\n- SIMBAD at CDS: HTTP 404 at all four tries, 07:01-07:37 UTC. The mirrors lack V462 Lup and V7994 Sgr, so SIMBAD counts as not searched for 2025-26.\n- Swift/BAT transient list: it was read, but with no 2025-26 control, so it counts as not searched.\n- Not opened or not served:\n  - the BAA alert archive on groups.io (AI access needs a licence);\n  - a few AAVSO campaign pages that served no text;\n  - page 2 of the concluded AAVSO campaigns.\n- Not read: the full Lucas et al. 2024 table, the full Li & Wang 2024 table, and the forthcoming A&A paper aa60629-26 (its WISE data predate 2025).\n- Not done: CBET texts, vsnet-outburst and vsnet-chat, and Lasair. The CBAT nova list and VSOLJ are stale.\n- Blind here: Gaia alerts (ended), ZTF, Fink/LSST, KMTNet, MOA and OGLE EWS.\n- TNS and CBAT TOCP should be re-run on the day of publication."
+   }
+  ],
+  "checklist_for_a_person": "These checks only read pages. Do not submit, post or report anything while doing them. For each check, write down the date, the UTC time, what you typed and what came back, in the 'Searched' list for that candidate in docs/sweep.md.\n\nPositions. Use these corrected positions, never the sweep's:\n- A, in Sagittarius: RA 18:03:12.98, Dec -23:28:05.4 (decimal 270.80408, -23.46818).\n- B, in Scorpius: RA 16:52:43.29, Dec -44:40:37.1 (decimal 253.18038, -44.67697).\n- C, in Norma: RA 16:06:50.17, Dec -52:12:20.3 (decimal 241.70906, -52.20564).\n\nHow to judge a position you find in a report. All three declinations are negative.\n\n'Same place' (within 30 arcsec):\n- A: RA 18:03:10.8 to 18:03:15.2, and Dec -23:27:35 to -23:28:35.\n- B: RA 16:52:40.5 to 16:52:46.1, and Dec -44:40:07 to -44:41:07.\n- C: RA 16:06:46.9 to 16:06:53.4, and Dec -52:11:50 to -52:12:50.\n\n'Nearby' (within 5 arcmin):\n- A: RA 18:02:51 to 18:03:35, and Dec -23:23:05 to -23:33:05.\n- B: RA 16:52:15 to 16:53:11, and Dec -44:35:37 to -44:45:37.\n- C: RA 16:06:18 to 16:07:23, and Dec -52:07:20 to -52:17:20.\n\nAn X-ray or gamma-ray report gives a circle, called its 'error radius'. If our position falls inside that circle, count the report as 'nearby'.\n\n1. The Astronomer's Telegram, full text. Nobody has searched it yet; the automated searches read only titles.\n- Open https://www.astronomerstelegram.org/\n- Control: type V7994 in its search box. The results must include ATel #17419, 'Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr'. If they do not, the search is not working: write that down and skip this step.\n- Then type each of these, one at a time:\n  - all candidates: SPHEREx;\n  - A: Sagittarius, Sgr, 18:03, 18 03;\n  - B: Scorpius, Sco, 16:52, 16 52, Seach;\n  - C: Norma, Nor, 16:06, 16 06.\n- Open every telegram dated 1 Aug 2025 or later about a nova, transient, outburst, young star or infrared source, and compare its position with the boxes.\n- Also open each of these by number (https://www.astronomerstelegram.org/?read=17688 and so on) and check that its position is outside the boxes:\n  - for A: 17688, 17689, 17698, 17700, 17743, 17945, 17989, 17995, 18122;\n  - for C: 17552, 17559, 17560, 17569, 17963, 17971, 17974, 18123, 18136.\n- Meaning: if nothing falls inside a box, write 'ATel: no report found'.\n\n2. NASA ADS. Nobody has searched it yet.\n- Open https://ui.adsabs.harvard.edu/ and type each line below into the search bar.\n- Control: bibstem:ATel abs:V7994 must list 'Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr'. If it does not, write that down and skip this step.\n- Then search:\n  - abs:SPHEREx year:2025-2026\n  - for A: bibstem:ATel year:2025-2026 abs:Sagittarius\n  - for B: the same with abs:Scorpius\n  - for C: the same with abs:Norma\n- Read the title and abstract of every result about a transient, nova, outburst or infrared brightening, and compare any position given with the boxes.\n- Meaning: if nothing falls inside a box, write 'ADS: no report found'.\n\n3. SIMBAD at CDS. It was down all morning on 15 Nov 2026, and its mirrors are out of date.\n- Control: open https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V7994+Sgr . It must show a nova from 2025. If the page says it is unavailable, or shows no nova, try again another day.\n- Then open:\n  - A: https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=270.80408+-23.46818&Radius=5&Radius.unit=arcmin\n  - B: the same address with Coord=253.18038+-44.67697\n  - C: the same address with Coord=241.70906+-52.20564\n- What to expect:\n  - A: nothing closer than 2MASS J18031598-2327530, about 43 arcsec away.\n  - B: nothing closer than about 33 arcsec.\n  - C: the cold dust cloud HIGALBM G330.4120-00.0823, about 4 arcsec away. It is a known cloud mapped by the Herschel telescope, not a report of a brightening.\n- Meaning: any entry within 5 arcmin described as a nova, nova candidate, transient, outburst, eruptive star or cataclysmic star goes to the team.\n\n4. On the day you publish, repeat two registry checks. Both found nothing on 15 Nov 2026.\n- TNS:\n  - Control: https://www.wis-tns.org/search?ra=227.01362&decl=-40.14308&radius=60&coords_unit=arcsec must list AT 2025nlr.\n  - Then open https://www.wis-tns.org/search?ra=270.80408&decl=-23.46818&radius=300&coords_unit=arcsec for A, and the same address with ra=253.18038&decl=-44.67697 for B and ra=241.70906&decl=-52.20564 for C.\n  - 'No results found' means nothing is registered within 5 arcmin.\n- CBAT:\n  - Open http://www.cbat.eps.harvard.edu/unconf/tocp.html , press Cmd-F (Ctrl-F on Windows) and type J1803 for A, J1652 for B and J1606 for C.\n  - No hit means nothing is pending there. A hit whose declination part begins -23 (A), -44 (B) or -52 (C) goes to the team.\n\n5. Optional: AAVSO. The automated searches were refused or held back there.\n- Open https://www.aavso.org/apps/campaigns and https://www.aavso.org/apps/campaigns/archived .\n- Look for any campaign since Aug 2025 on a nova or transient in Sagittarius, Scorpius or Norma, and compare its position with the boxes.\n\n6. Optional, low priority: the Lucas et al. 2024 table. This needs journal access.\n- Open the supplementary table at https://doi.org/10.1093/mnras/stad3929 , press Cmd-F and type J1803, J1652 and J1606.\n- A name whose declination part begins -23 (A), -44 (B) or -52 (C) goes to the team.\n- It is low priority because the VVV survey's catalogue lists only faint, steady stars near all three places.\n\nIf any check finds a report:\n- Stop. Do not publish the 'no earlier report' sentence for that candidate.\n- Save the page as a PDF or screenshot. Write down the report's name or number, its date, the position it gives and the uncertainty it states.\n- Tell the team the same day. Any report found counts as earlier than ours, because the team has not reported anything anywhere.\n- If it is inside the 'same place' box, treat the candidate as already reported. The page must name and cite that report and describe the SPHEREx data as an independent observation of it. Never call the object 'new' or 'first'.\n- If it is inside the 'nearby' box, or our position is inside an X-ray or gamma-ray circle, it is a possible match. Ask a professional astronomer, for example the mentor, to compare the positions before anything goes public. Until then, the page says that a possibly related report exists and cites it.\n- If steps 1-3 pass their controls and find nothing, the public sentence may drop the clause about sources not yet searched. It must keep 'this does not prove that no one else has seen it'.",
+  "overall": "No earlier report was found for A, B or C. None of the three searchers found a report of a transient within 30 arcsec of any candidate, or a named 2025-26 event within 5 arcmin, in either round. All three stay 'candidate', and the earlier ruling's public sentences still hold.\n\n**What the verdict rests on**\nI counted only searches with a passing control. Across both rounds that is more than 30 catalogues and alert lists per candidate.\n\nOnly some of these hold 2025-26 objects, so only they could carry a report of these brightenings:\n- TNS;\n- AAVSO VSX, live and in VizieR's 2026-10-18 copy, which holds the 2026 novae V419 Mus and V2104 Aql;\n- Mukai's confirmed-nova list (11 Nov 2026) and the CBET titles (to 14 Nov 2026);\n- CBAT TOCP and the ASAS-SN transients page;\n- vsnet-alert, MAXI and the Fermi-LAT nova list;\n- the ATel titles and the BAA circulars;\n- for A only, the ZTF brokers.\n\nThe older catalogues show only that no known variable star or earlier eruption sat at these places. They are GCVS (2020), Gaia DR3 (data to 2017), VVV (2010-19) and the nova catalogues (to 2015-22).\n\n**Closest things found**\n- Within 30 arcsec, only C has catalogued neighbours, and none is a transient or a report:\n  - a Gaia RS-type star at 11.95 arcsec;\n  - a VVV contact binary at 15.46 arcsec;\n  - a Herschel cold-dust clump at 3.65 arcsec.\n  The two stars were catalogued before 2025, are periodic, and are different stars, because C's position is good to 0.3-0.5 arcsec.\n- For A and B, the nearest catalogued variables are 33.8 and 33.3 arcsec away.\n- Nearest named 2025-26 events:\n  - A: AT 2025qzs (a CV candidate), 37 arcmin away, and the nova AT 2026abbx, 2.56 deg away.\n  - B: X-ray bursts of the known burster 4U 1705-440, 2.4 deg away.\n  - C: the HP Nor dwarf-nova outburst, 3.39 deg away, and the new X-ray nova MAXI J1609-487, 3.46 deg away.\n\n**Counted as not searched (no working control)**\n- SIMBAD: CDS returned HTTP 404 at every try from 07:01 to 07:37 UTC, and the IDIA and CfA mirrors lack the 2025 control novae.\n- The CBAT nova list (ends 2010), VSOLJ (last updated 2023) and, for C, the Swift/BAT list.\n\n**Blocked**\n- AAVSO alert notices (HTTP 403 for B).\n- The OUP and INAF copies of Lucas et al. 2024.\n- The BAA members' forum and the groups.io alert archive.\n\n**Left for a person, searched by no one**\nThe full text of The Astronomer's Telegram and NASA ADS were deliberately left for a person. The first round read only ATel titles and opening lines: 942 telegrams for A, 1,217 for B and 847 for C, with V7994 Sgr found as the control. This verdict therefore records which searches ran, that they worked and what they returned; it is not proof that no one else has seen these objects. Nothing has been submitted anywhere.\n\n**My checks**\nI made no new network requests and did not open ATel or ADS. I read:\n- A's 400-request log, including its four CDS 404s;\n- all 31 of B's VizieR answer files: each is HTTP 200, each control was re-found at about 0 arcsec, and nothing lies nearer than 33.3 arcsec;\n- C's VSX answers (V0462 Lup, V0419 Mus and V2104 Aql all present) and its VizieR summary;\n- the saved robots.txt files;\n- the BAA circulars VSSC 205-209.\nAll agree with the reports. My scripts are in <scratchpad>/referee3/scripts/\n\n**Process notes for the team**\n- aavso.org's robots.txt allows all agents in general (content signal 'use=reference'). Under a 'training crawlers' heading it disallows Anthropic's named crawlers (ClaudeBot, anthropic-ai, Claude-Web).\n  - The searchers read this differently. A made no aavso.org request, C read campaign and forum pages, and the first round queried VSX live.\n  - UCL Discovery is the same case: A held back, and B read one PDF there.\n- C sent two arXiv API lookups before reading that host's 'Disallow: /', and reported it.\n- TNS disallows '/search/' with a slash; the first round's queries were '/search?...'.\nNone of these reads changes a verdict. A person can repeat them (steps 4 and 5 of the checklist) if the team wants to be strict.\n\n**On the user's question ('the AI thing, the simulation one')**\nThis step ran no simulation and used no simulated or planted data. It only judged real, time-stamped requests to public services. Per the earlier ruling, four reviewers per candidate examined A, B and C in the real SPHEREx exposures. The project does have labelled simulation features: the practice screen and the planted practice round of the distant-world search, both stamped SIMULATION. Nothing from them enters these verdicts. Whether the main session is working on 'the simulation one' is for it to answer."
+ },
+ "searches": {
+  "search:B": {
+   "candidate": "B: RA 253.18038, Dec -44.67697 (J2000; 16:52:43.29 -44:40:37.1; l 341.089, b -0.416), Scorpius. Not seen up to 2025-09-15, first seen 2026-02-26, about 0.4 Jy at 4.4-5.0 um in March 2026 and about 1.0-1.1 Jy in August 2026. It lies in the SPICY young-star group G341.1-0.3.",
+   "earlier_report_found": "no",
+   "the_report": "",
+   "searches": [
+    {
+     "source": "SIMBAD TAP at CDS",
+     "query": "POST https://simbad.cds.unistra.fr/simbad/sim-tap/sync (ADQL). The control lookup for V462 Lup was meant to run first, then cones of 2 and 30 arcmin around B and the same cones around V462 Lup (227.01362, -40.14308).",
+     "when_utc": "2026-11-15 07:01:37, 07:11:12, 07:19:55, 07:24:30, 07:25:46",
+     "result": "HTTP 404 'This page is currently unavailable' (CDS 'Page unavailable') on all 5 tries. The sim-id page (Ident=V462+Lup) also gave 404 at 07:19:55. No cone was served.",
+     "control": "The V462 Lup control could not run because the service is down.",
+     "worked": "no"
+    },
+    {
+     "source": "VizieR at CDS (asu-tsv, TAPVizieR, cdsarc)",
+     "query": "https://vizier.cds.unistra.fr/viz-bin/asu-tsv?-source=B/vsx/vsx&-c=227.01362 -40.14308&-c.rs=10 ; https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync ; https://cdsarc.cds.unistra.fr/viz-bin/cat/B/vsx",
+     "when_utc": "2026-11-15 07:01:47; again 07:19:55 and 07:24:30",
+     "result": "asu-tsv HTTP 404. TAPVizieR and cdsarc timed out after 40-60 s. The CDS mirror at CfA was used instead (next rows).",
+     "control": "none possible",
+     "worked": "no"
+    },
+    {
+     "source": "VizieR catalogue search (CfA mirror, vizier.cfa.harvard.edu)",
+     "query": "asu-tsv?-meta&-words=... ('VVV variable', 'high amplitude', 'SPICY', 'Lucas', 'Guo', 'Contreras', 'YSO variability', 'nova', 'novae', 'ASAS-SN', 'Gaia DR3 variability', 'GCVS', 'outburst', 'VVVX', 'eruptive') and -meta&-source=J/MNRAS/528/*, J/MNRAS/504/*, J/MNRAS/528/1789*, J/MNRAS/528/1769*, J/MNRAS/504/830*",
+     "when_utc": "2026-11-15 07:04:24-07:11:24",
+     "result": "Identifiers found: J/MNRAS/472/2990 (Lucas+2017 eruptive YSOs); J/MNRAS/465/3011 and J/MNRAS/465/3039 (Contreras Pena+2017); J/MNRAS/486/4590 (Contreras+2019); J/MNRAS/495/3614; J/ApJ/864/11 (VVV V4); J/MNRAS/509/2566 (VIVACE); J/A+A/660/A35 (VVV LPVs); J/A+A/693/A28 (VVV/WISE Miras); J/ApJS/254/33 (SPICY); J/ApJS/278/10 (SPICY WISE variability, Neha+2025); J/ApJS/272/44 (ATLASGAL NEOWISE variability); J/ApJ/883/6; J/ApJ/920/132; J/ApJ/839/88 (SPRITEs); J/A+A/619/A41; J/A+A/703/A141 (VVV-WIT-13 photometry only); I/358 (Gaia DR3 variability); II/366/catv2021 (ASAS-SN variables); B/gcvs (GCVS, NSV); novae J/A+A/554/A123, J/ApJ/834/196, J/MNRAS/517/6150, J/ApJ/788/164, B/cb, V/123A. Not on VizieR (0 resources): Lucas+2024 (MNRAS 528, 1789), Guo+2024 (528, 1769), Guo+2021 (504, 830). No VVVX variability catalogue exists apart from tile coordinates and a Carina YSO list.",
+     "control": "The mirror is current: it holds catalogues published in 2026 (e.g. J/A+A/714/A98, J/A+A/712/A191).",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR cone searches, 31 tables (CfA mirror)",
+     "query": "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?-source=TABLE&-c=253.180380 -44.676970&-c.rs=60 | 600 | 3600&-out.add=_RAJ2000,_DEJ2000,_r&-sort=_r, for each table listed above",
+     "when_utc": "2026-11-15 07:08:07-07:11:11",
+     "result": "Nothing within 30 arcsec in any table. Within 1 arcmin: SPICY 43146 (Class III, group G341.1-0.3) at 33.3 arcsec; Gaia DR3 5964332646302546560 (RR) at 37.2 and 5964332543223328000 (LPV) at 58.0; VIVACE 1116770 (EA/EB) at 53.6. Within 10 arcmin: 76 SPICY YSOs (nearest Class I SPICY 43108 at 113 arcsec, 43213 at 117); Contreras Pena 2017 VVVv356 at 157, VVVv357 at 250, VVVv353 at 366; Albarracin Mira d070_114_6668 at 81; ASAS-SN-V J165247.64-443744.8 at 178; SPICY-WISE-variable J165250.41-443908.4 (Class I) at 117; ATLASGAL 341.181-00.277 (NEOWISE-variable table) at 593; 103-109 Gaia DR3 variables. Within 1 degree: GCVS 8 stars (nearest V889 Sco at 20.8 arcmin; the only nova is V1662 Sco (2018) at 44.6 arcmin), NSV 3 (nearest NSV 8032 at 31.6 arcmin), 36 Contreras Pena 2017 VVV variables, Teixeira+2018 massive-YSO variables G341.20-0.26 at 11.5 arcmin. Empty to 1 degree: Lucas+2017 tables, Contreras+2017 spectroscopy, Contreras+2019, Contreras+2020, V4 tables, VVV LPV tables, RMS YSO NEOWISE, Park+2021, SPRITEs, Saito 2013 VVV novae, Shafter 2017, Pagnotta 2014, Ritter-Kolb, Downes CVs. Raw JSON is in recheck/B/dl/viz/.",
+     "control": "For every table, the first row was re-found at 0.0 arcsec by the same 10-arcsec cone. Cone controls: the GCVS and Schaefer 2022 cones returned V1662 Sco at 44.6 arcmin; the Gaia RR Lyrae at 37 arcsec and SPICY 43146 at 33 arcsec are the same objects earlier reviewers found.",
+     "worked": "yes"
+    },
+    {
+     "source": "vsnet-alert public archive",
+     "query": "http://ooruri.kusastro.kyoto-u.ac.jp/mailarchive/vsnet-alert/msglist (latest 1000 subjects, 2022-12-27 to 2026-11-13). Every subject from 2025-08-01 to 2026-11-13 was read, and the 32 message bodies without coordinates in the subject were read on the HyperKitty pages (no robots.txt, page meta 'noindex,follow').",
+     "when_utc": "2026-11-15 07:09:11 (list); 07:12:02-07:13:17 (32 bodies)",
+     "result": "159 messages. Events in Scorpius and neighbouring constellations, with distance from B: V478 Sco (dwarf-nova activity, 2026-05-21) 11.1 deg; HP Nor (outburst) 11.4; IK Nor (active) 11.5; AS 221 (possible symbiotic nova, 2025-11-10, 17:12:12.9 -32:37:47) 12.6; V390 Sco (= 'SCOV390', Mira brightening, 2026-08-25) 13.5; MAXI J1750-327 (X-ray nova, 2026-08-17) 16.2; TCP J17301230-2753488 = AT 2025wyg (classical nova, Oph, 2025-09-07) 18.4; NSV 11274 (Tel) 19.7; ASASSN-26dv (Cen) 23.4; MASTER OT J142023.47-485540.0 (Lup) 26.1; TCP J16271026-1030020 (Oph) 34.6; ASASSN-26ew (Sgr) 34.9. Everything else is 35 to 175 deg away. Nothing in Scorpius within 11 deg.",
+     "control": "The 2025 classical nova TCP J17301230-2753488 (AT 2025wyg) and MAXI J1750-327 appear, with coordinates parsed from the subjects.",
+     "worked": "yes"
+    },
+    {
+     "source": "MAXI flash reports / novae list",
+     "query": "http://maxi.riken.jp/alert/novae/index.html (no robots.txt)",
+     "when_utc": "2026-11-15 07:12:41",
+     "result": "2,002 entries (2010-02 to 2026-11-10), 161 of them since 2025-08-01. Nearest to B: type-I bursts from 4U 1705-440 at 2.4-3.3 deg; 4U 1630-472 at 4.2; GX 339-4 at 4.4-5.2; MAXI J1609-487 (2026-10) at 8.2-8.5. No new transient within 2 deg.",
+     "control": "MAXI J1750-327 (2026-08-13) is listed.",
+     "worked": "yes"
+    },
+    {
+     "source": "Fermi-LAT detected novae (K. Mukai, NASA GSFC)",
+     "query": "https://asd.gsfc.nasa.gov/Koji.Mukai/novae/latnovae.html (page updated 28-Oct-2026)",
+     "when_utc": "2026-11-15 07:13:08",
+     "result": "2025-26 entries: V462 Lup, 'V572 Vul' (as written), V7994 Sgr, V1935 Cen, Fermi J1820-1648 (Feb 2026), V8056 Sgr (Oct 2026). None is in Scorpius, and none is close to B: the nearest Sgr/Cen positions are more than 15 deg away.",
+     "control": "V462 Lup and V7994 Sgr are listed.",
+     "worked": "yes"
+    },
+    {
+     "source": "Wikipedia list of novae",
+     "query": "https://en.wikipedia.org/wiki/List_of_novae_in_the_Milky_Way_galaxy (revision 1383222146, last edited 1 Nov 2026). The /w/ API is disallowed by robots.txt, so it was not used.",
+     "when_utc": "2026-11-15 07:15:48",
+     "result": "2025: V462 Lupi, V572 Velorum, V1935 Centauri. No 2026 entries. The list holds only bright novae, so it is weak evidence for a faint infrared event.",
+     "control": "V462 Lup is listed.",
+     "worked": "partly"
+    },
+    {
+     "source": "CBAT public list of Galactic novae",
+     "query": "http://www.cbat.eps.harvard.edu/nova_list.html",
+     "when_utc": "2026-11-15 07:16:00",
+     "result": "The list stops at V1723 Aql (2010), so it is not current and carries no information for 2025-26.",
+     "control": "Failed: no 2025 nova is present.",
+     "worked": "no"
+    },
+    {
+     "source": "AAVSO Alert Notices",
+     "query": "https://www.aavso.org/aavso-alert-notices",
+     "when_utc": "2026-11-15 07:16:16",
+     "result": "HTTP 403 with a Cloudflare 'Just a moment...' robot check. Stopped, no retry, no workaround. Special Notices are on the same site and were not tried.",
+     "control": "none",
+     "worked": "no"
+    },
+    {
+     "source": "VSOLJ",
+     "query": "http://vsolj.cetus-net.org/ , /bulletin.html , /index-j.html",
+     "when_utc": "2026-11-15 07:16:26",
+     "result": "The site is 'under construction'; the last Variable Star Bulletin is No. 121 (2023 Jul). There is no 2025-26 nova or transient news. The observation-search CGI is a form and was not used.",
+     "control": "No 2025-26 content exists to test against.",
+     "worked": "partly"
+    },
+    {
+     "source": "British Astronomical Association VSS: forum topic list (8 pages) and circulars VSSC 205-209 (Sep 2025 to Sep 2026)",
+     "query": "https://britastro.org/forums/forum/variable-stars (pages 1-8); https://britastro.org/vss/VSSC205.pdf ... VSSC209.pdf (text extracted and searched for Sco/Nor/Ara/Lup/SPHEREx/J1652/16 52); thread https://britastro.org/forums/topic/possible-new-galactic-recurrent-nova",
+     "when_utc": "2026-11-15 07:16:56-07:18:02",
+     "result": "2025-26 Galactic nova topics: Nova Sagittae 2026 (V488 Sge), Nova Aql 2026, Nova Tau 2026, and the recurrent-nova candidate AT2026lck (18:43:58.56 +01:52:48, about 55 deg away). The circulars mention only long-known Scorpius variables (V598 Sco, AR Sco, V1309 Sco). Nothing near B.",
+     "control": "The Nova Sge 2026 and Nova Aql 2026 threads were found.",
+     "worked": "yes"
+    },
+    {
+     "source": "Lucas et al. 2024 (MNRAS 528, 1789), open-access PDF at UCL Discovery",
+     "query": "https://discovery.ucl.ac.uk/10187580/1/stad3929.pdf (robots.txt allows generic agents; one fetch)",
+     "when_utc": "2026-11-15 07:21:54",
+     "result": "The printed Table 1 shows only 10 of its 222 rows; the full table is in the OUP online supplement. Of the 21 VVV J-names in the text, the nearest is VVV J163637.94-474444.1 at 4.1 deg.",
+     "control": "VVV 1640-4846 is found in the text.",
+     "worked": "partly"
+    },
+    {
+     "source": "OUP article page (route to the Lucas 2024 supplementary table)",
+     "query": "https://academic.oup.com/mnras/article/528/2/1789/7589621",
+     "when_utc": "2026-11-15 07:23:03",
+     "result": "HTTP 403 with a 'Just a moment...' robot check. Stopped.",
+     "control": "none",
+     "worked": "no"
+    },
+    {
+     "source": "INAF open-access repository",
+     "query": "https://openaccess.inaf.it/bitstreams/5ba42278-2e79-444c-8a06-eda3ef6a0cf5/download and .../acb103b2-985d-4589-a46b-b2f2b315a42c/download",
+     "when_utc": "2026-11-15 07:23:13",
+     "result": "HTTP 401 (login required). Stopped.",
+     "control": "none",
+     "worked": "no"
+    },
+    {
+     "source": "Guo et al. 2024 (MNRAS 528, 1769), arXiv HTML",
+     "query": "https://arxiv.org/html/2401.14464v1 (33 VVV high-amplitude sources with RA/Dec)",
+     "when_utc": "2026-11-15 07:23:34",
+     "result": "Nearest source: L222_59 (Lucas 2024 no. 59) at RA 253.43487 Dec -43.47205, 73.1 arcmin from B. This is the position of VVV-WIT-13 (RA 16:53:44.38 Dec -43:28:19.47 per arXiv 2509.15334). Next: VVV1636-4744 at 248.5 arcmin and VVV1640-4846 at 277.9.",
+     "control": "VVV1640-4846 is parsed with its catalogued position.",
+     "worked": "yes"
+    },
+    {
+     "source": "Open-web searches (WebSearch)",
+     "query": "'J165243.29-444037.1' / 'J165243.2-444037' / 'J165243-444037'; 'Nova Scorpii 2026' / 'Nova Scorpius 2026' / 'Nova Sco 2026'; the same for 2025; 'V1726 Sco' / 'V1727 Sco' / 'V1728 Sco'; 'G341.089-0.416' / 'G341.09-0.42' / 'G341.089-00.416'; '16 52 43' '-44 40' 2026; 'SPHEREx new infrared transient Scorpius young star outburst 2026'; plus pages opened from the hits: habr.com comment page, arXiv 2602.13678, 2607.15245, 2603.29835 and 2509.15334",
+     "when_utc": "2026-11-15 07:14-07:21",
+     "result": "No page about this source or position. The newest Scorpius nova designation found is V1725 Sco (2024); nothing exists for V1726-V1728 Sco. One Russian forum comment says 'Nova Scorpii 2025' (John Seach), but no position is given and it most likely refers to V1935 Cen; Mukai's list has no 2025 Scorpius nova. The arXiv hits are unrelated: an M31 red nova, a T CrB eruption-timing paper and the SPHEREx instrument paper.",
+     "control": "The same searches surfaced V1725 Sco, V1723 Sco, VVV-WIT-13 and the Karambelkar et al. 2026 SPHEREx transient paper.",
+     "worked": "yes"
+    }
+   ],
+   "nearest_known_events": "Within 30 arcsec: nothing, of any kind, in any working search.\nWithin 5 arcmin: no named 2025-26 event. Steady catalogued sources only:\n- SPICY 43146 (Class III) at 33 arcsec; the nearest Class I is SPICY 43108 at 113 arcsec.\n- Gaia DR3 5964332646302546560 (RR Lyrae) at 37 arcsec.\n- VIVACE 1116770 (EA/EB) at 54 arcsec.\n- VVV/WISE Mira d070_114_6668 at 81 arcsec.\n- SPICY WISE-variable Class I J165250.41-443908.4 at 117 arcsec.\n- VVV high-amplitude variable VVVv356 at 157 arcsec.\n- ASAS-SN-V J165247.64-443744.8 at 178 arcsec.\nWithin 1 degree:\n- V1662 Sco (classical nova, 2018) at 44.6 arcmin.\n- VVV-WIT-13 / L222_59, an eruptive young star known since before 2025 (16:53:44.38 -43:28:19.5), at 73 arcmin.\n2025-26 events in Scorpius and its neighbours, with distance from B:\n- MAXI X-ray bursts of 4U 1705-440 (a known burster): 2.4 deg.\n- 4U 1630-472: 4.2 deg.\n- GX 339-4: 4.4 deg.\n- MAXI J1609-487 (Oct 2026): 8.2 deg.\n- V478 Sco (dwarf-nova activity): 11.1 deg.\n- HP Nor / IK Nor: 11.4 / 11.5 deg.\n- AS 221 (possible symbiotic nova, Nov 2025): 12.6 deg.\n- V390 Sco (Mira): 13.5 deg.\n- MAXI J1750-327 (X-ray nova, Aug 2026): 16.2 deg.\n- AT 2025wyg = TCP J17301230-2753488 (classical nova, Oph): 18.4 deg.\n- ASASSN-26dv: 23.4 deg.\n- ASASSN-26ew: 34.9 deg.\nEarlier reviews give the nearest 2025-26 classical nova (Mukai's list) as 15.3 deg away.",
+   "not_searched": "- SIMBAD at CDS: down (HTTP 404) at 07:01:37, 07:11:12, 07:19:55, 07:24:30 and 07:25:46 UTC on 2026-11-15. For a person: open https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V462+Lup (it must show the 2025 nova), then https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=253.18038+-44.67697&Radius=2&Radius.unit=arcmin and the same with Radius=30.\n- VizieR at CDS and TAPVizieR: down or timing out at the same times. The CfA mirror, which holds 2026 catalogues, was used instead.\n- AAVSO Alert Notices and Special Notices: Cloudflare robot check. For a person: https://www.aavso.org/aavso-alert-notices\n- Lucas et al. 2024 full 222-source table: it is only in the MNRAS supplement, and the OUP page shows a robot check. For a person: https://academic.oup.com/mnras/article/528/2/1789/7589621 (Supplementary data). Check whether any row lies within 1 degree of RA 253.180, Dec -44.677. Lucas 2024 source 59 / VVV-WIT-13 at 73 arcmin is already known.\n- INAF open-access copies: need a login (https://openaccess.inaf.it/).\n- CBAT public nova list: online, but it ends in 2010, so it says nothing about 2025-26.\n- Not done, as instructed, and left for a team member: Astronomer's Telegram full text (https://www.astronomerstelegram.org/) and NASA ADS (https://ui.adsabs.harvard.edu/).\n- Also not done: CBETs (subscription), Lasair (needs a token), VVV-WIT list beyond VVV-WIT-13, and VSOLJ observation-search CGI (a form).",
+   "summary": "I found no earlier report of Candidate B in any search that worked. Nothing of any kind lies within 30 arcsec, and no named 2025-26 event lies within 5 arcmin.\n\nWhat worked:\n- VizieR, through the CDS mirror at CfA because CDS itself was down. I found each catalogue's identifier with VizieR's own catalogue search, then cone-searched 31 tables at 1, 10 and 60 arcmin, each with a control. The tables cover:\n  - the VVV and VVVX eruptive and high-amplitude variable lists (Lucas 2017, Contreras Pena 2017 and 2019, VVV V4, VIVACE, VVV long-period variables and Miras);\n  - SPICY young stars and their WISE-variability table, and NEOWISE YSO variability lists;\n  - Gaia DR3 variability, the ASAS-SN variable catalogue, GCVS and the New Suspected list;\n  - six nova and cataclysmic-variable catalogues.\n  The nearest entries are steady stars: SPICY 43146 at 33 arcsec and a Gaia RR Lyrae star at 37 arcsec. The only nova within 1 degree is V1662 Sco (2018), 44.6 arcmin away.\n- vsnet-alert: all subject lines from 2025-08 to 2026-11 (159 messages), plus 32 message bodies. Nothing in Scorpius or its neighbours is closer than 11 deg.\n- MAXI: nothing new within 2 deg; the nearest entries are bursts from the known source 4U 1705-440, 2.4 deg away.\n- Fermi-LAT nova list, Wikipedia's nova list, the BAA forum and its 2025-26 circulars, and open-web searches on the J-name, the Galactic name, 'Nova Sco 2025/2026' and the next Scorpius variable-star names (V1726-V1728 Sco): nothing near B.\n- Guo et al. 2024 (arXiv): its nearest source is VVV-WIT-13, an eruptive young star already known before 2025, 73 arcmin away.\n\nWhat did not work:\n- SIMBAD at CDS was down (HTTP 404) on all five tries (07:01, 07:11, 07:19, 07:24 and 07:25 UTC), so the V462 Lup control and the 2 and 30 arcmin cones could not run. VizieR at CDS was down too.\n- Lucas et al. 2024 and Guo et al. 2024 are not on VizieR. The open copy of Lucas 2024 prints only 10 of its 222 rows. The full table is behind a robot check on the publisher's site, and so are the AAVSO alert notices. INAF needs a login.\n- The CBAT public nova list ends in 2010.\n\nATel full text and ADS were left for a person, as instructed. This is a statement about these searches, not proof that nobody has reported the object. B stays a candidate.\n\nOn the user's question ('the AI thing, the simulation one'): this step only searched published catalogues and lists. It ran no simulation and cannot say what that question refers to.\n\nThe search log is in <scratchpad>/recheck/B/searches_B_recheck.tsv, the raw answers in <scratchpad>/recheck/B/dl/ and the scripts in <scratchpad>/recheck/B/scripts/."
+  },
+  "search:C": {
+   "candidate": "C: RA 241.70906, Dec -52.20564 (J2000; 16:06:50.17 -52:12:20.3; G330.413-00.082), Norma. Not seen up to 2025-08-19; first seen 2026-02-19; probably a classical nova hidden behind dust (referee's reading).",
+   "earlier_report_found": "no",
+   "the_report": "No report of a transient, nova or outburst lies within 30 arcsec, and no named 2025-26 event lies within 5 arcmin. Two variable stars that were catalogued before 2025 lie within 30 arcsec. Both were examined, and neither can be C.\n\n(1) Gaia DR3 5933349095879173504\n- Catalogues: VSX OID 5763624, type RS; Gaia DR3 vari_summary and vari_classifier_result, class RS (classifier 'nTransits:5+').\n- Position: RA 241.71378, Dec -52.20726 (ICRS, Gaia, sub-milliarcsecond). That is 11.95 arcsec from C, about 10.4 arcsec east and 5.8 arcsec south (PA about 119 deg).\n- Brightness: G mean 17.38, BP 18.30, RP 16.45. VSX gives a G range of 17.32-17.42, an amplitude of 0.1 mag.\n- Dates: Gaia DR3 photometry from about 2014 to 2017, published by the Gaia Collaboration in 2022.\n- Not C: it is 25-40 times C's position error (0.3-0.5 arcsec) away, it varies by only 0.1 mag, and all its data predate 2025. The referee already listed it as the 'Gaia RS-type star at 11.8-13.2 arcsec'.\n\n(2) VIVACE 1221624\n- Catalogue: VIVACE, VizieR J/MNRAS/509/2566 (Molnar et al. 2022, classifications from VVV/VIRAC light curves).\n- Position: RA 241.71449, Dec -52.20293. That is 15.46 arcsec from C, about 12.0 arcsec east and 9.8 arcsec north (PA about 51 deg).\n- Class: EW (contact binary), probability 0.57, period 0.6372 d, H-Ks 1.95.\n- Dates: VVV data from 2010-2019.\n- Not C: it lies 15.7 arcsec from the Gaia star, so it is a different star, and its data are periodic and predate 2025.\n\nWithin 5 arcmin, the only other things found are steady or periodic catalogued objects and no transient:\n- SPICY 32946 (Class II young-star candidate), 1.36 arcmin;\n- ASAS-SN variable J160654.36-520813.2 (ROT:, 0.06 mag), 4.17 arcmin;\n- Gaia RM, EB and LPV stars, 1.7-4.7 arcmin;\n- in SIMBAD, the Hi-GAL clump HIGALBM G330.4120-00.0823 at 3.65 arcsec.",
+   "searches": [
+    {
+     "source": "SIMBAD TAP at CDS Strasbourg",
+     "query": "POST https://simbad.cds.unistra.fr/simbad/sim-tap/sync, ADQL cone on basic of 2 arcmin and 30 arcmin around 241.70906 -52.20564, and the same for the control",
+     "when_utc": "2026-11-15T07:01:51Z, 07:24:14Z, 07:34:28Z, 07:36:57Z (4 attempts)",
+     "result": "HTTP 404 'This page is currently unavailable' every time. The CDS status page (cds.unistra.fr, updated 2026-11-09) reports a cybersecurity incident: SIMBAD, VizieR and X-Match in Strasbourg are offline, and it names official mirrors.",
+     "control": "V462 Lup cone sent to the same service: also 404.",
+     "worked": "no"
+    },
+    {
+     "source": "SIMBAD TAP mirror at IDIA (South Africa; listed by CDS)",
+     "query": "https://simbad.idia.ac.za/simbad/sim-tap/sync, the same ADQL cones of 2 and 30 arcmin",
+     "when_utc": "2026-11-15T07:03:59Z",
+     "result": "2 arcmin: 6 objects. Nearest is HIGALBM G330.4120-00.0823 (smm) at 3.65 arcsec; then 2MASS J16064227-5211540 at 77 arcsec, SPICY 32946 at 81 arcsec, two dark clouds at 83 and 111 arcsec, and TYC 8322-377-1 at 87 arcsec. 30 arcmin: 2,372 objects, with no nova, CV, transient or 'ev' object. The most notable are an X-ray source 1RXS J160810.2-520251 (15.5 arcmin), EXMS B1605-522 (24.4 arcmin), PSR J1605-5215 (14.4 arcmin), the V* 2MASS J16064466-5203014 (9.35 arcmin) and the Mira V345 Nor (7.76 arcmin).",
+     "control": "FAILED. V462 Lup is not found by the same cone or by name, and neither is V7994 Sgr (cone and ident LIKE searches). The mirror has 2026 references and some AT 2025 objects but not the 2025 Galactic novae. Its silence is therefore not evidence.",
+     "worked": "partly"
+    },
+    {
+     "source": "SIMBAD TAP mirror at CfA (simbad.cfa.harvard.edu; CDS says data are ingested up to 2026-10-14)",
+     "query": "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync, the same 2 and 30 arcmin cones",
+     "when_utc": "2026-11-15T07:04:19Z",
+     "result": "2 arcmin: 7 rows, nearest HIGALBM G330.4120-00.0823 at 3.65 arcsec. 30 arcmin: 2,566 rows, no transient.",
+     "control": "FAILED: V462 Lup is not found by the same cone.",
+     "worked": "partly"
+    },
+    {
+     "source": "VizieR catalogue identification",
+     "query": "(a) VizieR's own keyword search (viz-bin/votable -words= ... -meta.all) on the CfA and IDIA mirrors; (b) the IVOA registry, RegTAP at https://dc.g-vo.org/tap/sync (rr.resource and rr.res_role, ivoid LIKE 'ivo://cds.vizier/%', by title words and creator names); (c) each ID confirmed with -meta on the CfA mirror",
+     "when_utc": "2026-11-15T07:06-07:14Z",
+     "result": "(a) is broken on the mirrors: a Postgres 'syntax error at or near COMMIT' whenever more than one catalogue matches. The CDS original is down, and the NAOJ, IUCAA, INASAN and Cambridge mirrors time out. (b) gave the IDs: J/MNRAS/465/3011 and J/MNRAS/465/3039 (Contreras Pena+ 2017), J/MNRAS/472/2990 (Lucas+ 2017, eruptive YSOs), J/MNRAS/486/4590 (Contreras+ 2019), J/MNRAS/509/2566 (VIVACE), J/ApJ/864/11 (VVV V4), J/A+A/619/A41, J/ApJS/254/33 (SPICY), J/ApJS/278/10, J/ApJS/281/64, J/ApJ/920/132, I/358 (Gaia DR3 variability), II/366 (ASAS-SN variables), B/gcvs (GCVS + NSV), B/vsx, and the nova catalogues J/A+A/554/A123, J/ApJ/788/164, J/ApJ/834/196, J/MNRAS/517/6150, J/PAZh/34/270, J/ApJ/912/19, J/ApJ/910/134 and J/ApJS/197/31, plus J/MNRAS/544/885 (eROSITA Galactic X-ray transients). Lucas et al. 2024 (MNRAS 528, 1789) and Guo et al. 2024 (MNRAS 528, 1769) are NOT in VizieR: 'Table or Catalog not found' for J/MNRAS/528/1789 and 1769, and absent from the registry.",
+     "control": "The registry search returned the known SPICY and VSX IDs, and -meta on the mirror confirmed each title.",
+     "worked": "partly"
+    },
+    {
+     "source": "VizieR CfA mirror: VVV/VVVX eruptive and high-amplitude variable catalogues",
+     "query": "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?-source=<ID>&-c=241.70906 -52.20564&-c.rs=60, 600 and 3600 (arcsec)&-out.add=_r,_RAJ,_DEJ&-sort=_r, for J/MNRAS/465/3011, J/MNRAS/465/3039, J/MNRAS/472/2990, J/MNRAS/486/4590, J/MNRAS/509/2566, J/ApJ/864/11 and J/A+A/619/A41",
+     "when_utc": "2026-11-15T07:15-07:16Z",
+     "result": "Rows within 1 arcmin / 10 arcmin / 1 deg:\n- 465/3011: 0 / 0 / 16; nearest VVVv231 (LPV-Mira, Ks amplitude 2.05) at 14.7 arcmin; also VVVv658 (Eruptive) at 19.0 arcmin.\n- 465/3039: 0 / 0 / 3; nearest VVVv235 (AGB) at 31.2 arcmin.\n- 472/2990: 0 / 0 / 0.\n- 486/4590: 0 / 0 / 0.\n- VIVACE: 2 / 167 / 7,265; nearest VIVACE 1221624 (EW, P 0.637 d) at 15.46 arcsec.\n- V4: 0 / 0 / 0.\n- A41: 0 / 0 / 1 (EGO G329.61+0.11 at 49.6 arcmin).",
+     "control": "For each catalogue, a member (the nearest one to C, or any member when none lay within 10 deg) was found at 0.0 arcsec by the same 60-arcsec query at its own position, e.g. VVVv231, VVVv235 and VIVACE 1221624.",
+     "worked": "yes"
+    },
+    {
+     "source": "Lucas et al. 2024 and Guo et al. 2024 (VVV eruptive YSOs), not in VizieR",
+     "query": "arXiv HTML versions https://arxiv.org/html/2401.14471v1 and https://arxiv.org/html/2401.14464v1 (allowed by arxiv.org robots.txt), parsing every coordinate and VVV J-name",
+     "when_utc": "2026-11-15T07:35Z",
+     "result": "Guo et al. 2024 (2401.14464): 33 positions, nearest L222_33 (Eruptive) at 1.16 deg, then L222_32 at 2.21 deg and L222_37 at 2.80 deg. Lucas et al. 2024 (2401.14471): only part of the 222-object list carries positions in the HTML; nearest parsed is VVV J164011.76-484653.4 at 6.31 deg. Neither paper mentions G330.4.",
+     "control": "Known members decode to their positions (VVV1640-4846 = VVV J164011.76-484653.4).",
+     "worked": "partly"
+    },
+    {
+     "source": "VizieR CfA mirror: SPICY and YSO-variability catalogues",
+     "query": "The same cones for J/ApJS/254/33 (SPICY, Kuhn+ 2021), J/ApJS/278/10, J/ApJS/281/64 (Zhang+ 2025, unTimely) and J/ApJ/920/132 (NEOWISE YSO variability)",
+     "when_utc": "2026-11-15T07:16Z",
+     "result": "Rows within 1 arcmin / 10 arcmin / 1 deg:\n- SPICY: 0 / 33 / 1,261; nearest SPICY 32946 (Class II, SSTGLMC G330.4036-00.1023) at 81.5 arcsec, then SPICY 32927 at 188 arcsec.\n- 278/10: 0 / 3 / 163; nearest at 5.8 arcmin.\n- 281/64: 0 / 0 / 3; nearest at 28.3 arcmin.\n- 920/132: 0 / 0 / 0.",
+     "control": "SPICY 32946 found at 0.0 arcsec by the same query; each other catalogue's member also found at 0.0 arcsec.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR CfA mirror: Gaia DR3 variability (I/358, all tables)",
+     "query": "The same cones of 60, 600 and 3600 arcsec, -source=I/358",
+     "when_utc": "2026-11-15T07:18Z",
+     "result": "Within 1 arcmin: one source, Gaia DR3 5933349095879173504 (class RS) at 11.95 arcsec. Within 10 arcmin: 116 in vari_summary (nearest RM at 102 arcsec, LPV at 157 arcsec, EB at 248 arcsec, a Cepheid at 535 arcsec). Within 1 deg: 7,854. Every class is periodic, LPV or rotation; none is an outburst.",
+     "control": "Science-alerts member at 243.56549 -52.48171 found at 0.0 arcsec by the same query.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR CfA mirror: ASAS-SN variable stars (II/366)",
+     "query": "The same cones, -source=II/366",
+     "when_utc": "2026-11-15T07:17Z",
+     "result": "0 / 12 / 292 within 1 arcmin / 10 arcmin / 1 deg. Nearest ASASSN-V J160654.36-520813.2 (ROT:, 0.06 mag) at 4.17 arcmin; also YSO-type entries at 5.3 and 6.8 arcmin.",
+     "control": "Nearest member found at 0.00 arcsec.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR CfA mirror: GCVS and NSV (B/gcvs)",
+     "query": "The same cones, -source=B/gcvs (gcvs_cat, nsv_cat, nsvs_cat)",
+     "when_utc": "2026-11-15T07:17Z",
+     "result": "Within 1 arcmin: 0. Within 10 arcmin: V345 Nor (Mira, = NSV 07429) at 7.76 arcmin and V496 Nor (SR:) at 9.88 arcmin. Within 1 deg: 9 GCVS and 5 NSV entries, among them TW Nor (DCEP) at 23.3 arcmin and QX Nor (X-ray nova 1977, XND) at 55.5 arcmin. No 2025-26 designation.",
+     "control": "V345 Nor found at 0.00 arcsec, and NSV 07429 at 0.2 arcsec.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR CfA mirror: AAVSO VSX (B/vsx, version 2026-10-18)",
+     "query": "The same cones of 60, 600 and 3600 arcsec; also Name='V05* Nor', 'V0419 Mus', 'V2104 Aql' and 'V0462 Lup'",
+     "when_utc": "2026-11-15T07:17Z and 07:31Z",
+     "result": "Within 1 arcmin: only Gaia DR3 5933349095879173504 (RS) at 11.99 arcsec. Within 10 arcmin: 120 rows. Within 1 deg: 7,731 rows, with no nova type and no name containing 2025/2026, TCP, PNV, ASASSN-25/26 or Gaia25/26. The nearest CV-type entries are Gaia19dsc (UG:) at 35.9 arcmin and Gaia21buw (UG:) at 56.9 arcmin. The highest Norma designation is V567 Nor (a nova, 7.03 deg away); no new Norma name was assigned in 2025-26. The Norma novae V555, V556, V559 and V567 Nor lie 1.74-7.03 deg away.",
+     "control": "V462 Lup found by a 60-arcsec cone at its position (227.01363 -40.14308). The 2026 novae V419 Mus and V2104 Aql are found by name, so the snapshot holds 2025-26 objects.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR CfA mirror: nova catalogues",
+     "query": "The same cones for J/A+A/554/A123 (novae in the VVV area), J/ApJ/788/164, J/ApJ/834/196, J/MNRAS/517/6150, J/PAZh/34/270, J/ApJ/912/19 (PGIR novae), J/ApJ/910/134 (Swift novae) and J/ApJS/197/31",
+     "when_utc": "2026-11-15T07:17-07:18Z",
+     "result": "0 rows within 1 deg in every one.",
+     "control": "Members found at 0.00 arcsec, e.g. V382 Nor at 244.93642 -51.58142 and the nova at 243.4291 -52.6226. These catalogues predate 2025.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR CfA mirror: eROSITA Galactic X-ray transients (J/MNRAS/544/885)",
+     "query": "The same cones",
+     "when_utc": "2026-11-15T07:18Z",
+     "result": "0 rows within 1 deg.",
+     "control": "Member at 239.38758 -48.58603 found at 0.000 arcsec.",
+     "worked": "yes"
+    },
+    {
+     "source": "vsnet-alert public archive",
+     "query": "http://ooruri.kusastro.kyoto-u.ac.jp/mailarchive/vsnet-alert/msglist (the latest 1,000 subjects, 2022-12-27 to 2026-11-13; no robots.txt), filtered to 2025-08-01 to 2026-11-13, with J-coordinates in subjects decoded. Bodies read for 10 messages that had no coordinates in their subjects.",
+     "when_utc": "2026-11-15T07:21:32Z (list); bodies 07:23Z",
+     "result": "159 messages (vsnet-alert 28093-28251), 83 with decodable coordinates. Nearest decoded position: TCP J17301230-2753488 = V4371 Oph (new classical nova, 2025-09-07) at 28.85 deg. Norma and its neighbours:\n- HP Nor, dwarf-nova outburst at 13.2 mag, 2026-05-21 (msg 28171): 3.39 deg;\n- IK Nor, 'active', the same digest: 4.17 deg;\n- MASTER OT J142023.47-485540.0, outburst 2026-05-21: 17.1 deg;\n- ASASSN-26dv, in Lupus: 18.1 deg;\n- V478 Sco: 21.8 deg;\n- AS 221 (Sco), possible symbiotic nova, 2025-11: 22.9 deg;\n- V390 Sco brightening, 2026-08: 24.0 deg;\n- NN Cen: 24.8 deg;\n- MAXI J1750-327, X-ray nova 2026-08: 27.0 deg;\n- V803 Cen: 29.3 deg.\nNothing at C.",
+     "control": "V462 Lup appears as 'ASASSN-25cm - 8.7 mag transient in Lupus' (msg 28074, 2025-06-14, just before the window), and V572 Vel's PNV J10251200-5331109 decodes. vsnet-alert is incomplete for novae: V7994 Sgr and V1935 Cen have no subjects.",
+     "worked": "yes"
+    },
+    {
+     "source": "MAXI news and source list",
+     "query": "http://maxi.riken.jp/news/en/ (2026 entries), http://maxi.riken.jp/news/en/MAXI_News_s5.html (2024-2025) and http://maxi.riken.jp/top/slist.html",
+     "when_utc": "2026-11-15T07:26:06-07:26:34Z",
+     "result": "Two Norma events in 2025-26:\n(a) 2025-12-19: an X-ray transient in Norma, which NuSTAR (Dec 26-28) confirmed as the black-hole binary MAXI J1543-564 in outburst again (235.823 -56.414, 5.43 deg from C);\n(b) 2026-10-28: the new X-ray nova MAXI J1609-487 in Norma (242.237 -48.765, 3.46 deg from C), 380-530 mCrab, rebrightened Oct 31.\nThe nearest MAXI source of any kind is 4U 1608-52 (QX Nor) at 0.93 deg. Nothing within MAXI's error of C (about 0.1-0.2 deg).",
+     "control": "The same pages list MAXI J1750-327 (2026-08-13) and GS 1354-64 (2025-12-25), the 2025-26 X-ray transients also reported elsewhere (vsnet-alert 28209).",
+     "worked": "yes"
+    },
+    {
+     "source": "Swift/BAT Hard X-ray Transient Monitor list",
+     "query": "https://swift.gsfc.nasa.gov/results/transients/ (1,057 rows; no robots.txt)",
+     "when_utc": "2026-11-15T07:37Z",
+     "result": "Nearest source H 1608-522 at 0.92 deg; then IGR J16207-5129 at 2.26 deg and H 1553-542 at 2.59 deg. No Swift J or new source within 2 deg.",
+     "control": "None checked for a 2025-26 object. The list does contain the known Norma sources.",
+     "worked": "partly"
+    },
+    {
+     "source": "Fermi-LAT detected novae (Mukai)",
+     "query": "https://asd.gsfc.nasa.gov/Koji.Mukai/novae/latnovae.html (page updated 2026-10-28)",
+     "when_utc": "2026-11-15T07:25:02Z",
+     "result": "2025-26 entries: V462 Lup, V572 Vel (printed 'V572 Vul'), V7994 Sgr, V1935 Cen, Fermi J1820-1648 (Feb 2026) and V8056 Sgr (Oct 2026). None in Norma; the nearest, V1935 Cen, is 14.2 deg away.",
+     "control": "V462 Lup is present.",
+     "worked": "yes"
+    },
+    {
+     "source": "AAVSO observing campaigns (the successor of Alert Notices)",
+     "query": "https://www.aavso.org/apps/campaigns (active) and https://www.aavso.org/apps/campaigns/archived (concluded, newest page). The old /aavso-alert-notices and /aavso-special-notices URLs give 404. Campaign pages 898-943 were opened singly. robots.txt: Allow /, use=reference.",
+     "when_utc": "2026-11-15T07:27:44-07:30Z",
+     "result": "2025-26 nova campaigns: V7993 Sgr, V462 Lup (#896), PNV J10251200-5331109 (#897), V4371 Oph (#905), V1935 Cen (#906) and V7994 Sgr (#907). The concluded campaigns from 2025-10 to 2026-08 include none in Norma. No campaign is in or near Norma.",
+     "control": "V462 Lup (#896) is present.",
+     "worked": "partly"
+    },
+    {
+     "source": "AAVSO forum, Alerts category",
+     "query": "https://forums.aavso.org/c/observing/alerts/50 (first page, 23 topics; robots.txt allows /c/)",
+     "when_utc": "2026-11-15T07:31Z",
+     "result": "No Norma topic. The Southern ones are 'Mag 8.7 transient in Lupus', 'Nova in Centaurus', 'Possible Nova in Sagittarius', 'Nova Sgr 2026 No. 3' and 'Possible Bright Transient in Musca'.",
+     "control": "'Mag 8.7 transient in Lupus - rising nova?' = V462 Lup.",
+     "worked": "yes"
+    },
+    {
+     "source": "Wikipedia",
+     "query": "https://en.wikipedia.org/wiki/List_of_novae_in_the_Milky_Way_galaxy (edited 2026-11-01) and https://en.wikipedia.org/wiki/Norma_(constellation) (edited 2026-08-23). No 'novae by year' page for 2025 or 2026 exists; List_of_novae_in_the_Milky_Way gives 404.",
+     "when_utc": "2026-11-15T07:25:17Z and 07:25:54Z",
+     "result": "2025 entries: V462 Lup, V572 Vel and V1935 Cen (the list holds only bright novae); none for 2026; no Norma nova after IM Nor (2002).",
+     "control": "V462 Lup is listed.",
+     "worked": "yes"
+    },
+    {
+     "source": "Central Bureau (CBAT) public lists",
+     "query": "http://www.cbat.eps.harvard.edu/nova_list.html and http://www.cbat.eps.harvard.edu/RecentCBETs.html (CBET titles 5088-5778, 2022-01-07 to 2026-11-14)",
+     "when_utc": "2026-11-15T07:25:01Z and 07:32Z",
+     "result": "nova_list.html is stale (its last entries are from 2010), so it is not evidence. CBET titles from 2025-08 to 2026-11 for Galactic novae: V4371 Oph (CBET 5603), V1935 Cen (5611), V7994 Sgr (5612, 5615), V419 Mus (5690, 5703), V2104 Aql (5711), V1452 Tau (5723), V8055 Sgr (5724), V488 Sge (5729) and V8056 Sgr (5763). None in Norma; the nearest, V1935 Cen, is 14.19 deg away. CBET texts are behind a subscription.",
+     "control": "V7994 Sgr (CBET 5612) and V1935 Cen are present.",
+     "worked": "yes"
+    },
+    {
+     "source": "British Astronomical Association (BAA) and VSOLJ",
+     "query": "https://britastro.org/section_front/variable-star-section, https://britastro.org/baa-alerts, https://britastro.org/sections/variable-stars and http://vsolj.cetus-net.org/",
+     "when_utc": "2026-11-15T07:33-07:34Z",
+     "result": "BAA: no public list of 2025-26 alerts on its site. BAA Alerts is an e-mail list, and its archive is on groups.io, whose robots.txt says AI crawlers need a licence, so it was not opened. VSOLJ: the site was last updated in 2023, so it is not evidence.",
+     "control": "None possible.",
+     "worked": "no"
+    },
+    {
+     "source": "Open-web name searches (WebSearch, with astronomerstelegram.org and ADS domains excluded)",
+     "query": "'J160650' '-5212'; 'J1606-5212' / 'J1606.8-5212' / 'J160650-521220' / '160650.17-521220'; 'TCP J1606' / 'PNV J1606'; 'G330.41' / 'G330.413'; 'Nova Normae 2025' / 'Nova Norma 2025' / 'Nova Normae 2026' / 'Nova Norma 2026'; 'V557/V558/V559 Nor'; Norma nova 2026 infrared; Norma transient 2026 VVVX/NEOWISE/SPHEREx/Gattini/PRIME; MAXI J1609-487",
+     "when_utc": "2026-11-15T07:30-07:37Z",
+     "result": "No page mentions this position or a nova or transient in Norma in 2025-26. The hits were unrelated objects: CX330 (a different, bulge object), IM Nor, AT 2026rdg in Aquila (TNS AstroNote 2026-233, read: a reddened Fe II nova in Aquila) and Nova Sgr 2026 No. 3. Search engines index catalogues and telegrams poorly, so this evidence is weak.",
+     "control": "'Nova Lupi 2025' returns V462 Lup pages, and 'TCP J18035290-3127298' returns the CBAT and AAVSO pages for V7994 Sgr.",
+     "worked": "yes"
+    }
+   ],
+   "nearest_known_events": "Within 30 arcsec: only two catalogued periodic variables from before 2025, neither a transient. Gaia DR3 5933349095879173504 (RS, G 17.3-17.4) is at 11.95 arcsec, and VIVACE 1221624 (EW, P 0.637 d) at 15.46 arcsec. Details are in the_report.\n\nWithin 10 arcmin, nothing from 2025-26:\n- HIGALBM G330.4120-00.0823 (cold clump) at 3.65 arcsec;\n- SPICY 32946 at 1.36 arcmin;\n- ASASSN-V J160654.36-520813.2 (ROT:) at 4.17 arcmin;\n- V345 Nor (Mira) at 7.76 arcmin;\n- V496 Nor (SR:) at 9.88 arcmin.\n\nWithin 1 deg, no nova and no 2025-26 event in VSX, GCVS, Gaia DR3 variability, ASAS-SN, SPICY, the VVV catalogues or the nova catalogues. Older objects:\n- Gaia22cxu (AT 2022oyv) at 0.37 deg;\n- Gaia19dsc (UG:) at 0.60 deg;\n- 4U/H 1608-52 = QX Nor (recurrent X-ray transient) at 0.92-0.93 deg;\n- Gaia21buw (UG:) at 0.95 deg.\n\nNamed 2025-26 events, nearest first:\n- HP Nor, dwarf-nova outburst 2026-05-21 (vsnet-alert 28171): 3.39 deg;\n- MAXI J1609-487, new X-ray nova in Norma, 2026-10-28 (MAXI news; ATel 18123/18136 not opened): 3.46 deg;\n- IK Nor, active 2026-05-21: 4.17 deg;\n- MAXI J1543-564, black-hole outburst in Norma, 2025-12-19, identity confirmed by NuSTAR: 5.43 deg;\n- V1935 Cen (Nova Cen 2025): 14.19 deg;\n- V462 Lup (Nova Lup 2025): 15.72 deg;\n- MASTER OT J142023.47-485540.0 (outburst 2026-05): 17.1 deg;\n- ASASSN-26dv: 18.1 deg;\n- AS 221 (Sco, possible symbiotic nova, 2025-11): 22.9 deg;\n- MAXI J1750-327: 27.0 deg;\n- V4371 Oph: 28.85 deg;\n- V7994 Sgr: 29.7 deg;\n- V419 Mus (Nova Mus 2026): 34.1 deg.\n\nOlder Norma novae: V556 Nor (2018) 1.74 deg, V559 Nor 2.58 deg, V555 Nor 3.91 deg, V567 Nor 7.03 deg.",
+   "not_searched": "1. SIMBAD at CDS: down (HTTP 404) at 07:01:51, 07:24:14, 07:34:28 and 07:36:57 UTC on 2026-11-15, because of a CDS cybersecurity incident (status page https://cds.unistra.fr/ , updated 2026-11-09). The IDIA and CfA mirrors answer but lack V462 Lup and V7994 Sgr. A person should wait until https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V462+Lup shows the nova, then open https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=241.70906+-52.20564&Radius=2&Radius.unit=arcmin and repeat with Radius=30.\n\n2. Astronomer's Telegram and NASA ADS: left for a person; not opened. Links to ATels 17552, 17559, 17560, 17569, 17963, 17971, 17974, 18123 and 18136 appeared on MAXI and vsnet pages and were not followed. A person should read:\n- https://www.astronomerstelegram.org/?read=18123 and ?read=18136 (MAXI J1609-487 position and error, Norma, Oct 2026; 3.5 deg away);\n- ?read=17552 and ?read=17569 (the Norma X-ray transient of 2025-12-19 = MAXI J1543-564).\n\n3. BAA Alerts archive at https://groups.io/g/baavss-alert/topics : groups.io's robots.txt says AI crawlers need a licence. Also the BAA VSS circulars (PDF) at https://britastro.org/document_folder/baa-document-store/sections/variable-star-section/variable-star-section-circulars , not read.\n\n4. AAVSO campaign pages https://www.aavso.org/apps/campaigns/903 (and 912, 914, 915, 922, 927, 928, 932, 934, 935, 936, 937, 939, 941): these returned only a generic page with no campaign text, possibly not public. Also the concluded campaigns beyond the first page, https://www.aavso.org/apps/campaigns/archived?state=Archived&state=Concluded&page=2 : the server returned page 1 again.\n\n5. Lucas et al. 2024 full 222-object table: not in VizieR, only partly in the arXiv HTML, and arXiv e-print/source downloads are disallowed by robots.txt. Supplement at https://academic.oup.com/mnras/article/528/2/1789 .\n\n6. A&A forthcoming paper aa60629-26 (a WISE-based search for nova candidates; WISE data predate 2025): https://www.aanda.org/articles/aa/pdf/forth/aa60629-26.pdf . aanda.org gave an earlier reviewer a 403 JavaScript challenge, so it was not opened.\n\n7. Not searched at all:\n- CBET full texts (subscription);\n- the vsnet-outburst and vsnet-chat lists;\n- Lasair (needs a token);\n- VizieR keyword search, which is broken on the mirrors (Postgres COMMIT error), so the registry was used instead;\n- the CBAT nova_list.html and VSOLJ pages, which are stale (2010 and 2023).\n\n8. Process note: before reading export.arxiv.org/robots.txt (Disallow: /), two arXiv API name lookups were sent there. Two e-print download attempts also ran; both failed and the partial files were deleted. After that only the /html pages that robots.txt allows were used.",
+   "summary": "No earlier report of Candidate C was found.\n\nEvery working search, each with a control that found a known object, came back empty at C's position:\n- SIMBAD, through two official mirrors only, so it is not evidence: the control failed and CDS was down at all four tries;\n- 25 VizieR catalogues: the VVV eruptive and high-amplitude lists, VIVACE, V4, SPICY and two YSO-variability tables, Gaia DR3 variability, ASAS-SN variables, GCVS/NSV, VSX (version 2026-10-18), eight nova catalogues and eROSITA X-ray transients;\n- the Lucas and Guo 2024 VVV tables, read through arXiv HTML;\n- the vsnet-alert subjects from Aug 2025 to Nov 2026;\n- MAXI, Swift/BAT, the Fermi-LAT nova list, AAVSO campaigns and forum alerts, Wikipedia, and the CBET titles from Aug 2025 to Nov 2026;\n- open-web searches for the J-name, the Galactic name, Nova Norma/Normae 2025 and 2026, and new Norma designations (none was assigned after V567 Nor).\n\nWithin 30 arcsec, the only entries are two variable stars catalogued before 2025: a Gaia RS-type star at 11.95 arcsec and a VVV contact binary at 15.46 arcsec. Both are periodic, low-amplitude and too far away to be C.\n\nThe two Norma X-ray events of 2025-26 are 3.5 and 5.4 deg away:\n- MAXI J1543-564, Dec 2025, identity confirmed by NuSTAR;\n- MAXI J1609-487, Oct 2026.\nTheir ATels are for a person to read. The nearest 2025-26 optical event is the HP Nor dwarf-nova outburst, 3.4 deg away.\n\nAlso left for a person: ATel full text, ADS, SIMBAD at CDS once it is back, the BAA alert archive (groups.io restricts AI access) and a few AAVSO campaign pages.\n\nOn the user's question ('the AI thing, the simulation one'): this step ran no simulation. It made real requests to real public services, 341 of them, all logged with UTC times in <scratchpad>/recheck/C/out/fetch_log.tsv . This step cannot tell what 'the simulation one' refers to; the team lead should answer that. Raw downloads are in <scratchpad>/recheck/C/dl/ and the VizieR summary in <scratchpad>/recheck/C/out/vizier_summary.txt ."
+  },
+  "search:A": {
+   "candidate": "A: RA 270.80408, Dec -23.46818 (J2000; 18:03:12.98 -23:28:05.4; G006.712-00.635), Sagittarius. Absent in SPHEREx up to 2025-09-10. Bright from 2026-03-20 (about 2.4-2.9 Jy at 4.4-5.0 um, partly saturated; K about 7.5). About 0.7 Jy in late August 2026 (K about 11).",
+   "earlier_report_found": "no",
+   "the_report": "",
+   "searches": [
+    {
+     "source": "SIMBAD at CDS (TAP)",
+     "query": "https://simbad.cds.unistra.fr/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=tsv&QUERY=SELECT TOP 1 main_id FROM basic (a ping sent before the cone queries)",
+     "when_utc": "2026-11-15 07:01:25, 07:24:24, 07:32:10, 07:34:56",
+     "result": "HTTP 404 'This page is currently unavailable' all four times. The CDS home page (https://cds.unistra.fr/, notice updated 2026-11-09) reports a cybersecurity incident: SIMBAD and VizieR are degraded, and the official mirrors are SIMBAD at CfA (data ingested up to 2026-10-14) and at IDIA.",
+     "control": "Not possible: the service did not answer.",
+     "worked": "no"
+    },
+    {
+     "source": "SIMBAD mirror at IDIA (official CDS alternative), TAP",
+     "query": "https://simbad.idia.ac.za/simbad/sim-tap/sync, ADQL: SELECT main_id, ra, dec, otype, DISTANCE(...) FROM basic WHERE CONTAINS(POINT('ICRS',ra,dec), CIRCLE('ICRS',270.80408,-23.46818, R))=1, with R = 2 arcmin and 30 arcmin",
+     "when_utc": "2026-11-15 07:06:39-07:06:47 (name controls 07:07:19-07:08:19)",
+     "result": "2 arcmin: 3 objects, none a transient: 2MASS J18031598-2327530 (LP?) at 43.1\", Gaia DR3 4069173447841928576 (EB*) at 89.7\", SPICY 72045 (Y*?) at 100.5\". 30 arcmin: 2,017 objects with no No* or No? type. Transient-like types: X-ray 1RXS J180348.7-233006 at 8.4', V3899 Sgr (Or*) at 10.7', CV* 2XMM J180235.9-231332 at 16.9', and the gamma-ray sources 1FIG J1801.4-2330 and 0FGL J1801.6-2327 at about 20.5'.",
+     "control": "FAILED. The same 2-arcmin cone at V462 Lup (227.01362, -40.14308) returns only 4 field stars. Name lookups return nothing for V462 Lup, V7994 Sgr, V572 Vel, V8056 Sgr and V615 Vul; V1723 Sco (Feb 2024) and V1716 Sco are found. The mirror has no 'NOVA ... 2025/2026' identifiers and no 'AT 2026' identifiers, and its newest ATel reference is 2025ATel17100. It cannot speak to 2025-26 events.",
+     "worked": "partly"
+    },
+    {
+     "source": "SIMBAD mirror at CfA, TAP",
+     "query": "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync, the same 2-arcmin and 30-arcmin ADQL cones and name lookups",
+     "when_utc": "2026-11-15 07:34:05-07:34:09 (name controls 07:08:47-07:10:28)",
+     "result": "2 arcmin: 4 objects, the IDIA three plus Gaia DR3 4069172863743999360 (*) at 102.6\". 30 arcmin: 2,081 objects. The 79 objects not on IDIA are stars, YSOs and Em* stars, and none is a nova or transient.",
+     "control": "FAILED. V462 Lup and V7994 Sgr are absent by name and by cone; V1723 Sco is found.",
+     "worked": "partly"
+    },
+    {
+     "source": "VizieR at CDS (ASU) and TAPVizieR at CDS",
+     "query": "https://vizier.cds.unistra.fr/viz-bin/asu-tsv?-source=II/246/out&-c=270.80408 -23.46818&-c.rs=60 ; ...-source=B/gcvs/gcvs_cat...&-c.rs=600 ; https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync",
+     "when_utc": "2026-11-15 07:01:34, 07:03:02 (TAP), 07:34:57",
+     "result": "ASU: HTTP 404 'Page unavailable' both times. TAPVizieR: connection timeout after 75 s. The mirrors vizier.iucaa.in (07:04:21) and vizier.nao.ac.jp (07:05:36) also timed out. All VizieR work below used vizier.cfa.harvard.edu (and vizier.idia.ac.za for cross-checks), the mirrors CDS lists.",
+     "control": "n/a",
+     "worked": "no"
+    },
+    {
+     "source": "VizieR's own catalogue search (-meta), CfA and IDIA mirrors",
+     "query": "asu-tsv?-meta&-words=<kw> for Lucas, Contreras Pena, Contreras, Guo, SPICY, VVV, VVVX, eruptive, novae, nova, GCVS, Suspected, ASAS-SN, Gaia DR3, variability; plus -meta&-source=<id> and 1-row probes for each candidate identifier",
+     "when_utc": "2026-11-15 07:04:31-07:14:00",
+     "result": "Identifiers found: J/MNRAS/465/3011 (Contreras Pena+2017a, 816 VVV high-amplitude variables), J/MNRAS/465/3039 (Contreras Pena+2017b), J/MNRAS/472/2990 (Lucas+2017 UGPS eruptive YSOs), J/ApJ/864/11 (Medina+2018 VVV V4), J/MNRAS/509/2566 (VIVACE), J/ApJS/254/33 (SPICY), I/358 (Gaia DR3 variability), II/366 (ASAS-SN variables), B/gcvs (GCVS 5.1 Oct 2020 + NSV), B/vsx (2026-10-18). Novae and CVs: J/ApJ/834/196, J/MNRAS/517/6150, J/ApJ/788/164, J/A+A/554/A123, J/ApJ/912/19, B/cb, V/123A, J/AcA/64/197; also J/ApJ/920/132. NOT in VizieR, 'Table or Catalog not found' on both mirrors: Lucas+2024 (J/MNRAS/528/1789), Guo+2024 (J/MNRAS/528/1769), Contreras Pena+2024 (J/MNRAS/528/1823), VIVA (J/MNRAS/496/1730).",
+     "control": "The meta service returns the known record for J/MNRAS/465/3011, and keyword searches return known catalogues (for example, SPICY returns J/ApJS/254/33).",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR (CfA mirror): VVV and VVVX eruptive and high-amplitude variable catalogues",
+     "query": "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?-source=<table>&-c=270.804080 -23.468180&-c.rs=60|600|3600&-out.add=_r,_RAJ2000,_DEJ2000&-sort=_r, for J/MNRAS/465/3011/table2, J/MNRAS/465/3039/table1, J/MNRAS/472/2990/table1, J/ApJ/864/11/table5",
+     "when_utc": "2026-11-15 07:15:58-07:16:19 and 07:35:39-07:35:46",
+     "result": "0 rows within 1', 10' and 1 degree in all four.",
+     "control": "PASSED for each: a 60\" cone at a member's own position returns it at 0.00\". Members used: VVVv1 (175.39650 -62.34875) for 465/3011, VVVv20 for 465/3039, UGPS J032726.66+584508.5 for 472/2990, and the first V4 row (174.13270 -63.58779).",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR: VIVACE (J/MNRAS/509/2566/vivace)",
+     "query": "same cone pattern, 60/600/3600 arcsec",
+     "when_utc": "2026-11-15 07:16:20-07:16:32",
+     "result": "5 within 1': EA/EB at 33.8\", 38.9\" and 43.5\", Ell at 52.0\", EA/EB at 57.3\". 326 within 10' (for example LPV at 63.3\"). 16,176 within 1 degree. Nothing within 30\".",
+     "control": "PASSED: the nearest member, re-queried at its position, is found at 0.001\".",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR: SPICY (J/ApJS/254/33/table1)",
+     "query": "same cone pattern",
+     "when_utc": "2026-11-15 07:16:33-07:16:38",
+     "result": "0 within 1'. 18 within 10': SPICY 72045 (Class I) at 100.5\", 72046 (Class II) at 162.0\", 72096 (FS) at 169.1\", 71976 at 226.7\", 72047 at 235.8\". 1,612 within 1 degree.",
+     "control": "PASSED: SPICY 72045 found at 0.0\" by a 60\" cone at its SIMBAD position.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR: Gaia DR3 variability (I/358/vclassre, I/358/varisum, I/358/scalerts)",
+     "query": "same cone pattern",
+     "when_utc": "2026-11-15 07:16:47-07:17:06 and 07:35:47-07:35:52",
+     "result": "vclassre: 1 within 1', Gaia DR3 4069172520146611584 (LPV) at 43.0\". 69 within 10'. 5,126 within 1 degree: 3,177 LPV, 882 ECL, 362 YSO, 1 CV at 44.7', 1 microlensing. varisum: 1 within 1' and 70 within 10'. scalerts: 0, 0, 0. The data end in 2017, so this checks only for a variable progenitor.",
+     "control": "PASSED: Gaia DR3 4069172520146611584 found at 0.09\". Gaia16akk found at 0.001\" in scalerts.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR: ASAS-SN variable stars (II/366/catv2021)",
+     "query": "same cone pattern",
+     "when_utc": "2026-11-15 07:17:09-07:17:25",
+     "result": "0 within 1'. 11 within 10': ROT: at 177.1\", EB at 314.4\", RRC at 396.5\", SR at 517-547\". 451 within 1 degree, the only CV-type a UGSU at 53.9'.",
+     "control": "PASSED: the nearest member is re-found at 0.0\".",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR: GCVS 5.1 (B/gcvs/gcvs_cat) and New Suspected Variables (B/gcvs/nsv_cat)",
+     "query": "same cone pattern",
+     "when_utc": "2026-11-15 07:17:26-07:17:37",
+     "result": "GCVS: 0 within 1'. 1 within 10': V1950 Sgr (M; OH/IR) at 588.7\". 73 within 1 degree: 41 IN-type, V3899 Sgr INSB at 644\", V4578 Sgr WR at 786\", V5410 Sgr SRA at 880\", and no N-type. NSV: 0 within 1' and 10'. 138 within 1 degree, nearest NSV 24077 at 21.6'. This VizieR GCVS version (Oct 2020) carries no designations assigned after 2020.",
+     "control": "PASSED: V1950 Sgr found at 0.12\". NSV 24077 re-found at 0.0\".",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR: VSX copy (B/vsx/vsx, version 2026-10-18)",
+     "query": "same cone pattern, 60 and 600 arcsec only",
+     "when_utc": "2026-11-15 07:17:38-07:17:42",
+     "result": "1 within 1': Gaia DR3 4069172520146611584 (type L) at 43.1\". 76 within 10': E, L, RS, VAR, SR|M, YSO, and no N- or CV-type. Run before I read aavso.org's robots.txt (see not_searched).",
+     "control": "PASSED: V7994 Sgr (NA, 2025 nova) found at 3.7\" by a 60\" cone at 270.97042 -31.45828.",
+     "worked": "yes"
+    },
+    {
+     "source": "VizieR: nova and CV catalogues (Shafter 2017 J/ApJ/834/196; Schaefer 2022 J/MNRAS/517/6150; Pagnotta+2014 J/ApJ/788/164; Saito+2013 VVV-area novae J/A+A/554/A123; De+2021 PGIR novae J/ApJ/912/19; Ritter&Kolb B/cb; Downes V/123A; OGLE-IV transients J/AcA/64/197)",
+     "query": "same cone pattern; nova lists also at 10 degrees (36000\")",
+     "when_utc": "2026-11-15 07:17:43-07:18:43",
+     "result": "0 rows within 1 degree in all. Nearest novae within 10 degrees: V5588 Sgr (2011) at 1.68 deg (Schaefer, Saito); V4742 Sgr (2002) at 1.88 deg (1.21 deg with Shafter's coordinates); V4157 Sgr, V1583 Sgr and V1148 Sgr at 2.7-2.9 deg; nearest PGIR nova V6593 Sgr at 2.82 deg. These catalogues end in 2015-2022.",
+     "control": "PASSED for each: the nearest member (V4742 Sgr, V5588 Sgr, V6593 Sgr), or the first row (V1017 Sgr in B/cb, BE Oct in V/123A, 12-NOVA-02 in OGLE), is re-found at 0.0\".",
+     "worked": "yes"
+    },
+    {
+     "source": "arXiv HTML of the 2024 VVV eruptive-variable papers (not in VizieR)",
+     "query": "https://arxiv.org/html/2401.14471 (Lucas+2024, 'The most variable VVV sources', MNRAS 528, 1789); https://arxiv.org/html/2401.14464 (Guo+2024, MNRAS 528, 1769); https://arxiv.org/html/2401.14472 (Contreras Pena+2024, MNRAS 528, 1823). Every J-name, sexagesimal and decimal position was parsed. Requests were spaced at least 16 s apart, per arXiv's crawl-delay.",
+     "when_utc": "2026-11-15 07:30:06 (abs page), 07:30:24, 07:30:41, 07:30:58",
+     "result": "Lucas+2024: the HTML has only example rows (27 J-names, nearest 29.8 deg); the full 222-source list is in ancillary files, not read. Guo+2024: 20 L222 positions; nearest L222_192 (269.43525 -24.34244, eruptive) at 1.53 deg. Contreras Pena+2024: no positions in the HTML (tables are supplementary). The first review found the VIRAC2 source 1.5\" from A steady over 119 epochs, so A cannot be a \u0394Ks>4 member of Lucas+2024 in any case.",
+     "control": "Positions parse consistently: 'VVV J163637.94-474444.1 249.15809 -47.74558' is recovered identically from the name and from the columns.",
+     "worked": "partly"
+    },
+    {
+     "source": "vsnet-alert public archive",
+     "query": "http://ooruri.kusastro.kyoto-u.ac.jp/mailarchive/vsnet-alert/msglist (latest 1,000 subjects). The 58 message pages without coordinates in the subject were read. Positions came from J-names, message bodies, the ASAS-SN transients page (copy saved by the first review), the TNS object pages for AT 2026rdg and AT 2026ryu, and the Sesame mirror at IDIA. The site has no robots.txt and only a 'noindex' meta tag.",
+     "when_utc": "2026-11-15 07:16:17 (list); messages 07:17-07:25; Sesame 07:22-07:24; TNS 07:23:00-07:23:06",
+     "result": "159 messages dated 2025-08-01 to 2026-11-13. Sgr and neighbouring constellations, with distances from A: V4371 Oph = TCP J17301230-2753488 = AT 2025wyg (classical nova, 2025-09-07) 8.65 deg; UZ Ser (DN outburst, 2026-05-21 list) 8.76 deg; MAXI J1750-327 (X-ray nova, 2026-08-17) 9.69 deg; V390 Sco ('SCOV390 brightening', 2026-08-25) 13.00 deg; AS 221 (possible symbiotic nova, 2025-11-10) 14.49 deg; V478 Sco 14.52 deg; BP CrA 15.71 deg; NSV 11274 (Tel) 24.48 deg; TCP J16271026-1030020 (Oph, WZ Sge DN, 2025-08) 26.30 deg; ASASSN-26ew (Sgr, SU UMa DN, 2026-08) 27.93 deg; AT 2026ryu (Aql DN, 2026-07) 28.93 deg; FO Aql 29.57 deg; X Ser (2026-10-08) 32.74 deg; V2276 Sgr 35.59 deg; TCP J18030904+1218140 (Oph, AM CVn, 2026-08/09) 35.77 deg; CM Mic 37.26 deg; AT 2026rdg = V2104 Aql (reddened nova, 2026-07-01) 39.58 deg; TCP J20143906+0352503 (Aql) 42.11 deg; TT Ind 42.88 deg; V1047 Aql 43.43 deg; PQ Aql 45.29 deg; V1885 Aql not resolved (Aquila, at least about 11 deg from A). Nothing within 8.6 deg.",
+     "control": "Partly passed. V462 Lup (ASASSN-25cm, msg 28074, 2025-06-14), V572 Vel (PNV J10251200-5331109, msg 28082) and V4371 Oph (msg 28106) appear. V7994 Sgr, V8055 Sgr and V8056 Sgr were never announced on vsnet-alert, so the list does not carry every nova.",
+     "worked": "yes"
+    },
+    {
+     "source": "MAXI nova alert (flash report) page and MAXI news",
+     "query": "http://maxi.riken.jp/alert/novae/index.html ; http://maxi.riken.jp/news/en/ ; http://maxi.riken.jp/top/slist.html",
+     "when_utc": "2026-11-15 07:27:25-07:27:29",
+     "result": "2,002 flash reports from 2010-02-02 to 2026-11-10, 161 since 2025-08-01. Nearest since 2025-08: an X-ray burst from XTE J1810-197/-189 (2026-09-12) at 3.63 deg; V4641 Sgr (2026-01/02) at 4.16 deg; SAX J1748.8-2021 at 4.55 deg; GS 1826-238 bursts at 5.0-6.2 deg. Nothing within 3.6 deg. The news page lists nothing at A.",
+     "control": "PASSED: MAXI J1750-327 (2026-08-13) and MAXI J1609-487 (2026-10-28 and 10-31) are listed.",
+     "worked": "yes"
+    },
+    {
+     "source": "Fermi-LAT detected novae list (K. Mukai, NASA GSFC)",
+     "query": "https://asd.gsfc.nasa.gov/Koji.Mukai/novae/latnovae.html (page updated 28-Oct-2026)",
+     "when_utc": "2026-11-15 07:25:22",
+     "result": "LAT novae in 2025-26: V462 Lup, V572 Vel, V7994 Sgr (7.99 deg), V1935 Cen, Fermi J1820-1648 ('Nova in Sagittarius', LAT transient found 2026-02-18; 18 20 24.66 -16 53 36.7) at 7.71 deg, and V8056 Sgr (2026-10) at 4.60 deg. No LAT nova near A.",
+     "control": "PASSED: V7994 Sgr and V462 Lup are listed.",
+     "worked": "yes"
+    },
+    {
+     "source": "Wikipedia",
+     "query": "https://en.wikipedia.org/wiki/List_of_novae_in_the_Milky_Way_galaxy ; https://en.wikipedia.org/wiki/List_of_novae_in_2025 ; .../List_of_novae_in_2026",
+     "when_utc": "2026-11-15 07:26:10-07:26:14",
+     "result": "2025 entries: V462 Lup (+5.7), V572 Vel (+4.8), V1935 Cen (+5.8). No 2026 entry. The list covers bright novae only. The '2025' and '2026' pages do not exist (HTTP 404).",
+     "control": "PASSED: V462 Lup is listed.",
+     "worked": "partly"
+    },
+    {
+     "source": "CBAT public nova list",
+     "query": "http://www.cbat.eps.harvard.edu/nova_list.html",
+     "when_utc": "2026-11-15 07:25:18",
+     "result": "407 novae, ending in 2010 (V1723 Aql). Nearest to A: V4742 Sgr at 1.88 deg, V1583 Sgr at 2.71 deg. Not maintained after 2010.",
+     "control": "FAILED for 2025-26: V7994 Sgr is absent, because the list stops in 2010.",
+     "worked": "no"
+    },
+    {
+     "source": "CBAT public list of CBET titles (designations)",
+     "query": "http://www.cbat.eps.harvard.edu/cbet/RecentCBETs.html",
+     "when_utc": "2026-11-15 07:33:46",
+     "result": "Sgr designations for 2025-26: V7991, V7992, V7993 Sgr (TCP J18022164-3310319, 9.71 deg) and V7994 Sgr in 2025; V8055 Sgr = Nova Sgr 2026 No. 3 = TCP J18251276-2225293 (CBET 5724, 5.17 deg) and V8056 Sgr = TCP J17541876-2736362 (CBET 5763, 4.60 deg) in 2026. Neighbours: V4371 Oph (8.65 deg), V691 Ser, V2104 Aql. None near A.",
+     "control": "PASSED: V7994 Sgr (CBET 5612, 5615) is listed.",
+     "worked": "yes"
+    },
+    {
+     "source": "British Astronomical Association",
+     "query": "https://britastro.org/forums/topic/nova-sagittarii-2026-posted-20260821 ; https://britastro.org/vss/VSSC208.pdf, VSSC209.pdf, VSSC210.pdf",
+     "when_utc": "2026-11-15 07:28:31; 07:32:47-07:32:57",
+     "result": "Forum thread: HTTP 404 'Page not found' to an anonymous reader, probably members-only; not pursued. VSS Circular 208 (June 2026) mentions AT2026lck. VSS Circular 209 (September 2026) covers V2104 Aql, V1452 Tau and V488 Sge. Neither mentions anything near 18h03m -23d28m, Sgr novae or SPHEREx. VSSC210: 404, not yet published.",
+     "control": "PASSED: V2104 Aql (N Aql 2026) is found in VSSC209.",
+     "worked": "partly"
+    },
+    {
+     "source": "VSOLJ",
+     "query": "http://vsolj.cetus-net.org/ and index-j.html",
+     "when_utc": "2026-11-15 07:25:24, 07:28:08",
+     "result": "The site was last updated in 2023 (Variable Star Bulletin 120-121) and has no 2025-26 nova list. Its observation search is a CGI form and was not used.",
+     "control": "None possible: no current content.",
+     "worked": "no"
+    },
+    {
+     "source": "Open-web name searches (WebSearch tool)",
+     "query": "'J180312.98-232805.4' / 'J180312.9-232805' / '18 03 12.98 -23 28 05.4' / '18:03:12.98 -23:28:05.4'; 'G006.712-00.635' / 'G6.712-0.635' / 'G006.71-00.64' / 'G6.71-0.64'; 'Nova Sagittarii|Sagittarius|Sgr 2026'; the same for 2025; 'V8053 Sgr' / 'V8054 Sgr' / 'Nova Sagittarii 2026 No. 1|No. 2'; 'SPHEREx infrared transient Sagittarius 2026 18h03'; 'Fermi J1820-1648'; 'PNV J18365700-2855420'; a britastro.org-restricted search; 'Lucas 2024 VVV' to find the arXiv number",
+     "when_utc": "2026-11-15 about 07:25-07:33 (WebSearch calls are not time-stamped; times are bracketed by the logged requests)",
+     "result": "No page mentions A's position, J-name or Galactic name. Found: V7991-V7994 Sgr (2025); V8055 Sgr (Nova Sgr 2026 No. 3, 2026-08-19, about 8.4 V); Fermi J1820-1648 (gamma-ray transient 2026-02-18, ATel 17688/17689/17698/17700; not opened). PNV J18365700-2855420 is V5668 Sgr from 2015. Nova Sgr 2026 Nos. 1 and 2 were not identified in open sources. They may be Fermi J1820-1648 and PRIME26aaabsh, both 'Nova in Sagittarius' in early 2026 and 6.8-7.7 deg from A; this is unverified.",
+     "control": "PASSED: the 'Nova Sagittarii 2025' search returns V7994 Sgr = N Sgr 2025 No. 4 = TCP J18035290-3127298.",
+     "worked": "yes"
+    },
+    {
+     "source": "Koji Mukai's confirmed and unconfirmed nova lists (local copies saved by the first review; page dates 11-Nov-2026 and 12-Jan-2026), re-parsed for every 2025-26 entry",
+     "query": "vet2/A/reports/downloads/mukai_novae/answer.html and mukai_unconfirmed/answer.html, all rows dated 2025-26 with separations from A; no new request",
+     "when_utc": "2026-11-15 07:29 (parse)",
+     "result": "23 confirmed entries for 2025-26. The nearest is TCP J17520680-2343207 = ASASSN-26fc = AT 2026abbx ('Nova in Sagittarius', 2026-09-08, 11.3 mag) at 2.56 deg. Next: V8056 Sgr 4.60, PRIME26ahygn (Oph, 2026-03-28, H=11.1) 5.17, V8055 Sgr 5.17, V7991 Sgr 6.59, PRIME26aaabsh (2026-03-10, H=11.4, 'first detection after a seasonal data gap') 6.76, PRIME25aaghjd 7.21, Fermi J1820-1648 7.71, V7994 Sgr 7.99 and V4371 Oph 8.65 deg. Unconfirmed list: only AT 2025sqe (36 deg) is from 2025-26.",
+     "control": "PASSED: V7994 Sgr, V462 Lup and V691 Ser are present.",
+     "worked": "yes"
+    }
+   ],
+   "nearest_known_events": "Nothing lies within 30 arcsec of A, and no named 2025-26 event lies within 5 arcmin, in any search that worked.\n\nNearest catalogued objects (all steady or ordinary variables):\n- VIVACE EA/EB eclipsing binary at 33.8\".\n- Gaia DR3 4069172520146611584 at 43\": Gaia LPV, VSX type L, SIMBAD 2MASS J18031598-2327530 'LP?'.\n- Gaia DR3 4069173447841928576 (EB) at 89.6\".\n- SPICY 72045 (Class I YSO candidate) at 100.5\".\n- ASAS-SN ROT: variable at 177\".\n- X-ray source 1RXS J180348.7-233006 at 8.4'.\n- GCVS V1950 Sgr (Mira, OH/IR) at 9.8'.\n- CV 2XMM J180235.9-231332 at 16.9'.\n\nNearest 2025-26 transients:\n- TNS AT 2025qzs (CV candidate) at 37', from the first review.\n- ASASSN-26fc = TCP J17520680-2343207 = AT 2026abbx, nova in Sgr discovered 2026-09-08, at 2.56 deg.\n- XTE J1810-189/-197 X-ray bursts (MAXI, 2026-09/10) at 3.6-4.5 deg.\n- V8056 Sgr (2026-10-12, LAT gamma-ray nova) at 4.60 deg.\n- V8055 Sgr = Nova Sgr 2026 No. 3 (2026-08-19) at 5.17 deg.\n- PRIME26ahygn (infrared nova in Oph, 2026-03-28) at 5.17 deg.\n- V7991 Sgr at 6.59 deg.\n- PRIME26aaabsh (infrared nova in Sgr, 2026-03-10, first seen after the seasonal gap) at 6.76 deg.\n- PRIME25aaghjd at 7.21 deg.\n- Fermi J1820-1648 (gamma-ray nova, 2026-02-18; Ic=13.1 counterpart at 18 20 24.66 -16 53 36.7) at 7.71 deg.\n- V7994 Sgr at 7.99 deg.\n- V4371 Oph = AT 2025wyg at 8.65 deg.\n- MAXI J1750-327 at 9.69 deg.\n- V7993 Sgr at 9.71 deg; V7992 Sgr at 12.58 deg.\n- AS 221 (possible symbiotic nova, Nov 2025) at 14.49 deg.\n- V2104 Aql = AT 2026rdg at 39.6 deg.\n\nNearest novae of any year: V5588 Sgr (2011) at 1.68 deg and V4742 Sgr (2002) at 1.88 deg.\n\nOf these, Fermi J1820-1648 and the two PRIME infrared novae of early 2026 were obscured or near-conjunction novae found in the same season as A's onset. All are 5 to 8 deg away, far beyond their position errors, so none can be A.",
+   "not_searched": "Pages a person should open (I did not):\n1. SIMBAD at CDS: down at every try (07:01:25, 07:24:24, 07:32:10, 07:34:56 UTC; HTTP 404; CDS cybersecurity-incident notice of 2026-11-09). When it is back, open https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V462+Lup (the control must show the 2025 nova), then https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=270.80408+-23.46818&Radius=2&Radius.unit=arcmin and the same with Radius=30. Both mirrors (CfA, IDIA) answer but fail the 2025 control.\n2. VizieR at CDS and TAPVizieR: down (07:01:34, 07:03:02, 07:34:57). The CfA and IDIA mirrors were used instead.\n3. Astronomer's Telegram full text and NASA ADS (reserved for a person by the task). Read especially ATel 17688, 17689, 17698 and 17700 (Fermi J1820-1648), 17743 (PRIME26aaabsh), 17945 (PRIME26ahygn), 17989 and 17995 (V8055 Sgr) and 18122 (V8056 Sgr), to confirm their positions and that none mentions a second source near 18:03:13 -23:28:05.\n4. AAVSO Alert Notices and Special Notices for 2025-26 (https://www.aavso.org/aavso-alert-notices and https://www.aavso.org/special-notices). Not opened: aavso.org's robots.txt disallows the agents 'anthropic-ai', 'Claude-Web' and 'ClaudeBot'. For the same reason I made no VSX request on aavso.org. My two B/vsx cones went to VizieR's copy at CfA (07:17:38-07:17:42) and were sent before I read that robots.txt. The first review's VSX queries went to aavso.org itself, so the team may want a person to repeat the VSX check by hand: https://www.aavso.org/vsx/index.php?view=results.get&coords=270.80408+-23.46818&format=d&size=60&unit=3\n5. BAA forum thread 'Nova Sagittarii 2026' (https://britastro.org/forums/topic/nova-sagittarii-2026-posted-20260821): 404 for an anonymous reader, probably members-only.\n6. The Lucas et al. 2024 full 222-source table. It is in arXiv's ancillary files (https://arxiv.org/abs/2401.14471, 'Ancillary files'; the /src path is disallowed to robots) or the MNRAS online supplement (https://doi.org/10.1093/mnras/stad3929). The UCL Discovery copy was not used because its robots.txt disallows ClaudeBot. The Contreras Pena et al. 2024 table (MNRAS 528, 1823) is likewise only in the supplement.\n7. CBET texts (subscription), for example CBET 5724 and 5763.\n8. Fermi FAVA light-curve generator at A's position for 2025-09 to 2026-03 (https://fermi.gsfc.nasa.gov/ssc/data/access/lat/FAVA/LightCurve.php). It is a form, so it was not used. It would test for a gamma-ray nova at A's hidden onset.\n9. TNS search: its robots.txt disallows /search/, so I read only the object pages for AT 2026rdg and AT 2026ryu. The first review's cone (https://www.wis-tns.org/search?ra=270.80408&decl=-23.46818&radius=60&coords_unit=arcsec) can be repeated by a person.\n10. Not covered: vsnet-outburst and vsnet-chat (only vsnet-alert was read); Purdue's nova page (extragalactic only).\nLimits of what worked: the VizieR GCVS copy is from Oct 2020, Gaia DR3 variability ends in 2017, the nova catalogues end in 2015-2022, and the CBAT nova_list.html ends in 2010. These can show only that no earlier variable sat at A.",
+   "summary": "I found no report of candidate A. Nothing is within 30 arcsec, and no named 2025-26 event is within 5 arcmin, in any search that worked against its control.\n\n- **SIMBAD:** CDS was still down at all four tries (07:01-07:35 UTC, HTTP 404; CDS reports a cybersecurity incident). Both official mirrors (IDIA, CfA) answer the 2-arcmin and 30-arcmin cones, but both fail the V462 Lup control: they hold no 2025-26 novae. Their empty answer is therefore not evidence. Within 30 arcmin they show no nova; the nearest objects are field variables 43-100\" away, and the nearest CV is 16.9' away.\n- **VizieR:** 22 catalogue tables were searched on the CfA mirror, with identifiers found through VizieR's own catalogue search, cones of 1', 10' and 1 deg, and a passing control for each. They were the VVV and UGPS eruptive and high-amplitude lists, V4, VIVACE, SPICY, NEOWISE YSOs, Gaia DR3 variability and alerts, ASAS-SN variables, GCVS and NSV, VSX (2026-10-18) and eight nova/CV catalogues. All had nothing within 30\". The nearest object is a VIVACE eclipsing binary at 33.8\". Lucas+2024, Guo+2024 and Contreras Pena+2024 are not in VizieR. In Guo+2024's arXiv table the nearest object is 1.53 deg away; the full Lucas+2024 table could not be read.\n- **vsnet-alert:** I read 159 subjects from 2025-08 to 2026-11 and the bodies of 58 messages. The nearest Sgr-region event is V4371 Oph at 8.65 deg. The list does not carry V7994 Sgr, V8055 Sgr or V8056 Sgr.\n- **Public lists:** MAXI has nothing within 3.6 deg. Mukai's Fermi-LAT nova list (Oct 2026) has V8056 Sgr at 4.6 deg and Fermi J1820-1648 at 7.7 deg. Wikipedia has no 2026 Milky Way nova. The CBAT nova list stops in 2010. The CBAT CBET titles give the Sgr designations V7991-V7994 (2025) and V8055-V8056 (2026), all 4.6-12.6 deg away. The BAA circulars and VSOLJ have nothing at A.\n- **Web searches:** no page mentions A's J-name, Galactic name or coordinates.\n- **Nearest 2025-26 nova:** ASASSN-26fc / AT 2026abbx, at 2.56 deg.\n\n**Left for a person:**\n- SIMBAD at CDS when it is back.\n- ATel full text and ADS.\n- AAVSO notices: aavso.org's robots.txt bars Anthropic agents.\n- The BAA members-only forum.\n- The Lucas+2024 supplement.\n- A FAVA gamma-ray light curve at A for Sep 2025 to Mar 2026.\n\n**Files:** all 400 requests are logged in <scratchpad>/recheck/A/notes/requests.log. The results are in <scratchpad>/recheck/A/notes/ (vizier_campaign_cfa.out, vsnet_table.out, maxi_alerts.out, mukai_2025_26_list.out, simbad_*.out), and the raw answers are under <scratchpad>/recheck/A/downloads/. Nothing was submitted anywhere, and nothing was written in the project folder."
+  }
+ }
+}

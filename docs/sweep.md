@@ -4,7 +4,8 @@ Written 2026-11-14 for teammates who are not astronomers. The three candidates' 
 2026-11-15 from the vetting ruling: four independent reviewers attacked each candidate and a referee ruled.
 The ruling and all twelve reviews, with the reviewers' tables, scripts and pictures, are in
 `docs/sweep/vetting/` (start with its `README.md`). Where this page and `docs/sweep/vetting/ruling.json`
-differ, the ruling wins.
+differ, the ruling wins. Every search made for an earlier report of the three, including those made after the
+ruling, and the checklist a person must still work through, are in `docs/sweep/searches-for-earlier-reports.md`.
 
 Everything below was measured on real SPHEREx images; nothing was simulated, injected or filled in. The
 sweep's tallies come from `scripts/sweep_plane.py --summary` (saved as `docs/sweep/summary.json`).
@@ -34,8 +35,14 @@ What that means:
   Nobody has confirmed it. It is not a discovery, and it must not be called new without "that we found in no
   catalogue or report we checked".
 - **Nothing has been reported to anyone.** No form, account or e-mail was used. A person must first make the
-  checks only a person can make, then decide whether to report. The steps and ready texts are in
+  checks only a person can make, then decide whether to report. The checks are the checklist in
+  `docs/sweep/searches-for-earlier-reports.md`, section (d); the ready texts (not sent) are in
   `docs/sweep/report-draft.md`.
+- **No earlier report has been found.** After the ruling a wider search checked more than 30 public catalogues
+  and alert lists per candidate, each tested on a known object, and a keyword search of the Astronomer's
+  Telegrams followed. Neither found a report at any of the three places. Some sources have not been searched in
+  full (no person has read the telegrams in full; NASA ADS has had only its control and one search; SIMBAD at CDS
+  was down), so this does not prove that no one else has seen them. The record: `docs/sweep/searches-for-earlier-reports.md`.
 - **The sweep's first write-up of the three was wrong** in several ways (its 2025 numbers for A and B were other
   stars' light, two positions were 3 arcsec off, its "counterparts" were other stars, C's bright readings were
   emission lines). See "What the sweep's first write-up got wrong". Every number about A, B and C is the reviewers', except the rerun table, which is the fixed code's own.
@@ -448,9 +455,10 @@ the identification is established.
 The Transient Name Server searches were centred on the sweep's first position; 60 arcsec covers the corrected
 one, but a person should repeat them at the corrected position on the day (see below).
 
-**Not checked:** the Astronomer's Telegram full text (a robot check, which was not bypassed); NASA ADS (needs
-a token); CBETs (subscription); VVV-WIT and the Lucas et al. 2024 VVV eruptive list; TNS AstroNotes; PRIME
-and WINTER internal lists.
+**Not checked at the time of the ruling:** the Astronomer's Telegram full text (a robot check, which was not
+bypassed); NASA ADS (needs a token); CBETs (subscription); VVV-WIT and the Lucas et al. 2024 VVV eruptive list;
+TNS AstroNotes; PRIME and WINTER internal lists. What was searched afterwards, and what is still not searched:
+`docs/sweep/searches-for-earlier-reports.md`.
 
 **Caveats.** The spring-2026 values rest on saturated and OVERFLOW pixels (D6 10 of 18 exposures saturated,
 D4 16 of 18), so 2.4-2.9 Jy is uncertain; an apparent 1.8-fold rise within the March visit is unconfirmed
@@ -472,15 +480,8 @@ front are unknown.
 5. Human searches of the Astronomer's Telegram full text and NASA ADS. If either finds a report, A is
    already reported.
 
-**What a person must do.** Part one of `docs/sweep/report-draft.md`, then write each answer here:
-
-Searched by a person (date, time, result):
-
-- Transient Name Server at the corrected position, with its control: ____
-- Astronomer's Telegram full text: ____
-- NASA ADS: ____
-- SIMBAD at CDS, once it shows V7994 Sgr: ____
-- CBAT TOCP: ____
+**What a person must do.** The checklist in `docs/sweep/searches-for-earlier-reports.md`, section (d), which
+is also part one of `docs/sweep/report-draft.md`. Write each answer there, not here, so that there is one record.
 
 ### Candidate B: RA 253.18038, Dec -44.67697 (16:52:43.29 -44:40:37.1), l 341.089, b -0.416, in Scorpius
 
@@ -575,8 +576,9 @@ microlensing, an X-ray-binary jet. Nothing here is established.
 | ZTF, Rubin/LSST, KMTNet, MOA; Gaia alerts | | blind to this field (or ended January 2025): their empty answers mean nothing |
 | SIMBAD | failed (CDS down; the copy lags) | not evidence |
 
-**Not checked:** the Astronomer's Telegram full text; NASA ADS; CBETs; Lasair; VVV-WIT, the Lucas et al. 2024
-VVV eruptive list and other VVV variability tables.
+**Not checked at the time of the ruling:** the Astronomer's Telegram full text; NASA ADS; CBETs; Lasair;
+VVV-WIT, the Lucas et al. 2024 VVV eruptive list and other VVV variability tables. What was searched afterwards,
+and what is still not searched: `docs/sweep/searches-for-earlier-reports.md`.
 
 **What would confirm it.**
 
@@ -590,15 +592,8 @@ VVV eruptive list and other VVV variability tables.
 4. A sub-millimetre or radio detection of a dusty envelope or outflow, which would support the young star.
 5. Human searches of the Astronomer's Telegram full text and NASA ADS coming back empty.
 
-**What a person must do.** Part one of `docs/sweep/report-draft.md`, then write each answer here:
-
-Searched by a person (date, time, result):
-
-- Transient Name Server at the corrected position, with its control: ____
-- Astronomer's Telegram full text: ____
-- NASA ADS: ____
-- SIMBAD at CDS, once it shows V7994 Sgr: ____
-- CBAT TOCP: ____
+**What a person must do.** The checklist in `docs/sweep/searches-for-earlier-reports.md`, section (d), which
+is also part one of `docs/sweep/report-draft.md`. Write each answer there, not here, so that there is one record.
 
 ### Candidate C: RA 241.70906, Dec -52.20564 (16:06:50.17 -52:12:20.3), l 330.413, b -0.082, in Norma
 
@@ -707,10 +702,11 @@ symbiotic star, an R CrB star or dusty giant, a Mira or OH/IR star, microlensing
 The Transient Name Server misses some novae in our Galaxy (V7994 Sgr is not in it), so the nova lists, VSX and
 the Astronomer's Telegram carry more weight here.
 
-**Not checked:** the Astronomer's Telegram full text; NASA ADS; CBETs; MAXI and Swift X-ray records for
-2025-26 (a nova's supersoft X-ray phase); the full Li & Wang 2024 table; Lasair and ANTARES. Reflections of bright
-stars other than V345 Nor were excluded only by the turn of the spacecraft and the fixed position, not tested
-in images.
+**Not checked at the time of the ruling:** the Astronomer's Telegram full text; NASA ADS; CBETs; MAXI and Swift
+X-ray records for 2025-26 (a nova's supersoft X-ray phase); the full Li & Wang 2024 table; Lasair and ANTARES. What
+was searched afterwards, and what is still not searched: `docs/sweep/searches-for-earlier-reports.md`. Reflections
+of bright stars other than V345 Nor were excluded only by the turn of the spacecraft and the fixed position, not
+tested in images.
 
 **What would confirm it.**
 
@@ -724,15 +720,8 @@ in images.
 4. A professional check of the line identifications.
 5. Human searches of the Astronomer's Telegram full text and NASA ADS.
 
-**What a person must do.** Part one of `docs/sweep/report-draft.md`, then write each answer here:
-
-Searched by a person (date, time, result):
-
-- Transient Name Server at the corrected position, with its control: ____
-- Astronomer's Telegram full text: ____
-- NASA ADS: ____
-- SIMBAD at CDS, once it shows V7994 Sgr: ____
-- CBAT TOCP and Mukai's list: ____
+**What a person must do.** The checklist in `docs/sweep/searches-for-earlier-reports.md`, section (d), which
+is also part one of `docs/sweep/report-draft.md`. Write each answer there, not here, so that there is one record.
 
 ### Candidate D (weak) is withdrawn: RA 250.48507, Dec -46.02356, l 338.837, b +0.158
 
@@ -897,8 +886,10 @@ was not detected is drawn as a downward arrow at the code's 3-sigma limit for de
 None of A, B or C is confirmed, and none may be called a discovery. To go further:
 
 1. **A person makes the checks only a person can make** (the Astronomer's Telegram full text, NASA ADS, SIMBAD
-   at CDS once it is back, and the Transient Name Server at the corrected positions on the day). Step by step,
-   with the addresses and boxes to tick: part one of `docs/sweep/report-draft.md`.
+   at CDS once it is back, and the Transient Name Server and CBAT at the corrected positions on the day). Step by
+   step, with the addresses, the boxes that say what counts as the same place, and a space for each answer: the
+   checklist in `docs/sweep/searches-for-earlier-reports.md`, section (d), which is also part one of
+   `docs/sweep/report-draft.md`.
 2. **Only then, and only if those come back empty, the team decides whether to report**, after a
    professional astronomer (for example a mentor) has checked the corrected numbers. Ready texts are in part
    two of the same file. A Transient Name Server report needs an account and a reporting group and is public
