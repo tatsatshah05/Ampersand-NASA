@@ -528,6 +528,63 @@ def fit_glow(kind: str, wave: np.ndarray, ratio: np.ndarray, err: np.ndarray, ea
             "sign": "added" if a > 0 else "removed"}
 
 
+def fit_tilt(wave: np.ndarray, ratio: np.ndarray, err: np.ndarray) -> dict[str, Any]:
+    """A straight tilt: ratio = a x wavelength^s (a line in log-log). Not one of the four shapes; a plain description
+    ("changed more at long wavelengths") offered for objects that no shape fits. s > 0: changed less (or brightened
+    more) at long wavelengths; s < 0 the opposite."""
+    x = np.log(wave)
+    y = np.log(ratio)
+    sg = err / ratio
+    w = 1.0 / sg ** 2
+    sw, sx, sy, sxx, sxy = w.sum(), (w * x).sum(), (w * y).sum(), (w * x * x).sum(), (w * x * y).sum()
+    det = sw * sxx - sx ** 2
+    slope = (sw * sxy - sx * sy) / det
+    icpt = (sy - slope * sx) / sw
+    chi2 = float(np.sum(((y - icpt - slope * x) / sg) ** 2))
+    n = len(ratio)
+    p = float(stats_chi2_sf(chi2, n - 2))
+    return {"chi2": chi2, "dof": n - 2, "p": p, "fits": bool(p > FIT_P),
+            "params": {"factor_at_1um": float(math.exp(icpt)), "slope": float(slope)}}
+
+
+def fit_combo(kind: str, wave: np.ndarray, ratio: np.ndarray, err: np.ndarray, early: np.ndarray,
+              alpha: float = DUST_ALPHA) -> dict[str, Any]:
+    """A two-part description, tried only when no single shape fits: everything changes by a factor AND ...
+
+    kind "grey_dust": ratio = a x exp(-tau_1 lambda^-alpha) (the whole object changes, and dust is added or removed);
+    "grey_warm" / "grey_hot": ratio = a + A S(lambda, T) / earlier (the whole object changes, and a warm or hot glow
+    is added or removed). a and A are solved exactly at each tau_1 or T; the best on a grid is reported with its
+    chi-square and degrees of freedom. These are NOT among the four shapes and never set a class.
+    """
+    w = 1.0 / err ** 2
+    n = len(ratio)
+    best: dict[str, Any] | None = None
+    if kind == "grey_dust":
+        for t in np.linspace(-6.0, 6.0, 241):
+            m = dust_ratio(wave, float(t), alpha)
+            a = float(np.sum(w * ratio * m) / np.sum(w * m * m))
+            c = _chi2(a * m, ratio, err)
+            if best is None or c < best["chi2"]:
+                best = {"chi2": c, "params": {"factor": a, "tau_1": float(t)}}
+        k = 2
+    else:
+        lo, hi = WARM_T if kind == "grey_warm" else HOT_T
+        ref = 4.5 if kind == "grey_warm" else 1.6
+        for t in np.geomspace(lo, hi, 60):
+            s = planck_shape(wave, float(t), ref) / early
+            design = np.vstack([np.ones(n), s]).T * np.sqrt(w)[:, None]
+            coef, *_ = np.linalg.lstsq(design, ratio * np.sqrt(w), rcond=None)
+            c = _chi2(coef[0] + coef[1] * s, ratio, err)
+            if best is None or c < best["chi2"]:
+                best = {"chi2": c, "params": {"factor": float(coef[0]), "amplitude_mjy_at_ref": float(coef[1]),
+                                              "temperature_k": float(t)}}
+        k = 3
+    assert best is not None
+    best.update(dof=n - k, p=float(stats_chi2_sf(best["chi2"], n - k)))
+    best["fits"] = bool(best["p"] > FIT_P)
+    return best
+
+
 def fit_shapes(ch: list[dict[str, Any]], *, error_scale: float = 1.0, glow: bool = True,
                alpha: float = DUST_ALPHA, min_sigma: float = MIN_SIGNIFICANCE) -> dict[str, Any]:
     """All four shapes fitted to one ratio spectrum, and an honest verdict.
@@ -573,6 +630,14 @@ def fit_shapes(ch: list[dict[str, Any]], *, error_scale: float = 1.0, glow: bool
                    verdict_text=f"no clear change: below {min_sigma:.1f} sigma, too small to tell the colour")
     elif not good:
         out.update(verdict="none_of_these", verdict_text="none of the four simple shapes fits within the errors")
+        combos = {"grey_dust": fit_combo("grey_dust", wave, ratio, err, early, alpha)}
+        if glow:
+            combos["grey_warm"] = fit_combo("grey_warm", wave, ratio, err, early)
+            combos["grey_hot"] = fit_combo("grey_hot", wave, ratio, err, early)
+        combos["tilt"] = fit_tilt(wave, ratio, err)
+        out["two_part_fits"] = combos
+        works = sorted(k for k, f in combos.items() if f["fits"])
+        out["two_part_that_fit"] = works
     else:
         best = min(good.values(), key=lambda f: f["score"])
         tied = sorted(k for k, f in good.items() if f["score"] - best["score"] <= TIE_SCORE)
@@ -930,6 +995,48 @@ def break_ice_change(rec: dict[str, Any], band: str, a: int, b: int, pull_sd: fl
     return out
 
 
+# --------------------------------------------------------------------------- words
+
+CLASS_NAMES = {"grey": "grey (the same at every colour)", "dust": "dust-like (more at short wavelengths)",
+               "warm": "warm glow", "hot": "hot glow", "cannot_tell": "cannot tell",
+               "none_of_these": "none of these", "no_clear_change": "too small to tell"}
+
+
+def plain_sentence(res: dict[str, Any]) -> str:
+    """One plain sentence about the colour of an object's change (its headline pair). A description, not a cause."""
+    h = res.get("headline")
+    if not h:
+        return "Too few channels were measured in two visits to tell the colour of its change."
+    fit = res["pairs"][h]["fit"]
+    v = fit["verdict"]
+    if v == "grey":
+        return "It changed the same at every colour."
+    if v == "dust":
+        tau = fit["fits"]["dust"]["params"]["tau_1"]
+        return ("It changed more at short wavelengths, the way dust in front would do." if tau > 0 else
+                "It brightened more at short wavelengths, the way less dust in front would do.")
+    if v in ("warm", "hot"):
+        f = fit["fits"][v]
+        word = "added" if f["params"]["amplitude_mjy_at_ref"] > 0 else "removed"
+        t = f["params"]["temperature_k"]
+        return (f"Its change has the colours of a {v} glow (about {t:,.0f} K) being {word}"
+                + (", though the temperature is at the edge of what was tried."
+                   if f.get("temperature_at_edge") else "."))
+    if v == "cannot_tell":
+        return "Several simple shapes fit equally well, so the colour of its change cannot be told."
+    if v == "none_of_these":
+        return "Its change fits none of the simple shapes."
+    if v == "no_clear_change":
+        return "Its change is too small to tell the colour of."
+    return "Too few channels were measured in two visits to tell the colour of its change."
+
+
+def ratio_at(ch: list[dict[str, Any]], lo: float, hi: float) -> float | None:
+    """Median ratio of the channels between lo and hi micrometres (None if none)."""
+    v = [c["ratio"] for c in ch if lo <= c["wave_um"] < hi]
+    return float(np.median(v)) if v else None
+
+
 # --------------------------------------------------------------------------- 5. let the data sort itself
 
 PCA_MIN_OBJECTS = 40             # the share of channels required is lowered until this many objects are complete
@@ -1048,6 +1155,7 @@ def points_to_record(points: list[dict[str, Any]], ranges: dict[str, list[float]
     keep = [p for p in points if p["wavelength_um"] is not None]
     edges = {int(d): photometry.channel_edges(lo, hi) for d, (lo, hi) in ranges.items()}
     return {"id": rid, "kind": "object", "ra": 0.0, "dec": 0.0, "ring": False, "edges": edges,
+            "patch": {"ra": 0.0, "dec": 0.0, "fov": 0.0},
             "detector": np.array([p["detector"] for p in keep]), "epoch": np.array([p["epoch"] for p in keep]),
             "mjd": np.array([p["mjd"] for p in keep]),
             "flux": np.array([np.nan if p["flux_mjy"] is None else p["flux_mjy"] for p in keep], dtype=float),
