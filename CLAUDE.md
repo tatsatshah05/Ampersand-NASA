@@ -945,7 +945,7 @@ Second hunt and the watchlist (2026-11-14 evening; `docs/search.md`, `docs/watch
   2025 and March 2026 in five detectors; NEOWISE factor 3.7 at 3.4 microns over 21 visits. A
   candidate, with the same limits as the Serpens South star.
 
-Sweep of the Milky Way's plane for newly appeared infrared sources (2026-11-14; `backend/sweep.py`, `scripts/sweep_plane.py`, `docs/sweep.md`)
+Sweep of the Milky Way's plane for infrared sources that appeared between SPHEREx's visits (2026-11-14; `backend/sweep.py`, `scripts/sweep_plane.py`, `docs/sweep.md`)
 - Detector 6 whole images (about 100 MB read from S3 in 6 to 20 s each; an image is 2040 x 2040, aperture 2.5 pixels, noise about
   4 mJy per measurement) compared between three epochs (Aug to Sep 2025, Feb to Apr 2026, Aug to Sep 2026), ten times brighter or
   absent in every image of both epochs. Proof: V7994 Sgr found blind in a tile 0.4 degrees off it (1,289 mJy, VSX type NA; 29,424
@@ -1044,8 +1044,29 @@ The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the refe
   75 (114) / 0.7 (0.3). The ruling: A about 0, 2,419-2,926 (partly saturated), 670-803; B about 0, 393-424,
   1,006-1,089; C about 0, about 85-110, about 3-5. A's negative 2025 value is most likely the wing of the 437 mJy
   star, which the fit does not model: it is not a Gaia star brighter than G 17 (the three within 30 arcsec are
-  22.7 to 29.0 arcsec from A and none is at its place). C in detector 6 has a fourth visit of
-  two April 2026 exposures spoiled by cosmic-ray "snowballs" ("unknown"), so its button uses detector 5.
+  22.7 to 29.0 arcsec from A and none is at its place). C's button uses detector 6 (since the final review,
+  2026-11-15): -0.9 (-2.3) / 92 (129) / "unknown" for visit 3, two April 2026 exposures partly spoiled by cosmic-ray
+  hits (the page says so) / 3.85 "marginal" (5.3) in Jul-Sep 2026. Detector 5 read 0.7 "not seen" there, which read as
+  C having gone, which the ruling forbids (C's lines persist then).
+- Final review fixes (branch agent/finds-final): the opening shows the change. A candidate's view opens on its
+  "before" visit and blinks between it and the first visit where it is clearly seen, 1.2 s each at Normal
+  (`usePlayer` pair, `wording.ts` `beforeAfter`), with "Before · Aug 2025" / "After · Mar 2026" over the picture
+  (both always there, the one on screen marked: no word changes while it plays) and "Blink before and after"; with
+  reduced motion it opens still on "before". Beginner marks the fixed place with a white cross in every visit and
+  draws no path; its table says "seen clearly, brighter/fainter" (the page's own fitted mJy, 1.5 times either way)
+  and "picture spoiled here"; the allowed sentence sits under the table so the headline and the visits stay in view.
+  Expert shows the headline, the allowed sentence and the reviewers' brightness over its table, never "moving 0.00″
+  a year" (the zero was the button's), position errors no smaller than 0.3 arcsec, and the candidate's notes
+  (neighbour, dates over all detectors, probably, what was searched) under it. Every one of those sentences is in
+  `finds.ts` / `findsInfo.ts` and quoted word for word in `docs/sweep.md` ("What the app shows about each
+  candidate"; `finds.test.ts` checks it). No candidate line points to Brightness over time any more.
+- The brightness, spectrum and patch-search tools measure a 15.4-arcsec circle with no neighbour modelled. At a
+  candidate's place (`lightcurve.ts` `guardLightcurve`, `spectrum.ts` `guardSpectrum`) the exposures in its
+  `quiet` dates (before it appeared; C again from July 2026) get status `neighbours_light` and no value, with the
+  candidate's `circle` note as the message; within 25 arcsec only a note. The patch search (`search.ts`
+  `markFinds`) gives any changer within 25 arcsec a caution and the candidate's name, never a "Candidate" tag
+  (at B it had flagged the steady 40 mJy star 10 arcsec away). Typed coordinates within 5 arcsec of a candidate, or
+  its name, open its held view (`SearchBar.tsx`).
 - `wording.ts` `changeHeadline`: where a target is "not seen" (under 3) in some visits and "clear" (5 or more) in
   others, Beginner's sentence says exactly that ("Not seen in August 2025. Clearly there by March 2026."), then the
   allowed sentence for a candidate (`findAt`, within 5 arcsec) or one hedged line elsewhere. It never fires without

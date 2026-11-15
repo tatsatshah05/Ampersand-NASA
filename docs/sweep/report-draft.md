@@ -150,10 +150,11 @@ These are the ruling's lists ("must_not_say"), for every report, page, slide and
 **A:**
 
 - Not "a nova" or "a dust-forming nova" as fact.
-- Not "appears in 2025", "brightens ninefold", "9 times", or any 2025 brightness for A: the sweep's 2025
-  numbers and tile images were the light of the star 2MASS 18031245-2327467, 20 arcsec away.
+- Not that A appeared in 2025, not the first write-up's rise factor, and not any 2025 brightness for A: the
+  sweep's 2025 numbers and tile images were the light of the star 2MASS 18031245-2327467, 20 arcsec away
+  (the withdrawn claims are listed in docs/sweep.md, "What the sweep's first write-up got wrong").
 - Not the sweep's D3 and D4 values as A's light.
-- Not "the nearest AllWISE source is 0.4 mJy" (it is 3.7 mJy).
+- Not the first write-up's brightness for the nearest AllWISE source (it is 3.7 mJy, ten times more).
 - Not "GLIMPSE does not cover this place" (GLIMPSE II does).
 - Not an exact spring-2026 brightness without saying the readings are saturated (neither the sweep's single
   value nor its whole-image limits, which cannot be checked again).
@@ -161,9 +162,9 @@ These are the ruling's lists ("must_not_say"), for every report, page, slide and
 
 **B:**
 
-- Not "rises steadily through 2025", or any 2025 brightness for B: the sweep's 2025 numbers and tile images
+- Not that B was there and rising in 2025, nor any 2025 brightness for B: the sweep's 2025 numbers and tile images
   were the star 2MASS 16524412-4440318, 10 arcsec away.
-- Not "ratio 35".
+- Not the first write-up's ratio between the visits.
 - Not "a thousand times its old brightness" measured against the CatWISE / GLIMPSE / 2MASS / Gaia star 3.5-4.9
   arcsec away, and not "a pre-existing red star erupted": that star is not the source.
 - Not the sweep's D3 values as B's light.
@@ -179,7 +180,7 @@ These are the ruling's lists ("must_not_say"), for every report, page, slide and
   3.6-3.75 arcsec).
 - Not the sweep's two bright tile readings as C's brightness: they fell on emission lines; the continuum was
   about 85-110 mJy.
-- Not "back to nearly nothing by August 2026": emission lines are still detected.
+- Not that C had gone, or nearly gone, by August 2026: emission lines are still detected.
 - Not the sweep's faint values as C's own light.
 - Not "a flare lasting half a year" as measured: the start is unknown, between 2025-08-19 and 2026-02-19.
 
@@ -247,8 +248,9 @@ Authors: [to be filled by the registered professional who posts it, with the tea
 > position to 0.12 arcsec per exposure, is seen in paired detectors at the same moments, was absent in 2025
 > under the same pointing geometry, and does not move; JPL lists no known Solar System body within 54 arcsec.
 > We found no report or catalogue entry at this position in the Transient Name Server, AAVSO VSX, ASAS-SN,
-> CBAT, Koji Mukai's nova lists, the ZTF brokers ALeRCE, ANTARES and Fink, OGLE, KMTNet, ATel titles and
-> arXiv, each checked with a control object.
+> CBAT, Koji Mukai's nova lists, the ZTF brokers ALeRCE, ANTARES and Fink, and ATel titles and keyword
+> searches, each checked with a control object that was found; nor in OGLE, KMTNet or six papers, which had
+> no control.
 >
 > The spectrum from 0.75 to 5 micrometres is a smooth, very red continuum, about 880 K in spring and 780-800 K
 > in August 2026 without correction for reddening. A possible Brackett-alpha excess at 4.05 micrometres is seen
@@ -286,7 +288,7 @@ Authors: [to be filled by the registered professional who posts it, with the tea
 > We report an infrared transient candidate in public SPHEREx level-2 images from NASA/IPAC IRSA, at RA
 > 16:52:43.29, Dec -44:40:37.1 (J2000; 253.18038, -44.67697; uncertainty 0.3 arcsec; l 341.089, b -0.416). It
 > was not detected in SPHEREx images of 2025 August 2 to September 15 (3-sigma limit 2.5-4.0 mJy at 4.4-5.0
-> micrometres). It was about 0.39-0.42 Jy at 4.4-5.0 micrometres in 2026 February 26 to March 16, rising about
+> micrometres). It was about 0.39-0.42 Jy at 4.4-5.0 micrometres in 2026 March (8-16 March), rising about
 > 10 per cent a day, and about 1.0-1.1 Jy on 2026 August 8-25. It was first seen on 2026 February 26 at 49.7
 > +/- 7.3 mJy at 2.42 micrometres. Fluxes come from point-source fits in which the steady star 2MASS
 > 16524412-4440318, 10 arcsec away, was fitted separately.
@@ -295,9 +297,10 @@ Authors: [to be filled by the registered professional who posts it, with the tea
 > (2024 March 9). The source is point-like, holds one position to 0.25 arcsec over 93 bright exposures, is
 > seen in paired detectors at the same instant and was absent in 2025 under the same pointing geometry; JPL
 > lists no known Solar System body near it. We found no report or catalogue entry at the position in the
-> Transient Name Server, CBAT, Koji Mukai's nova list, AAVSO VSX, ASAS-SN, VizieR (about 40 catalogues of
-> variables, young stars, masers, nebulae and X-ray sources) and ATel titles, each checked with a control
-> object. ZTF and Rubin cannot see this field.
+> Transient Name Server, CBAT, AAVSO VSX and about 40 VizieR catalogues of variables, young stars, masers,
+> nebulae and X-ray sources, each checked with a control object that was found; nor in Koji Mukai's nova list,
+> ASAS-SN, VizieR's all-catalogue search (no variable, young-star, transient or X-ray entry) or the titles of
+> 1,217 ATels, which had no control. ZTF and Rubin cannot see this field.
 >
 > The August 2026 spectrum is that of warm dust, 567-575 K without correction for reddening. Possible
 > features, all tentative: a water-ice dip near 3 micrometres (March), a 20-30 per cent dip at 4.25
@@ -322,7 +325,7 @@ Authors: [to be filled by the registered professional who posts it, with the tea
   (`docs/sweep/vetting/C/pixels/forced.json`) is 2026-02-22 14:06 UT, exposure 2026W08_2A_0578_1 (detector 4),
   101.7 +/- 1.9 mJy at 3.603 micrometres = AB 11.38 +/- 0.04 (with the 3 per cent calibration term). Give its
   own date and wavelength in the remarks.
-- "Last non-detection": 2025-08-19 22:57 UT, below about 3 mJy at 4-5 micrometres (AB fainter than about 15.1).
+- "Last non-detection": 2025-08-19 22:57 UT, below about 3 mJy at 4-5 micrometres (AB fainter than about 15.2).
 - "Instrument": SPHEREx (or "Other"). Data: SPHEREx level-2 spectral images from NASA/IPAC IRSA.
 - "Host": none.
 - "Remarks": In the Galactic plane. Hydrogen emission lines suggest a reddened nova; this is not established.
@@ -354,9 +357,9 @@ Authors: [to be filled by the registered professional who posts it, with the tea
 > V345 Nor 7.7 arcmin away: at the predicted ghost positions we measure -0.9 to -0.3 mJy where at least 60 mJy
 > would be expected. Archival limits at the position: Spitzer GLIMPSE [4.5] under 0.19-0.40 mJy, NEOWISE under
 > 5 mJy (2010-2024), VVV Ks about 0.12 mJy or less (2010-2019). A cold Hi-GAL clump lies 3.6-3.75 arcsec away.
-> We found no report or catalogue entry at the position in the Transient Name Server, AAVSO VSX, VizieR, CBAT,
-> Koji Mukai's nova list, ASAS-SN, ATel titles and opening lines, and three relevant papers, each checked with
-> a control object.
+> We found no report at the position in the Transient Name Server, AAVSO VSX, or the titles and opening lines
+> of 847 ATels, and no variable or transient entry in VizieR, each checked with a control object that was
+> found; nor in CBAT, Koji Mukai's nova list, ASAS-SN or three relevant papers, which had no control.
 >
 > The emission lines and the fast fade suggest a classical nova hidden behind Galactic dust; an embedded
 > young-star outburst is not excluded, given the nearby clump. Neither is established. We encourage

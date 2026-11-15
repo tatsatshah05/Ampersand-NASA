@@ -7,7 +7,7 @@
 // line under the box says what was found. The box sits in the page's top bar and the
 // buttons in the row under it; useSkySearch holds what both share.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { FINDS, findTarget, type Find } from '../finds'
+import { FINDS, findAt, findTarget, type Find } from '../finds'
 import { releaseFocusAfterPointer } from '../focus'
 import {
   COORD_EXAMPLES,
@@ -303,7 +303,23 @@ function useSkySearch(onSelect: OnSelect): SearchState {
         kind: 'found',
         text: `Coordinates read as RA ${formatRaDeg(ra)}°, Dec ${formatDecDeg(dec)}° (${sexagesimal}).`,
       })
+      // One of our candidates' places (within 5 arcsec): shown as its button shows it, held at its
+      // corrected place. With no motion the page would measure the brightest spot near the centre,
+      // which in 2025 was a neighbouring star, and say it was "seen clearly in all 3 visits".
+      const find = findAt(ra, dec)
+      if (find) {
+        setStatus({ kind: 'found', text: `Coordinates read as RA ${formatRaDeg(ra)}°, Dec ${formatDecDeg(dec)}° (${sexagesimal}): that is ${find.name}'s place.` })
+        onSelectNow.current(findTarget(find), find.name)
+        return
+      }
       onSelectNow.current({ ra, dec }) // no motion: nothing is known about what is at a typed position
+      return
+    }
+    // A candidate's name ("Candidate B", "candidate b") is its button.
+    const named = FINDS.find((f) => sameName(f.name, query))
+    if (named) {
+      setStatus({ kind: 'idle' })
+      onSelectNow.current(findTarget(named), named.name)
       return
     }
     if (name.length > MAX_NAME_LENGTH) {

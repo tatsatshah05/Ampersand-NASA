@@ -1,8 +1,22 @@
 // The three candidates as data: the referee's corrected positions and allowed sentences, and the
 // words a public page must never use about them.
 import { describe, expect, it } from 'vitest'
-import { FINDS, findAt } from './finds'
+import { FIND_EVIDENCE, FINDS, findAt, findNear, isHeldFind } from './finds'
+import { MAYBE_PLAIN, NEIGHBOUR_PLAIN } from './findsInfo'
+import lcB from './fixtures/lightcurve/find_b_d6.json'
+import searchB from './fixtures/search/find_b.json'
+import { guardLightcurve, leftOut, NEIGHBOURS_LIGHT, summarise, type LightcurveResponse } from './lightcurve'
+import { isCandidate, markFinds, verdictSentence, type SearchStatus } from './search'
+import { guardSpectrum, type SpectrumResponse } from './spectrum'
+import { TIMES_SCATTER_NOTE } from './wording'
 
+const fsModule = 'node:fs'
+const { readFileSync } = (await import(/* @vite-ignore */ fsModule)) as { readFileSync: (p: URL, encoding: string) => string }
+// The sweep's first positions, withdrawn: read from the vetting folder, the only place they are kept.
+const vetted = JSON.parse(readFileSync(new URL('../../docs/sweep/vetting/candidates.json', import.meta.url), 'utf8')) as {
+  candidates: { label: string; first_run_position_withdrawn: [number, number] }[]
+}
+const withdrawn = Object.fromEntries(vetted.candidates.map((c) => [c.label, c.first_run_position_withdrawn]))
 const byKey = Object.fromEntries(FINDS.map((f) => [f.key, f]))
 
 describe('the three candidates', () => {
@@ -13,8 +27,9 @@ describe('the three candidates', () => {
       ['C', 'Candidate C', 'Norma', 241.70906, -52.20564],
     ])
     // The sweep's positions for A and C were 3 arcsec off: they are not the candidates' places any more.
-    expect(byKey.A.ra).not.toBe(270.80362)
-    expect(byKey.C.dec).not.toBe(-52.20484)
+    for (const f of FINDS) expect([f.ra, f.dec]).not.toEqual(withdrawn[f.key])
+    expect(byKey.A.ra).not.toBe(withdrawn.A[0])
+    expect(byKey.C.dec).not.toBe(withdrawn.C[1])
   })
 
   it('carry the referee’s allowed sentence word for word', () => {
@@ -61,8 +76,124 @@ describe('findAt', () => {
   it('finds nothing further than 5 arcseconds away, or elsewhere in the sky', () => {
     expect(findAt(253.18038, -44.67697 + 6 / 3600)).toBeNull()
     // The sweep's own position for A was 3.0 arcsec off: still A. Barnard's Star is nothing.
-    expect(findAt(270.80362, -23.46745)?.key).toBe('A')
+    expect(findAt(withdrawn.A[0], withdrawn.A[1])?.key).toBe('A')
     expect(findAt(269.446267, 4.768222)).toBeNull()
     expect(findAt(Number.NaN, 0)).toBeNull()
+  })
+})
+
+// ---- every other sentence about them, and the tools that measure them ------------------------
+
+/** The write-up, with its quotation marks and line breaks undone, so a sentence can be found whole. */
+const flat = (s: string) => s.replace(/\n>\s?/g, ' ').replace(/\s+/g, ' ')
+const writeUp = flat(readFileSync(new URL('../../docs/sweep.md', import.meta.url), 'utf8'))
+
+/** Every sentence the page can show about one candidate (finds.ts and findsInfo.ts). */
+const sentencesOf = (f: (typeof FINDS)[number]) => [
+  f.allowed,
+  f.probably,
+  f.brightness,
+  f.neighbour,
+  f.dates,
+  f.checked,
+  f.place,
+  f.circle,
+  ...(f.spoiled ? [f.spoiled.note] : []),
+  NEIGHBOUR_PLAIN[f.key],
+  MAYBE_PLAIN[f.key],
+]
+
+describe('every sentence about them', () => {
+  it('is quoted word for word in docs/sweep.md, so the page and the write-up cannot drift apart', () => {
+    for (const f of FINDS) for (const s of sentencesOf(f)) expect(writeUp, s).toContain(flat(s))
+    for (const s of [FIND_EVIDENCE, TIMES_SCATTER_NOTE]) expect(writeUp, s).toContain(s)
+  })
+
+  it('breaks none of the ruling’s "must not say"', () => {
+    for (const f of FINDS) {
+      const all = sentencesOf(f).join(' ')
+      expect(all).not.toMatch(/discover|first ever|ninefold|9 times|appears in 2025|ratio 35|rises steadily|back to nearly nothing|counterpart/i)
+      expect(all).not.toMatch(/\bnew\b/i)
+      expect(all).not.toMatch(/\b(is|was) a (nova|young star)\b/i)
+      expect(all).not.toMatch(/\bconfirmed\b(?! it yet| by nobody)/i)
+      // The sweep's withdrawn positions.
+      for (const [ra, dec] of Object.values(withdrawn)) expect(all).not.toMatch(new RegExp(`${String(ra).replace('.', '\\.')}|${String(Math.abs(dec)).replace('.', '\\.')}`))
+    }
+  })
+
+  it('gives no 2025 brightness: only "not detected", with the reviewers’ limit', () => {
+    expect(byKey.A.brightness).toContain('not detected on 24 August–10 September 2025 (below about 10–14 mJy)')
+    expect(byKey.B.brightness).toContain('not detected on 2 August–15 September 2025 (3-sigma limit 2.5–4.0 mJy)')
+    expect(byKey.C.brightness).toContain('about 0 on 30 July–19 August 2025 (not detected)')
+  })
+})
+
+describe('the places near them', () => {
+  it('findNear: a candidate whose light reaches a measuring circle within 25 arcsec', () => {
+    // The steady star 10 arcsec north-east of B, where the patch search found a "change".
+    expect(findNear(253.18377, -44.675508)?.find.key).toBe('B')
+    expect(findNear(253.18377, -44.675508)?.arcsec).toBeCloseTo(10.1, 1) // the ruling: 10.0-10.2 arcsec
+    expect(findNear(269.446267, 4.768222)).toBeNull()
+  })
+  it('isHeldFind: a candidate at its place with no motion, as its button asks', () => {
+    expect(isHeldFind({ ra: 253.18038, dec: -44.67697, pmra: 0, pmdec: 0 })).toBe(true)
+    expect(isHeldFind({ ra: 253.18038, dec: -44.67697, pmra: null, pmdec: null })).toBe(false)
+    expect(isHeldFind({ ra: 269.446267, dec: 4.768222, pmra: 0, pmdec: 0 })).toBe(false)
+  })
+})
+
+describe('the tools at a candidate (the server’s real answers at B)', () => {
+  const lc = lcB as unknown as LightcurveResponse
+  it('the brightness tool leaves out the 2025 exposures, whose circle held the neighbour’s light, and says why', () => {
+    // Unguarded, visit 1 has values: the light of the star 2MASS 16524412-4440318, 10 arcsec away.
+    expect(lc.bins!.some((b) => b.points.some((p) => p.epoch === 1 && p.flux_mjy != null))).toBe(true)
+    expect(summarise(lc, 'flux').map((s) => [s.firstEpoch, s.lastEpoch])).toEqual([[1, 3]])
+    const guarded = guardLightcurve(lc, lc)
+    expect(guarded.bins!.every((b) => b.points.every((p) => p.date >= '2026-02-26' || (p.status === NEIGHBOURS_LIGHT && p.flux_mjy == null)))).toBe(true)
+    expect(guarded.message).toContain(byKey.B.circle)
+    // What is left compares March with August 2026: brighter, as the ruling says (about 2.5 times).
+    expect(summarise(guarded, 'flux').map((s) => [s.firstEpoch, s.lastEpoch, s.verdict])).toEqual([[2, 3, 'brighter']])
+    expect(leftOut(guarded, 'flux').reasons[NEIGHBOURS_LIGHT]).toBeGreaterThan(0)
+  })
+  it('the spectrum tool does the same, and a place near a candidate is only told so', () => {
+    const point = (epoch: number, date: string, flux: number) => ({
+      obs_id: String(epoch),
+      detector: 6,
+      epoch,
+      mjd: 0,
+      date,
+      status: 'ok',
+      wavelength_um: 4.6,
+      bandwidth_um: 0.04,
+      flux_mjy: flux,
+      flux_err_mjy: 1,
+    })
+    const two: SpectrumResponse = {
+      ra: 253.18038,
+      dec: -44.67697,
+      n_exposures: 2,
+      status_counts: { ok: 2 },
+      points: [point(1, '2025-08-17T04:08:13', 23), point(2, '2026-03-13T00:00:00', 400)],
+    }
+    const guarded = guardSpectrum(two, two)
+    expect(guarded.points!.map((p) => [p.status, p.flux_mjy])).toEqual([
+      [NEIGHBOURS_LIGHT, null],
+      ['ok', 400],
+    ])
+    expect(guarded.message).toBe(`${byKey.B.circle} ${FIND_EVIDENCE} 1 of 2 exposures gave a clean measurement.`)
+    const near = guardSpectrum({ ra: 253.18377, dec: -44.675508 }, { ...two, ra: 253.18377, dec: -44.675508 })
+    expect(near.points).toEqual(two.points)
+    expect(near.message).toMatch(/^Candidate B, 10 arcseconds from here, appeared between 2025 and 2026/)
+  })
+  it('the patch search marks the steady star 10 arcsec from B as B’s light, never as a candidate of its own', () => {
+    const marked = markFinds(searchB as unknown as SearchStatus)
+    const star = marked.result!.objects.find((o) => o.id === '03')!
+    expect(star.near_find?.name).toBe('Candidate B')
+    expect(star.near_find?.at).toBe(false)
+    expect(star.verdict).toBe('caution')
+    expect(isCandidate(star)).toBe(false)
+    expect(verdictSentence(star)).toMatch(/^Candidate B, 10 arcseconds from here, appeared between 2025 and 2026 .* most likely Candidate B's light, not a change of this source\.$/)
+    // The others in the patch are left as they were.
+    expect(marked.result!.objects.filter((o) => o.near_find)).toHaveLength(1)
   })
 })

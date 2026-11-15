@@ -603,8 +603,8 @@ def irac2_mjy(mag: float | None) -> float | None:
 def brightness_text(row: dict[str, Any]) -> str:
     """The infrared and optical brightness a catalogue row lists, in words ("W2 13.54 mag = 0.66 mJy, Ks 13.77").
 
-    Always converted by `w2_mjy`, `irac2_mjy`, never by hand: the first write-up of candidate A gave W2 11.6 as
-    0.4 mJy, and it is 3.9 (docs/sweep/vetting/ruling.json, method fault 4).
+    Always converted by `w2_mjy`, `irac2_mjy`, never by hand: the first write-up of candidate A misconverted W2 11.6
+    by a factor of ten; it is 3.9 mJy (docs/sweep/vetting/ruling.json, method fault 4).
     """
     parts = []
     if row.get("w2") is not None:
@@ -1296,42 +1296,93 @@ def exposure_confirmation(sv: dict[str, Any], detectors: tuple[int, ...] = (5, 6
             "faint_median_mjy": round(mf, 1), "ratio": round(r, 1), "n_bright": len(b), "n_faint": len(f)}
 
 
-def lightcurve_picture(points: list[dict[str, Any]], path: Path, title: str = "") -> None:
-    """Brightness against date for every clean exposure, one colour per detector (a plain chart, drawn with PIL)."""
+def lightcurve_marks(described: dict[str, Any], snr: float = 3.0) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """What a light curve of a `describe` result may show: (points, limits).
+
+    Points are the clean exposures whose fit is at least `snr` times its own error, so a value at or below
+    zero (a non-detection) is never drawn as a faint measurement. Limits are the visits in which the source
+    was not detected (`faint[...]["detected"] is False`): one downward arrow each, at the 3-sigma limit of
+    the blank-sky test in detector 6, from the visit's first date to its last.
+    """
+    epochs = described.get("epochs", {})
+    faint = described.get("faint", {})
+    undetected = {int(k) for k, v in faint.items() if v.get("detected") is False}
+    points = [{"d": r["detector"], "mjd": r["mjd"], "mjy": r["fit_mjy"]} for r in described.get("exposures", [])
+              if r["status"] == "ok" and r["fit_mjy"] is not None and r.get("fit_err")
+              and r["epoch"] not in undetected and r["fit_mjy"] >= snr * r["fit_err"]]
+    limits = []
+    for k in sorted(undetected):
+        lim = faint[str(k)].get("limit_3sigma")
+        dates = epochs.get(str(k), {}).get("dates")
+        if lim is None or not dates:
+            continue
+        mjds = [Time(f"{d}T12:00:00", format="isot", scale="utc").mjd for d in dates]
+        limits.append({"mjd": float(np.mean(mjds)), "mjy": float(lim), "dates": dates})
+    return points, limits
+
+
+def lightcurve_picture(points: list[dict[str, Any]], path: Path, title: str = "",
+                       limits: list[dict[str, Any]] | None = None) -> None:
+    """Brightness against date, one colour per detector (a plain chart, drawn with PIL).
+
+    `limits` are visits in which the source was not detected, each drawn as a white downward arrow at its
+    upper limit and labelled, never as a point. Months are marked along the bottom.
+    """
     from PIL import Image, ImageDraw
 
-    if not points:
+    limits = limits or []
+    if not points and not limits:
         return
     colours = {1: (120, 120, 255), 2: (80, 200, 255), 3: (80, 220, 140), 4: (230, 220, 80), 5: (255, 150, 60),
                6: (255, 70, 70)}
-    w, h, ml, mb = 900, 420, 70, 40
+    w, h, ml, mb = 900, 440, 70, 60
     img = Image.new("RGB", (w, h), (24, 24, 28))
     dr = ImageDraw.Draw(img)
-    t0, t1 = min(p["mjd"] for p in points), max(p["mjd"] for p in points)
-    top = max(max(p["mjy"] for p in points), 1.0)
-    lo = 0.5
+    marks = points + limits
+    t0, t1 = min(p["mjd"] for p in marks) - 10, max(p["mjd"] for p in marks) + 10
+    top = max(max(p["mjy"] for p in marks), 1.0)
+    lo = max(0.5, min([p["mjy"] for p in marks if p["mjy"] > 0] + [top]) / 4)
     ylog = lambda v: math.log10(max(v, lo))  # noqa: E731
     y0, y1 = ylog(lo), ylog(top * 1.3)
 
-    def px(p: dict[str, Any]) -> tuple[float, float]:
-        return (ml + (p["mjd"] - t0) / max(t1 - t0, 1.0) * (w - ml - 15),
-                h - mb - (ylog(p["mjy"]) - y0) / (y1 - y0) * (h - mb - 30))
+    def xy(mjd: float, mjy: float) -> tuple[float, float]:
+        return (ml + (mjd - t0) / max(t1 - t0, 1.0) * (w - ml - 15),
+                h - mb - (ylog(mjy) - y0) / (y1 - y0) * (h - mb - 30))
 
     dr.text((ml, 6), title, fill=(230, 230, 230))
-    for v in (1, 10, 100, 1000, 10000):
+    for v in (1, 3, 10, 30, 100, 300, 1000, 3000, 10000):
         if lo <= v <= top * 1.3:
-            y = h - mb - (ylog(v) - y0) / (y1 - y0) * (h - mb - 30)
-            dr.line([(ml, y), (w - 10, y)], fill=(60, 60, 66))
+            y = xy(t0, v)[1]
+            dr.line([(ml, y), (w - 10, y)], fill=(60, 60, 66) if str(v)[0] == "1" else (40, 40, 46))
             dr.text((8, y - 6), f"{v} mJy", fill=(170, 170, 170))
+    # The first day of each month along the bottom, labelled in January and every third month.
+    start = Time(t0, format="mjd").datetime
+    year, month = start.year, start.month + 1
+    while True:
+        if month > 12:
+            year, month = year + 1, 1
+        m = Time(f"{year}-{month:02d}-01T00:00:00", format="isot", scale="utc").mjd
+        if m > t1:
+            break
+        x = xy(m, lo)[0]
+        dr.line([(x, h - mb), (x, h - mb + 4)], fill=(170, 170, 170))
+        if month in (1, 4, 7, 10):
+            dr.text((x - 18, h - mb + 6), f"{year}-{month:02d}", fill=(170, 170, 170))
+        month += 1
     for p in points:
-        x, y = px(p)
+        x, y = xy(p["mjd"], p["mjy"])
         c = colours.get(p["d"], (255, 255, 255))
         dr.ellipse([x - 3, y - 3, x + 3, y + 3], fill=c)
+    for lim in limits:
+        x, y = xy(lim["mjd"], lim["mjy"])
+        dr.line([(x - 8, y), (x + 8, y)], fill=(255, 255, 255), width=2)
+        dr.line([(x, y), (x, y + 22)], fill=(255, 255, 255), width=2)
+        dr.polygon([(x - 5, y + 18), (x + 5, y + 18), (x, y + 26)], fill=(255, 255, 255))
+        dr.text((x + 10, y - 6), f"not detected: below {lim['mjy']:.1f} mJy (detector 6, 3-sigma)",
+                fill=(230, 230, 230))
     for k, (d, c) in enumerate(colours.items()):
         dr.rectangle([ml + k * 90, h - 22, ml + k * 90 + 10, h - 12], fill=c)
         dr.text((ml + k * 90 + 14, h - 24), f"detector {d}", fill=(200, 200, 200))
-    dr.text((ml, h - mb + 2), f"{Time(t0, format='mjd').iso[:10]} to {Time(t1, format='mjd').iso[:10]}",
-            fill=(170, 170, 170))
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
 
@@ -1361,7 +1412,7 @@ CENTROID_SHIFT_PX = 0.5          # light centred further than this (3 arcsec) fr
 CONCENTRATION_SHARE = 0.6        # or less concentrated than this share of the source's own bright-state value
 POSITION_CLIP_ARCSEC = 3.0       # a bright-state centroid this far from the median: the exposure's coordinates are off
 BRIGHT_FIT_SNR = 10.0            # bright-state fits used for the position
-BLANK_RING_PX = 5.0              # the blank-sky test: the same fit at empty places this far out
+BLANK_RING_PX = 5.0              # the blank-sky test: the same fit at places on a ring this far out (not checked empty)
 BLANK_PLACES = 12
 LINE_FACTOR = 1.5                # a tile reading this many times the same visit's other wavelengths: a possible line
 LINE_WIDTH_UM = 0.04             # "other wavelengths" are further than this from the reading's own (about a channel)
@@ -1624,7 +1675,7 @@ def aperture_check(c: Cutout, x: float, y: float) -> dict[str, Any]:
 
 def blank_test(cutouts: list[Cutout], ra: float, dec: float, ring_px: float = BLANK_RING_PX,
                places: int = BLANK_PLACES) -> dict[str, Any]:
-    """How large a false signal the forced fit gives at empty places near the source, in the same exposures.
+    """How large a false signal the forced fit gives at places on a ring around the source, in the same exposures.
 
     The fit is repeated at `places` points on a circle of `ring_px` pixels around (ra, dec); each place
     gives the median over the exposures. `scatter_mjy` is the robust scatter of those medians (1.4826 x
@@ -1681,7 +1732,7 @@ def line_flag(readings: list[dict[str, Any]], others: list[dict[str, Any]], fact
     tile images ({"obs_id", "um", "mjy"}), `others` the same visit's other clean exposures of the same
     detector ({"um", "mjy"}, measured the same way). A reading `factor` or more times the median of the
     exposures further than `width_um` from its wavelength is flagged: "possibly an emission line", and
-    the change should then be judged on the continuum (C's 178 and 300 mJy fell on lines at 4.739 and
+    the change should then be judged on the continuum (C's two bright tile readings fell on lines at 4.739 and
     4.631 micrometres while its continuum was 85 to 110 mJy; ruling, method fault 5).
     """
     out: dict[str, Any] = {"possible_emission_line": False, "readings": []}

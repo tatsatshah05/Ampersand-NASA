@@ -2,6 +2,7 @@
 // in every SPHEREx exposure, grouped into wavelength bins. Field names are the backend's
 // (backend/photometry.py). Only points in the same bin can be compared over time: another
 // bin is another colour of light.
+import { FIND_EVIDENCE, findAt, findNear, inQuiet, nearFindSentence } from './finds'
 import type { Measured, Motion, SpectrumRequest, StarsInCircle } from './spectrum'
 
 export interface LightcurvePoint {
@@ -223,5 +224,58 @@ export async function fetchLightcurve(req: SpectrumRequest, signal?: AbortSignal
     }
     throw new Error(detail)
   }
-  return (await r.json()) as LightcurveResponse
+  return guardLightcurve(req, (await r.json()) as LightcurveResponse)
+}
+
+/**
+ * The status of an exposure at one of our candidates' places whose circle held its neighbours'
+ * light, not the candidate's (finds.ts, `quiet`). It has no value, and is left out like any other.
+ */
+export const NEIGHBOURS_LIGHT = 'neighbours_light'
+
+/** A message joined to the backend's own, if it has one. */
+const withMessage = (was: string | undefined, add: string) => (was ? `${was} ${add}` : add)
+
+/**
+ * At one of our candidates (finds.ts) the measuring circle, with no neighbour modelled, holds a
+ * neighbouring star's light while the candidate is faint (in 2025 for all three, and from July
+ * 2026 for C): the reviewers showed it, and those values must never be shown as the candidate's.
+ * They are given no value (status NEIGHBOURS_LIGHT), the other exposures are compared among
+ * themselves, and a message says why. Near a candidate (within 25 arcsec), only the message: its
+ * light reaches this circle.
+ */
+export function guardLightcurve(req: { ra: number; dec: number }, data: LightcurveResponse): LightcurveResponse {
+  const at = findAt(req.ra, req.dec)
+  if (!at) {
+    const near = findNear(req.ra, req.dec)
+    return near ? { ...data, message: withMessage(data.message, nearFindSentence(near.find, near.arcsec)) } : data
+  }
+  const counts = { ...(data.status_counts ?? {}) }
+  const bins = (data.bins ?? []).map((b) => {
+    const points = b.points.map((p) => {
+      if (!inQuiet(at, p.date)) return p
+      counts[p.status] = (counts[p.status] ?? 1) - 1
+      counts[NEIGHBOURS_LIGHT] = (counts[NEIGHBOURS_LIGHT] ?? 0) + 1
+      return {
+        ...p,
+        status: NEIGHBOURS_LIGHT,
+        flux_mjy: null,
+        flux_err_mjy: null,
+        relative_flux: null,
+        wing_status: NEIGHBOURS_LIGHT,
+        wing_mjy: null,
+        wing_err_mjy: null,
+        relative_wing: null,
+      }
+    })
+    // "1 = usual" is again the typical value of what is left.
+    const kept = points.flatMap((p) => (p.status === 'ok' && p.flux_mjy != null ? [p.flux_mjy] : []))
+    const usual = kept.length ? median(kept) : null
+    return {
+      ...b,
+      median_flux_mjy: usual,
+      points: points.map((p) => (p.relative_flux != null && p.flux_mjy != null && usual ? { ...p, relative_flux: p.flux_mjy / usual } : p)),
+    }
+  })
+  return { ...data, bins, status_counts: counts, message: withMessage(data.message, `${at.circle} ${FIND_EVIDENCE}`) }
 }

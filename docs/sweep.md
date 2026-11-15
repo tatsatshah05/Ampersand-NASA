@@ -1,4 +1,4 @@
-# A sweep of the Milky Way's plane for infrared sources that newly appeared
+# A sweep of the Milky Way's plane for infrared sources that appeared between SPHEREx's visits
 
 Written 2026-11-14 for teammates who are not astronomers. The three candidates' sections were rewritten on
 2026-11-15 from the vetting ruling: four independent reviewers attacked each candidate and a referee ruled.
@@ -38,7 +38,7 @@ What that means:
   `docs/sweep/report-draft.md`.
 - **The sweep's first write-up of the three was wrong** in several ways (its 2025 numbers for A and B were other
   stars' light, two positions were 3 arcsec off, its "counterparts" were other stars, C's bright readings were
-  emission lines). See "What the sweep's first write-up got wrong". Every number on this page is the reviewers'.
+  emission lines). See "What the sweep's first write-up got wrong". Every number about A, B and C is the reviewers', except the rerun table, which is the fixed code's own.
 
 ## The candidates at a glance
 
@@ -64,9 +64,42 @@ absent at its place in 2025):
   it only in two emission-line channels)
 
 And the brightness in every clean exposure, measured again with the fixed code (below):
-`docs/sweep/candidate_A_lightcurve.png`, `candidate_B_lightcurve.png`, `candidate_C_lightcurve.png`.
+`docs/sweep/candidate_A_lightcurve.png`, `candidate_B_lightcurve.png`, `candidate_C_lightcurve.png`. In those
+three pictures a visit in which the source was not detected is a downward arrow at its upper limit, not a point.
 
-## Why this is the one place a newly appeared object can be found
+## What the app shows about each candidate
+
+The app opens on Candidate B, and a row of buttons starts with Candidate A, B and C. A button shows the
+candidate held at its corrected place (with no motion: none was given or measured), in detector 6
+(4.4-5.0 micrometres), opening on its first visit and blinking between the visit without it ("Before") and
+the first visit with it ("After"). Typing a candidate's position or name into the search box shows the same.
+
+The page's own measure says, per visit, whether something is seen at the place ("not seen", "seen clearly",
+"only just seen", and in Beginner whether it was brighter or fainter than in the visit before). Beyond that,
+these are every sentence the app shows about A, B and C, quoted here word for word from
+`frontend/src/finds.ts` and `frontend/src/findsInfo.ts` (`frontend/src/finds.test.ts` checks that this page
+and the app agree). Every number in them is the reviewers'.
+
+- **The allowed sentence** of each, quoted under "Read this first": in Beginner under the table of visits, in
+  Expert over it, and as the description of each candidate's button.
+- **Its brightness**, in Expert under the allowed sentence (never a 2025 brightness: only "not detected"):
+  - A: "At 4.4–5.0 micrometres, in the reviewers' fits with the neighbouring star modelled: not detected on 24 August–10 September 2025 (below about 10–14 mJy), 2,419–2,926 mJy on 20 March–1 April 2026 (partly saturated) and 670–803 mJy on 25 August–2 September 2026."
+  - B: "At 4.4–5.0 micrometres, in the reviewers' fits with the neighbouring star modelled: not detected on 2 August–15 September 2025 (3-sigma limit 2.5–4.0 mJy), 393–424 mJy in March 2026 (8–16 March, rising about 10% a day) and 1,006–1,089 mJy on 8–25 August 2026."
+  - C: "Its continuum at 4–5 micrometres, in the reviewers' fits with 28 neighbours modelled: about 0 on 30 July–19 August 2025 (not detected), about 85–110 mJy on 19 February–3 March 2026, about a third of that on 9–10 April 2026 and about 3–5 mJy in July–September 2026, while its emission lines persist."
+- **Under Expert's table**, first: "The number after “clear” is how many times the background scatter the spot stands at its place: how surely it is seen, not how many times brighter it got." Then, for each:
+  - its neighbour. A: "The bright star about 20 arcseconds to the north-north-west, seen in every visit, is a steady neighbour, 2MASS 18031245-2327467 (437 mJy at 4.6 micrometres), not Candidate A." B: "The faint star 10 arcseconds to the north-east, seen in every visit, is a steady neighbour, 2MASS 16524412-4440318 (40 mJy at 4.6 micrometres), not Candidate B." C: "The field is crowded: the stars around it are other stars, not Candidate C; the nearest catalogued ones, 1.9 and 2.2 arcseconds away, are faint and steady."
+  - when, after "This picture is detector 6 (4.4–5.0 micrometres).": A: "Over all six detectors, SPHEREx's last picture without it was taken on 10 September 2025, and its first picture with it on 20 March 2026." B: "Over all six detectors, SPHEREx's last picture without it was taken on 15 September 2025, and its first picture with it on 26 February 2026, in detector 4 (2.42 micrometres)." C: "Over all six detectors, SPHEREx's last picture without it was taken on 19 August 2025, and its first picture with it on 19 February 2026, in detector 4 (2.53 micrometres)."
+  - for C only, its spoiled April visit: "Visit 3 (April 2026) is two exposures partly spoiled by cosmic-ray hits, so the page cannot say how clearly it is seen; the reviewers measured about a third of its February brightness then."
+  - what it probably is. A: "Probably a dusty eruption of unknown kind, perhaps a nova hidden behind dust: its light is a smooth, very red glow. Not established." B: "Probably an outburst of a young star still inside its birth cloud: it lies in a star-forming complex, in a known group of young stars. Not established." C: "Probably a nova hidden behind dust: in February and March 2026 its light was dominated by very strong hydrogen emission lines (Brackett-alpha 438–519 mJy against a continuum of 93–103 mJy). Not established."
+  - what was searched. A: "Searched on 15 November 2026, each with a control object that was found: the Transient Name Server, AAVSO VSX, ASAS-SN, CBAT, Koji Mukai's nova lists, the ZTF brokers and 942 Astronomer's Telegram titles. Also searched: six papers, OGLE and KMTNet. Not yet searched: the telegrams' full text, NASA ADS and SIMBAD, which was down that day." B: "Searched on 15 November 2026, each with a control object that was found: the Transient Name Server, CBAT, AAVSO VSX and about 40 catalogues of variable stars, young stars, masers, nebulae and X-ray sources. Also searched: Koji Mukai's nova list, ASAS-SN, VizieR, 1,217 Astronomer's Telegram titles and two papers. Not yet searched: the telegrams' full text, NASA ADS and SIMBAD, which was down that day." C: "Searched on 15 November 2026, each with a control object that was found: the Transient Name Server, AAVSO VSX, VizieR and the titles and opening lines of 847 Astronomer's Telegrams. Also searched: CBAT, Koji Mukai's nova list, ASAS-SN and three papers. Not yet searched: the telegrams' full text, NASA ADS, X-ray records and SIMBAD, which was down that day."
+- **In Expert's Catalogue notes**, in place of a motion (Expert no longer says "moving 0.00″ a year": the zero
+  was the button's, not a measurement). A: "Held at its corrected place: no catalogue gives it a motion, and its spring and August 2026 positions agree to 0.4 arcseconds." B: "Held at its corrected place: no catalogue gives it a motion, and its March and August 2026 positions agree to 0.3 arcseconds." C: "Held at its corrected place: no catalogue gives it a motion, and its exposures bright in emission lines in August 2026 put it at the same place as in February." Expert's position errors for the three are never shown smaller than the reviewers' 0.3 arcsec.
+- **In the brightness, spectrum and patch-search tools.** These measure a fixed circle with no neighbour
+  modelled, so at a candidate's place they leave out the exposures whose circle held other stars' light, and
+  say: A: "At Candidate A's place, in 2025 this measuring circle (15.4 arcseconds in radius) held only light from the steady star 2MASS 18031245-2327467, 20 arcseconds away; Candidate A itself was not detected. Those exposures are left out here, so nothing below is a 2025 brightness of Candidate A." B: "At Candidate B's place, in 2025 this measuring circle (15.4 arcseconds in radius) held only light from the steady star 2MASS 16524412-4440318, 10 arcseconds away; Candidate B itself was not detected. Those exposures are left out here, so nothing below is a 2025 brightness of Candidate B." C: "At Candidate C's place, in 2025 and again from July 2026 this measuring circle (15.4 arcseconds in radius) held more light from neighbouring stars than from Candidate C, whose continuum was about 0 in 2025 and about 3–5 mJy in July–September 2026. Those exposures are left out here." Each is followed by "The values left are this circle's light, its neighbours' included; the reviewers' fits, with the neighbours modelled, are in the project's write-up, docs/sweep.md." Within 25 arcsec of a candidate the tools say that its light reaches the circle there, and the patch search never offers a change there as a candidate of its own (at B it had flagged the steady 40 mJy star 10 arcsec away as "changed brightness").
+- **Beginner's "i" popovers**, in plain words for a reader of about 11: of the picture, A: "The bright star just above it is a steady neighbour, there in every visit. It is not Candidate A." B: "The faint star just up and to the left is a steady neighbour, there in every visit. It is not Candidate B." C: "The stars around it are other stars, not Candidate C." And of what it may be, A: "What it is, nobody knows yet. Its light is a smooth, very red glow, like warm dust." B: "What it is, nobody knows yet. It lies among young stars, so it may be a young star flaring up." C: "Its light hints at a nova: most of it came from glowing hydrogen gas. A nova is a blast on the surface of a small, burnt-out star." followed by "Nobody has confirmed it yet. People must still make some checks. A bigger telescope must look at its light."
+
+## Why this is the one place where a source that appeared between visits can be found
 
 A star or planet that was always there is in deeper catalogues than SPHEREx's. A thing that *changed* is
 different, and an eruption hidden behind the dust of the Milky Way's plane is invisible to optical
@@ -675,7 +708,7 @@ The Transient Name Server misses some novae in our Galaxy (V7994 Sgr is not in i
 the Astronomer's Telegram carry more weight here.
 
 **Not checked:** the Astronomer's Telegram full text; NASA ADS; CBETs; MAXI and Swift X-ray records for
-2025-26 (a nova's soft X-ray phase); the full Li & Wang 2024 table; Lasair and ANTARES. Reflections of bright
+2025-26 (a nova's supersoft X-ray phase); the full Li & Wang 2024 table; Lasair and ANTARES. Reflections of bright
 stars other than V345 Nor were excluded only by the turn of the spacecraft and the fixed position, not tested
 in images.
 
@@ -686,7 +719,7 @@ in images.
    or more) hydrogen and helium lines and lines of highly ionised atoms such as [Si VI] 1.964 or [Si VII]
    2.483 micrometres would confirm a nova; narrow Brackett-gamma with carbon monoxide bands, a young star. C is
    35 degrees from the Sun now; practical from about mid-January 2027 (52 degrees on January 15).
-2. A Swift X-ray observation: a soft X-ray source would mean a nova.
+2. A Swift X-ray observation: a supersoft X-ray source would mean a nova.
 3. The next SPHEREx visit (about February 2027) to follow the 4.49 micrometre line.
 4. A professional check of the line identifications.
 5. Human searches of the Astronomer's Telegram full text and NASA ADS.
@@ -804,8 +837,9 @@ answers. The 63 tiles were **not** run again; only the three candidates' follow-
    near it in the same exposure are fitted together, each as a star-shaped spot of the exposure's own width.
    Beside it the old circle is kept, with two tests of whether its light is centred on the source
    (`aperture_check`): where the centroid of the light in the circle lies, and how concentrated the light is
-   (the 1.5 / 2.5 pixel ratio). The faint-state limit comes from the same fit at 12 empty places around the
-   source (`blank_test`), not from the formal error.
+   (the 1.5 / 2.5 pixel ratio). The faint-state limit comes from the same fit at 12 places on a ring 5 pixels
+   out from the source (`blank_test`; the places are not checked to be empty, so a star on the ring counts as
+   a false signal), not from the formal error. The limit is three times the robust scatter of those 12.
 2. **The position is the bright-state centroid** (`centroid_fit`, `describe`): the mean of fits in exposures
    where the source is bright and not saturated, after dropping any exposure whose sky coordinates disagree by
    more than 3 arcsec. In the tile run itself a survivor is now placed by its detections in the bright images
@@ -832,17 +866,21 @@ picture?
 | First visit (2025), D6, fit with neighbours modelled | -0.7 mJy: absent | -0.7 mJy: absent | -0.1 mJy: absent |
 | First visit, 3-sigma limit from the blank-sky test | 15.0 mJy | 6.0 mJy | 2.1 mJy |
 | The old circle at the true place in 2025 | 62.6 mJy, light centred 2.0 pixels away, concentration 0.06 against 0.82: **a neighbour's light** | 26.1 mJy, centred 1.4 pixels away, 0.33 against 0.85: **a neighbour's light** | 3.3 mJy, not significant |
-| Bright visits, D6 median of clean exposures | 2,538 mJy in March-April (8 clean, 10 saturated); 669 in August-September | 420 in February-March; 1,003 in August | 101 in February-March (continuum plus lines) |
+| Bright visits, D6 median of the exposures not saturated at the source | 2,538 mJy in March-April (8 not saturated, all 8 with OVERFLOW pixels, so partial reads; 10 saturated); 669 in August-September (14 of 19 with OVERFLOW pixels) | 420 in February-March; 1,003 in August (all 18 with OVERFLOW pixels) | 101 in February-March (continuum plus lines) |
 | Rise, at least | 170 times | 167 times | 49 times |
 | Catalogued star within 1.5 arcsec | none | none | none |
 | Brightest catalogued star whose light reaches the circle | AllWISE J180312.46-232746.7, W2 6.49 = 437 mJy, 20.1 arcsec | CatWISE J165244.11-444031.9, W2 9.02 = 42 mJy, 10.0 arcsec | GLIMPSE G330.4070-00.0826, [4.5] 9.11 = 41 mJy, 20.6 arcsec |
 | Tile images on an emission line | cannot tell: both bright tile images are saturated | no (0.81 and 0.90 of the continuum) | **yes**: 4.739 micrometres 1.69 times and 4.631 micrometres 2.78 times the continuum of about 100 mJy |
 
-So yes, with three plain differences:
+So yes, with four plain differences:
 
 - **B's rise.** The fixed code gives "at least 167 times", not the ruling's "at least 250", because its blank-sky
-  limit for B in 2025 (6.0 mJy; the largest of 12 empty places was 22 mJy) is above the reviewers' 2.5-4.0 mJy.
+  limit for B in 2025 (6.0 mJy; the largest of its 12 ring places was 22 mJy) is above the reviewers' 2.5-4.0 mJy.
   Both are lower bounds; the ruling's number stands, and the code's is the more cautious.
+- **A's limit.** One of A's 12 ring places read 30 mJy (scatter 5.0 mJy, median 2.3), twice the code's
+  15.0 mJy limit, which uses the robust scatter of the 12. Judged by that largest value, as the reviewers judged
+  theirs (14 mJy, the largest of 30 places), the code would give a rise of only about 84 times, which does not
+  reach "more than 100". The ruling's "more than 100 times" rests on the reviewers' fits, not on this rerun.
 - **A's nearby GLIMPSE II star.** The code asks the GLIMPSE II *catalogue*, whose nearest star is 4.0 arcsec away
   ([4.5] 13.44 = 0.76 mJy). The reviewers' star 2.9-3.0 arcsec away ([4.5] 14.35 = 0.33 mJy) is in the GLIMPSE II
   *archive* table (`docs/sweep/vetting/A/archives/`), which the code does not ask. Neither is at the place.
@@ -850,7 +888,9 @@ So yes, with three plain differences:
   old circle there (8.2 mJy) is again mostly neighbours' light.
 
 The new light curves (`docs/sweep/candidate_A_lightcurve.png` and the same for B and C) show every clean
-exposure measured this way.
+exposure measured this way in which the fit is at least 3 times its own error. A visit in which the source
+was not detected is drawn as a downward arrow at the code's 3-sigma limit for detector 6 (15.0, 6.0 and
+2.1 mJy), never as a faint measurement: a value at or below zero is not a detection.
 
 ## What would confirm them, and who must act
 

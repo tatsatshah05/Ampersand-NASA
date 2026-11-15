@@ -22,12 +22,15 @@ import { FINDS } from './finds'
 import { movementInfo, pictureInfo } from './guide'
 import {
   CHANGE_CAUTION,
+  TIMES_SCATTER_NOTE,
+  beforeAfter,
   catalogueCheck,
   catalogueLine,
   changeHeadline,
   compassWord,
   dateSpan,
   expertCells,
+  expertResult,
   flagsNote,
   monthYearLong,
   overallResult,
@@ -254,77 +257,111 @@ describe('built cases', () => {
 })
 
 // The three candidates of our sweep (finds.ts), on the server's real answers of 15 Nov 2026 for the
-// views their buttons ask for: the corrected position, held still (pmra = pmdec = 0), in the detector
-// that shows each best. The page's own measure, per visit, against the referee's ruling:
-//   A, detector 6: -6.2 (not seen), 521, 168 times the scatter. Ruling: about 0 in Aug-Sep 2025 once
-//     the 437 mJy star 20″ away is modelled; 2.4-2.9 Jy in spring 2026; 0.67-0.80 Jy in Aug 2026.
-//   B, detector 6: -1.8, 282, 619. Ruling: about 0 in 2025; about 400 mJy in March, 1,000-1,090 in August.
-//   C, detector 5: -1.1, 75, 0.7. Ruling: about 0 in 2025; 85-110 mJy in Feb-Mar 2026; 3-5 mJy in Jul-Sep 2026.
+// views their buttons ask for: the corrected position, held still (pmra = pmdec = 0), in detector 6.
+// The page's own measure, per visit, against the referee's ruling:
+//   A: -6.2 (not seen), 521, 168 times the scatter (fitted 1,925 and 631 mJy). Ruling: about 0 in
+//     Aug-Sep 2025 once the 437 mJy star 20″ away is modelled; 2.4-2.9 Jy in spring 2026; 0.67-0.80 Jy in Aug 2026.
+//   B: -2.6, 282, 619 (377 and 926 mJy). Ruling: about 0 in 2025; about 400 mJy in March, 1,000-1,090 in August.
+//   C: -1.4, 92 (129 mJy), unknown (two April exposures partly spoiled), 3.3 (marginal). Ruling: about
+//     0 in 2025; 85-110 mJy in Feb-Mar 2026; a third of that in April; 3-5 mJy in Jul-Sep 2026, lines persisting.
+//   C in detector 5 reads "not seen" in August 2026 (0.7 times the scatter), which reads as "back to
+//   nearly nothing", a phrase the ruling forbids: the page shows C in detector 6.
 const findA = findAJson as unknown as FramesReady
 const findB = findBJson as unknown as FramesReady
-const findC = findCJson as unknown as FramesReady
-const findC6 = findC6Json as unknown as FramesReady
-const allowed = (key: string) => FINDS.find((f) => f.key === key)?.allowed
+const findC5 = findCJson as unknown as FramesReady
+const findC = findC6Json as unknown as FramesReady
+const find = (key: string) => FINDS.find((f) => f.key === key)!
+const allowed = (key: string) => find(key).allowed
 
 describe('something that appears: the three candidates', () => {
-  it('A: says what was seen when, then the referee’s sentence and where the brightness tool is', () => {
+  it('A: the headline, then the table, then the referee’s sentence under it; no pointer to the brightness tool', () => {
     expect(overallResult(findA)).toEqual({
       sentence: 'Not seen in August 2025. Clearly there by March 2026.',
-      more: [allowed('A'), 'For brightness, see Expert’s Brightness over time.'],
+      more: [],
+      after: [allowed('A')],
       pointer: null,
     })
-    // Beginner's column says how clearly it is seen in each visit, not how far it moved; the
-    // line on how clearly it is seen would only say the headline again.
+    // Beginner's column says how clearly it is seen in each visit, and how it changed from the last
+    // visit it was clearly seen in, by the page's own measure (1,925 then 631 mJy: fainter).
     expect(plainColumn(findA)).toEqual({ header: 'Seen', label: 'Every visit, and how clearly it is seen in it' })
-    expect(plain(findA)).toEqual(['not seen', 'seen clearly', 'seen clearly'])
+    expect(plain(findA)).toEqual(['not seen', 'seen clearly', 'seen clearly, fainter'])
     expect(tableNotes(findA, 'beginner')).toEqual([])
     expect(seenLine(findA)).toBeNull()
   })
 
-  it('B: the same, and the table says "not seen" where it is not seen, at both levels', () => {
+  it('B: brighter in August than in March, and "not seen" where it is not seen, at both levels', () => {
     expect(overallResult(findB)).toEqual({
       sentence: 'Not seen in August 2025. Clearly there by March 2026.',
-      more: [allowed('B'), 'For brightness, see Expert’s Brightness over time.'],
+      more: [],
+      after: [allowed('B')],
       pointer: null,
     })
-    expect(plain(findB)).toEqual(['not seen', 'seen clearly', 'seen clearly'])
-    expect(expert(findB)[0]).toEqual({ measured: 'not seen', total: '', predicted: '0.0, 0.0', differ: '', about: '2–21 Aug 2025 · 18 exp. · not seen' })
+    expect(plain(findB)).toEqual(['not seen', 'seen clearly', 'seen clearly, brighter'])
+    // Nothing is predicted for a candidate held at its place, so there is nothing to differ from.
+    expect(expert(findB)[0]).toEqual({ measured: 'not seen', total: '', predicted: '', differ: '', about: '2–21 Aug 2025 · 18 exp. · not seen' })
     expect(expert(findB)[2].measured).toBe('−0.3, +0.1') // Expert keeps the shifts: within error, as its notes say
+    // The reviewers' 0.3 arcsec, not the fit's 0.03: the shift of 0.3″ is then plainly within error.
+    expect(expert(findB)[1].about).toBe('8–16 Mar 2026 · 19 exp. · clear, 282× · ±0.3″')
     expect(rowAnnouncement(findB, 0)).toBe('Visit 1 of 3, August 2025: not seen.')
+    expect(rowAnnouncement(findB, 2)).toBe('Visit 3 of 3, August 2026: seen clearly, brighter.')
     // Held still at its place by the page, not by any catalogue: no "catalogue motion" anywhere.
     expect(catalogueCheck(findB)).toBeNull()
     expect(catalogueLine(findB)).toBeNull()
     expect([...movementInfo(findB), ...pictureInfo(findB, 'Candidate B')].join(' ')).not.toMatch(/catalogue/i)
   })
 
-  it('C: appeared and faded again', () => {
+  it('C, in detector 6: appeared and faded again, still only just seen in August 2026; the spoiled April visit is said so', () => {
     expect(overallResult(findC)).toEqual({
-      sentence: 'Not seen in August 2025. Clearly there in February 2026, and faint again by August 2026.',
-      more: [allowed('C'), 'For brightness, see Expert’s Brightness over time.'],
+      sentence: 'Not seen in August 2025. Clearly there in March 2026, and faint again by August 2026.',
+      more: [],
+      after: [allowed('C')],
       pointer: null,
     })
-    expect(plain(findC)).toEqual(['not seen', 'seen clearly', 'not seen'])
+    expect(plain(findC)).toEqual(['not seen', 'seen clearly', 'picture spoiled here', 'only just seen'])
     expect(tableNotes(findC, 'beginner')).toEqual([])
-    // Visit 3 is detector 6's alone: here the third row is visit 4, and the screen reader says so.
-    expect(rowAnnouncement(findC, 2)).toBe('Visit 4, number 3 of 3, August 2026: not seen.')
+    expect(rowAnnouncement(findC, 2)).toBe('Visit 3 of 4, April 2026: picture spoiled here.')
+    // In detector 5, August 2026 reads "not seen": the reason the page shows detector 6.
+    expect(plain(findC5)).toEqual(['not seen', 'seen clearly', 'not seen'])
   })
 
-  it('a visit where how clearly is not known is left out of the headline (C in detector 6, two spoiled April exposures)', () => {
-    expect(changeHeadline(findC6)?.sentence).toBe('Not seen in August 2025. Clearly there in March 2026, and faint again by August 2026.')
-    expect(plain(findC6)).toEqual(['not seen', 'seen clearly', 'not known', 'only just seen'])
+  it('Blink and the labels on the picture compare the visit without it and the first one with it', () => {
+    expect(beforeAfter(findA)).toEqual({ before: 0, after: 1 })
+    expect(beforeAfter(findB)).toEqual({ before: 0, after: 1 })
+    expect(beforeAfter(findC)).toEqual({ before: 0, after: 1 }) // never visit 1 and visit 4, both without it
+    for (const d of [barnard, difference, sum, request, epsInd, rwAur, nova, wise]) expect(beforeAfter(d)).toBeNull()
   })
 
-  it('Expert has no headline over its table: the same words come first under it, with every caution kept', () => {
+  it('Expert: the headline, the referee’s sentence and the reviewers’ brightness over the table; the candidate’s notes first under it, then every caution', () => {
+    expect(expertResult(findB)).toEqual({
+      sentence: 'Not seen in August 2025. Clearly there by March 2026.',
+      more: [allowed('B'), find('B').brightness],
+      pointer: null,
+    })
     expect(tableNotes(findB, 'expert')).toEqual([
-      'Not seen in August 2025. Clearly there by March 2026.',
-      allowed('B'),
-      'For brightness, see Brightness over time.',
+      TIMES_SCATTER_NOTE,
+      find('B').neighbour,
+      `This picture is detector 6 (4.4–5.0 micrometres). ${find('B').dates}`,
+      find('B').probably,
+      find('B').checked,
       'Within error, visit 3: under a third of one SPHEREx pixel (6.15 arcseconds), so it may be measurement error rather than real movement.',
       'Visit 1: no position could be measured. Visit details says why.',
       'Not detected in visit 1: at least 3 times the background scatter is needed.',
     ])
-    // + is the fixed place, not a catalogue prediction: the caption says so, and why there is none.
-    expect(tableCaption(findB)).toBe('Shift since visit 2 in ″, east and north; + is its fixed place (no Gaia star to G 17 within 15″ to predict from).')
+    expect(tableNotes(findC, 'expert')).toContain(find('C').spoiled!.note)
+    // + is the corrected place, not a catalogue prediction: the caption says so.
+    expect(tableCaption(findB)).toBe('Shift since visit 2 in ″, east and north; + marks its corrected place, where it is held (no catalogue gives it a motion).')
+    // Anywhere else, Expert has no sentence over its table.
+    expect(expertResult(barnard)).toBeNull()
+  })
+
+  it('never points a candidate to the brightness tool, whose 2025 circle held a neighbour’s light', () => {
+    for (const d of [findA, findB, findC]) {
+      const r = overallResult(d)
+      const e = expertResult(d)!
+      expect([r.sentence, ...r.more, ...(r.after ?? []), r.pointer ?? '', e.sentence, ...e.more, ...tableNotes(d, 'expert')].join(' ')).not.toMatch(
+        /Brightness over time|brightness tool/,
+      )
+    }
   })
 
   it('says what was detected, never what the object is, and never "new" or "discovery"', () => {
@@ -335,12 +372,12 @@ describe('something that appears: the three candidates', () => {
     }
   })
 
-  it('keeps Beginner’s block as short as it can be around the referee’s sentence (51, 54 and 73 words)', () => {
+  it('keeps Beginner’s words around the referee’s sentence few (70, 73 and 99 words with it)', () => {
     const counts = [findA, findB, findC].map((d) => {
       const r = overallResult(d)
-      return words([r.sentence, ...r.more, seenLine(d) ?? '', ...plain(d), ...tableNotes(d, 'beginner')].join(' '))
+      return words([r.sentence, ...r.more, ...(r.after ?? []), seenLine(d) ?? '', ...plain(d), ...tableNotes(d, 'beginner')].join(' '))
     })
-    expect(counts).toEqual([76, 79, 102])
+    expect(counts).toEqual([70, 73, 99])
   })
 })
 

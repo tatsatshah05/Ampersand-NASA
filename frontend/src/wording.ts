@@ -11,7 +11,8 @@
 // at the centre; otherwise the words say what was measured and why it may not be movement.
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady, type Target } from './api'
 import { blendNotes, coreNotes, detectionNotes, detectionShort, isMarginal, listVisits } from './detection'
-import { findAt } from './finds'
+import { DETECTORS } from './address'
+import { findAt, type Find } from './finds'
 import {
   measuredRows,
   realShiftBar,
@@ -236,7 +237,7 @@ export function plainResult(row: VisitRow, data: FramesReady): string {
   let words: string
   // Under a headline about what was seen when, Beginner's column says how clearly it is seen in each
   // visit (plainColumn), by the same rule: "not seen" where it is not.
-  if (changeHeadline(data)) return seenWords(row.frame)
+  if (changeHeadline(data)) return findShown(data) ? findSeenWords(row, data) : seenWords(row.frame)
   if (isSum(data)) words = 'every visit in one picture'
   else if (isAlone(data)) words = 'the only visit so far'
   else if (row.start) words = 'start'
@@ -293,15 +294,16 @@ export function expertCells(row: VisitRow, data: FramesReady): ExpertCells {
     dateSpan(f.date_start, f.date_end),
     `${f.n_exposures} exp.`,
     detectionShort(f),
-    c?.err_arcsec != null ? `±${errWords(c.err_arcsec)}″` : null,
+    c?.err_arcsec != null ? `±${errWords(heldAtFind(data) ? Math.max(c.err_arcsec, FIND_POSITION_ERR_ARCSEC) : c.err_arcsec)}″` : null,
     blended(row) && !allBlended ? 'blended' : null,
     doubt && !everyRow((r) => shiftDoubt(r, data) === doubt) ? (doubt === 'another spot' ? 'maybe another spot' : 'within error') : null,
   ].filter((w): w is string => !!w)
   return {
     measured,
     total: row.shift ? row.shift.total.toFixed(1) : '',
-    predicted: row.predicted ? pair(row.predicted) : row.start || isSum(data) || isAlone(data) ? '' : '—',
-    differ: row.differ != null ? `${row.differ.toFixed(1)}″ (${(row.differ / NATIVE_PIXEL_ARCSEC).toFixed(2)} px)` : '',
+    // A held candidate has no motion from anyone, so nothing is predicted and there is nothing to differ from.
+    predicted: heldAtFind(data) ? '' : row.predicted ? pair(row.predicted) : row.start || isSum(data) || isAlone(data) ? '' : '—',
+    differ: heldAtFind(data) ? '' : row.differ != null ? `${row.differ.toFixed(1)}″ (${(row.differ / NATIVE_PIXEL_ARCSEC).toFixed(2)} px)` : '',
     about: about.join(' · '),
   }
 }
@@ -319,6 +321,16 @@ const startEpoch = (data: FramesReady): number | null => visitRows(data).find((r
 const heldAtFind = (data: FramesReady): boolean =>
   findAt(data.ra, data.dec) !== null && data.target?.origin === 'request' && data.target.pmra === 0 && data.target.pmdec === 0
 
+/** The candidate a view shows, held at its corrected place; null for anything else. */
+export const findShown = (data: FramesReady): Find | null => (heldAtFind(data) ? findAt(data.ra, data.dec) : null)
+
+/**
+ * The smallest position error shown for a held candidate: the reviewers checked SPHEREx's bright-state
+ * positions against 7 to 12 control stars per field and found them good to about 0.3 arcsec, which
+ * is larger than a bright source's formal fit error (B's read ±0.03″ beside a 0.3″ shift).
+ */
+export const FIND_POSITION_ERR_ARCSEC = 0.3
+
 /** What Expert's table holds, in one line over it. */
 export function tableCaption(data: FramesReady): string {
   if (isSum(data)) return 'The sum of all visits: one picture, so there is nothing to compare.'
@@ -329,7 +341,7 @@ export function tableCaption(data: FramesReady): string {
   // place. That no Gaia star to G 17 lies within 15″ is what /api/frames answers there without a
   // motion (no target: src/fixtures/frames/find_*_d6_nomotion.json).
   if (heldAtFind(data)) {
-    return `Shift since visit ${from} in ″, east and north; + is its fixed place (no Gaia star to G 17 within 15″ to predict from).`
+    return `Shift since visit ${from} in ″, east and north; + marks its corrected place, where it is held (no catalogue gives it a motion).`
   }
   const by = predictedBy(data.target)
   return `Shift since visit ${from} in ″, east and north${by ? `; + from ${by}` : ''}.`
@@ -387,8 +399,9 @@ export function tableNotes(data: FramesReady, level: 'beginner' | 'expert'): str
     if (notFound.length) notes.push(`Not found in ${listVisits(notFound)}: no clear spot could be measured there.`)
     return notes
   }
-  // Expert has no headline over its table: the same words come first under it.
-  if (change) notes.push(change.sentence, ...changeLines(data, 'expert'))
+  // Expert shows the headline over its table (expertResult); one of our candidates' notes come first under it.
+  const find = change ? findShown(data) : null
+  if (find) notes.push(...findNotes(find, data))
   if (isSum(data)) notes.push('Every visit is in this one frame, so nothing moves in it.')
   if (isAlone(data)) notes.push('This is the only visit so far with this detector, so there is nothing to compare it with yet.')
   if (data.mode === 'difference') {
@@ -545,20 +558,78 @@ export function plainColumn(data: FramesReady): { header: string; label: string 
     : { header: 'Moved (arcseconds)', label: 'Every visit, and how far it had moved since the start' }
 }
 
-/** The brightness tool by the name it has at each level. */
-const BRIGHTNESS_TOOL = { beginner: 'Expert’s Brightness over time', expert: 'Brightness over time' } as const
 /** The one line said under the headline for any place that is not one of our candidates. */
 export const CHANGE_CAUTION = 'This can be a real change in the sky or a measuring problem. The brightness tool shows every measurement.'
 
 /**
- * The lines under the headline, in normal type: for one of our candidates (finds.ts), the
- * referee's allowed sentence word for word and where the brightness tool is; for anywhere
- * else, one line saying it may be a measuring problem.
+ * The lines that go with the headline: for one of our candidates (finds.ts), the referee's allowed
+ * sentence word for word, and in Expert its brightness in each visit from the reviewers' fits; for
+ * anywhere else, one line saying it may be a measuring problem. Never a pointer to the brightness
+ * tool for a candidate: that tool measures a circle with no neighbour modelled, which in 2025 held
+ * a neighbouring star's light (lightcurve.ts, guardLightcurve).
  */
 export function changeLines(data: FramesReady, level: 'beginner' | 'expert'): string[] {
   const find = findAt(data.ra, data.dec)
   if (!find) return [CHANGE_CAUTION]
-  return [find.allowed, `For brightness, see ${BRIGHTNESS_TOOL[level]}.`]
+  return level === 'expert' ? [find.allowed, find.brightness] : [find.allowed]
+}
+
+/** What "clear, 282×" in Expert's rows means, said under a candidate's table. */
+export const TIMES_SCATTER_NOTE =
+  'The number after “clear” is how many times the background scatter the spot stands at its place: how surely it is seen, not how many times brighter it got.'
+
+/** "This picture is detector 6 (4.4–5.0 micrometres)." */
+function detectorWords(n: number): string {
+  const d = DETECTORS.find((x) => x.number === n)
+  return d ? `This picture is detector ${n} (${d.from.toFixed(1)}–${d.to.toFixed(1)} micrometres).` : `This picture is detector ${n}.`
+}
+
+/** Whether a visit of this view is one the candidate's picture is spoiled in (finds.ts, `spoiled`). */
+const spoiledVisit = (find: Find, data: FramesReady, epoch: number | null): boolean =>
+  !!find.spoiled && data.detector === find.det && epoch !== null && find.spoiled.visits.includes(epoch)
+
+/** A candidate's notes under Expert's table: how to read it, what is near it, when, what it may be, what was searched. */
+function findNotes(find: Find, data: FramesReady): string[] {
+  const spoiled = find.spoiled && data.frames.some((f) => spoiledVisit(find, data, f.epoch)) ? [find.spoiled.note] : []
+  return [TIMES_SCATTER_NOTE, find.neighbour, `${detectorWords(data.detector)} ${find.dates}`, ...spoiled, find.probably, find.checked]
+}
+
+/**
+ * The visit where a candidate is not seen and the first one after it where it clearly is: what
+ * Blink flips between and what the picture is labelled "Before" and "After" with. Indices into
+ * data.frames; null for anything that is not one of our candidates appearing.
+ */
+export function beforeAfter(data: FramesReady): { before: number; after: number } | null {
+  const change = changeHeadline(data)
+  if (!change || change.kind === 'faded' || !findShown(data)) return null
+  const before = data.frames.findIndex((f) => f.epoch !== null && change.notSeen.includes(f.epoch))
+  const after = data.frames.findIndex((f, i) => i > before && (f.detection === 'clear' || f.detection === 'saturated'))
+  return before >= 0 && after > before ? { before, after } : null
+}
+
+/**
+ * Beginner's "Seen" cell for one of our candidates: how clearly, and against the visit it was last
+ * clearly seen in, whether it was brighter or fainter by the page's own measure at its place (at
+ * least 1.5 times either way); "picture spoiled here" for a visit spoiled at its place (finds.ts).
+ */
+function findSeenWords(row: VisitRow, data: FramesReady): string {
+  const find = findShown(data)
+  const f = row.frame
+  if (find && spoiledVisit(find, data, f.epoch)) return 'picture spoiled here'
+  const words = seenWords(f)
+  if (f.detection !== 'clear') return words
+  const rows = visitRows(data)
+  const at = rows.findIndex((r) => r.frame === f)
+  const earlier = rows
+    .slice(0, at)
+    .reverse()
+    .find((r) => r.frame.detection === 'clear')
+  const now = measureOf(f).flux_mjy
+  const was = earlier ? measureOf(earlier.frame).flux_mjy : null
+  if (now == null || was == null || was <= 0) return words
+  if (now >= 1.5 * was) return `${words}, brighter`
+  if (now <= was / 1.5) return `${words}, fainter`
+  return words
 }
 
 type OverallKind = 'sum' | 'alone' | 'none found' | 'found once' | 'moved' | 'other spot' | 'came back' | 'still'
@@ -590,7 +661,16 @@ const BRIGHTNESS_ELSEWHERE = 'For brightness, see Expert’s Brightness over tim
  * found, and never calls a shift movement unless it is real (motion.ts) and a known object is
  * listed at the centre. The sentence is the same whichever visit is on screen.
  */
-export function overallResult(data: FramesReady): { sentence: string; more: string[]; pointer: string | null } {
+export interface Result {
+  sentence: string
+  /** Lines in normal type right under the sentence. */
+  more: string[]
+  /** Lines in normal type under the table (one of our candidates in Beginner: its allowed sentence). */
+  after?: string[]
+  pointer: string | null
+}
+
+export function overallResult(data: FramesReady): Result {
   const kind = overallKind(data)
   if (kind === 'sum') return { sentence: 'Every visit is added into this one picture, so nothing moves in it.', more: [], pointer: null }
   if (kind === 'alone') return { sentence: 'This is the only visit so far, so there is nothing to compare yet.', more: [], pointer: null }
@@ -598,8 +678,11 @@ export function overallResult(data: FramesReady): { sentence: string; more: stri
   const change = changeHeadline(data)
   if (change) {
     const lines = changeLines(data, 'beginner')
-    // One of our candidates: its sentence and where the brightness tool is, both in normal type under the headline.
-    return findAt(data.ra, data.dec) ? { sentence: change.sentence, more: lines, pointer: null } : { sentence: change.sentence, more: lines, pointer: BRIGHTNESS_ELSEWHERE }
+    // One of our candidates: its allowed sentence under the table, so the headline and the visits stay
+    // together at the top of the column in a short window (the sentence for C alone is 73 words).
+    return findAt(data.ra, data.dec)
+      ? { sentence: change.sentence, more: [], after: lines, pointer: null }
+      : { sentence: change.sentence, more: lines, pointer: BRIGHTNESS_ELSEWHERE }
   }
   const rows = visitRows(data)
   const measured = measuredRows(rows)
@@ -638,6 +721,17 @@ export function overallResult(data: FramesReady): { sentence: string; more: stri
   // The honest reason, and the catalogue's own expectation, in one line.
   const why = overall.total < SMALL_SHIFT_ARCSEC ? 'Any shift was under a third of a pixel.' : 'Any shift was within the measuring error.'
   return { sentence: `No movement seen ${when}.`, more: [check ? `${why} ${check}` : `${why} It may be a measuring error.`], pointer: BRIGHTNESS_ELSEWHERE }
+}
+
+/**
+ * Expert's headline over its table, for a place where something appeared or faded (null for
+ * anything else, whose table has no sentence over it): the headline and, for one of our
+ * candidates, its allowed sentence and its brightness in each visit, so a reader sees the claim
+ * and its numbers before the table.
+ */
+export function expertResult(data: FramesReady): Result | null {
+  const change = changeHeadline(data)
+  return change ? { sentence: change.sentence, more: changeLines(data, 'expert'), pointer: null } : null
 }
 
 export interface CatalogueCheck {
@@ -730,6 +824,8 @@ export function rowAnnouncement(data: FramesReady, index: number): string {
   const head = f.epoch === k ? `${rowName(f, data)} of ${all.length}, ${monthYearLong(f.date_mean)}` : `${rowName(f, data)}, number ${k} of ${all.length}, ${monthYearLong(f.date_mean)}`
   if (isAlone(data)) return `${head}: the only visit so far.`
   if (f.epoch !== null && changeHeadline(data)?.notSeen.includes(f.epoch)) return `${head}: not seen.`
+  // One of our candidates is held at one place: what is said is how clearly it is seen, as in Beginner's table.
+  if (changeHeadline(data) && findShown(data)) return `${head}: ${findSeenWords(row, data)}.`
   if (row.start) return `${head}: where it started.`
   if (!row.shift) return `${head}: no position could be measured.`
   if (row.shift.total < 0.05) return `${head}: in the same place as at the start.`

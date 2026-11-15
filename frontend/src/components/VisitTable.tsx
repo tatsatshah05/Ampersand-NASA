@@ -29,6 +29,13 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
   const rows = tableRows(data)
   const table = useRef<HTMLTableElement>(null)
 
+  // A new view starts with its block scrolled to the top, so the sentence over the table is in
+  // sight (the block is the same element from one target to the next and kept its scroll).
+  useLayoutEffect(() => {
+    const box = table.current?.closest('.readout-block')
+    if (box instanceof HTMLElement) box.scrollTop = 0
+  }, [data.key])
+
   // Keep the marked row inside the readout block when the visitor steps to it. Only the block
   // scrolls, never the page; and never while playing, so nothing moves by itself.
   useLayoutEffect(() => {
@@ -37,7 +44,9 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
     const row = table.current?.querySelector<HTMLElement>('[aria-current="true"]')
     if (!(box instanceof HTMLElement) || !row) return
     const top = row.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
-    const bottom = top + (row.closest('tbody')?.offsetHeight ?? row.offsetHeight)
+    // The marked element is the visit's own: a row in Beginner, the visit's two-row body in Expert. (The
+    // body around a Beginner row holds every visit, which scrolled the sentence over the table away.)
+    const bottom = top + row.offsetHeight
     if (top < box.scrollTop) box.scrollTop = top
     else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight
   }, [follow, current])

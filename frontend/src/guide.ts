@@ -9,6 +9,7 @@
 // or "centroid" here, and never "discovery" or "new planet" (guide.test.ts checks all of it).
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady } from './api'
 import { times } from './detection'
+import { findChangeInfo, findPictureInfo, findPlayerInfo } from './findsInfo'
 import { measuredRows, realShiftBar, shiftBetween, visitRows } from './motion'
 import { catalogueCheck, listVisits, monthYear, monthYearLong } from './wording'
 
@@ -300,14 +301,15 @@ export function levelInfo(): string[] {
 /** All popover texts for the view on screen, by key. None depends on which visit is shown. */
 export function infoFor(key: InfoKey, data: FramesReady | null, bright?: BrightStar[] | null, name?: string | null): string[] {
   switch (key) {
+    // One of our sweep's candidates (findsInfo.ts) is about something that appeared, not something that moved.
     case 'picture':
-      return pictureInfo(data, name)
+      return findPictureInfo(data, pictureInfo(data, name))
     case 'visits':
       return visitsInfo(data)
     case 'player':
-      return playerInfo(data)
+      return findPlayerInfo(data) ?? playerInfo(data)
     case 'movement':
-      return movementInfo(data)
+      return findChangeInfo(data) ?? movementInfo(data)
     case 'detection':
       return detectionInfo(data)
     case 'bright':

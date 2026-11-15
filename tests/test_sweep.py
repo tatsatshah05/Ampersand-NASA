@@ -381,8 +381,11 @@ def test_the_wing_of_a_saturated_nova_is_not_a_candidate():
 
 CAND = DATA / "candidates"
 RULED = {"A": (270.80408, -23.46818), "B": (253.18038, -44.67697), "C": (241.70906, -52.20564)}
-FIRST = {"A": (270.80362, -23.46745), "B": (253.18044, -44.67687), "C": (241.70931, -52.20484)}
-C_TILE_IMAGES = [{"obs_id": "2026W09_2A_0389_1", "mjy": 178.07}, {"obs_id": "2026W10_1A_0205_2", "mjy": 299.60}]
+# Read from the vetting folder, the only place the withdrawn positions and tile readings are kept.
+FIRST = {v["label"]: tuple(v["first_run_position_withdrawn"]) for v in sweep.vetted_candidates()}
+_RERUN = json.loads((Path(__file__).parent.parent / "docs" / "sweep" / "vetting" / "rerun.json").read_text())
+C_TILE_IMAGES = [{"obs_id": r["obs_id"], "mjy": round(r["tile_mjy"], 2)}
+                 for r in _RERUN["candidates"]["C"]["describe"]["lines"]["readings"]]
 
 
 def _arcsec(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -495,7 +498,7 @@ def test_the_brightest_star_whose_light_reaches_the_circle_is_named(ruled_catalo
 
 
 def test_w2_magnitudes_are_converted_by_code_not_by_hand():
-    assert sweep.w2_mjy(11.655) == pytest.approx(3.74, abs=0.01)     # the first write-up said 0.4 mJy
+    assert sweep.w2_mjy(11.655) == pytest.approx(3.74, abs=0.01)     # the first write-up was a factor of ten low
     assert sweep.w2_mjy(11.6) == pytest.approx(3.9, abs=0.05)
     assert "3.74 mJy" in sweep.brightness_text({"w2": 11.655})
     band, mjy = sweep.infrared_mjy({"w2": 6.487})
@@ -540,5 +543,21 @@ def test_the_summary_carries_only_the_ruled_numbers(tmp_path, monkeypatch):
     s = sweep.summarise(vetted=vetted)
     (a,) = s["survivors"]
     assert a["label"] == "A" and (a["ra"], a["dec"]) == RULED["A"] and a["kind"] == "candidate"
-    assert "bright_mjy" not in a and "270.80362" not in json.dumps(s)
+    assert "bright_mjy" not in a and str(FIRST["A"][0]) not in json.dumps(s)
     assert "nobody has confirmed it yet" in a["allowed_sentence"]
+
+
+def test_a_light_curve_draws_a_non_detection_as_an_arrow_never_as_a_faint_point(tmp_path):
+    """In the rerun, A, B and C were not detected in 2025: no 2025 point is drawn, one arrow at the limit is."""
+    rerun = json.loads((Path(__file__).parent.parent / "docs" / "sweep" / "vetting" / "rerun.json").read_text())
+    for label, limit in (("A", 14.97), ("B", 6.0), ("C", 2.07)):
+        d = rerun["candidates"][label]["describe"]
+        points, limits = sweep.lightcurve_marks(d)
+        first = d["epochs"]["0"]["dates"]
+        assert limits[0]["mjy"] == limit and limits[0]["dates"] == first
+        # Every point is a detection at 3 times its error or more, and none is from the 2025 visit.
+        assert points and all(p["mjy"] > 0 for p in points)
+        t_end = sweep.Time(f"{first[1]}T23:59:59", format="isot", scale="utc").mjd
+        assert all(p["mjd"] > t_end for p in points)
+        sweep.lightcurve_picture(points, tmp_path / f"{label}.png", label, limits=limits)
+        assert (tmp_path / f"{label}.png").stat().st_size > 0

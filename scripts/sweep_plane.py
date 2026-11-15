@@ -71,6 +71,22 @@ def _sep_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> float:
     return sweep.sep_deg(ra1, dec1, ra2, dec2) * 3600.0
 
 
+def draw_lightcurve(v: dict, d: dict) -> None:
+    """docs/sweep/candidate_<label>_lightcurve.png from a `describe` result: detections as points, misses as arrows."""
+    points, limits = sweep.lightcurve_marks(d)
+    sweep.lightcurve_picture(points, PICTURES / f"candidate_{v['label']}_lightcurve.png",
+                             f"Candidate {v['label']}, RA {v['ra']:.5f} Dec {v['dec']:+.5f}: fits with the neighbours "
+                             "modelled, every clean exposure at 3 times its error or more (mJy, log scale)",
+                             limits=limits)
+
+
+def redraw_lightcurves() -> None:
+    """The three light curves again from docs/sweep/vetting/rerun.json, without measuring anything again."""
+    rerun = json.loads(RERUN.read_text())
+    for v in sweep.vetted_candidates():
+        draw_lightcurve(v, rerun["candidates"][v["label"]]["describe"])
+
+
 def describe_candidates(log=print) -> dict:
     """The follow-up of the three ruled candidates again, with the fixed code; nothing else is rerun.
 
@@ -114,11 +130,7 @@ def describe_candidates(log=print) -> dict:
             "brightest_in_reach": cls["circle"]["brightest_in_reach"][:2],
             "possible_emission_line": (d.get("lines") or {}).get("possible_emission_line"),
         }
-        points = [{"d": r["detector"], "mjd": r["mjd"], "mjy": r["fit_mjy"]} for r in d["exposures"]
-                  if r["status"] == "ok" and r["fit_mjy"] is not None]
-        sweep.lightcurve_picture(points, PICTURES / f"candidate_{v['label']}_lightcurve.png",
-                                 f"Candidate {v['label']}, RA {v['ra']:.5f} Dec {v['dec']:+.5f}: every clean exposure, "
-                                 "fitted with its neighbours modelled (mJy, log scale)")
+        draw_lightcurve(v, d)
         out["candidates"][v["label"]] = {"summary": summary_, "describe": d, "classification": cls,
                                          "catalogue_answers": cat["answers"], "catalogue_failed": cat["failed"]}
         log(f"[{v['label']}] {json.dumps(summary_)}")
@@ -137,6 +149,8 @@ def main() -> int:
     ap.add_argument("--describe", action="store_true",
                     help="rerun only the follow-up of the three ruled candidates with the fixed code "
                          "(writes docs/sweep/vetting/rerun.json)")
+    ap.add_argument("--pictures", action="store_true",
+                    help="redraw the three candidates' light curves from docs/sweep/vetting/rerun.json")
     ap.add_argument("--proof", action="store_true", help="run the proof tile around V7994 Sgr (not part of the sweep)")
     ap.add_argument("--shard", default="0/1", help="i/n: this process takes the tiles whose number is i modulo n")
     ap.add_argument("--min-mjy", type=float, default=sweep.DETECT_MJY)
@@ -150,6 +164,9 @@ def main() -> int:
     log = lambda *a: print(*a, flush=True)  # noqa: E731
     if args.describe:
         describe_candidates(log)
+        return 0
+    if args.pictures:
+        redraw_lightcurves()
         return 0
     if args.summary:
         s = summary()
