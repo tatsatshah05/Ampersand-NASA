@@ -890,3 +890,19 @@ New data reaches cached results (2026-11-14, `tests/test_new_data.py`)
   when the archive does not answer) and the cached result is served meanwhile.
 - `SPHEREX_COLLECTIONS` (comma-separated) replaces the collection names without a code
   change. Search results (`cache/search2/results`) are not refreshed automatically.
+
+Novae of 2025 (2026-11-14, `scripts/check_nova.py`, `docs/novae.md`; outputs in `docs/novae/output_*.txt`)
+- V572 Vel (max 27 June 2025), 21 May to 19 July 2026 (day +328 to +386): about 41 mJy at 0.75 to 1.65 micrometres,
+  about 100 at 2.4 to 3.8, about 1,000 at 3.8 to 4.4, about 1,500 at 4.4 to 5.0; 1 to 4 mJy before the eruption in
+  the same circle. Comparison stars (15 Gaia stars, same exposures and channels) unchanged to a few per cent.
+  4.3 micrometre light fell 43 to 48 per cent in 33 days, 1.5 micrometre light 18 to 21 per cent. Every clean reading at
+  3.8 to 5 micrometres carries an OVERFLOW pixel (partial reading); the red rise at 2.4 to 2.9 micrometres does not.
+  Colour temperature of the continuum 480 to 570 K depending on choices (a power law fits as well). The dust itself was
+  already reported: ATel no. 18127 (29 Oct 2026), 1,030 K then 480 K from the same SPHEREx visits. Do not call it new.
+- V462 Lup (max 20 June 2025): the July to August 2026 spectrum has no OVERFLOW pixel in 91 of 92 clean readings: 9 to 14
+  mJy at 0.75 to 2.4 micrometres, 57 at 3.8 to 4.4, 84 at 4.4 to 5.0; February 2026: about 40 mJy at 1.1 to 1.6, 830 to
+  980 at 3.8 to 5.0. Same-channel fall February to July: 4 times (near) and 12 to 17 times (long). AAVSO shows no dust dip.
+- V7994 Sgr (max 26 Sept 2025): 1,070 and 1,420 mJy at 3.8 to 4.4 and 4.4 to 5.0 (day +175 to +192), 96 and 177 mJy
+  (day +334 to +347, no OVERFLOW pixel); blackbody 580 K then 430 K. V1935 Cen: no excess measurable.
+- In crowded fields (V1935 Cen, V7994 Sgr) the brightness before the eruption is negative at 2.4 to 5 micrometres
+  (-2 to -7 mJy): the sky ring over-subtracts, so an excess below about 5 to 10 mJy cannot be seen there.
