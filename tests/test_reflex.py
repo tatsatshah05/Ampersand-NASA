@@ -85,3 +85,50 @@ def test_drift_box_is_centred_on_the_reflex_rate():
     assert 1.0 < rad <= reflex.DRIFT_RADIUS_MAX
     ce2, cn2, _ = reflex.drift_box(-0.01, 400.0, -300.0, 50.0)  # reversed Earth: reversed centre
     assert (ce2, cn2) == (-4.0, 3.0)
+
+
+def test_interval_ignores_negative_and_missing_signal():
+    """synthetic arithmetic test, not data: a profile with NaN and large negative points (the old -1e9
+    sentinel, squared, used to count as 'inside' the interval)."""
+    grid = np.arange(-0.01, 0.0201, 0.001)
+    snr = 12.0 - 2000.0 * (grid - 0.01) ** 2 * 100  # peak 12 at 1/d = 0.01
+    snr[grid < -0.004] = -9.3e8
+    snr[3] = np.nan
+    ib = int(np.nanargmax(snr))
+    near, far = reflex._interval(grid, snr, ib, 4.0)
+    assert near is not None and far is not None and near < 100.0 < far
+
+
+def test_interval_far_end_is_none_when_the_profile_stays_flat_to_infinity():
+    """synthetic arithmetic test, not data: S/N flat at 10 for every 1/d."""
+    grid = np.arange(-0.01, 0.0201, 0.001)
+    snr = np.full(len(grid), 10.0)
+    snr[0] = 9.0
+    near, far = reflex._interval(grid, snr, 5, 4.0)
+    assert far is None
+
+
+def test_null_visit_never_gives_a_measured_distance():
+    """Real recorded results (docs/reflex/results.json, written by check_reflex.py null): the Eris field in its
+    other visits used to print 'distance measured' for a noise peak; now no null run may."""
+    import json
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "docs" / "reflex" / "results.json"
+    if not path.exists():
+        return
+    data = json.loads(path.read_text())
+    rows = [r for k, v in data.items() if k.startswith("null_runs") for r in v["rows"]]
+    assert rows, "run scripts/check_reflex.py null"
+    for r in rows:
+        assert not any(r["forward_distance_measured"])
+        assert r["n_reversed_surviving_vetting"] == 0
+        assert not any(v.startswith("candidate") for v in r["forward_verdicts"])
+
+
+def test_epochs_group_exposures_of_one_detector_within_a_fraction_of_a_day():
+    """synthetic arithmetic test, not data: made-up times and detectors."""
+    t = np.array([0.0, 0.05, 0.1, 3.0, 3.1, 0.02, 3.05])
+    det = np.array([1, 1, 1, 1, 1, 2, 2])
+    groups = reflex.epochs_of(t, det)
+    assert sorted(len(g) for g in groups) == [1, 1, 2, 3]

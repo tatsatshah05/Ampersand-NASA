@@ -26,19 +26,31 @@ def main() -> None:
         width=1000,
         height=420,
     )
-    ch.line(prof["inv_d"], prof["snr"], color=BLUE)
+    pts = [(x, y) for x, y in zip(prof["inv_d"], prof["snr"], strict=True) if y is not None]
+    ch.line([p[0] for p in pts], [p[1] for p in pts], color=BLUE)
     ch.vline(1.0 / jpl, color=BLACK, label=f"JPL: {jpl:.1f} AU")
     ch.vline(0.0, label="infinitely far")
     save(ch.render(), DOCS / "eris_profile.png")
-    spec = Chart(
-        "Eris, spectrum from the same exposures",
-        "detector (D1 0.75-1.1, D2 1.1-1.6, D3 1.6-2.4 um)",
-        "mean flux (mJy)",
-        width=700,
-        height=360,
-    )
+    # three band-averaged fluxes against wavelength (band centres of D1-D3), matched-filter scale, y axis from 0
     dets = c["per_detector"]
-    spec.scatter([1, 2, 3], [dets[f"D{i}"]["flux_mjy"] for i in (1, 2, 3)], color=BLUE)
+    centres = [0.92, 1.36, 2.02]
+    half = [0.17, 0.26, 0.40]
+    flux = [dets[f"D{i}"]["flux_mjy"] for i in (1, 2, 3)]
+    err = [dets[f"D{i}"].get("flux_error_mjy", 0.0) for i in (1, 2, 3)]
+    spec = Chart(
+        "Eris: three band fluxes from the same exposures (matched-filter scale, uncalibrated)",
+        "wavelength (micrometres): D1 0.75-1.09, D2 1.10-1.62, D3 1.63-2.42",
+        "mean flux (mJy)",
+        width=760,
+        height=380,
+        ylim=(0.0, max(flux) * 1.3),
+        xlim=(0.6, 2.6),
+    )
+    spec.scatter(centres, flux, yerr=err, xerr=half, color=BLUE, label="Eris, blind track")
+    # approximate solar-coloured reflector, scaled to D1 (about 1 : 0.95 : 0.72 from solar colours; reviewers' estimate)
+    spec.scatter(
+        centres, [flux[0] * f for f in (1.0, 0.95, 0.72)], color=BLACK, hollow=True, label="solar colours (approx.)"
+    )
     save(spec.render(), DOCS / "eris_spectrum.png")
 
 
