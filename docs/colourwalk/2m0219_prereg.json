@@ -1,0 +1,23 @@
+{
+ "note": "Pass bars for the first independent known-answer test, written down BEFORE any 2MASS J0219-3925 SPHEREx exposure was fetched or fitted. Not yet run.",
+ "object": "2MASS J0219-3925 B, companion of the M6 host 2MASS J0219-3925 A (Artigau et al. 2015, ApJ 806, 254, Table 2)",
+ "host_gaia_dr3_guess_for_b": "4963614887043331072",
+ "known_separation_arcsec": 3.96,
+ "known_pa_deg": 173.9,
+ "bars": {
+  "walk_direction_pa_deg": [153.9, 193.9],
+  "pa_scan_peak_within_deg_of_174": 20,
+  "expected_walk_size_arcsec": "about 0.1 to 0.15 (from the calibrated 8.5 arcsec response); a walk under 0.05 arcsec is a fail to detect, not a contradiction",
+  "walk_significance": "report the Rayleigh p_false with the measured floors (0.049 E, 0.066 N); no sigma bar is promised because the walk may be below the floor",
+  "detector_fixed_part_of_walk_arcsec_max": 0.05,
+  "per_visit_walk_directions": "each visit's sky-frame walk within 40 degrees of 174, and the detector-frame angle differing between visits that have opposite roll",
+  "controls": "ratio at the true place minus the median of off-peak angles (at least 75 degrees from the walk) of the 15-degree PA scan, with the off-peak scatter as the error; no absolute 0.02 bar"
+ },
+ "prerequisites_before_running": [
+  "catalogue lookup works (IRSA Gator; done)",
+  "any-angle neighbour model in gaia_explains (done)",
+  "per-visit sky/detector split (done)",
+  "controls and PA scan in the detector frame (not done)",
+  "reference-star subtraction for hosts with two or more field stars in the cutout (not done)"
+ ]
+}
