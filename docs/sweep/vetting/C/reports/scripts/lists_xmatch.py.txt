@@ -1,0 +1,50 @@
+"""Extract every position in each downloaded alert/transient list and report entries near the target and near the controls."""
+import re, csv, sys
+import numpy as np
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+D = sys.argv[1]
+T = SkyCoord(241.70931, -52.20484, unit='deg')
+CTRL = {'V462 Lup': SkyCoord(227.01362, -40.14308, unit='deg'), 'V7994 Sgr': SkyCoord(270.96983, -31.45739, unit='deg')}
+def sexa_pairs(text, sep):
+    if sep == ':':
+        pat = r'(\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?)\s+([+-]?\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?)'
+    else:
+        pat = r'(\d{1,2} \d{2} \d{2}(?:\.\d+)?)\s+([+-]\d{1,2} \d{2} \d{2}(?:\.\d+)?)'
+    out = []
+    for m in re.finditer(pat, text):
+        out.append((m.group(1), m.group(2), text[max(0, m.start()-120):m.end()+60].replace('\n', ' ')))
+    return out
+def report(name, ra, dec, ctx, nearT=3600, nearC=120):
+    if len(ra) == 0:
+        print(f'== {name}: NO POSITIONS PARSED'); return
+    c = SkyCoord(ra, dec, unit=(u.hourangle, u.deg)) if isinstance(ra[0], str) else SkyCoord(ra, dec, unit='deg')
+    s = c.separation(T).arcsec
+    print(f'== {name}: {len(c)} positions parsed; nearest to target {s.min():.0f}" ({s.min()/3600:.2f} deg); entries within 1 deg: {(s<3600).sum()}; within 60": {(s<60).sum()}')
+    for i in np.argsort(s)[:3]:
+        if s[i] < nearT: print(f'     {s[i]:.0f}" : {ctx[i][:230]}')
+    for cn, cc in CTRL.items():
+        sc = c.separation(cc).arcsec
+        j = np.argmin(sc)
+        print(f'   control {cn}: nearest entry {sc[j]:.1f}" -> {ctx[j][:200]}')
+# Gaia alerts
+rows = list(csv.reader(open(f'{D}/gaia/alerts.csv')))
+hdr, rows = rows[0], [r for r in rows[1:] if len(r) > 3]
+dates = [r[1] for r in rows]
+print('Gaia alerts: rows', len(rows), 'date range', min(dates), max(dates))
+report('Gaia Science Alerts (alerts.csv)', np.array([float(r[2]) for r in rows]), np.array([float(r[3]) for r in rows]), [','.join(r) for r in rows])
+# ASAS-SN transients
+t = re.sub(r'<[^>]+>', ' ', open(f'{D}/asassn/transients.html', encoding='utf-8', errors='replace').read())
+p = sexa_pairs(t, ':'); report('ASAS-SN transients page', [x[0] for x in p], [x[1] for x in p], [x[2] for x in p])
+for f in ['ogle/ews2025.html', 'ogle/ews2026.html', 'kmt/2025.html', 'kmt/2026.html']:
+    t = re.sub(r'<[^>]+>', ' ', open(f'{D}/{f}', encoding='utf-8', errors='replace').read())
+    p = sexa_pairs(t, ':'); report(f, [x[0] for x in p], [x[1] for x in p], [re.sub(r'\s+', ' ', x[2]) for x in p])
+# Mukai
+t = re.sub(r'<[^>]+>', ' ', open(f'{D}/mukai/novae.html', encoding='utf-8', errors='replace').read())
+p = sexa_pairs(t, ' '); report('Mukai recent novae', [x[0] for x in p], [x[1] for x in p], [re.sub(r'\s+', ' ', x[2]) for x in p])
+# CBAT TOCP designations
+t = open(f'{D}/cbat/tocp.html', encoding='utf-8', errors='replace').read()
+des = sorted(set(re.findall(r'\b([A-Z]{2,4}) ?J(\d{8})([+-]\d{7})', t)))
+ra = [f'{d[1][0:2]}:{d[1][2:4]}:{d[1][4:6]}.{d[1][6:8]}' for d in des]
+de = [f'{d[2][0:3]}:{d[2][3:5]}:{d[2][5:7]}' for d in des]
+report('CBAT TOCP current page (designations)', ra, de, [f'{d[0]} J{d[1]}{d[2]}' for d in des])

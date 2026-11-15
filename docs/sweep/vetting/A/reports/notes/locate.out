@@ -1,0 +1,5 @@
+cutout folders covering the target (folder, files, centre offset arcsec): [('250d2b7784', 327, np.float64(2.089693909082518))]
+D5/D6 cutouts used: 111
+epoch 2025: n=36  centroid offset from target: median 17.1" (range 14.7-18.6); from the 17" neighbour: median 0.5";  peak pixel (MJy/sr) at target median 14.4, at neighbour median 184.6
+epoch 2026a: n=36  centroid offset from target: median 2.8" (range 0.5-12.8); from the 17" neighbour: median 19.7";  peak pixel (MJy/sr) at target median 726.3, at neighbour median 194.3
+epoch 2026b: n=39  centroid offset from target: median 1.2" (range 0.1-6.5); from the 17" neighbour: median 17.4";  peak pixel (MJy/sr) at target median 270.1, at neighbour median 188.3

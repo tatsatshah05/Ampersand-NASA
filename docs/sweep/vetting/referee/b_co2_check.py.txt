@@ -1,0 +1,11 @@
+# Referee check: B, the 4.25 um dip disputed between the pixel lens and the ordinary lens.
+import csv, json
+rows=list(csv.DictReader(open('B/pixels/out/per_exposure.csv')))
+d=json.load(open('B/ordinary/out/spectra_points.json'))
+for ep,lo,hi,mlo,mhi in [('1',4.15,4.35,61000,61200),('2',4.10,4.42,61200,61400)]:
+    print(f"== visit {ep}: pixel lens forced flux (mJy)")
+    for r in sorted([r for r in rows if r['det']=='5' and r['ep']==ep and lo<=float(r['wave'])<=hi and r['forced']], key=lambda r: float(r['wave'])):
+        print(f"   {r['obs']:20s} {r['date']} {float(r['wave']):.4f} um {float(r['forced']):7.1f}")
+    print(f"== visit {ep}: ordinary lens field-star-calibrated flux (mJy)")
+    for p in sorted([p for p in d if p['det']==5 and mlo<p['mjd']<mhi and lo<=p['wave_um']<=hi and p.get('flux_cal')], key=lambda p:p['wave_um']):
+        print(f"   {p['file'][:20]:20s} {p['wave_um']:.4f} um {p['flux_cal']:7.1f}")

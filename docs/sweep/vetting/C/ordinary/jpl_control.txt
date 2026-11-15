@@ -1,0 +1,2 @@
+half-width 0.02 deg: n_second_pass=1 error=None warning=None names=['2 Pallas (A802 FA)']
+half-width 0.05 deg: n_second_pass=2 error=None warning=None names=['2 Pallas (A802 FA)', '695075 (2015 VV42)']

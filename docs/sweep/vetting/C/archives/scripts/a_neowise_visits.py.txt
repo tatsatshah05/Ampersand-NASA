@@ -1,0 +1,55 @@
+"""Per-visit summary of WISE/NEOWISE single-exposure detections in the 30" cone around candidate C.
+Control: the AllWISE neighbours (W2 9.1 at 23.5", W2 9.7 at 19.8") must be detected in each visit."""
+import sys, warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+from astropy.table import Table, vstack
+from astropy.time import Time
+from pathlib import Path
+D = Path(__file__).resolve().parent.parent / "data"
+ts = []
+for f in ["allsky_4band_p1bs_psd_30.csv", "allsky_3band_p1bs_psd_30.csv", "neowiser_p1bs_psd_30.csv"]:
+    p = D / f
+    if p.exists():
+        t = Table.read(p, format="csv")
+        t = t[["ra", "dec", "mjd", "w1mpro", "w2mpro", "w2sigmpro", "w2snr", "w1snr", "cc_flags", "qual_frame", "sep_arcsec"]]
+        t["src"] = f.split("_p1bs")[0]
+        ts.append(t)
+t = vstack(ts)
+t.sort("mjd")
+mjd = np.array(t["mjd"], float)
+# visits: gaps > 30 d
+vid = np.concatenate([[0], np.cumsum(np.diff(mjd) > 30)])
+t["visit"] = vid
+ctrl = [(241.7034486, -52.2103065, "AllWISE W2 9.11 @23.5\""), (241.7121127, -52.1996203, "AllWISE W2 9.71 @19.8\""), (241.7043487, -52.2045159, "AllWISE W2 11.31 @11\"")]
+def near(ra, dec, r=3.0):
+    d = np.hypot((np.array(t["ra"], float) - ra) * np.cos(np.radians(dec)), np.array(t["dec"], float) - dec) * 3600
+    return d < r
+mc = [near(r, d) for r, d, _ in ctrl]
+print("visit  dates(UT)               table          frames  ctrl1 ctrl2 ctrl3(W2 11.3 @11\") faintestW2(snr>=5,30\")  det<10\"")
+rows = []
+for v in np.unique(vid):
+    s = vid == v
+    fr = np.unique(np.round(mjd[s], 5))
+    d0, d1 = Time(mjd[s].min(), format="mjd").iso[:10], Time(mjd[s].max(), format="mjd").iso[:10]
+    good = s & (np.array(t["w2snr"].filled(0) if hasattr(t["w2snr"], "filled") else t["w2snr"], float) >= 5)
+    w2 = np.array(t["w2mpro"], float)
+    faint = np.nanmax(w2[good]) if good.any() else np.nan
+    n10 = int((s & (np.array(t["sep_arcsec"], float) < 10)).sum())
+    print(f"{v:4d}  {d0} to {d1}  {t['src'][s][0]:22s} {len(fr):4d}  {int((s & mc[0]).sum()):4d}  {int((s & mc[1]).sum()):4d}  {int((s & mc[2]).sum()):4d}             {faint:6.2f}                {n10}")
+    rows.append((v, d0, d1, len(fr), int((s & mc[0]).sum()), int((s & mc[1]).sum()), faint, n10))
+Table(rows=rows, names=["visit", "start", "end", "n_frames_with_any_detection", "ctrl1_dets", "ctrl2_dets", "faintest_w2_snr5_in_30as", "dets_within_10as"]).write(D / "neowise_visits.csv", overwrite=True)
+print()
+print("Detections within 10\":")
+s = np.array(t["sep_arcsec"], float) < 10
+t[s].pprint(max_width=250)
+# Same-visit frames for the one detection
+if s.any():
+    v = t["visit"][s][0]
+    sv = (vid == v)
+    print(f"\nFrames in that visit ({len(np.unique(np.round(mjd[sv],5)))}), MJDs:", np.unique(np.round(mjd[sv], 4)))
+    # the detection's frame: what else was detected in that same frame?
+    m0 = float(t["mjd"][s][0])
+    same = np.abs(mjd - m0) < 1e-5
+    print("\nAll detections in the same frame (MJD %.5f):" % m0)
+    t[same].pprint(max_width=250)

@@ -1,0 +1,48 @@
+"""D3 (1.65-2.4 um) brightness of the 2026 source on a 2MASS-Ks-calibrated scale, channels 2.0-2.4 um only,
+same simple centroid/aperture method as spx_centroid.py (fit() reused)."""
+import math, warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+from pathlib import Path
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from astropy.table import Table
+from astropy.time import Time
+src = open(Path(__file__).with_name("spx_centroid.py")).read()
+ns = {"__file__": str(Path(__file__).with_name("spx_centroid.py"))}
+exec(src.split("rows = []")[0], ns)
+fit, BAD, CUT, OUT = ns["fit"], ns["BAD"], ns["CUT"], ns["OUT"]
+tm = Table.read(OUT / "twomass_300as.csv", format="csv")
+k = np.array(tm["k_m"], float); ra, de = np.array(tm["ra"], float), np.array(tm["dec"], float)
+q = np.array([str(s)[2] == "A" for s in tm["ph_qual"]])
+iso = np.array([not np.any((np.hypot((ra - ra[i]) * 0.6129, de - de[i]) * 3600 < 12) & (k < k[i] + 1.5) & (np.arange(len(k)) != i)) for i in range(len(k))])
+cal = q & iso & (k > 7.5) & (k < 10.5)
+cal_mjy = 666.7e3 * 10 ** (-0.4 * k)
+print("2MASS Ks calibrators:", cal.sum())
+RA, DEC = 241.709120, -52.205661
+rows = []
+for f in sorted(CUT.glob("*_D3.fits")):
+    with fits.open(f) as h:
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float); flg = h["FLAGS"].data
+        w = WCS(h["IMAGE"].header); lam = float(np.nanmedian(h["WAVE"].data)); mjd = float(h["IMAGE"].header.get("MJD-AVG", h["IMAGE"].header.get("MJD-OBS")))
+    if lam < 2.0:
+        continue
+    img *= proj_plane_pixel_area(w) * (math.pi / 180) ** 2 * 1e9
+    img[(flg & BAD) != 0] = np.nan
+    x, y = w.all_world2pix(RA, DEC, 0)
+    r = fit(img, float(x), float(y))
+    cx, cy = w.all_world2pix(ra[cal], de[cal], 0)
+    rat = [cal_mjy[cal][i] / qq["vol"] for i, (a, b) in enumerate(zip(cx, cy)) if (qq := fit(img, float(a), float(b))) is not None and qq["vol"] > 0]
+    if r is None or len(rat) < 3:
+        continue
+    rows.append((mjd, lam, r["vol"] * np.median(rat), len(rat)))
+t = Table(rows=rows, names=["mjd", "lam", "flux_ks_scale", "ncal"])
+ep = np.where(t["mjd"] < 61000, "Jul-Aug 2025", np.where(t["mjd"] < 61200, "Feb-Apr 2026", "Jul-Sep 2026"))
+for e in ["Jul-Aug 2025", "Feb-Apr 2026", "Jul-Sep 2026"]:
+    s = ep == e
+    if s.any():
+        v = np.array(t["flux_ks_scale"][s])
+        print(f"{e}: D3 2.0-2.4 um, n={s.sum()}, median {np.median(v):.1f} mJy (16-84%: {np.percentile(v,16):.1f}-{np.percentile(v,84):.1f}); ncal median {int(np.median(t['ncal'][s]))}")
+for r in t[ep == "Feb-Apr 2026"]:
+    print(f"   {Time(r['mjd'],format='mjd').iso[:16]} {r['lam']:.2f} um {r['flux_ks_scale']:.1f} mJy ncal {r['ncal']}")

@@ -1,0 +1,139 @@
+"""Forced fit at the candidate's place, neighbours modelled: per exposure, a 13 x 13 px box, model = sum of fixed-width
+circular Gaussians at fixed places (the candidate's centroid and every GLIMPSE/2MASS source within 30 arcsec with
+[4.5] < 14 or Ks < 14) + a constant, fitted linearly on unflagged pixels. Width per detector = median Gaussian sigma of the
+candidate in its clean Feb-Mar 2026 fits. The candidate's amplitude is turned into mJy and scaled to the aperture
+system with the Feb-Mar ratio (aperture / Gaussian) of the candidate itself. Gives the candidate's own brightness in the
+faint visits (neighbours' light separated) and in the April exposures whose aperture holds a cosmic-ray patch."""
+import json
+import os
+import sys
+import warnings
+
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from measure import CUT, PHOT_BAD
+from readcat import tsv
+
+POS = json.load(open(os.path.join(HERE, "position_corrected.json")))
+CRA, CDE = POS["ra_allwise_frame"], POS["dec_allwise_frame"]
+R = json.load(open(os.path.join(HERE, "measurements.json")))
+NAMES = {0: "Jul-Aug 2025", 1: "Feb-Mar 2026", 2: "Apr 2026", 3: "Jul-Sep 2026"}
+
+neigh = []
+for r in tsv("glimpse_30as"):
+    m = r.get("4.5mag") or r.get("3.6mag")
+    if m and float(m) < 14:
+        neigh.append((float(r["RAJ2000"]), float(r["DEJ2000"])))
+for r in tsv("2mass_30as"):
+    if r["Kmag"] and float(r["Kmag"]) < 14:
+        ra, de = float(r["RAJ2000"]), float(r["DEJ2000"])
+        if all(np.hypot((ra - a) * np.cos(np.radians(de)), de - b) * 3600 > 2.0 for a, b in neigh):
+            neigh.append((ra, de))
+neigh = [(a, b) for a, b in neigh if np.hypot((a - CRA) * np.cos(np.radians(CDE)), b - CDE) * 3600 > 3.0]
+print("neighbours modelled:", len(neigh))
+
+sig = {}
+for d in range(1, 7):
+    s = [r["gfit"]["sigma_px"] for r in R if r["det"] == d and r.get("ep") == 1 and r.get("gfit") and r.get("flux")
+         and r["flux"] > 40 and r["gfit"]["sigma_px"] > 0.31]
+    sig[d] = float(np.median(s)) if s else None
+# detectors without a usable candidate fit: use the header PSF FWHM (arcsec) / 2.3548 / 6.15
+for d, fw in ((1, 7.53), (2, 7.46), (3, 7.45)):
+    if sig[d] is None:
+        sig[d] = fw / 2.3548 / 6.15
+print("sigma (px):", {d: round(v, 3) for d, v in sig.items()})
+
+
+def fit(r, half=6):
+    with fits.open(os.path.join(CUT, f"{r['obs_id']}_D{r['det']}.fits")) as h:
+        hd = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float)
+        fl = h["FLAGS"].data.astype(np.int64)
+        zod = h["ZODI"].data.astype(float)
+        var = h["VARIANCE"].data.astype(float)
+    w = WCS(hd)
+    data = img - zod
+    x0, y0 = (float(t) for t in w.all_world2pix(CRA, CDE, 0))
+    xi, yi = int(round(x0)), int(round(y0))
+    ny, nx = data.shape
+    if not (half + 1 <= xi < nx - half - 1 and half + 1 <= yi < ny - half - 1):
+        return None
+    yy, xx = np.mgrid[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    sub = data[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    sf = fl[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    sv = var[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    ok = np.isfinite(sub) & ((sf & PHOT_BAD) == 0) & np.isfinite(sv)
+    s = sig[r["det"]]
+    places = [(x0, y0)] + [tuple(float(t) for t in w.all_world2pix(a, b, 0)) for a, b in neigh]
+    places = [p for k, p in enumerate(places) if k == 0 or (xi - half - 2 <= p[0] <= xi + half + 2 and yi - half - 2 <= p[1] <= yi + half + 2)]
+    cols = [np.exp(-((xx - px) ** 2 + (yy - py) ** 2) / (2 * s * s)) for px, py in places] + [np.ones_like(sub)]
+    A = np.vstack([c[ok] for c in cols]).T
+    b = sub[ok]
+    # is the candidate's core (within 1.5 px) covered by clean pixels?
+    core_ok = int((ok & (np.hypot(xx - x0, yy - y0) <= 1.5)).sum())
+    try:
+        coef, *_ = np.linalg.lstsq(A, b, rcond=None)
+    except Exception:
+        return None
+    resid = b - A @ coef
+    s2 = float(np.sum(resid ** 2) / max(len(b) - A.shape[1], 1))
+    cov = np.linalg.pinv(A.T @ A) * s2
+    to = float(proj_plane_pixel_area(w)) * (np.pi / 180) ** 2 * 1e9
+    k = 2 * np.pi * s * s * to
+    return {"gflux": float(coef[0] * k), "gerr": float(np.sqrt(cov[0, 0]) * k), "n_ok": int(ok.sum()), "core_ok": core_ok,
+            "n_comp": len(places)}
+
+
+def main():
+    rows = []
+    for r in R:
+        if r.get("status") == "edge" or "x" not in r or r.get("ep") is None:
+            continue
+        f = fit(r)
+        if f is None:
+            continue
+        f.update(obs_id=r["obs_id"], det=r["det"], ep=r["ep"], wave=r.get("wave_um"), ap=r.get("flux"), status=r["status"],
+                 date=r["date"])
+        rows.append(f)
+    # scale: aperture / Gaussian for the candidate in clean bright exposures
+    scale = {}
+    for d in range(1, 7):
+        q = [x["ap"] / x["gflux"] for x in rows if x["det"] == d and x["ep"] == 1 and x["status"] == "ok" and x["gflux"] > 30]
+        scale[d] = float(np.median(q)) if q else None
+    print("aperture/Gaussian scale:", {d: (round(v, 3) if v else None) for d, v in scale.items()})
+    sc_all = float(np.median([v for v in scale.values() if v]))
+    for x in rows:
+        sc = scale[x["det"]] or sc_all
+        x["flux_forced"] = x["gflux"] * sc
+        x["err_forced"] = x["gerr"] * sc
+    json.dump(rows, open(os.path.join(HERE, "forced.json"), "w"), indent=0)
+    print("\nCandidate's own brightness (forced fit, neighbours modelled), exposures whose core (r<=1.5 px) has >= 6 clean pixels:")
+    for d in range(1, 7):
+        for ep in (0, 1, 2, 3):
+            v = [x for x in rows if x["det"] == d and x["ep"] == ep and x["core_ok"] >= 6]
+            if not v:
+                continue
+            f = np.array([x["flux_forced"] for x in v])
+            e = np.array([x["err_forced"] for x in v])
+            mad = 1.4826 * np.median(np.abs(f - np.median(f)))
+            print(f"  D{d} {NAMES[ep]:13s} n={len(v):2d}  median {np.median(f):7.1f} mJy  MAD {mad:5.1f}  "
+                  f"error of median ~{1.2533 * mad / np.sqrt(len(v)):4.1f}  median fit err {np.median(e):4.1f}")
+    print("\nApril 2026 exposures one by one:")
+    for x in rows:
+        if x["ep"] == 2:
+            print(f"  {x['date']} {x['obs_id']} D{x['det']} {x['wave']:.3f}um forced {x['flux_forced']:6.1f} +/- {x['err_forced']:4.1f} mJy, "
+                  f"clean core px {x['core_ok']}, aperture {x['ap']:.1f} ({x['status']})")
+    print("\nFeb-Mar 2026 at the April wavelengths, for comparison:")
+    for x in rows:
+        if x["ep"] == 1 and x["wave"] and ((x["det"] == 3 and abs(x["wave"] - 2.31) < 0.06) or (x["det"] == 6 and abs(x["wave"] - 4.93) < 0.06)):
+            print(f"  {x['date']} D{x['det']} {x['wave']:.3f}um forced {x['flux_forced']:6.1f} +/- {x['err_forced']:4.1f} ({x['status']})")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,43 @@
+import json, numpy as np, sys, csv, io
+sys.path.insert(0,'.')
+from common import *
+import measure as M
+from astropy.io import ascii
+b = json.load(open(f"{W}/out/adopted_bright.json"))["bright"]
+print("bright", b)
+cats = []
+for r in read_vizier_tsv(f"{W}/downloads/viz_2mass30.tsv"):
+    cats.append(("2MASS", "J"+r["2MASS"], float(r["RAJ2000"]), float(r["DEJ2000"]), f"J{r['Jmag']} H{r['Hmag']} K{r['Kmag']} q{r['Qflg']}", f"err {r['errMaj']}x{r['errMin']}"))
+for r in read_vizier_tsv(f"{W}/downloads/viz_allwise30.tsv"):
+    cats.append(("AllWISE", r["AllWISE"], float(r["RAJ2000"]), float(r["DEJ2000"]), f"W1 {r['W1mag']} W2 {r['W2mag']} var {r['var']}", f"err {r['eeMaj']}"))
+for r in read_vizier_tsv(f"{W}/downloads/viz_glimpse30.tsv"):
+    cats.append(("GLIMPSE", r["GLIMPSE"], float(r["RAJ2000"]), float(r["DEJ2000"]), f"J {r['Jmag']} H {r['Hmag']} [3.6] {r['3.6mag']} [4.5] {r['4.5mag']} [5.8] {r['5.8mag']}", ""))
+t = ascii.read(f"{W}/downloads/gator_catwise30.tbl", format="ipac")
+for r in t:
+    cats.append(("CatWISE", str(r["source_name"]), float(r["ra"]), float(r["dec"]), f"W1 {r['w1mpro']} W2 {r['w2mpro']}", f"err {r['sigra']:.2f},{r['sigdec']:.2f}"))
+for g in csv.DictReader(io.StringIO(open(f"{W}/downloads/gaia30.csv").read())):
+    gg = {k: num(v) for k, v in g.items()}
+    ra, de = gaia_at(gg, 2026.3)
+    cats.append(("Gaia", g["source_id"], ra, de, f"G {g['phot_g_mean_mag']} bp-rp {g['bp_rp']} ruwe {g['ruwe']}", f"err {float(g['ra_error']):.2f},{float(g['dec_error']):.2f} mas"))
+rows = []
+for c in cats:
+    de, dn = offset_en(c[2], c[3], b[0], b[1])
+    rows.append((float(np.hypot(de, dn)), c[0], c[1], float(de), float(dn), c[4], c[5], c[2], c[3]))
+rows.sort()
+for r in rows:
+    if r[0] < 12.5:
+        print(f"{r[0]:6.2f}\" E{r[3]:+6.2f} N{r[4]:+6.2f}  {r[1]:8s} {r[2]:22s} {r[5]}  {r[6]}")
+json.dump(rows, open(f"{W}/out/catalogue_offsets.json","w"))
+cand = np.concatenate([M.TM_RA, M.CW_RA]), np.concatenate([M.TM_DE, M.CW_DE])
+rng = np.random.default_rng(7)
+ctrl = []
+while len(ctrl) < 12:
+    r = rng.uniform(25, 45); th = rng.uniform(0, 2*np.pi)
+    ra = b[0] + r*np.sin(th)/3600/np.cos(np.radians(b[1])); de = b[1] + r*np.cos(th)/3600
+    if np.min(sep_arcsec(ra, de, cand[0], cand[1])) > 8:
+        ctrl.append((ra, de))
+ad = {"bright": b, "counterpart_2mass": [253.182237, -44.676834], "glimpse_W": [253.179017, -44.676589]}
+for i, (ra, de) in enumerate(ctrl):
+    ad[f"ctrl{i}"] = [ra, de]
+json.dump(ad, open(f"{W}/out/adopted_positions.json", "w"))
+print(len(ctrl), "control positions")

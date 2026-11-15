@@ -1,0 +1,169 @@
+"""Independent photometry and astrometry of candidate C on the cached SPHEREx cutouts.
+
+Written for the vetting check (ordinary-explanations lens). Reads the cached slim cutouts
+(read only), never writes into the repository. Own choices, deliberately different from
+backend/photometry.py where it matters:
+  - aperture radius 1.5 px (9.2 arcsec) as well as 2.5 px, sky from a ring 5 to 9 px, 3-sigma clipped,
+    pixels with any photometry-bad flag left out of the sky;
+  - every reading is kept with the flag bits found in the aperture, so flagged exposures can be looked at;
+  - a 2D Gaussian + tilted plane fitted to an 11 x 11 pixel stamp for the position (free width),
+    in the same exposure for up to 6 reference 2MASS stars (Ks 9 to 11.5, no other Ks<14 star within 20")
+    so the WCS error of that exposure can be removed (differential position).
+Output: JSON lines, one per exposure.
+"""
+import glob
+import json
+import math
+import sys
+
+import numpy as np
+from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from scipy.optimize import least_squares
+
+RA, DEC = 241.70930897676817, -52.204840342454105
+CUT = "<repository>/backend/cache/sweep/cutouts/4ae14c5ec1"
+BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7,
+       "MISSING_DATA": 9, "HOT": 10, "COLD": 11, "FULLSAMPLE": 12, "PHANMISS": 14,
+       "NONLINEAR": 15, "PERSIST": 17, "OUTLIER": 19, "CROSSTALK": 20, "SOURCE": 21,
+       "GHOST": 22, "GHOST_FPA": 23, "GHOST_EXT": 24, "STREAK": 25, "BLOOM": 26,
+       "SNOWBALL": 27, "HALO": 28, "SATELLITE_HALO": 29}
+NAME = {v: k for k, v in BIT.items()}
+
+
+def mask(*names):
+    return sum(1 << BIT[n] for n in names)
+
+
+PHOT_BAD = mask("SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR", "PERSIST", "BLOOM",
+                "SNOWBALL", "HALO", "SATELLITE_HALO")
+SKY_BAD = PHOT_BAD | mask("OVERFLOW", "OUTLIER", "TRANSIENT")
+
+
+def names(bits):
+    return [NAME.get(b, f"bit{b}") for b in range(31) if bits >> b & 1 and b != BIT["SOURCE"]]
+
+
+def coverage(ny, nx, x, y, r_out, sub=5):
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    off = (np.arange(sub) + 0.5) / sub - 0.5
+    tot = np.zeros((ny, nx))
+    for dy in off:
+        for dx in off:
+            tot += np.hypot(xx + dx - x, yy + dy - y) < r_out
+    return tot / sub ** 2
+
+
+def gfit(data, good, x0, y0, half=5):
+    xi, yi = int(round(x0)), int(round(y0))
+    ny, nx = data.shape
+    if not (half <= xi < nx - half and half <= yi < ny - half):
+        return None
+    sl = (slice(yi - half, yi + half + 1), slice(xi - half, xi + half + 1))
+    d, g = data[sl], good[sl]
+    yy, xx = np.mgrid[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    if g.sum() < 60:
+        return None
+    dv, xv, yv = d[g], xx[g], yy[g]
+
+    def model(p):
+        a, xc, yc, s, b0, bx, by = p
+        return a * np.exp(-((xv - xc) ** 2 + (yv - yc) ** 2) / (2 * s * s)) + b0 + bx * (xv - xi) + by * (yv - yi)
+
+    p0 = [max(float(np.nanmax(dv) - np.nanmedian(dv)), 1e-3), x0, y0, 0.65, float(np.nanmedian(dv)), 0, 0]
+    try:
+        r = least_squares(lambda p: model(p) - dv, p0,
+                          bounds=([0, x0 - 3, y0 - 3, 0.3, -np.inf, -np.inf, -np.inf],
+                                  [np.inf, x0 + 3, y0 + 3, 2.5, np.inf, np.inf, np.inf]))
+    except Exception:
+        return None
+    a, xc, yc, s, *_ = r.x
+    resid = r.fun
+    rms = float(np.sqrt(np.mean(resid ** 2)))
+    # crude position error: sigma_pos ~ s / SNR, SNR ~ peak/rms * sqrt(n_eff)
+    snr = a / max(rms, 1e-9) * math.sqrt(2 * math.pi * s * s)
+    return {"x": float(xc), "y": float(yc), "sigma_px": float(s), "amp": float(a), "rms": rms,
+            "snr": float(snr), "pos_err_px": float(s / max(snr, 1e-3) * 1.4)}
+
+
+def main(refs_path, out_path):
+    refs = json.load(open(refs_path))
+    out = open(out_path, "w")
+    for f in sorted(glob.glob(CUT + "/*.fits")):
+        with fits.open(f) as h:
+            hd = h["IMAGE"].header
+            img = h["IMAGE"].data.astype(float)
+            fl = h["FLAGS"].data.astype(np.int64)
+            var = h["VARIANCE"].data.astype(float)
+            zodi = h["ZODI"].data.astype(float)
+            wave = h["WAVE"].data
+            bw = h["BANDWIDTH"].data
+        w = WCS(hd)
+        rec = {"file": f.split("/")[-1], "obs_id": hd["OBSID"], "det": int(hd["DETECTOR"]),
+               "mjd": float(hd["MJD-AVG"]), "psf_fwhm": hd.get("PSF_FWHM")}
+        x, y = (float(v) for v in w.all_world2pix(RA, DEC, 0))
+        ny, nx = img.shape
+        rec.update(x=x, y=y, ny=ny, nx=nx)
+        if not (10 <= x < nx - 10 and 10 <= y < ny - 10):
+            rec["status"] = "edge"
+            out.write(json.dumps(rec) + "\n")
+            continue
+        xi, yi = int(round(x)), int(round(y))
+        rec["um"] = float(wave[yi, xi])
+        rec["bw_um"] = float(bw[yi, xi])
+        data = img - zodi
+        finite = np.isfinite(data) & np.isfinite(var)
+        yy, xx = np.mgrid[0:ny, 0:nx]
+        r = np.hypot(xx - x, yy - y)
+        ring = (r >= 5) & (r < 9) & finite & ((fl & SKY_BAD) == 0)
+        if ring.sum() < 40:
+            rec["status"] = "no_sky"
+            out.write(json.dumps(rec) + "\n")
+            continue
+        _, sky, ssig = sigma_clipped_stats(data[ring], sigma=3.0, maxiters=5)
+        to_mjy = float(proj_plane_pixel_area(w)) * (math.pi / 180) ** 2 * 1e9
+        rec["sky"] = float(sky)
+        for rap in (1.5, 2.5):
+            cov = coverage(ny, nx, x, y, rap)
+            used = cov > 0
+            bits = int(np.bitwise_or.reduce(fl[used])) if used.any() else 0
+            bad = used & (((fl & PHOT_BAD) != 0) | ~finite)
+            share = float(cov[bad].sum() / cov[used].sum())
+            good = used & ~bad
+            scale = float(cov[used].sum() / max(cov[good].sum(), 1e-9))
+            val = float(np.sum(cov[good] * (data[good] - sky))) * scale * to_mjy if good.any() else None
+            err = float(np.sqrt(np.sum(cov[good] ** 2 * var[good]) * scale ** 2 + cov[used].sum() ** 2 * ssig ** 2 / ring.sum())) * to_mjy if good.any() else None
+            rec[f"f{rap}"] = val
+            rec[f"e{rap}"] = err
+            rec[f"badshare{rap}"] = share
+            rec[f"flags{rap}"] = names(bits)
+        good_pix = finite & ((fl & PHOT_BAD) == 0)
+        g = gfit(data, good_pix, x, y)
+        if g:
+            ra_c, dec_c = (float(v) for v in w.all_pix2world(g["x"], g["y"], 0))
+            g["ra"], g["dec"] = ra_c, dec_c
+            g["d_east"] = (ra_c - RA) * math.cos(math.radians(DEC)) * 3600
+            g["d_north"] = (dec_c - DEC) * 3600
+        rec["fit"] = g
+        # reference stars: measured minus catalogue position, in arcsec
+        offs = []
+        for s in refs:
+            sx, sy = (float(v) for v in w.all_world2pix(s["ra"], s["dec"], 0))
+            if not (6 <= sx < nx - 6 and 6 <= sy < ny - 6):
+                continue
+            gs = gfit(data, good_pix, sx, sy)
+            if not gs or gs["snr"] < 20 or not (0.4 < gs["sigma_px"] < 1.6):
+                continue
+            ra_s, dec_s = (float(v) for v in w.all_pix2world(gs["x"], gs["y"], 0))
+            offs.append([(ra_s - s["ra"]) * math.cos(math.radians(DEC)) * 3600, (dec_s - s["dec"]) * 3600,
+                         s["name"], gs["amp"]])
+        rec["ref_offsets"] = offs
+        rec["status"] = "measured"
+        out.write(json.dumps(rec) + "\n")
+    out.close()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2])

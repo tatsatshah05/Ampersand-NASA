@@ -1,0 +1,18 @@
+import math
+RA1,DE1=270.804063,-23.468200   # A' from epoch-3 D6 centroids (this work)
+def rows(fn, rac, dec, cols):
+    out=[]
+    for line in open(fn):
+        if line.startswith('#') or not line.strip(): continue
+        p=line.rstrip('\n').split('\t')
+        try: ra=float(p[rac]); de=float(p[dec])
+        except: continue
+        e=(ra-RA1)*math.cos(math.radians(DE1))*3600; n=(de-DE1)*3600
+        out.append((math.hypot(e,n), e, n, [p[c].strip() for c in cols]))
+    return sorted(out)
+for fn,cols,label in [("downloads/II_246_out.tsv",[3,4,6,8,10],"2MASS id J H K Qflg"),
+                      ("downloads/II_328_allwise.tsv",[3,4,6,8,9,10],"AllWISE id W1 W2 W3 W4 ccf"),
+                      ("downloads/I_355_gaiadr3.tsv",[3,4,5,6],"Gaia id G BP RP")]:
+    print("==",label)
+    for d,e,n,c in rows(fn,0,1,cols)[:8]:
+        print(f"  r {d:5.1f}\"  E {e:6.1f} N {n:6.1f}  {' '.join(c)}")

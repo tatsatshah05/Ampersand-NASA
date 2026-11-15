@@ -1,0 +1,89 @@
+"""Draw cached SPHEREx cutouts around candidate A, per detector and epoch, mark the
+candidate, saturated pixels (photometry.saturated_pixels rule) in red, and the
+brightest pixel. Read-only on the cache. Output: PNG panels in ../out/.
+Run from the sweep checkout with SPHEREX_CACHE_DIR set."""
+import json, sys
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from PIL import Image, ImageDraw
+
+sys.path.insert(0, ".")
+from backend import photometry  # noqa: E402
+
+RA, DEC = 270.80362, -23.46745
+CACHE = Path("<repository>/backend/cache/sweep")
+CUT = CACHE / "cutouts" / "250d2b7784"
+OUT = Path(sys.argv[1])
+pts = json.load(open(CACHE / "photometry" / "2c3c31c3c37a6a21.json"))["points"]
+
+SCALE = 4
+
+
+def panel(path, label):
+    with fits.open(path) as h:
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        flags = h["FLAGS"].data
+        w = WCS(h["IMAGE"].header)
+    sat = photometry.saturated_pixels(flags, img)
+    x, y = w.all_world2pix(RA, DEC, 0)
+    finite = np.isfinite(img)
+    lo, hi = np.nanpercentile(img, 5), np.nanpercentile(img, 99.7)
+    a = np.clip((np.nan_to_num(img, nan=hi) - lo) / (hi - lo), 0, 1) ** 0.5
+    rgb = np.stack([a, a, a], -1) * 255
+    rgb[sat] = [255, 40, 40]
+    rgb[~finite] = [40, 80, 255]
+    im = Image.fromarray(rgb[::-1].astype("uint8")).resize((img.shape[1] * SCALE, img.shape[0] * SCALE), Image.NEAREST)
+    d = ImageDraw.Draw(im)
+    ny = img.shape[0]
+    cx, cy = (x + 0.5) * SCALE, (ny - y - 0.5) * SCALE
+    r = 2.5 * SCALE
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(0, 255, 0))
+    d.text((2, 2), label, fill=(255, 255, 0))
+    return im, sat, (float(x), float(y)), img
+
+
+def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    rows = []
+    summary = []
+    for det in (2, 3, 4, 5, 6):
+        for ep in (1, 2, 3):
+            sel = [p for p in pts if p["detector"] == det and p["epoch"] == ep and p["status"] != "off_image"]
+            sel = sel[:4]
+            ims = []
+            for p in sel:
+                f = CUT / f"{p['obs_id']}_D{det}.fits"
+                if not f.exists():
+                    continue
+                im, sat, (x, y), img = panel(f, f"D{det} {p['date'][:10]} {p['status'][:3]}")
+                ims.append(im)
+                ys, xs = np.nonzero(sat)
+                if len(xs):
+                    dist = np.hypot(xs - x, ys - y) * 6.15
+                    # cluster of saturated pixels: report nearest and centroid
+                    summary.append((det, ep, p['obs_id'], p['status'], int(len(xs)), round(float(dist.min()), 1),
+                                    round(float(np.median(dist)), 1)))
+                else:
+                    summary.append((det, ep, p['obs_id'], p['status'], 0, None, None))
+            if ims:
+                W = sum(i.width for i in ims) + 4 * len(ims)
+                row = Image.new("RGB", (W, ims[0].height), (20, 20, 20))
+                xo = 0
+                for i in ims:
+                    row.paste(i, (xo, 0)); xo += i.width + 4
+                rows.append(row)
+    H = sum(r.height + 4 for r in rows)
+    Wd = max(r.width for r in rows)
+    sheet = Image.new("RGB", (Wd, H), (0, 0, 0))
+    yo = 0
+    for r in rows:
+        sheet.paste(r, (0, yo)); yo += r.height + 4
+    sheet.save(OUT / "cutouts_by_detector_epoch.png")
+    for s in summary:
+        print(*s)
+
+
+if __name__ == "__main__":
+    main()

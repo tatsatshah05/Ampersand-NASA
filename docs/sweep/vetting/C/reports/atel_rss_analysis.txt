@@ -1,0 +1,52 @@
+telegrams read: 847 | failed/empty: 4 ['18157', '18158', '18159', '18160']
+number range 17310 18156 | dates 2025-07-26 2026-11-14
+
+-- keyword "SPHEREx": 2
+    17601 2026-01-15 ATel 17601: Detection of Nova V572 Vel by SPHEREx that precedes the optical discovery
+    18127 2026-10-29 ATel 18127: Detection of dust in the nova V572 Velorum from SPHEREx observations
+
+-- keyword "near-infrared": 7
+    17368 2025-09-02 ATel 17368: EP250828a: Early near-infrared follow-up with MIRAGE on the MDM 1.3m telescope
+    17673 2026-02-12 ATel 17673: Insight-HXMT detects transient spectral softening and QPO suppression during an X-ray flare in GS 1354-64
+    17877 2026-07-06 ATel 17877: GTC/EMIR near-infrared observations of the magnetar candidate EP J223759.5+531421
+    18007 2026-08-25 ATel 18007: ALMA + VLA observations of MAXI J1750-327
+    18048 2026-09-16 ATel 18048: MDM/MIRAGE discovery of a pronounced infrared brightening in the luminous nova AT2026aabo in M31
+    18126 2026-10-29 ATel 18126: Four-band near-infrared imaging of 3I/ATLAS: Keck/MOSFIRE observations on 2025 July 11
+    18133 2026-10-31 ATel 18133: Keck/MOSFIRE near-infrared imaging and colors of 3I/ATLAS on 2026 February 6
+
+-- keyword "NEOWISE": 1
+    17801 2026-05-14 ATel 17801: Discovery of a likely new Galactic recurrent nova with ZTF, ASAS-SN, and NEOWISE.
+
+-- keyword "WINTER": 1
+    17379 2025-09-09 ATel 17379: WINTER near-IR identification and spectroscopic observations of a likely extremely slow nova WNTR25fhdoi / AT2025sqe
+
+-- keyword "PRIME": 4
+    17426 2025-09-30 ATel 17426: PRIME discovery and SOAR confirmation of a very bright symbiotic nova PRIME25aaghjd near the Galactic center
+    17743 2026-04-07 ATel 17743: PRIME discovery and IRTF confirmation of a bright nova PRIME26aaabsh at the Galactic center
+    17945 2026-08-06 ATel 17945: PRIME discovery and IRTF confirmation of a bright nova PRIME26ahygn at the Galactic center
+    17988 2026-08-19 ATel 17988: PRIME early detection and pre-outburst upper limit for the NIR counterpart to MAXI J1750-327
+
+-- keyword "YSO": 1
+    17375 2025-09-07 ATel 17375: XRISM/Xtend Transient Search (XTS) detected an X-ray flare possibly from a YSO
+
+-- keyword "FU Ori": 1
+    17823 2026-05-30 ATel 17823: Infrared Spectroscopy Confirms the Transition of IRAS 21204+4913 to an FU Ori Outburst
+
+-- keyword "FUor": 3
+    17519 2025-12-01 ATel 17519: FUor-like absorption-dominated spectrum of TCP J21220926+4926242
+    17546 2025-12-16 ATel 17546: Swift X-ray non-detection of IRAS 21204+4913 close to its optical-outburst maximum
+    17556 2025-12-23 ATel 17556: Evidence for an EXor - FUor accretion state transition in TCP J21220926+4926242
+
+-- keyword "EXor": 1
+    17556 2025-12-23 ATel 17556: Evidence for an EXor - FUor accretion state transition in TCP J21220926+4926242
+
+-- J-name designations decoded (within 5 deg of target, or matching controls):
+    ATel 17419 2025-09-25 J18035290-3127298 sep_target 29.72 deg; V462 Lup 130703"; V7994 Sgr 4" | ATel 17419: Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr
+designations decoded: 164
+
+-- control by name:
+   "V7994 Sgr": 1 telegrams ['17419']
+   "V462 Lup": 2 telegrams ['17353', '17436']
+   "TCP J18035290-3127298": 1 telegrams ['17419']
+   "ASASSN-25cm": 2 telegrams ['17353', '17436']
+   "AT 2025nlr": 2 telegrams ['17353', '17436']

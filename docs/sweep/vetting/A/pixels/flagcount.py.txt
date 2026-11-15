@@ -1,0 +1,31 @@
+"""Which flag bits are set within 2.5 px of A' in each detector and visit (counts of exposures)."""
+import json, math, warnings, logging, sys
+from pathlib import Path
+from collections import defaultdict, Counter
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+warnings.simplefilter("ignore"); logging.getLogger("astropy").setLevel(logging.ERROR)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from measure import CUT, LIST, NAME
+A = (270.804063, -23.468200)
+L = json.load(open(LIST)); L.sort(key=lambda e: e["mjd"])
+ep, cur = [], 0
+for i, e in enumerate(L):
+    if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+    ep.append(cur + 1)
+cnt = defaultdict(Counter); n = Counter()
+for e, k in zip(L, ep):
+    with fits.open(CUT / f"{e['obs_id']}_D{e['detector']}.fits") as h:
+        w = WCS(h["IMAGE"].header); f = h["FLAGS"].data.astype(np.int64)
+    x, y = (float(v) for v in w.all_world2pix(*A, 0))
+    yy, xx = np.mgrid[0:f.shape[0], 0:f.shape[1]]
+    m = np.hypot(xx - x, yy - y) <= 2.5
+    if not m.any(): continue
+    bits = 0
+    for v in np.unique(f[m]): bits |= int(v)
+    n[(e["detector"], k)] += 1
+    for b in range(31):
+        if bits >> b & 1: cnt[(e["detector"], k)][NAME.get(b, f"bit{b}")] += 1
+for key in sorted(n):
+    print(f"D{key[0]} visit {key[1]} ({n[key]}): " + ", ".join(f"{nm} {c}" for nm, c in cnt[key].most_common()))

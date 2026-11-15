@@ -1,0 +1,147 @@
+"""Spectrum of the candidate's own light (forced fit with neighbours modelled, forced.json) per visit, and continuum fits for
+Feb-Mar 2026: (a) blackbody; (b) blackbody dimmed by interstellar extinction (Indebetouw et al. 2005 law, A_K free);
+(c) flat F_nu (free-free like) dimmed by extinction. Line channels (H I within 0.6 bandwidth) and the two unidentified
+bumps (4.28-4.31, 4.72-4.79 um) are left out of the continuum. Writes spectrum2.json, spectrum2.png."""
+import json
+import os
+
+import numpy as np
+from PIL import Image, ImageDraw
+from scipy.optimize import least_squares
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+F = json.load(open(os.path.join(HERE, "forced.json")))
+M = {(r["obs_id"], r["det"]): r for r in json.load(open(os.path.join(HERE, "measurements.json")))}
+HL = {"Pa d": 1.0052, "Pa g": 1.0941, "Pa b": 1.2822, "Br 10": 1.7367, "Br e": 1.8179, "Pa a": 1.8756, "Br d": 1.9451,
+      "Br g": 2.1661, "Br b": 2.6259, "Pf 9": 2.8730, "Pf e": 3.0392, "Pf d": 3.2970, "Pf g": 3.7406, "Br a": 4.0523,
+      "Hu 13": 4.1708, "Hu 12": 4.3765, "Pf b": 4.6538, "Hu 11": 4.6725}
+NAMES = {0: "Jul-Aug 2025", 1: "Feb-Mar 2026", 2: "Apr 2026", 3: "Jul-Sep 2026"}
+HCK = 14387.77
+
+
+def lines(w, bw):
+    return [n for n, l in HL.items() if abs(w - l) < 0.6 * bw + 0.005]
+
+
+def odd(w):
+    return 4.28 <= w <= 4.31 or 4.72 <= w <= 4.79
+
+
+def ext(w):   # A_lambda / A_K, Indebetouw et al. 2005
+    lw = np.log10(w)
+    return 10 ** (0.61 - 2.22 * lw + 1.21 * lw ** 2)
+
+
+def bb(w, T):
+    return (1 / w ** 3) / np.expm1(HCK / (w * T))
+
+
+def models():
+    return {
+        "blackbody": (lambda p, w: p[0] * bb(w, p[1]) / bb(4.6, p[1]), [100, 1000], ([0, 100], [1e5, 3e4])),
+        "blackbody x extinction": (lambda p, w: p[0] * bb(w, p[1]) / bb(4.6, p[1]) * 10 ** (-0.4 * p[2] * (ext(w) - ext(4.6))),
+                                   [100, 1500, 2], ([0, 100, 0], [1e5, 3e4, 20])),
+        "flat F_nu x extinction": (lambda p, w: p[0] * 10 ** (-0.4 * p[1] * (ext(w) - ext(4.6))), [100, 2], ([0, 0], [1e5, 20])),
+    }
+
+
+def fit_all(w, f, e):
+    out = {}
+    for name, (fn, p0, bounds) in models().items():
+        best = None
+        starts = [p0] + ([[100, T, 2] for T in (500, 1000, 3000, 8000)] if len(p0) == 3 else
+                         [[100, T] for T in (500, 2000, 5000)] if name == "blackbody" else [])
+        for s in starts:
+            try:
+                r = least_squares(lambda p: (fn(p, w) - f) / e, s, bounds=bounds)
+            except Exception:
+                continue
+            if best is None or r.cost < best.cost:
+                best = r
+        chi2 = 2 * best.cost
+        dof = len(w) - len(best.x)
+        cov = np.linalg.pinv(best.jac.T @ best.jac) * max(chi2 / dof, 1)
+        out[name] = {"params": [float(v) for v in best.x], "errors": [float(v) for v in np.sqrt(np.diag(cov))],
+                     "chi2": float(chi2), "dof": dof, "chi2_red": float(chi2 / dof), "n": len(w)}
+    return out
+
+
+def main():
+    pts = []
+    for x in F:
+        if x["core_ok"] < 6 or x["wave"] is None or not np.isfinite(x["flux_forced"]):
+            continue
+        bw = M[(x["obs_id"], x["det"])]["band_um"]
+        pts.append({"ep": x["ep"], "det": x["det"], "um": x["wave"], "bw": bw, "mjy": x["flux_forced"], "err": x["err_forced"],
+                    "lines": lines(x["wave"], bw), "odd": odd(x["wave"]), "date": x["date"], "obs_id": x["obs_id"]})
+    out = {"points": pts}
+    b = [p for p in pts if p["ep"] == 1 and not p["lines"] and not p["odd"]]
+    w = np.array([p["um"] for p in b]); f = np.array([p["mjy"] for p in b])
+    e = np.hypot(np.array([p["err"] for p in b]), np.hypot(1.0, 0.05 * np.abs(f)))   # fit error, 1 mJy floor, 5 per cent
+    out["fits_feb_mar_continuum"] = fit_all(w, f, e)
+    for k, v in out["fits_feb_mar_continuum"].items():
+        print(f"{k}: params {np.round(v['params'], 2).tolist()} +/- {np.round(v['errors'], 2).tolist()}  chi2/dof {v['chi2']:.1f}/{v['dof']} = {v['chi2_red']:.2f}  (n={v['n']})")
+    # residuals of the best model by detector
+    best = min(out["fits_feb_mar_continuum"].items(), key=lambda kv: kv[1]["chi2_red"])
+    fn = models()[best[0]][0]
+    print(f"best: {best[0]}; residual (data/model) by detector:")
+    for d in range(1, 7):
+        m = np.array([p["det"] == d for p in b])
+        if m.sum():
+            print(f"  D{d}: n={m.sum():2d} median data/model {np.median(f[m] / fn(best[1]['params'], w[m])):.2f}")
+    # line excesses over the best continuum
+    print("\nchannels with an H I line or an unidentified bump, Feb-Mar 2026 (forced flux / continuum model):")
+    for p in sorted([p for p in pts if p["ep"] == 1 and (p["lines"] or p["odd"])], key=lambda p: p["um"]):
+        c = float(fn(best[1]["params"], np.array([p["um"]]))[0])
+        print(f"  D{p['det']} {p['um']:.3f} bw {p['bw']:.3f}  {p['mjy']:6.1f} mJy vs continuum {c:6.1f}  ratio {p['mjy']/c:4.2f}  "
+              f"{','.join(p['lines']) or 'unidentified'}  {p['date'][:16]}")
+    # faint visits, forced flux medians per detector
+    for ep in (0, 2, 3):
+        s = [f"D{d}: {np.median([p['mjy'] for p in pts if p['ep'] == ep and p['det'] == d]):+.1f}" for d in range(1, 7)
+             if any(p["ep"] == ep and p["det"] == d for p in pts)]
+        print(f"{NAMES[ep]} forced fluxes (median per detector, mJy): {'; '.join(s)}")
+    json.dump(out, open(os.path.join(HERE, "spectrum2.json"), "w"), indent=0)
+    draw(pts, out, best)
+
+
+def draw(pts, out, best):
+    W, H = 1150, 640
+    img = Image.new("RGB", (W, H), (255, 255, 255))
+    d = ImageDraw.Draw(img)
+    x0, x1, y0, y1 = 70, W - 20, 50, H - 60
+    wmin, wmax = 0.7, 5.05
+    fmin, fmax = -10, 520
+
+    def X(w):
+        return x0 + (w - wmin) / (wmax - wmin) * (x1 - x0)
+
+    def Y(f):   # linear-asinh-ish: sqrt scale for visibility, sign kept
+        s = np.sign(f) * np.sqrt(abs(f))
+        return y1 - (s - (-np.sqrt(10))) / (np.sqrt(fmax) + np.sqrt(10)) * (y1 - y0)
+    d.rectangle([x0, y0, x1, y1], outline=(0, 0, 0))
+    for f in (0, 10, 30, 100, 200, 300, 500):
+        d.line([x0, Y(f), x1, Y(f)], fill=(225, 225, 225))
+        d.text((x0 - 32, Y(f) - 6), f"{f}", fill=(0, 0, 0))
+    for w in np.arange(1, 5.1, 0.5):
+        d.text((X(w) - 8, y1 + 8), f"{w:.1f}", fill=(0, 0, 0))
+    for n, l in HL.items():
+        d.line([X(l), y0, X(l), y1], fill=(250, 205, 205))
+        d.text((X(l) + 2, y0 + 2 + (12 if n in ("Hu 11", "Br e", "Pf e", "Hu 12", "Br d") else 0)), n, fill=(200, 80, 80))
+    cols = {0: (60, 90, 200), 1: (220, 120, 0), 2: (0, 150, 0), 3: (120, 60, 160)}
+    for p in pts:
+        cx, cy = X(p["um"]), Y(p["mjy"])
+        c = cols[p["ep"]]
+        d.ellipse([cx - 4, cy - 4, cx + 4, cy + 4], fill=c if not (p["lines"] or p["odd"]) else None, outline=c)
+    fn = models()[best[0]][0]
+    ws = np.linspace(0.75, 5.0, 300)
+    fs = fn(best[1]["params"], ws)
+    d.line([(X(w), Y(f)) for w, f in zip(ws, fs)], fill=(0, 0, 0), width=1)
+    d.text((x0, 8), "Candidate C: its own light per exposure (forced fit, 28 neighbours modelled), mJy on a square-root scale. "
+                    "Blue Jul-Aug 2025, orange Feb-Mar 2026, green Apr 2026, purple Jul-Sep 2026.", fill=(0, 0, 0))
+    d.text((x0, 24), f"Open circles: channels holding a hydrogen line or an unidentified bump. Black: {best[0]} fit to the Feb-Mar "
+                     f"continuum, params {np.round(best[1]['params'], 1).tolist()}, chi2/dof {best[1]['chi2_red']:.1f}", fill=(0, 0, 0))
+    img.save(os.path.join(HERE, "spectrum2.png"))
+
+
+if __name__ == "__main__":
+    main()

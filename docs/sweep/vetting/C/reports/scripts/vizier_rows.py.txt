@@ -1,0 +1,16 @@
+import sys, warnings
+warnings.filterwarnings('ignore')
+from astroquery.vizier import Vizier
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+c = SkyCoord(241.70931, -52.20484, unit='deg')
+for cat, rad in [('II/387/virac2', 12), ('II/376/vvv4', 12), ('II/293/glimpse', 12), ('J/A+A/646/A74/tablee1', 12), ('II/246/out', 12), ('I/355/gaiadr3', 12), ('II/328/allwise', 12), ('II/365/catwise', 12), ('J/MNRAS/471/100/hcatalog', 12), ('II/348/vvv2', 6)]:
+    v = Vizier(columns=['**', '_r'], row_limit=50, timeout=300, vizier_server='vizier.cfa.harvard.edu')
+    try:
+        r = v.query_region(c, radius=rad*u.arcsec, catalog=cat)
+    except Exception as e:
+        print('==', cat, 'ERROR', e); continue
+    print('==', cat, 'within', rad, 'arcsec')
+    for t in r:
+        t.sort('_r')
+        t.pprint(max_lines=30, max_width=400)

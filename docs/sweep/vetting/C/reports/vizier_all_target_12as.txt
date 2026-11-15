@@ -1,0 +1,36 @@
+== TARGET: all VizieR catalogues within 12.0" of 241.70931 -52.20484, server vizier.cfa.harvard.edu, 2026-11-15T04:57Z
+catalogues with rows: 34
+I/297/out                           n=  3 rmin=9.5190 None | Example of the an output of NOMAD-1
+I/324/igsl3                         n=  3 rmin=9.5270 None | the IGSL3 data release
+I/337/gaia                          n=  1 rmin=9.1960 None | GaiaSource data
+I/345/gaia2                         n=  1 rmin=9.1880 None | GaiaSource DR2 data
+I/347/gaia2dis                      n=  1 rmin=9.1880 None | Estimating distances from parallaxes (1331909727 sources)
+I/350/gaiaedr3                      n=  1 rmin=9.1890 None | GaiaSource EDR3 data
+I/350/comscanl                      n=  1 rmin=9.0860 None | *Representation of the Gaia scanning law over the 34 month time period
+I/352/gedr3dis                      n=  1 rmin=9.1890 None | Estimating distances from parallaxes (1467744818 sources)
+I/353/gsc242                        n=  4 rmin=9.1880 None | records of GSC 2.4.2
+I/355/gaiadr3                       n=  1 rmin=9.1890 None | Gaia DR3 source catalog (1811709771 sources)
+I/355/paramp                        n=  1 rmin=9.1890 None | 1D astrophysical parameters produced by the Apsis processing chain dev
+II/246/out                          n=  3 rmin=9.5190 None | 2MASS Point Source Catalogue, output (on a total of 470,992,970 source
+II/293/glimpse                      n=  7 rmin=4.0930 None | GLIMPSE sources in Galactic Center
+II/311/wise                         n=  1 rmin=10.9710 None | the WISE All-Sky release (among 563,921,584 sources)
+II/328/allwise                      n=  1 rmin=11.0340 None | *the AllWISE data release (among 747,634,026 sources) (updated version
+II/337/vvv1                         n= 15 rmin=2.7980 None | VVV catalog DR1 (2014-07-15)
+II/348/vvv2                         n= 15 rmin=2.7570 None | VVV catalog DR2 (2015-08-19)
+II/363/unwise                       n=  4 rmin=10.2690 None | the band-merged unWISE catalog (among 2,214,734,224 sources)
+II/364/virac                        n= 16 rmin=2.7900 None | VIRAC catalog
+II/365/catwise                      n=  3 rmin=10.7890 None | the CatWISE2020 catalog (among 1,890,715,640 sources)
+II/376/vvv4                         n= 24 rmin=2.7870 None | VISTA variables in the Via Lactea (VVV) DR4.2 ZYJHKs Catalog; output (
+II/379/smssdr4                      n=  1 rmin=9.2180 None | SkyMapper DR4
+II/386/vphasplus32                  n=  2 rmin=9.1150 None | VPHAS+ DR3.2 catalog
+II/387/virac2                       n= 19 rmin=2.8560 None | *VIRAC2 source catalog (VVVX DR3); the complete catalog containing 545
+IV/38/tic                           n=  4 rmin=9.1780 None | Transiting Exoplanet Survey Satellite (TESS) Input Catalog - v8.0 (TIC
+IV/39/tic82                         n=  4 rmin=9.1780 None | Transiting Exoplanet Survey Satellite (TESS) Input Catalog - v8.2 (TIC
+VI/42/out                           n=  1 rmin=0.1000 None | Compute constellation name from position
+J/A+A/591/A149/higalred             n=  1 rmin=7.5100 None | Red (PACS 160um) band HIGAL Herschel catalog
+J/A+A/591/A149/higalpsw             n=  1 rmin=4.4920 None | PSW (SPIRE 250um) band HIGAL Herschel catalog
+J/A+A/591/A149/higalpmw             n=  1 rmin=3.3030 None | PMW (SPIRE 350um) band HIGAL Herschel catalog
+J/A+A/591/A149/higalplw             n=  1 rmin=10.9470 None | PLW (SPIRE 500um) band HIGAL Herschel catalog
+J/A+A/646/A74/tablee1               n=  1 rmin=6.2000 None | 5_sigma catalogue
+J/A+A/646/A74/tablee1b              n=  1 rmin=6.2000 None | 3_sigma catalogue
+J/MNRAS/471/100/hcatalog            n=  1 rmin=6.5820 None | High reliability Hi-GAL catalog

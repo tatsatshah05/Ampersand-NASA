@@ -1,0 +1,57 @@
+"""ZTF alert broker cone searches (ALeRCE, Fink, ANTARES), 60 arcsec, target plus controls."""
+import sys, os, json, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fetch import fetch
+
+POS = {
+    "target": (270.80362, -23.46745),
+    "v7994sgr": (270.96983, -31.45739),
+    "at2024pfu_nova": (278.08252, -10.69960),   # Gaia24chk 'confirmed Nova', from the Gaia alerts list
+    "v0691ser": (279.74438, -3.86389),
+}
+R = 60  # arcsec
+
+for n, (ra, dec) in POS.items():
+    # ALeRCE
+    u = f"https://api.alerce.online/ztf/v1/objects/?ra={ra}&dec={dec}&radius={R}&page_size=50"
+    l, b = fetch(f"alerce_{n}", u)
+    try:
+        j = json.loads(b)
+        items = j.get("items", [])
+        print(f"ALeRCE {n}: HTTP {l['status']}, total={j.get('total')}, items={len(items)}")
+        for it in items[:10]:
+            print("    ", it.get("oid"), it.get("meanra"), it.get("meandec"), it.get("ndet"),
+                  it.get("firstmjd"), it.get("lastmjd"), it.get("class"), it.get("classifier"))
+    except Exception as e:
+        print(f"ALeRCE {n}: HTTP {l['status']} could not parse {e!r} {b[:200]!r}")
+
+    # Fink
+    l, b = fetch(f"fink_{n}", "https://api.fink-portal.org/api/v1/conesearch",
+                 data={"ra": ra, "dec": dec, "radius": R, "output-format": "json"})
+    try:
+        j = json.loads(b)
+        oids = sorted({x.get("i:objectId") for x in j})
+        print(f"Fink {n}: HTTP {l['status']}, alerts={len(j)}, objects={oids[:10]}")
+        for x in j[:3]:
+            print("    ", x.get("i:objectId"), x.get("i:ra"), x.get("i:dec"), x.get("i:jd"), x.get("v:classification"),
+                  x.get("i:magpsf"), x.get("i:fid"))
+    except Exception as e:
+        print(f"Fink {n}: HTTP {l['status']} could not parse {e!r} {b[:200]!r}")
+
+    # ANTARES
+    q = {"query": {"bool": {"filter": {"sky_distance": {"distance": f"{R} arcsec",
+                                                          "htm16": {"center": f"{ra} {dec}"}}}}}}
+    u = ("https://api.antares.noirlab.edu/v1/loci?" +
+         urllib.parse.urlencode({"elasticsearch_query[locus_listing]": json.dumps(q), "page[limit]": 50}))
+    l, b = fetch(f"antares_{n}", u)
+    try:
+        j = json.loads(b)
+        data = j.get("data", [])
+        print(f"ANTARES {n}: HTTP {l['status']}, loci={len(data)}, meta={j.get('meta')}")
+        for x in data[:10]:
+            a = x.get("attributes", {})
+            print("    ", x.get("id"), a.get("ra"), a.get("dec"), a.get("properties", {}).get("ztf_object_id"),
+                  a.get("properties", {}).get("num_measurements"), a.get("tags"))
+    except Exception as e:
+        print(f"ANTARES {n}: HTTP {l['status']} could not parse {e!r} {b[:300]!r}")
+    print()

@@ -1,0 +1,49 @@
+"""Is each exposure's sky WCS right? Offsets of isolated 2MASS stars found within 4 px of their expected place."""
+import json, os, sys
+from concurrent.futures import ProcessPoolExecutor
+import numpy as np
+from astropy.time import Time
+sys.path.insert(0, os.path.dirname(__file__))
+from common import CUT, W, Cut, gaia_at, offset_en
+import measure as M
+
+
+def one(fn):
+    c = Cut(os.path.join(CUT, fn))
+    t_yr = Time(c.mjd, format="mjd").jyear
+    offs = []
+    for s in M.REFS:
+        rra, rde = (gaia_at(s["gaia"], t_yr) if s["gaia"] else (s["ra"], s["dec"]))
+        rx, ry = c.sky2pix(rra, rde)
+        rx, ry = float(rx[0]), float(ry[0])
+        if not (8 <= rx < c.nx - 8 and 8 <= ry < c.ny - 8):
+            continue
+        xi, yi = int(round(rx)), int(round(ry))
+        box = c.data[yi - 4:yi + 5, xi - 4:xi + 5]
+        if not np.isfinite(box).any():
+            continue
+        j = np.unravel_index(np.nanargmax(box), box.shape)
+        px, py = xi - 4 + j[1], yi - 4 + j[0]
+        fr = M.fit_single(c, px, py)
+        if not fr or fr.get("status") != "ok" or not np.isfinite(fr["ex"]) or fr["ex"] > 0.3:
+            continue
+        offs.append((fr["x"] - rx, fr["y"] - ry, s["K"]))
+    o = np.array(offs) if offs else np.zeros((0, 3))
+    res = {"file": fn, "det": c.det, "n": len(o)}
+    if len(o) >= 4:
+        res["dx"], res["dy"] = float(np.median(o[:, 0])), float(np.median(o[:, 1]))
+        res["agree"] = int(np.sum(np.hypot(o[:, 0] - res["dx"], o[:, 1] - res["dy"]) < 0.5))
+    return res
+
+
+if __name__ == "__main__":
+    files = sorted(f for f in os.listdir(CUT) if f.endswith(".fits"))
+    with ProcessPoolExecutor(6) as ex:
+        out = list(ex.map(one, files, chunksize=6))
+    json.dump(out, open(f"{W}/out/wcscheck.json", "w"))
+    bad = [o for o in out if o.get("dx") is not None and np.hypot(o["dx"], o["dy"]) > 0.4]
+    none = [o for o in out if o.get("dx") is None]
+    print("exposures:", len(out), "with >= 4 stars:", len(out) - len(none), "offset > 0.4 px:", len(bad))
+    for o in sorted(bad, key=lambda o: -np.hypot(o["dx"], o["dy"])):
+        print(f"  {o['file']}: dx {o['dx']:+.2f} dy {o['dy']:+.2f} px, {o['agree']}/{o['n']} stars agree")
+    print("no check possible:", [o["file"] for o in none][:40], len(none))

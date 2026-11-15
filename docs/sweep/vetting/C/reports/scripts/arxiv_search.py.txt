@@ -1,0 +1,25 @@
+import requests, re, sys, time, datetime, xml.etree.ElementTree as ET
+ns = {'a': 'http://www.w3.org/2005/Atom'}
+queries = [
+ 'all:SPHEREx AND all:transient', 'all:SPHEREx AND all:nova', 'all:SPHEREx AND all:outburst', 'all:SPHEREx AND all:eruptive',
+ 'all:SPHEREx AND all:variability', 'all:SPHEREx AND abs:"young stellar"', 'all:SPHEREx AND all:variable',
+ 'abs:"infrared transient" AND abs:Galactic', 'abs:WINTER AND abs:transient', 'abs:PRIME AND abs:"infrared" AND abs:transient',
+ 'abs:VVVX AND abs:eruptive', 'abs:"eruptive young" AND abs:2025', 'abs:"FU Orionis" AND abs:outburst AND abs:2026',
+ 'abs:"episodic accretion" AND abs:outburst AND abs:NEOWISE', 'all:Norma AND all:nova', 'abs:G330.4',
+]
+out = open(sys.argv[1], 'w')
+for q in queries:
+    url = 'http://export.arxiv.org/api/query'
+    r = requests.get(url, params={'search_query': q, 'start': 0, 'max_results': 60, 'sortBy': 'submittedDate', 'sortOrder': 'descending'}, headers={'User-Agent': 'generic research client'}, timeout=120)
+    root = ET.fromstring(r.content)
+    ents = root.findall('a:entry', ns)
+    keep = []
+    for e in ents:
+        pub = e.find('a:published', ns).text[:10]
+        if pub >= '2025-01-01':
+            keep.append((pub, e.find('a:id', ns).text.split('/abs/')[-1], ' '.join(e.find('a:title', ns).text.split())))
+    line = f'== {datetime.datetime.now(datetime.timezone.utc):%Y-%m-%dT%H:%MZ} HTTP {r.status_code} query [{q}] total {len(ents)} returned, {len(keep)} since 2025'
+    print(line); out.write(line + '\n')
+    for k in keep:
+        s = f'   {k[0]} {k[1]} {k[2]}'; print(s); out.write(s + '\n')
+    time.sleep(3.5)

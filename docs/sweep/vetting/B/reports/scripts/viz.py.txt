@@ -1,0 +1,21 @@
+"""VizieR cone search via the CfA mirror (CDS Strasbourg answered 404 'currently unavailable' on 2026-11-15).
+usage: python -I viz.py OUTDIR TAG CATALOG RA DEC RADIUS_ARCSEC [extra '&'-joined VizieR constraints]
+Prints the exact URL and the table, and saves the raw TSV."""
+import sys, urllib.parse, urllib.request, datetime
+
+out, tag, cat, ra, dec, rad = sys.argv[1:7]
+extra = sys.argv[7] if len(sys.argv) > 7 else ""
+params = {"-source": cat, "-c": f"{ra} {dec}", "-c.rs": rad, "-out.max": "500", "-out.add": "_r",
+          "-sort": "_r", "-out.all": ""}
+url = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?" + urllib.parse.urlencode(params)
+if extra:
+    url += "&" + extra
+req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; generic-research-client/1.0)"})
+txt = urllib.request.urlopen(req, timeout=120).read().decode("utf-8", "replace")
+fn = f"{out}/viz_{tag}_{cat.replace('/', '_')}.tsv"
+open(fn, "w").write(txt)
+print("UTC", datetime.datetime.utcnow().isoformat(), "URL", url)
+lines = [l for l in txt.splitlines() if l and not l.startswith("#")]
+print(f"-- {cat} {tag}: {max(0, len(lines) - 3)} data rows (saved {fn})")
+for l in lines[:40]:
+    print("  ", l[:400])

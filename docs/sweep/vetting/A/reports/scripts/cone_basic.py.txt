@@ -1,0 +1,70 @@
+"""VSX (AAVSO web service and VizieR B/vsx) and SIMBAD (TAP) cone searches, target plus controls.
+Every request and its answer is saved by fetch.fetch; this prints a digest."""
+import json, sys, os, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fetch import fetch
+import io
+from astropy.io.votable import parse_single_table
+
+POS = {
+    "target": (270.80362, -23.46745),
+    "v7994sgr": (270.96983, -31.45739),
+    "v462lup": (227.01362, -40.14308),
+}
+
+
+def vsx_api(name, ra, dec, rad_deg):
+    url = (f"https://www.aavso.org/vsx/index.php?view=api.list&ra={ra}&dec={dec}"
+           f"&radius={rad_deg}&format=json")
+    line, body = fetch(f"vsx_api_{name}_{rad_deg}", url)
+    print("VSX API", name, rad_deg, "deg:", line["status"], line["bytes"], "bytes")
+    try:
+        j = json.loads(body)
+        stars = j.get("VSXObjects", {}).get("VSXObject", []) if isinstance(j.get("VSXObjects"), dict) else []
+        if isinstance(stars, dict):
+            stars = [stars]
+        print("   rows:", len(stars))
+        for s in stars[:60]:
+            print("   ", s.get("Name"), s.get("RA2000"), s.get("Declination2000"), s.get("VariabilityType"),
+                  s.get("MaxMag"), s.get("MinMag"), s.get("Epoch"), s.get("Discoverer", ""))
+    except Exception as e:
+        print("   could not parse:", repr(e), body[:300])
+
+
+def vizier_vsx(name, ra, dec, rad_arcsec):
+    url = ("https://vizier.cfa.harvard.edu/viz-bin/votable?-source=B/vsx/vsx&-c="
+           f"{ra}%20{dec}&-c.rs={rad_arcsec}&-out.all&-out.max=500")
+    line, body = fetch(f"vizier_bvsx_{name}_{rad_arcsec}", url)
+    print("VizieR B/vsx", name, rad_arcsec, "arcsec:", line["status"], line["bytes"])
+    try:
+        t = parse_single_table(io.BytesIO(body)).to_table()
+        print("   rows:", len(t))
+        cols = [c for c in ("Name", "RAJ2000", "DEJ2000", "Type", "max", "min", "_r") if c in t.colnames]
+        for r in t[:60]:
+            print("   ", [str(r[c]) for c in cols])
+    except Exception as e:
+        print("   no table / could not parse:", repr(e)[:200], body[:300])
+
+
+def simbad(name, ra, dec, rad_deg):
+    q = (f"SELECT main_id, ra, dec, otype, DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', {ra}, {dec}))*3600 AS sep "
+         f"FROM basic WHERE CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', {ra}, {dec}, {rad_deg}))=1 ORDER BY sep")
+    url = "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync?" + urllib.parse.urlencode(
+        {"request": "doQuery", "lang": "adql", "format": "json", "query": q})
+    line, body = fetch(f"simbad_{name}_{rad_deg}", url)
+    print("SIMBAD", name, rad_deg, "deg:", line["status"], line["bytes"])
+    try:
+        j = json.loads(body)
+        print("   rows:", len(j["data"]))
+        for r in j["data"][:80]:
+            print("   ", r)
+    except Exception as e:
+        print("   could not parse:", repr(e), body[:300])
+
+
+if __name__ == "__main__":
+    for n, (ra, dec) in POS.items():
+        vsx_api(n, ra, dec, 1 / 60)
+        vizier_vsx(n, ra, dec, 60)
+        simbad(n, ra, dec, 1 / 60)
+        print()

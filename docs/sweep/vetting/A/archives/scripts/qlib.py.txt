@@ -1,0 +1,117 @@
+"""Small query helpers: IRSA TAP, VizieR TAP/ASU, SIMBAD TAP. Saves every raw answer to tables/."""
+import io, os, time, json, urllib.parse
+import requests
+import numpy as np
+from astropy.table import Table
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+
+BASE = "docs/sweep/vetting/A/archives"
+TAB = os.path.join(BASE, "tables")
+UA = {"User-Agent": "generic-astro-client/1.0"}
+RA0, DEC0 = 270.80362, -23.46745
+C0 = SkyCoord(RA0, DEC0, unit="deg")
+LOG = os.path.join(BASE, "query_log.txt")
+
+
+def log(msg):
+    with open(LOG, "a") as f:
+        f.write(time.strftime("%Y-%m-%dT%H:%M:%S ") + msg + "\n")
+
+
+def _get(url, params, timeout=180, tries=3):
+    last = None
+    for i in range(tries):
+        try:
+            r = requests.get(url, params=params, headers=UA, timeout=timeout)
+            return r
+        except Exception as e:  # network
+            last = e
+            time.sleep(3 * (i + 1))
+    raise last
+
+
+def tap(url, adql, name, fmt="csv"):
+    """Run a sync TAP query; save raw text to tables/<name>.csv; return astropy Table (or None) and status str."""
+    params = {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": fmt, "QUERY": adql}
+    try:
+        r = _get(url, params)
+    except Exception as e:
+        log(f"{name} FAIL network {e!r} :: {adql}")
+        return None, f"network error {e!r}"
+    raw = r.text
+    with open(os.path.join(TAB, name + ".csv"), "w") as f:
+        f.write(raw)
+    log(f"{name} HTTP {r.status_code} len={len(raw)} :: {url} :: {adql}")
+    if r.status_code != 200 or raw.lstrip().startswith("<"):
+        return None, f"HTTP {r.status_code}: {raw[:300]!r}"
+    try:
+        t = Table.read(io.StringIO(raw), format="ascii.csv")
+    except Exception as e:
+        if raw.strip().count("\n") == 0:  # header only
+            return Table(), "header only (0 rows)"
+        return None, f"parse error {e!r}: {raw[:300]!r}"
+    return t, f"{len(t)} rows"
+
+
+def add_offset(t, racol="ra", deccol="dec", ra0=RA0, dec0=DEC0):
+    if t is None or len(t) == 0:
+        return t
+    c = SkyCoord(np.array(t[racol], float), np.array(t[deccol], float), unit="deg")
+    c0 = SkyCoord(ra0, dec0, unit="deg")
+    t["sep_arcsec"] = np.round(c.separation(c0).arcsec, 2)
+    t["pa_deg"] = np.round(c0.position_angle(c).deg, 1)
+    t.sort("sep_arcsec")
+    return t
+
+
+IRSA = "https://irsa.ipac.caltech.edu/TAP/sync"
+VIZ = "https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync"
+SIMBAD = "https://simbad.cds.unistra.fr/simbad/sim-tap/sync"
+
+
+def irsa_cone(table, radius_arcsec, name, cols="*", racol="ra", deccol="dec", ra0=RA0, dec0=DEC0):
+    adql = (f"SELECT {cols} FROM {table} WHERE CONTAINS(POINT('ICRS',{racol},{deccol}),"
+            f"CIRCLE('ICRS',{ra0},{dec0},{radius_arcsec/3600.0:.7f}))=1")
+    t, st = tap(IRSA, adql, name)
+    if t is not None and len(t):
+        t = add_offset(t, racol, deccol, ra0, dec0)
+    return t, st
+
+
+def viz_cone(table, radius_arcsec, name, racol="RAJ2000", deccol="DEJ2000", cols="*", ra0=RA0, dec0=DEC0):
+    adql = (f'SELECT {cols} FROM "{table}" WHERE 1=CONTAINS(POINT(\'ICRS\',"{racol}","{deccol}"),'
+            f"CIRCLE('ICRS',{ra0},{dec0},{radius_arcsec/3600.0:.7f}))")
+    t, st = tap(VIZ, adql, name)
+    if t is not None and len(t):
+        t = add_offset(t, racol, deccol, ra0, dec0)
+    return t, st
+
+
+def asu(catalog, radius_arcsec, name, extra=None, ra0=RA0, dec0=DEC0):
+    """VizieR ASU-TSV cone, all columns + computed _r (arcmin? no: arcsec via -c.u)."""
+    params = {"-source": catalog, "-c": f"{ra0} {dec0}", "-c.rs": f"{radius_arcsec}",
+              "-out.max": "500", "-out.all": "", "-out.add": "_r,_RAJ,_DEJ", "-sort": "_r", "-oc.form": "dec"}
+    if extra:
+        params.update(extra)
+    url = "https://vizier.cds.unistra.fr/viz-bin/asu-tsv"
+    try:
+        r = _get(url, params)
+    except Exception as e:
+        log(f"{name} FAIL network {e!r}")
+        return None, f"network error {e!r}"
+    with open(os.path.join(TAB, name + ".tsv"), "w") as f:
+        f.write(r.text)
+    log(f"{name} ASU HTTP {r.status_code} len={len(r.text)} :: {catalog} r={radius_arcsec}")
+    return r.text, f"HTTP {r.status_code}"
+
+
+def show(t, cols=None, n=40):
+    if t is None:
+        print("   (no table)")
+        return
+    if len(t) == 0:
+        print("   0 rows")
+        return
+    tt = t[cols] if cols else t
+    tt[:n].pprint(max_lines=-1, max_width=-1)

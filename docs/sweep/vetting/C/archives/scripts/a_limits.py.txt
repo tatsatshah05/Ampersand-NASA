@@ -1,0 +1,100 @@
+"""Brightest point source each pre-2025 image allows at the 2026 SPHEREx position (241.709120, -52.205661).
+
+excess = (max pixel within r_core of the position) - (median of a ring 8-16"), sigma = 1.4826*MAD of the ring.
+Conversion peak -> point-source flux is calibrated on catalogued stars in the same image
+(GLIMPSE archive for IRAC, unWISE catalogue for W1/W2, MIPSGAL archive source for 24 um); for W3/W4 a
+Gaussian PSF (FWHM 6.5", 12.0") on the unWISE Vega-nanomaggie scale is used (no usable catalogued W3/W4 star).
+Upper limit = conversion * (max(excess, 0) + 3 sigma)."""
+import math, warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+from pathlib import Path
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.table import Table
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+from astropy.wcs.utils import skycoord_to_pixel, proj_plane_pixel_scales
+A = Path(__file__).resolve().parent.parent
+D, R = A / "data", A / "img" / "raw"
+POS = SkyCoord(241.709120 * u.deg, -52.205661 * u.deg)
+
+
+def load(f):
+    with fits.open(f) as h:
+        hd = next(x for x in h if x.data is not None and x.data.ndim >= 2)
+        d = np.array(hd.data, float)
+        while d.ndim > 2:
+            d = d[0]
+        hh = hd.header.copy()
+        if str(hh.get('CTYPE1', '')).startswith('RA') and 'RADESYS' not in hh and 'EQUINOX' not in hh:
+            hh['RADESYS'] = 'ICRS'  # unWISE neo7 cutout headers carry no frame; astropy would assume FK4
+        return d, WCS(hh).celestial
+
+
+def peak_excess(d, w, c, rcore, ring=(8, 16)):
+    x, y = (float(v) for v in skycoord_to_pixel(c, w, origin=0, mode="all"))
+    ps = float(proj_plane_pixel_scales(w).mean() * 3600)
+    gy, gx = np.mgrid[0:d.shape[0], 0:d.shape[1]]
+    r = np.hypot(gx - x, gy - y) * ps
+    rg = (r > ring[0]) & (r < ring[1]) & np.isfinite(d)
+    bg = np.median(d[rg]); sig = 1.4826 * np.median(np.abs(d[rg] - bg))
+    core = d[(r <= rcore) & np.isfinite(d)]
+    if core.size == 0:
+        return float('nan'), float(sig), ps
+    return float(core.max() - bg), float(sig), ps
+
+
+def calib(d, w, ras, decs, mjy, rcore, nsig=5, ring=(8, 16)):
+    out = []
+    for a, b, f in zip(ras, decs, mjy):
+        e, s, _ = peak_excess(d, w, SkyCoord(a * u.deg, b * u.deg), rcore, ring)
+        if e > nsig * s and e > 0:
+            out.append(f / e)
+    return (float(np.median(out)), len(out)) if out else (np.nan, 0)
+
+
+rows = []
+# IRAC: GLIMPSE archive calibrators (2004 catalogue; stars, assumed steady to ~10%)
+gl = Table.read(D / "gator_glimpse_s07_ar_30.tbl", format="ipac")
+for f, label, col, rc in [("spitzer/glimpseI_I1.fits", "GLIMPSE I 3.6um (mosaic made 2007-04)", "f3_6", 1.2),
+                          ("spitzer/glimpseI_I2.fits", "GLIMPSE I 4.5um (mosaic made 2007-04)", "f4_5", 1.2),
+                          ("spitzer/glimpseI_I3.fits", "GLIMPSE I 5.8um (mosaic made 2007-04)", "f5_8", 1.2),
+                          ("spitzer/glimpseI_I4.fits", "GLIMPSE I 8.0um (mosaic made 2007-06)", "f8_0", 1.2),
+                          ("spitzer/deep_I1.fits", "Deep GLIMPSE 3.6um (mosaic made 2015-07)", "f3_6", 0.9),
+                          ("spitzer/deep_I2.fits", "Deep GLIMPSE 4.5um (mosaic made 2015-07)", "f4_5", 0.9),
+                          ("spitzer/apo_I1.fits", "APOGLIMPSE 3.6um (mosaic made 2018-09)", "f3_6", 0.9),
+                          ("spitzer/apo_I2.fits", "APOGLIMPSE 4.5um (mosaic made 2018-09)", "f4_5", 0.9)]:
+    d, w = load(R / f)
+    m = ~np.ma.getmaskarray(gl[col]) & (np.array(gl[col].filled(0), float) > 1.0)
+    k, n = calib(d, w, np.array(gl["ra"][m], float), np.array(gl["dec"][m], float), np.array(gl[col][m], float), rc)
+    e, s, ps = peak_excess(d, w, POS, rc)
+    rows.append((label, e, s, k, n, k * (max(e, 0) + 3 * s)))
+# MIPSGAL 24: the one archive source (5.506 mJy at 19.4")
+d, w = load(R / "spitzer/mipsgal24.fits")
+k, n = calib(d, w, [241.711954], [-52.199709], [5.506], 2.5, nsig=1, ring=(8, 14))
+e, s, ps = peak_excess(d, w, POS, 2.5, ring=(8, 14))
+rows.append(("MIPSGAL 24um (DATE_OBS 2006-04-13)", e, s, k, n, k * (max(e, 0) + 3 * s)))
+# unWISE W1/W2 (neo7 = 2010-2020; allwise = 2010-2011), calibrated on unWISE catalogue fluxes (Vega nMgy)
+uw = Table.read(D / "gator_unwise_2019_30.tbl", format="ipac")
+for ver, yrs in [("unwise_neo7", "2010-2020"), ("unwise_allwise", "2010-2011")]:
+    for band, zp in [(1, 309.540e3), (2, 171.787e3)]:
+        d, w = load(R / ver / f"unwise-2407m515-w{band}-img-m.fits")
+        fl = np.array(uw[f"flux_{band}"].filled(np.nan), float)
+        m = np.isfinite(fl) & (fl > 3000)
+        mjy = zp * 1e-9 * fl[m]  # Vega nMgy -> mJy: f = ZP * 10^(-0.4 m), m = 22.5 - 2.5 log10(nMgy)
+        k, n = calib(d, w, np.array(uw["ra"][m], float), np.array(uw["dec"][m], float), mjy, 2.75)
+        e, s, ps = peak_excess(d, w, POS, 2.75, ring=(12, 25))
+        rows.append((f"unWISE {ver.split('_')[1]} W{band} ({yrs})", e, s, k, n, k * (max(e, 0) + 3 * s)))
+for band, zp, fwhm in [(3, 31.674e3, 6.5), (4, 8.363e3, 12.0)]:
+    d, w = load(R / "unwise_allwise" / f"unwise-2407m515-w{band}-img-m.fits")
+    sig_px = fwhm / 2.355 / 2.75
+    k = zp * 1e-9 * 2 * math.pi * sig_px ** 2  # mJy per (nMgy/pixel) of peak, Gaussian PSF
+    e, s, ps = peak_excess(d, w, POS, 2.75, ring=(15, 40))
+    rows.append((f"unWISE allwise W{band} (2010), Gaussian PSF", e, s, k, 0, k * (max(e, 0) + 3 * s)))
+t = Table(rows=rows, names=["image", "excess_at_pos", "ring_sigma", "mJy_per_peak_unit", "n_calibrators", "upper_limit_mJy"])
+for c in t.colnames[1:]:
+    if t[c].dtype.kind == "f":
+        t[c].info.format = ".3g"
+t.pprint(max_width=200, max_lines=50)
+t.write(D / "archival_limits.csv", format="csv", overwrite=True)

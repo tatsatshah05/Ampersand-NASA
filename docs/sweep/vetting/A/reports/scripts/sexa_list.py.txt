@@ -1,0 +1,24 @@
+"""Generic: find every 'HH:MM:SS.ss ... +-DD:MM:SS.s' pair in a downloaded page and report separations to the
+target and controls, plus how many entries lie within 1 and 2 degrees (to show whether a survey covers the place)."""
+import sys, os, re, html
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from lists import T, sep
+
+T = dict(T)
+T["OGLE-2025-BLG-0001 (self-check)"] = (15 * (17 + 19 / 60 + 44.68 / 3600), -(27 + 43 / 60 + 21.4 / 3600))
+
+for path in sys.argv[1:]:
+    t = open(path, encoding="utf-8", errors="replace").read()
+    out = []
+    for m in re.finditer(r"(\d{1,2}):(\d{2}):(\d{2}(?:\.\d+)?)(?:&nbsp;|\s|<[^>]{0,40}>){0,12}([+-])(\d{1,2}):(\d{2}):(\d{2}(?:\.\d+)?)", t):
+        hh, mm, ss, sg, dd, dm, ds = m.groups()
+        ra = 15 * (int(hh) + int(mm) / 60 + float(ss) / 3600)
+        dec = (-1 if sg == "-" else 1) * (int(dd) + int(dm) / 60 + float(ds) / 3600)
+        ctx = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", t[max(0, m.start() - 250): m.end() + 60])).split())
+        out.append((ra, dec, ctx[-260:]))
+    print(f"== {path}: {len(out)} positions")
+    for n, p in T.items():
+        d = sorted((sep(p, (e[0], e[1])), e[2]) for e in out)
+        print(f"  {n}: within 60 arcsec {sum(1 for x in d if x[0] < 60)}, within 1 deg {sum(1 for x in d if x[0] < 3600)}, within 2 deg {sum(1 for x in d if x[0] < 7200)}")
+        for x in d[:2]:
+            print(f"     {x[0]:9.1f} arcsec  {x[1][-200:]}")

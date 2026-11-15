@@ -1,0 +1,43 @@
+== II/293 r=8" failed=False info=[]
+   II/293: 0 rows; GLIMPSE Source Catalog (I + II + 3D) (IPAC 2008)
+   II/293/glimpse: 3 rows; GLIMPSE sources in Galactic Center
+      {'_r': '3.734', 'GLIMPSE': 'G341.0882-00.4146', 'RAJ2000': '253.179017', 'DEJ2000': '-44.676589', 'C': 'A', '2MASS': '', 'Jmag': '', 'Hmag': '', 'Kmag': '', '3.6mag': '14.238', 'e_3.6mag': '0.132', '4.5mag': ''}
+      {'_r': '4.487', 'GLIMPSE': 'G341.0893-00.4165', 'RAJ2000': '253.182102', 'DEJ2000': '-44.676973', 'C': 'C', '2MASS': '16524373-4440366', 'Jmag': '15.299', 'Hmag': '14.509', 'Kmag': '13.774', '3.6mag': '12.695', 'e_3.6mag': '0.118', '4.5mag': '12.472'}
+      {'_r': '6.778', 'GLIMPSE': 'G341.0899-00.4143', 'RAJ2000': '253.180268', 'DEJ2000': '-44.675128', 'C': 'A', '2MASS': '', 'Jmag': '', 'Hmag': '', 'Kmag': '', '3.6mag': '14.524', 'e_3.6mag': '0.130', '4.5mag': ''}
+== II/348 r=4" failed=False info=['#Column\te_Zmag3\t(F10.3)\t? Error ind default source Z mag 2.0 arcsec diam (ZAPERMAG3ERR)\t[ucd=stat.error;phot.mag]', '#Column\te_Ymag3\t(F8.3)\t? Error in default source Y mag 2.0 arcsec aperture diameter (YAPERMAG3ERR)\t[ucd=stat.error]']
+   II/348: 0 rows; VISTA Variable in the Via Lactea Survey DR2 (Minniti+, 2017)
+   II/348/vvv2: 2 rows; VVV catalog DR2 (2015-08-19)
+      {'_r': '2.397', 'RAJ2000': '253.179947', 'DEJ2000': '-44.677611', 'iauname': 'VVV J165243.18-444039.39', 'mClass': '-1', 'Zmag3': '', 'e_Zmag3': '', 'Zperrbits': '0', 'Ymag3': '', 'e_Ymag3': '', 'Yperrbits': '0', 'Jmag3': ''}
+      {'_r': '3.554', 'RAJ2000': '253.179105', 'DEJ2000': '-44.676573', 'iauname': 'VVV J165242.98-444035.66', 'mClass': '1', 'Zmag3': '19.582', 'e_Zmag3': '0.106', 'Zperrbits': '16', 'Ymag3': '', 'e_Ymag3': '', 'Yperrbits': '0', 'Jmag3': '18.352'}
+== J/AJ/149/64 r=10" failed=False info=[]
+   J/AJ/149/64: 0 rows; MIPSGAL 24{mu}m point source catalog (Gutermuth+, 2015)
+   J/AJ/149/64/catalog: 0 rows; MIPSGAL 24{mu}m point source catalog (2015-05-22 version)
+   J/AJ/149/64/archive: 0 rows; MIPSGAL 24{mu}m lower quality point source archive (2015-05-22 version)
+== II/297 r=30" failed=False info=[]
+   II/297: 0 rows; AKARI/IRC mid-IR all-sky Survey (ISAS/JAXA, 2010)
+   II/297/irc: 0 rows; AKARI/IRC All-Sky Survey Point Source Catalogue (Version 1.0)
+== V/114 r=30" failed=False info=[]
+   V/114: 0 rows; MSX6C Infrared Point Source Catalog (Egan+ 2003)
+   V/114/msx6_gp: 0 rows; The complete MSX6C catalogue in the Galactic Plane (|b|<=6{deg})
+   V/114/msx6_main: 0 rows; High latitude, |b|> 6
+   V/114/msx6_lr: 0 rows; Low reliability sources (S/N between 3 and 5) in all the observed regions
+   V/114/msx6_s: 0 rows; Singleton sources (extracted from a single scan but with good fluxes) in all the observed 
+== II/125 r=60" failed=False info=[]
+   II/125: 0 rows; IRAS catalogue of Point Sources, Version 2.0 (IPAC 1986)
+   II/125/main: 0 rows; IRAS Point Sources
+== J/ApJS/223/15 r=600" failed=False info=[]
+   J/ApJS/223/15: 0 rows; 8yr INTEGRAL/IBIS soft gamma-ray source obs. (Bird+, 2016)
+   J/ApJS/223/15/table2: 0 rows; IBIS catalog of 1000 INTEGRAL orbits
+== J/ApJS/235/4 r=600" failed=False info=[]
+   J/ApJS/235/4: 0 rows; The 105-month Swift-BAT all-sky hard X-ray survey (Oh+, 2018)
+   J/ApJS/235/4/table3: 0 rows; Catalog of sources in the 105-month Swift-BAT survey
+   J/ApJS/235/4/table2: 0 rows; Unidentified sources with 2MASS counterpart in the Swift-BAT 105-month catalog
+== II/337 r=6" failed=False info=['#Column\te_Zmag3\t(F7.3)\t? Error in default source Z mag 2.0 arcsec aperture diameter\t[ucd=stat.error;phot.mag]', '#Column\te_Ymag3\t(F8.3)\t? Error in default source Y mag 2.0 arcsec apertude diameter\t[ucd=stat.error]']
+   II/337: 0 rows; VISTA Variables in the Via Lactea Survey DR1 (Saito+, 2012)
+   II/337/vvv1: 3 rows; VVV catalog DR1 (2014-07-15)
+      {'_r': '4.143', 'RAJ2000': '253.179090', 'DEJ2000': '-44.676288', 'iauname': 'VVV J165242.98-444034.63', 'mClass': '1', 'Zmag3': '19.582', 'e_Zmag3': '0.106', 'Zperrbits': '16', 'Ymag3': '', 'e_Ymag3': '', 'Yperrbits': '0', 'Jmag3': '18.352'}
+      {'_r': '4.269', 'RAJ2000': '253.178725', 'DEJ2000': '-44.676744', 'iauname': 'VVV J165242.89-444036.27', 'mClass': '-1', 'Zmag3': '18.615', 'e_Zmag3': '0.045', 'Zperrbits': '16', 'Ymag3': '', 'e_Ymag3': '', 'Yperrbits': '0', 'Jmag3': '17.275'}
+      {'_r': '4.979', 'RAJ2000': '253.182273', 'DEJ2000': '-44.676804', 'iauname': 'VVV J165243.74-444036.49', 'mClass': '-1', 'Zmag3': '16.639', 'e_Zmag3': '0.009', 'Zperrbits': '0', 'Ymag3': '', 'e_Ymag3': '', 'Yperrbits': '0', 'Jmag3': '15.167'}
+== II/341 r=4" failed=False info=[]
+   II/341: 0 rows; VPHAS+ DR2 survey (Drew+, 2016)
+   II/341/vphasp: 0 rows; VPHAS+ catalog, output (on a total of 319,126,837 sources)

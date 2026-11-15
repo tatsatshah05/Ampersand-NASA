@@ -1,0 +1,31 @@
+CONTROL VizieR J/A+A/568/A41 [J/A+A/568/A41/atl-csc] r=600": 5 rows nearest 253.0"
+CONTROL VizieR J/MNRAS/473/1059 [J/MNRAS/473/1059/table2] r=600": 5 rows nearest 252.8"
+CONTROL VizieR J/MNRAS/473/1059 [J/MNRAS/473/1059/table8] r=600": 1 rows nearest 425.0"
+CONTROL VizieR J/ApJS/254/33 [J/ApJS/254/33/table1] r=120": 1 rows nearest 84.0"
+CONTROL VizieR J/AJ/136/2413 [J/AJ/136/2413/table2] r=600": 5 rows nearest 317.3"
+CONTROL VizieR J/ApJS/208/11 [J/ApJS/208/11/table1] r=1800": 6 rows nearest 524.8"
+CONTROL VizieR II/366 r=900": no table returned
+CONTROL VizieR II/297 [II/297/irc] r=600": 35 rows nearest 154.6"
+CONTROL VizieR II/125 [II/125/main] r=900": 17 rows nearest 331.6"
+CONTROL VizieR J/MNRAS/465/3011 [J/MNRAS/465/3011/table2] r=3600": 16 rows nearest 882.4"
+CONTROL VizieR II/379/smssdr4 r=30": no table returned
+CONTROL VizieR II/358/smss r=30": no table returned
+CONTROL VizieR II/379/smssdr4 r=120": no table returned
+CONTROL VizieR B/vsx [B/vsx/vsx] r=60": 1 rows nearest 13.2"
+  _r    OID               Name              V   RAJ2000   DEJ2000  Type l_max   max   u_max n_max f_min l_min   min   u_min n_min l_Period Period u_Period  Sp
+                                                  deg       deg                 mag                             mag                          d                
+----- ------- ---------------------------- --- --------- --------- ---- ----- ------- ----- ----- ----- ----- ------- ----- ----- -------- ------ -------- ---
+13.20 5763624 Gaia DR3 5933349095879173504   0 241.71381 -52.20726   RS        17.320           G              17.420           G              --            A
+CONTROL VizieR I/358 [I/358/varisum] r=30": 1 rows nearest 13.2"
+  _r          Source           RA_ICRS         DE_ICRS        TimeG        DurG     Gmagmean    TimeBP      DurBP    BPmagmean    TimeRP      DurRP    RPmagmean VCR VRRLyr VCep VPN VST VLPV VEB VRM VMSO VAGN Vmicro VCC
+                                 deg             deg            d           d         mag         d           d         mag         d           d         mag                                                             
+------ ------------------- --------------- --------------- ----------- ----------- --------- ----------- ----------- --------- ----------- ----------- --------- --- ------ ---- --- --- ---- --- --- ---- ---- ------ ---
+13.172 5933349095879173504 241.71378123681 -52.20726459133 2172.611989  894.485660 17.381441 2186.148552  894.485660 18.303688 2177.446610  894.485660 16.453646   1      0    0   0   0    0   0   0    0    0      0   0
+CONTROL VizieR I/358 [I/358/vclassre] r=30": 1 rows nearest 13.2"
+  _r          Source             SolID         Classifier  Class     RA_ICRS         DE_ICRS    
+                                                                       deg             deg      
+------ ------------------- ------------------ ------------ ----- --------------- ---------------
+13.172 5933349095879173504 375316653866487564 nTransits:5+    RS 241.71378123681 -52.20726459133
+CONTROL VizieR J/MNRAS/504/2742 r=120": no table returned
+CONTROL VizieR II/363/unwise r=30": no table returned
+CONTROL VizieR II/365/catwise r=30": no table returned

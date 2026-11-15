@@ -1,0 +1,87 @@
+"""Per-detector aperture corrections from isolated, unsaturated field stars in the same cutouts:
+r=2.5 px aperture / r=1.5 px aperture, and r=2.5 aperture / Gaussian integral (shape fitted per star).
+Also: saturated / photometry-flagged pixels within 1 px of A' and of the neighbour, per exposure."""
+import json, math, warnings, logging, sys
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+warnings.simplefilter("ignore"); logging.getLogger("astropy").setLevel(logging.ERROR)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from measure import CUT, LIST, PHOT_BAD, OVF, SUR, SPILL, SKY_BAD, mask, clipped_median, frac_disk, gauss_fit, find_peaks
+D = Path(__file__).resolve().parent
+A = (270.804063, -23.468200); NB = (270.801899, -23.462976)
+L = json.load(open(LIST)); L.sort(key=lambda e: e["mjd"])
+ep, cur = [], 0
+for i, e in enumerate(L):
+    if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+    ep.append(cur + 1)
+
+def work(args):
+    e, k = args
+    with fits.open(CUT / f"{e['obs_id']}_D{e['detector']}.fits") as h:
+        hd = h["IMAGE"].header; img = h["IMAGE"].data.astype(float); flg = h["FLAGS"].data.astype(np.int64)
+        zod = h["ZODI"].data.astype(float); var = h["VARIANCE"].data.astype(float)
+    w = WCS(hd); ny, nx = img.shape
+    d = img - zod; d[img < -10 * np.sqrt(var)] = np.nan
+    to_mjy = float(proj_plane_pixel_area(w)) * (math.pi / 180) ** 2 * 1e9
+    sat = (((flg & OVF) != 0) & ((flg & SUR) != 0)) | ((flg & SPILL) != 0) | (((flg & OVF) != 0) & ~np.isfinite(img))
+    good = np.isfinite(d) & ((flg & PHOT_BAD) == 0)
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    out = {"obs_id": e["obs_id"], "det": e["detector"], "epoch": k}
+    for nm, (ra, de) in (("A", A), ("NB", NB)):
+        x, y = (float(v) for v in w.all_world2pix(ra, de, 0))
+        r = np.hypot(xx - x, yy - y)
+        near = r <= 1.0
+        out[f"{nm}_sat1"] = int((sat & near).sum()); out[f"{nm}_bad1"] = int((~good & near).sum())
+        out[f"{nm}_ovf1"] = int((((flg & OVF) != 0) & near).sum())
+        out[f"{nm}_sat15"] = int((sat & (r <= 1.5)).sum())
+    # comparison stars
+    v = d[good & ((flg & SKY_BAD) == 0)]
+    if v.size < 200:
+        v = d[good]
+    sky, ssig, _ = clipped_median(v)
+    dd = d - sky
+    stars = []
+    pk = find_peaks(dd, good, 10 * ssig, border=8)
+    for (x, y, pv) in pk:
+        if any(0 < math.hypot(q[0] - x, q[1] - y) < 5 and q[2] > 0.1 * pv for q in pk): continue
+        sub = sat[y - 3:y + 4, x - 3:x + 4]; subg = good[y - 3:y + 4, x - 3:x + 4]
+        if sub.any() or not subg.all(): continue
+        if ((flg[y - 3:y + 4, x - 3:x + 4] & OVF) != 0).any(): continue
+        g = gauss_fit(dd, good, float(x), float(y))
+        if not g or g["amp"] <= 0: continue
+        # local sky ring 6-9 px for the star
+        rr = np.hypot(xx - g["x"], yy - g["y"])
+        ring = (rr >= 6) & (rr < 9) & good
+        if ring.sum() < 30: continue
+        ls, _, _ = clipped_median(dd[ring])
+        f = {}
+        for rad in (1.5, 2.5):
+            wt = frac_disk(nx, ny, g["x"], g["y"], rad); u = wt > 0
+            if not good[u].all(): break
+            f[rad] = float(np.sum(wt[u] * (dd[u] - ls)) * to_mjy)
+        else:
+            gint = 2 * math.pi * g["sx"] * g["sy"] * g["amp"] * to_mjy
+            if f[2.5] > 15:
+                stars.append({"f15": f[1.5], "f25": f[2.5], "gauss": gint, "fwhm": g["fwhm_arcsec"] if "fwhm_arcsec" in g else g["fwhm_px"] * 6.15,
+                              "ar": g["axis_ratio"]})
+    out["stars"] = stars
+    return out
+
+if __name__ == "__main__":
+    from multiprocessing import Pool
+    with Pool(6) as pool:
+        R = pool.map(work, list(zip(L, ep)))
+    json.dump(R, open(D / "calib.json", "w"))
+    from collections import defaultdict
+    by = defaultdict(list)
+    for r in R:
+        for s in r["stars"]: by[r["det"]].append(s)
+    for det in sorted(by):
+        s = by[det]
+        a = np.array([x["f25"] / x["f15"] for x in s]); b = np.array([x["f25"] / x["gauss"] for x in s])
+        fw = np.array([x["fwhm"] for x in s])
+        print(f"D{det}: {len(s)} star measurements; ap2.5/ap1.5 median {np.median(a):.3f} (MAD {1.4826*np.median(np.abs(a-np.median(a))):.3f}); "
+              f"ap2.5/gauss median {np.median(b):.3f} (MAD {1.4826*np.median(np.abs(b-np.median(b))):.3f}); FWHM median {np.median(fw):.2f}\" (MAD {1.4826*np.median(np.abs(fw-np.median(fw))):.2f})")

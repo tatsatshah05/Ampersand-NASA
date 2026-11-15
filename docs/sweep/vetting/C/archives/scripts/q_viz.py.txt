@@ -1,0 +1,36 @@
+"""VizieR (CfA mirror) cones around candidate C. Raw VOTables saved in data/."""
+import sys, warnings
+warnings.filterwarnings("ignore")
+sys.path.insert(0, __file__.rsplit("/", 1)[0])
+from qlib import *
+
+jobs = [
+    ("II/246/out", 30), ("II/328/allwise", 30), ("II/365/catwise", 30), ("II/363/unwise", 30),
+    ("II/348", 30), ("II/376", 30), ("II/387", 30), ("II/337", 30),
+    ("I/355/gaiadr3", 30), ("I/358", 30), ("II/379", 30), ("II/358", 30),
+    ("J/ApJS/234/39", 30), ("J/ApJS/264/28", 30),
+    ("J/A+A/568/A41", 120), ("J/MNRAS/473/1059", 120),
+    ("J/A+A/591/A149", 60), ("J/MNRAS/471/100", 60), ("J/MNRAS/504/2742", 60),
+    ("J/AJ/149/64", 60), ("II/297", 60), ("II/298", 120), ("V/114", 120), ("II/125", 180),
+    ("J/ApJS/254/33", 60), ("J/AJ/136/2413", 60), ("J/ApJS/208/11", 120),
+    ("B/vsx", 60), ("II/366", 60), ("J/MNRAS/465/3011", 120),
+]
+only = set(sys.argv[1:])
+for src, rad in jobs:
+    if only and src not in only:
+        continue
+    try:
+        tabs, infos = vizier(src, rad, name="viz_" + src.replace("/", "_").replace("+", "p"))
+    except Exception as e:
+        print(f"### {src} r={rad}\": ERROR {e}")
+        continue
+    if not tabs:
+        print(f"### {src} r={rad}\": no table returned; INFO: {infos[:4]}")
+        continue
+    for name, t in tabs:
+        if t is None:
+            print(f"### {src} [{name}]: could not convert")
+            continue
+        print(f"### {src} [{name}] r={rad}\": {len(t)} rows")
+        if len(t):
+            t[:30].pprint(max_lines=40, max_width=250)

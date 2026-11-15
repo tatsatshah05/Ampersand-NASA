@@ -1,0 +1,258 @@
+"""Shared helpers for the independent pixel-level check of sweep candidate B.
+
+Own code: reads the cached SPHEREx cutouts (IMAGE, FLAGS, VARIANCE, ZODI, WAVE, BANDWIDTH) with astropy and
+measures with numpy/scipy. Nothing from backend/photometry.py or backend/sweep.py is called.
+"""
+from __future__ import annotations
+
+import csv
+import io
+import warnings
+
+import numpy as np
+from astropy.io import ascii, fits
+from astropy.wcs import WCS, FITSFixedWarning
+from scipy.special import erf
+
+warnings.simplefilter("ignore", FITSFixedWarning)
+
+W = "docs/sweep/vetting/B/pixels"
+CUT = "<repository>/backend/cache/sweep/cutouts/b464db86a4"
+SIA = "<repository>/backend/cache/sweep/queries/sia_f17f2b60997fa157.json"
+RA0, DEC0 = 253.18044, -44.67687
+
+# Flag bits, Table 16 of the SPHEREx Explanatory Supplement v2.1 (as copied in the project's CLAUDE.md / pipeline.py)
+BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7, "MISSING_DATA": 9, "HOT": 10,
+       "COLD": 11, "FULLSAMPLE": 12, "PHANMISS": 14, "NONLINEAR": 15, "PERSIST": 17, "OUTLIER": 19, "CROSSTALK": 20,
+       "SOURCE": 21, "GHOST": 22, "GHOST_FPA": 23, "GHOST_EXT": 24, "STREAK": 25, "BLOOM": 26, "SNOWBALL": 27,
+       "HALO": 28, "SATELLITE_HALO": 29}
+
+
+def m(*names):
+    return sum(1 << BIT[n] for n in names)
+
+
+PHOT_BAD = m("SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR", "PERSIST", "BLOOM", "SNOWBALL",
+             "HALO", "SATELLITE_HALO")
+SKY_BAD = PHOT_BAD | m("OVERFLOW", "OUTLIER", "SOURCE", "TRANSIENT")
+NAMES = {v: k for k, v in BIT.items()}
+
+
+def flag_names(bits):
+    return [NAMES.get(b, f"bit{b}") for b in range(32) if (int(bits) >> b) & 1]
+
+
+def saturated(flags, data):
+    ov = (flags & m("OVERFLOW")) != 0
+    return (ov & ((flags & m("SUR_ERROR")) != 0)) | ((flags & m("BLOOM", "NONLINEAR")) != 0) | (ov & ~np.isfinite(data))
+
+
+def sep_arcsec(ra1, dec1, ra2, dec2):
+    ra1, dec1, ra2, dec2 = map(np.radians, (ra1, dec1, ra2, dec2))
+    s = np.sin((dec2 - dec1) / 2) ** 2 + np.cos(dec1) * np.cos(dec2) * np.sin((ra2 - ra1) / 2) ** 2
+    return np.degrees(2 * np.arcsin(np.sqrt(s))) * 3600
+
+
+def offset_en(ra, dec, ra_ref, dec_ref):
+    """east, north offset of (ra, dec) from the reference, arcsec (small angles)."""
+    de = (ra - ra_ref) * np.cos(np.radians(dec_ref)) * 3600
+    dn = (dec - dec_ref) * 3600
+    return de, dn
+
+
+# ---------- catalogues ----------
+def read_vizier_tsv(path):
+    t = open(path).read()
+    lines = [l for l in t.splitlines() if l and not l.startswith("#")]
+    # skip HTTP-like header lines
+    lines = [l for l in lines if "\t" in l]
+    head = [h.strip() for h in lines[0].split("\t")]
+    rows = []
+    for l in lines[3:]:
+        v = l.split("\t")
+        if len(v) != len(head):
+            continue
+        rows.append({h: x.strip() for h, x in zip(head, v)})
+    return rows
+
+
+def num(x):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return None
+
+
+def twomass_deep():
+    rows = read_vizier_tsv(f"{W}/downloads/viz_2mass_deep.tsv")
+    out = []
+    for r in rows:
+        out.append({"name": "2MASS J" + r["2MASS"], "ra": float(r["RAJ2000"]), "dec": float(r["DEJ2000"]),
+                    "J": num(r["Jmag"]), "H": num(r["Hmag"]), "K": num(r["Kmag"]), "q": r["Qflg"]})
+    return out
+
+
+def catwise_deep():
+    t = ascii.read(f"{W}/downloads/gator_catwise_deep.tbl", format="ipac")
+    return [{"name": "CWISE " + str(r["source_name"]), "ra": float(r["ra"]), "dec": float(r["dec"]),
+             "W1": float(r["w1mpro"]) if r["w1mpro"] is not np.ma.masked else None,
+             "W2": float(r["w2mpro"]) if r["w2mpro"] is not np.ma.masked else None} for r in t]
+
+
+def gaia_deep():
+    t = open(f"{W}/downloads/gaia_deep.csv").read()
+    out = []
+    for r in csv.DictReader(io.StringIO(t)):
+        out.append({k: num(v) if k != "source_id" else v for k, v in r.items()})
+    return out
+
+
+def gaia_at(g, epoch_yr):
+    """Gaia DR3 position (epoch 2016.0) moved to epoch_yr with its proper motion (no parallax term)."""
+    ra, dec = g["ra"], g["dec"]
+    if g.get("pmra") is not None and g.get("pmdec") is not None:
+        dt = epoch_yr - 2016.0
+        dec = dec + g["pmdec"] * dt / 3.6e6
+        ra = ra + g["pmra"] * dt / 3.6e6 / np.cos(np.radians(dec))
+    return ra, dec
+
+
+# ---------- one cutout ----------
+class Cut:
+    def __init__(self, path):
+        with fits.open(path) as h:
+            hd = h["IMAGE"].header
+            self.hd = hd
+            self.image = h["IMAGE"].data.astype("f8")
+            self.flags = h["FLAGS"].data.astype("i8")
+            self.var = h["VARIANCE"].data.astype("f8")
+            self.zodi = h["ZODI"].data.astype("f8")
+            self.wave = h["WAVE"].data.astype("f8")
+            self.band = h["BANDWIDTH"].data.astype("f8")
+        self.det = int(hd["DETECTOR"])
+        self.obs = str(hd["OBSID"])
+        self.mjd = float(hd["MJD-AVG"])
+        self.psf_fwhm_hdr = float(hd.get("PSF_FWHM", np.nan))
+        self.wcs = WCS(hd)
+        self.wA = WCS(hd, key="A")
+        data = self.image - self.zodi
+        with np.errstate(invalid="ignore"):
+            imp = self.image < -10.0 * np.sqrt(self.var)
+        data[imp] = np.nan
+        self.data = data
+        self.ny, self.nx = data.shape
+
+    shift = (0.0, 0.0)   # measured correction of the archive WCS, pixels (true = WCS + shift)
+
+    def sky2pix(self, ra, dec):
+        x, y = self.wcs.all_world2pix(np.atleast_1d(ra), np.atleast_1d(dec), 0)
+        return x + self.shift[0], y + self.shift[1]
+
+    def pix2sky(self, x, y):
+        r, d = self.wcs.all_pix2world(np.atleast_1d(x) - self.shift[0], np.atleast_1d(y) - self.shift[1], 0)
+        return r, d
+
+    def det_xy(self, x, y):
+        a, b = self.wA.wcs_pix2world(np.atleast_1d(x), np.atleast_1d(y), 0)
+        return a, b
+
+    def pixel_area_arcsec2(self, x, y):
+        r, d = self.pix2sky([x - 0.5, x + 0.5, x, x], [y, y, y - 0.5, y + 0.5])
+        dxe, dxn = offset_en(r[1], d[1], r[0], d[0])
+        dye, dyn = offset_en(r[3], d[3], r[2], d[2])
+        return abs(dxe * dyn - dxn * dye)
+
+    def position_angle(self):
+        """Angle east of north of the detector +y axis on the sky (deg) at the cutout centre."""
+        xc, yc = self.nx / 2, self.ny / 2
+        r, d = self.pix2sky([xc, xc], [yc, yc + 10])
+        de, dn = offset_en(r[1], d[1], r[0], d[0])
+        return float(np.degrees(np.arctan2(de[0] if np.ndim(de) else de, dn[0] if np.ndim(dn) else dn)) % 360)
+
+    def sky_level(self, x, y, r_in=14.0, r_out=20.0):
+        yy, xx = np.mgrid[0:self.ny, 0:self.nx]
+        r = np.hypot(xx - x, yy - y)
+        ring = (r >= r_in) & (r < r_out) & np.isfinite(self.data)
+        use = ring & ((self.flags & SKY_BAD) == 0)
+        mode = "strict"
+        if use.sum() < 100:
+            use = ring & ((self.flags & (SKY_BAD & ~m("SOURCE", "OUTLIER"))) == 0)
+            mode = "source_pixels_allowed"
+        if use.sum() < 100:
+            return None, None, 0, "no_sky"
+        v = self.data[use]
+        for _ in range(5):
+            med = np.median(v)
+            sd = 1.4826 * np.median(np.abs(v - med))
+            keep = np.abs(v - med) < 3 * sd
+            if keep.all():
+                break
+            v = v[keep]
+        return float(np.median(v)), float(np.std(v)), int(use.sum()), mode
+
+
+def coverage(nx, ny, x, y, r_out, r_in=0.0, sub=7):
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    off = (np.arange(sub) + 0.5) / sub - 0.5
+    tot = np.zeros((ny, nx))
+    for dy in off:
+        for dx in off:
+            rr = np.hypot(xx + dx - x, yy + dy - y)
+            tot += (rr >= r_in) & (rr < r_out)
+    return tot / sub ** 2
+
+
+def aperture(c: Cut, x, y, r=2.5, sky=None):
+    """Sky-subtracted aperture sum in mJy and the flag summary. Independent implementation."""
+    out = {"status": "ok", "flux": None, "err": None, "flags": [], "n_overflow": 0}
+    if not (21 <= x < c.nx - 21 and 21 <= y < c.ny - 21):
+        out["status"] = "edge"
+        return out
+    if sky is None:
+        s, ssd, n, mode = c.sky_level(x, y)
+    else:
+        s, ssd, n, mode = sky
+    if s is None:
+        out["status"] = "no_sky"
+        return out
+    w = coverage(c.nx, c.ny, x, y, r)
+    sel = w > 0
+    f = c.flags[sel]
+    d = c.data[sel]
+    v = c.var[sel]
+    bits = int(np.bitwise_or.reduce(f)) if f.size else 0
+    out["flags"] = flag_names(bits & ~m("SOURCE"))
+    out["n_overflow"] = int(((f & m("OVERFLOW")) != 0).sum())
+    out["n_sat"] = int(saturated(f, d).sum())
+    out["n_bad"] = int((((f & PHOT_BAD) != 0) | ~np.isfinite(d) | ~np.isfinite(v)).sum())
+    area = c.pixel_area_arcsec2(x, y)
+    to_mjy = area / (206264.806 ** 2) * 1e9
+    out["to_mjy"] = to_mjy
+    if out["n_sat"]:
+        out["status"] = "saturated"
+    elif out["n_bad"]:
+        out["status"] = "flagged"
+    if out["status"] in ("ok", "saturated", "flagged"):
+        good = np.isfinite(d) & np.isfinite(v)
+        # value with whatever is there (for saturated: a lower limit if only the core lost charge; not a flux)
+        out["raw_sum"] = float(np.sum(w[sel][good] * (d[good] - s))) * to_mjy
+    if out["status"] == "ok":
+        out["flux"] = float(np.sum(w[sel] * (d - s))) * to_mjy
+        var = float(np.sum(w[sel] ** 2 * v)) + float(w[sel].sum()) ** 2 * (ssd ** 2 / max(n, 1))
+        out["err_stat"] = float(np.sqrt(var)) * to_mjy
+        out["err"] = float(np.hypot(out["err_stat"], 0.03 * out["flux"]))
+    out["sky"] = s
+    out["sky_sd"] = ssd
+    out["sky_mode"] = mode
+    return out
+
+
+# ---------- PSF model ----------
+SQ2 = np.sqrt(2.0)
+
+
+def pix_gauss(xx, yy, xc, yc, s):
+    """Pixel-integrated round Gaussian with unit total flux, pixel centres at integer coords."""
+    gx = 0.5 * (erf((xx + 0.5 - xc) / (SQ2 * s)) - erf((xx - 0.5 - xc) / (SQ2 * s)))
+    gy = 0.5 * (erf((yy + 0.5 - yc) / (SQ2 * s)) - erf((yy - 0.5 - yc) / (SQ2 * s)))
+    return gx * gy

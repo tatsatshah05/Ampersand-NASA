@@ -1,0 +1,42 @@
+"""V345 Nor (the 607 Jy Mira) brightness per epoch from its unsaturated wings (rings 6.5-9.5 and 9.5-12.5 px), D5 and D6,
+and the saturated-core flags, to scale what a ghost of it would be in each epoch."""
+import glob, json, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+from measure import coverage, sky_level, PHOT_BAD
+STAR = (241.715125, -52.076250)
+R = {(r["obs_id"], r["det"]): r for r in json.load(open("measurements.json"))}
+out = []
+for p in sorted(glob.glob(os.path.join(HERE, "downloads", "big", "*", "*.fits"))):
+    oid, dd = os.path.basename(p)[:-5].rsplit("_D", 1); d = int(dd)
+    with fits.open(p) as h:
+        hd = h["IMAGE"].header; img = h["IMAGE"].data.astype(float); fl = h["FLAGS"].data.astype(np.int64); zod = h["ZODI"].data.astype(float)
+    w = WCS(hd); data = img - zod; ny, nx = data.shape
+    x, y = (float(t) for t in w.all_world2pix(*STAR, 0))
+    if not (30 <= x < nx - 30 and 30 <= y < ny - 30): continue
+    sub = data[int(y) - 30:int(y) + 31, int(x) - 30:int(x) + 31]; sf = fl[int(y) - 30:int(y) + 31, int(x) - 30:int(x) + 31]
+    sx, sy = x - (int(x) - 30), y - (int(y) - 30)
+    sky, _, _ = sky_level(sub, sf, sx, sy, 22, 28)
+    to = float(proj_plane_pixel_area(w)) * (np.pi / 180) ** 2 * 1e9
+    rec = {"obs_id": oid, "det": d, "ep": R[(oid, d)]["ep"], "wave": None}
+    for name, (a, b) in (("ring1", (6.5, 9.5)), ("ring2", (9.5, 12.5))):
+        cw = coverage(sub.shape[1], sub.shape[0], sx, sy, a, b)
+        u = cw > 0; bad = ((sf[u] & PHOT_BAD) != 0) | ~np.isfinite(sub[u])
+        rec[name] = float(np.sum(cw[u][~bad] * (sub[u][~bad] - sky)) * to * cw[u].sum() / cw[u][~bad].sum()) if bad.mean() < 0.1 else None
+    core = (np.hypot(*np.meshgrid(np.arange(sub.shape[1]) - sx, np.arange(sub.shape[0]) - sy)) < 2)
+    rec["core_saturated"] = bool(((sf[core] & ((1 << 1) | (1 << 2))) == ((1 << 1) | (1 << 2))).any() or (sf[core] & (1 << 26)).any())
+    out.append(rec)
+names = {0: "Jul-Aug 2025", 1: "Feb-Mar 2026", 2: "Apr 2026", 3: "Jul-Sep 2026"}
+for d in (5, 6):
+    for ring in ("ring1", "ring2"):
+        line = f"D{d} {ring}: "
+        for ep in (0, 1, 2, 3):
+            v = [o[ring] for o in out if o["det"] == d and o["ep"] == ep and o[ring] is not None]
+            if v: line += f"{names[ep]} {np.median(v):8.0f} mJy (n={len(v)})  "
+        print(line)
+    print(f"D{d} core saturated in", sum(o["core_saturated"] for o in out if o["det"] == d), "of", sum(1 for o in out if o["det"] == d))
+json.dump(out, open("mira.json", "w"))

@@ -1,0 +1,91 @@
+-- https://simbad.harvard.edu/simbad/sim-tap/sync 200 | SELECT b.main_id, b.ra, b.dec, b.otype, b.nbref, i.id FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id IN ('V* V462 Lup','V* V7994 Sgr','NOVA Lup 2025','NOVA Sgr 2025b','NOVA Sgr 2025','V* V572 Vel','NOVA Vel 2025')
+main_id,ra,dec,otype,nbref,id
+
+-- https://simbad.harvard.edu/simbad/sim-tap/sync 200 | SELECT main_id, ra, dec, otype, nbref FROM basic WHERE CONTAINS(POINT('ICRS',ra,dec), CIRCLE('ICRS',227.01362,-40.14308,0.05))=1 AND otype IN ('No*','No?','CV*')
+main_id,ra,dec,otype,nbref
+
+-- https://simbad.harvard.edu/simbad/sim-tap/sync 200 | SELECT TOP 5 main_id, ra, dec, otype FROM basic WHERE main_id LIKE 'V* V7%Sgr' ORDER BY oid DESC
+main_id,ra,dec,otype
+"V* V761 Sgr",267.6282379524399,-29.614844713500005,"EB*"
+"V* V751 Sgr",266.99460342620995,-28.857912666350007,"EB*"
+"V* V712 Sgr",274.21732282648,-34.77430839614999,"RR*"
+"V* V733 Sgr",285.03408210341,-18.25281058784,"Mi*"
+"V* V782 Sgr",269.15598333326994,-27.831200740729997,"EB*"
+
+Traceback (most recent call last):
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connection.py", line 239, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/util/connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 977, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connectionpool.py", line 793, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connectionpool.py", line 494, in _make_request
+    raise new_e
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connectionpool.py", line 470, in _make_request
+    self._validate_conn(conn)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connectionpool.py", line 1125, in _validate_conn
+    conn.connect()
+    ~~~~~~~~~~~~^^
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connection.py", line 827, in connect
+    self.sock = sock = self._new_conn()
+                       ~~~~~~~~~~~~~~^^
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connection.py", line 246, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: HTTPSConnection(host='simbad.u-strasbg.fr', port=443): Failed to resolve 'simbad.u-strasbg.fr' ([Errno 8] nodename nor servname provided, or not known)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<repository>/.venv/lib/python3.13/site-packages/requests/adapters.py", line 696, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/connectionpool.py", line 847, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "<repository>/.venv/lib/python3.13/site-packages/urllib3/util/retry.py", line 555, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='simbad.u-strasbg.fr', port=443): Max retries exceeded with url: /simbad/sim-tap/sync (Caused by NameResolutionError("HTTPSConnection(host='simbad.u-strasbg.fr', port=443): Failed to resolve 'simbad.u-strasbg.fr' ([Errno 8] nodename nor servname provided, or not known)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "docs/sweep/vetting/C/reports/scripts/simbad_names.py", line 6, in <module>
+    run("SELECT b.main_id, b.ra, b.dec, b.otype, b.nbref, i.id FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id IN ('V* V462 Lup','V* V7994 Sgr','NOVA Lup 2025','NOVA Sgr 2025b','NOVA Sgr 2025','V* V572 Vel','NOVA Vel 2025')")
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "docs/sweep/vetting/C/reports/scripts/simbad_names.py", line 4, in run
+    r = requests.post(url, data={'REQUEST':'doQuery','LANG':'ADQL','FORMAT':'csv','QUERY':adql}, headers={'User-Agent':'generic research client'}, timeout=120)
+  File "<repository>/.venv/lib/python3.13/site-packages/requests/api.py", line 134, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "<repository>/.venv/lib/python3.13/site-packages/requests/api.py", line 71, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<repository>/.venv/lib/python3.13/site-packages/requests/sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+  File "<repository>/.venv/lib/python3.13/site-packages/requests/sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+  File "<repository>/.venv/lib/python3.13/site-packages/requests/adapters.py", line 729, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='simbad.u-strasbg.fr', port=443): Max retries exceeded with url: /simbad/sim-tap/sync (Caused by NameResolutionError("HTTPSConnection(host='simbad.u-strasbg.fr', port=443): Failed to resolve 'simbad.u-strasbg.fr' ([Errno 8] nodename nor servname provided, or not known)"))

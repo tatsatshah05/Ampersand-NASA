@@ -1,0 +1,58 @@
+"""Centroid statistics of the candidate in the bright exposures, drift with time, and what a ghost of the
+607 Jy star 7.7' north would do (rigid offset in detector pixels)."""
+import json, os, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+warnings.simplefilter("ignore")
+RA0, DEC0 = 241.70931, -52.20484
+CUT = "<repository>/backend/cache/sweep/cutouts/4ae14c5ec1"
+R = json.load(open("measurements.json")); G = {(g["obs_id"], g["det"]): g for g in json.load(open("geometry.json"))}
+good = [r for r in R if r["ep"] in (1, 2) and r.get("gfit") and r["flux"] is not None and r["flux"] > 40 and r["n_bad_ap"] <= 3
+        and r["gfit"]["ex_px"] is not None and r["gfit"]["ex_px"] < 0.5]
+print("bright exposures with a centroid fit (flux>40 mJy, <=3 flagged px in aperture):", len(good))
+E = np.array([r["g_off_e"] for r in good]); N = np.array([r["g_off_n"] for r in good])
+ee = np.array([r["gfit"]["ex_px"] * 6.15 for r in good]); en = np.array([r["gfit"]["ey_px"] * 6.15 for r in good])
+print(f"all: mean E {E.mean():+.2f} N {N.mean():+.2f}  sd E {E.std(ddof=1):.2f} N {N.std(ddof=1):.2f}  median fit err {np.median(ee):.2f} {np.median(en):.2f} arcsec")
+for d in range(1, 7):
+    m = np.array([r["det"] == d for r in good])
+    if m.sum() == 0: continue
+    print(f"  D{d}: n={m.sum():2d} mean E {E[m].mean():+.2f} N {N[m].mean():+.2f}  sd E {E[m].std(ddof=1) if m.sum()>1 else 0:.2f} N {N[m].std(ddof=1) if m.sum()>1 else 0:.2f}")
+days = sorted(set(r["date"][:10] for r in good))
+for dday in days:
+    m = np.array([r["date"][:10] == dday for r in good])
+    print(f"  {dday}: n={m.sum():2d} mean E {E[m].mean():+.2f} N {N[m].mean():+.2f}")
+t = np.array([r["mjd"] for r in good])
+for comp, v in (("E", E), ("N", N)):
+    A = np.vstack([t - t.mean(), np.ones_like(t)]).T
+    coef, res, *_ = np.linalg.lstsq(A, v, rcond=None)
+    resid = v - A @ coef
+    s = np.sqrt(np.sum(resid ** 2) / (len(v) - 2)); cov = s ** 2 * np.linalg.inv(A.T @ A)
+    print(f"  drift {comp}: {coef[0]*1:+.3f} +/- {np.sqrt(cov[0,0]):.3f} arcsec/day over {t.max()-t.min():.1f} days")
+ra_m = RA0 + E.mean() / 3600 / np.cos(np.radians(DEC0)); de_m = DEC0 + N.mean() / 3600
+print(f"mean position RA {ra_m:.6f} Dec {de_m:.6f}  (sd of mean E {E.std(ddof=1)/np.sqrt(len(E)):.2f} N {N.std(ddof=1)/np.sqrt(len(N)):.2f})")
+json.dump({"ra": ra_m, "dec": de_m, "sd_e": float(E.std(ddof=1)), "sd_n": float(N.std(ddof=1)), "n": len(E)}, open("position.json", "w"))
+# detector coverage of these good exposures
+dx = np.array([r["det_x"] for r in good]); dy = np.array([r["det_y"] for r in good])
+print(f"detector positions spanned: x {dx.min():.0f}..{dx.max():.0f}, y {dy.min():.0f}..{dy.max():.0f}")
+# --- rigid detector-offset ghost of the 607 Jy star: predicted sky wander
+print("\nGhost of the 607 Jy star with a rigid detector offset V0 (median source-minus-star vector of D6 in the bright epoch):")
+v0 = np.median([np.array(G[(r['obs_id'], r['det'])]["src_det"]) - np.array(G[(r['obs_id'], r['det'])]["stars"][0]["det"]) for r in good if r["det"] == 6], axis=0)
+print("V0 (px) =", np.round(v0, 2))
+pred = []
+for r in good:
+    g = G[(r["obs_id"], r["det"])]
+    hd = fits.getheader(os.path.join(CUT, f"{r['obs_id']}_D{r['det']}.fits"), "IMAGE")
+    w = WCS(hd)
+    offx = float(hd["CRVAL1A"]) + 1.0 - float(hd["CRPIX1A"]); offy = float(hd["CRVAL2A"]) + 1.0 - float(hd["CRPIX2A"])
+    sx, sy = g["stars"][0]["det"]
+    gx, gy = sx + v0[0] - offx, sy + v0[1] - offy
+    gra, gde = (float(q) for q in w.all_pix2world(gx, gy, 0))
+    pe = (gra - RA0) * np.cos(np.radians(DEC0)) * 3600; pn = (gde - DEC0) * 3600
+    pred.append((r["det"], pe, pn, r["g_off_e"], r["g_off_n"]))
+pred = np.array(pred)
+for d in (3, 4, 5, 6):
+    m = pred[:, 0] == d
+    if m.sum() == 0: continue
+    print(f"  D{d}: predicted ghost sky offsets E {pred[m,1].min():+6.1f}..{pred[m,1].max():+6.1f}  N {pred[m,2].min():+6.1f}..{pred[m,2].max():+6.1f}   observed E {pred[m,3].min():+5.1f}..{pred[m,3].max():+5.1f} N {pred[m,4].min():+5.1f}..{pred[m,4].max():+5.1f}")
+print(f"  all: predicted ghost spread (sd) E {pred[:,1].std():.1f} N {pred[:,2].std():.1f} arcsec; observed sd E {pred[:,3].std():.2f} N {pred[:,4].std():.2f}")

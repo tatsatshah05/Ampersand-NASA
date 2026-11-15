@@ -1,0 +1,75 @@
+== J/A+A/582/A68 r=60" failed=False info=[]
+   J/A+A/582/A68: 0 rows; Database of circumstellar OH masers (Engels+, 2015)
+   J/A+A/582/A68/oh_maser: 0 rows; OH maser observations
+   J/A+A/582/A68/maps: 0 rows; Interferometric OH maser observations (oh_maser_maps)
+   J/A+A/582/A68/monitor: 0 rows; OH maser monitoring programs (oh_maser_monitor)
+== J/MNRAS/417/1964 r=60" failed=False info=[]
+   VIII/96: 0 rows; 6-GHz methanol multibeam maser catalogue (Caswell+, 2010-12)
+   VIII/96/catalog: 0 rows; Methanol maser positions observed on Parkes
+   VIII/96/table2: 0 rows; Sources associated with the 3-kpc arms as identified by Green et al. (2009ApJ...696L.156G)
+== J/MNRAS/416/1764 r=60" failed=False info=[]
+   J/MNRAS/416/1764: 0 rows; H_2_O Southern Galactic Plane Survey (HOPS) (Walsh+, 2011)
+   J/MNRAS/416/1764/table2: 0 rows; Properties of detected water masers
+== J/ApJS/208/11 r=60" failed=False info=[]
+   J/ApJS/208/11: 0 rows; The Red MSX Source Survey: massive protostars (Lumsden+, 2013)
+   J/ApJS/208/11/table1: 0 rows; The full RMS (Red MSX Source Survey) catalog
+   J/ApJS/208/11/table2: 0 rows; Complete list of massive protostars with L>20000L_{sun}_
+== J/A+A/568/A41 r=60" failed=False info=[]
+   J/A+A/568/A41: 0 rows; ATLASGAL Compact Source Catalog: 280<l<60 (Urquhart+, 2014)
+   J/A+A/568/A41/atl-csc: 0 rows; ATLASGAL compact source catalog (table 1)
+== V/84 r=60" failed=False info=[]
+   V/84: 0 rows; Strasbourg-ESO Catalogue of Galactic Planetary Nebulae (Acker+, 1992)
+   V/84/main: 0 rows; Discoverers, Designations, and Positions of True and Possible Planetary Nebulae (1)
+   V/84/iras: 0 rows; IRAS Point Source Catalogue fluxes (1)
+   V/84/pospn: 0 rows; Possible PN (table 2)
+   V/84/notpn: 0 rows; Objects rejected as PN (table 3)
+== J/MNRAS/373/79 r=60" failed=False info=['#INFO\tError=Table or Catalog not found: J/MNRAS/373/79\t']
+   no table returned; head: # | #   VizieR Astronomical Server vizier.cfa.harvard.edu | #    Date: 2026-11-15T04:33:45 [V7.6.1] | #   In case of problem, please report to:	cds-question@unistra.fr | # | # | #Coosys	J2000:	eq_FK5 J2000 | #INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved | #INFO	request_date
+== IX/58 r=60" failed=False info=[]
+   IX/58: 0 rows; 2SXPS Swift X-ray telescope point source catalogue (Evans+, 2020)
+   IX/58/2sxps: 0 rows; The 2SXPS Catalogue of Swift X-ray telescope Point Sources
+   IX/58/2sxpscle: 0 rows; The 2SXPS Catalogue of Swift X-ray telescope Point Sources "clean" version
+== IX/69 r=60" failed=False info=[]
+   IX/69: 0 rows; XMM-Newton Serendipitous Source Catalogue 4XMM-DR13 (Webb+, 2023)
+   IX/69/xmm4d13s: 0 rows; The 4XMM-DR13 Catalog, "slim" version
+   IX/69/summary: 0 rows; List of observations
+== IX/70 r=60" failed=False info=[]
+   IX/70: 0 rows; Chandra Source Catalog Release 2 (CSC 2.1) (Evans+, 2024)
+   IX/70/csc21mas: 0 rows; Chandra Source Catalog version 2.1
+== IX/57 r=60" failed=False info=[]
+   IX/57: 0 rows; The Chandra Source Catalog (CSC), Release 2.0 (Evans+, 2019)
+   IX/57/csc2master: 0 rows; Chandra Source Catalog, V2.0; master sources
+== J/A+A/588/A103 r=60" failed=False info=['#Column\te_Cts\t(F10.6)\tError of the source counts (CERR)\t[ucd=stat.error]', '#Column\te_HR1\t(F8.3)\t? Error of HR1 (HR_1_err)\t[ucd=stat.error]']
+   J/A+A/588/A103: 0 rows; Second ROSAT all-sky survey (2RXS) source catalog (Boller+, 2016)
+   J/A+A/588/A103/cat2rxs: 0 rows; Catalogue of 135118 2RXS ROSAT sources
+== J/A+A/682/A34 r=60" failed=False info=[]
+   J/A+A/682/A34: 0 rows; SRG/eROSITA all-sky survey catalogs (eRASS1) (Merloni+, 2024)
+   J/A+A/682/A34/erass1-m: 0 rows; All extended X-ray sources and all point-like X-ray sources with detection likelihood >6, 
+   J/A+A/682/A34/erass1-s: 0 rows; Point-like X-ray sources with detection likelihood 5<DET_LIKE<6, detected over a broad 0.2
+   J/A+A/682/A34/erass1-h: 0 rows; All X-ray sources detected in the 2.3-5keV band with detection likelihood DET_LIKE>12
+== IX/10A r=60" failed=False info=['#Column\te_Count\t(E9.2)\t? Error on Count (4)\t[ucd=stat.error;phot.count]', '#Column\te_HR1\t(F5.2)\t? Error on HR1 (6)\t[ucd=stat.error]']
+   IX/10A: 0 rows; ROSAT All-Sky Bright Source Catalogue (1RXS) (Voges+ 1999)
+   IX/10A/1rxs: 0 rows; The 1RXS catalogue
+   IX/10A/1rxs_cor: 0 rows; 1RXS Correlation entries
+   IX/10A/cor_iras: 0 rows; 1RXS Correlation to IRASPSC, IRASFSC
+   IX/10A/cor_ned: 0 rows; 1RXS Correlation to NED
+   IX/10A/cor_nvs: 0 rows; 1RXS Correlation to NVSS, FIRST
+   IX/10A/cor_pri: 0 rows; 1RXS Correlation to PRI, RITTER, SIMBAD, TYCHO, EUVE
+   IX/10A/cor_hst: 0 rows; 1RXS Correlation to HST_GSC
+   IX/10A/cor_wfc: 0 rows; 1RXS Correlation to ROSAT-WFC
+   IX/10A/cor_ros: 0 rows; 1RXS Correlation to ROSATP3, ROSATWGA, ROSATHRI
+   IX/10A/cor_ver: 0 rows; 1RXS Correlation Catalogue to VERON8 (VII/207)
+== IX/29 r=60" failed=False info=['#Column\te_Count\t(E9.2)\t? Error on Count (4)\t[ucd=stat.error;phot.count]', '#Column\te_HR1\t(F5.2)\t? Error on HR1 (6)\t[ucd=stat.error]']
+   IX/29: 0 rows; ROSAT All-Sky Survey Faint Source Catalog (Voges+ 2000)
+   IX/29/rass_fsc: 0 rows; The ROSAT All Sky Survey Faint Source Catalog
+== J/ApJS/223/15 r=60" failed=False info=[]
+   J/ApJS/223/15: 0 rows; 8yr INTEGRAL/IBIS soft gamma-ray source obs. (Bird+, 2016)
+   J/ApJS/223/15/table2: 0 rows; IBIS catalog of 1000 INTEGRAL orbits
+== J/A+AS/146/407 r=60" failed=False info=[]
+   J/A+AS/146/407: 0 rows; Symbiotic stars catalogue (Belczynski+, 2000)
+   J/A+AS/146/407/catalog: 0 rows; Catalog of symbiotic stars and suspected  symbiotic stars
+   J/A+AS/146/407/adata: 0 rows; Additional positions and cross-identifications
+== J/A+A/635/A14 r=60" failed=False info=[]
+   J/A+A/635/A14: 0 rows; New R Coronae Borealis stars (Tisserand+, 2020)
+   J/A+A/635/A14/table2: 0 rows; Coordinates and magnitudes of the selected objects
+   J/A+A/635/A14/list: 0 rows; List of fits spectra for 47 sources, all new RCB stars, except KDM-6546 with is a CH-star

@@ -1,0 +1,33 @@
+"""Profile of the change itself: aperture sums at r = 1.25 and 2.5 px in each bright (Feb-Mar 2026) exposure minus the
+median of the same sums in the faint epochs (same detector, wavelength within 0.1 um), so the neighbours' light cancels."""
+import json, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+from measure import CUT, coverage, PHOT_BAD
+R = json.load(open("measurements.json")); POS = json.load(open("position.json"))
+def sums(r):
+    with fits.open(os.path.join(CUT, f"{r['obs_id']}_D{r['det']}.fits")) as h:
+        hd = h["IMAGE"].header; data = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float); fl = h["FLAGS"].data.astype(np.int64)
+    w = WCS(hd); x, y = (float(t) for t in w.all_world2pix(POS["ra"], POS["dec"], 0))
+    ny, nx = data.shape; out = []
+    for rad in (1.25, 2.5):
+        cw = coverage(nx, ny, x, y, 0, rad); u = cw > 0
+        if (((fl[u] & PHOT_BAD) != 0) | ~np.isfinite(data[u])).any(): return None
+        out.append(float(np.sum(cw[u] * (data[u] - r["sky"]))) * r["to_mjy"])
+    return out
+for d in (3, 4, 5, 6):
+    faint = [(r["wave_um"], sums(r)) for r in R if r.get("ep") in (0, 3) and r["det"] == d and r.get("status") == "ok"]
+    faint = [(w_, s) for w_, s in faint if s]
+    cs = []
+    for r in R:
+        if r.get("ep") != 1 or r["det"] != d or r.get("status") != "ok": continue
+        s = sums(r)
+        if not s: continue
+        base = [f for w_, f in faint if abs(w_ - r["wave_um"]) < (0.5 if d == 4 else 0.1)]
+        if len(base) < 2: continue
+        b = np.median(np.array(base), axis=0)
+        cs.append((s[0] - b[0]) / (s[1] - b[1]))
+    if cs: print(f"D{d}: concentration of the change (bright minus faint): median {np.median(cs):.3f}, range {min(cs):.3f}-{max(cs):.3f}, n={len(cs)}")

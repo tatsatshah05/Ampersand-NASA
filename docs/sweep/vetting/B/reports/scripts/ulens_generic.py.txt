@@ -1,0 +1,15 @@
+"""Extract every sexagesimal RA/Dec pair (hh:mm:ss.s  -dd:mm:ss.s) from a page and report the nearest to B."""
+import re, sys
+import numpy as np
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+for f in sys.argv[1:]:
+    t = re.sub(r"<[^>]+>", " ", open(f, errors="replace").read())
+    pairs = re.findall(r"\b(\d{1,2}:\d\d:\d\d(?:\.\d+)?)\s+([-+]?\d{1,2}:\d\d:\d\d(?:\.\d+)?)", t)
+    if not pairs:
+        print(f, "no coordinate pairs found"); continue
+    c = SkyCoord([p[0] for p in pairs], [p[1] for p in pairs], unit=(u.hourangle, u.deg))
+    l = c.galactic.l.deg; l = np.where(l > 180, l - 360, l)
+    s = SkyCoord(253.18044, -44.67687, unit="deg").separation(c).deg
+    i = int(np.argmin(s))
+    print(f"{f.split('/')[-1]}: {len(pairs)} positions, l from {l.min():.1f} to {l.max():.1f}, b from {c.galactic.b.deg.min():.1f} to {c.galactic.b.deg.max():.1f}; nearest to B {s[i]:.2f} deg ({pairs[i][0]} {pairs[i][1]})")

@@ -1,0 +1,44 @@
+"""Zoomed per-visit stacks (60 x 60 arcsec, 2 arcsec grid, x8) of D6, D5, D4, D3 with catalogue places marked by offset ticks."""
+import json, os, sys
+import numpy as np
+from PIL import Image, ImageDraw
+sys.path.insert(0, os.path.dirname(__file__))
+import stamps as S
+from common import offset_en
+P = S.P
+cols = {"bright place": (255, 60, 60), "2MASS J16524373 (Ks 13.8)": (60, 200, 255), "41 mJy star 2MASS J16524412": (255, 200, 0),
+        "GLIMPSE G341.0882 ([3.6] 14.2)": (90, 255, 90)}
+Z = 15   # half size in grid pixels (30 arcsec)
+sc = 8
+labels = {0: "Aug-Sep 2025", 1: "Feb-Mar 2026", 2: "Aug 2026"}
+dets = (6, 5, 4, 3)
+canvas = Image.new("RGB", (3 * (2 * Z * sc + 10) + 10, len(dets) * (2 * Z * sc + 28) + 80), (255, 255, 255))
+dr = ImageDraw.Draw(canvas)
+dr.text((8, 4), "Candidate B: per-visit median stacks, 60\" x 60\", north up, east left, same grey scale within a row.", fill=(0, 0, 0))
+dr.text((8, 16), "Ticks end 4\" from: red = bright place (my centroid), blue = 2MASS J16524373/Gaia G 19.4 counterpart,", fill=(0, 0, 0))
+dr.text((8, 28), "yellow = 2MASS J16524412 (W2 9.05, 41 mJy, 10\" NE), green = GLIMPSE G341.0882 ([3.6] 14.2, 3.7\" W)", fill=(0, 0, 0))
+for r, det in enumerate(dets):
+    st = {}
+    for ep in (0, 1, 2):
+        fns = [f for f, p in P.items() if p["det"] == det and p["ep"] == ep]
+        arr = np.array([S.resample(f) for f in fns])
+        with np.errstate(all="ignore"):
+            st[ep] = np.nanmedian(arr, axis=0)[S.HALF - Z:S.HALF + Z, S.HALF - Z:S.HALF + Z], len(fns)
+    allv = np.concatenate([a[np.isfinite(a)] for a, _ in st.values()])
+    lo, hi = np.percentile(allv, 2), np.max(allv)
+    for col, ep in enumerate((0, 1, 2)):
+        a, n = st[ep]
+        im = S.to_png(a, lo, hi, sc)
+        d2 = ImageDraw.Draw(im)
+        for lab, (ra, de) in S.MARKS.items():
+            e, nn = offset_en(ra, de, S.RA_B, S.DE_B)
+            cx = (Z - e / S.GRID) * sc; cy = (Z - nn / S.GRID) * sc
+            c = cols[lab]
+            # ticks pointing at the place from 4 to 8 arcsec away: left and below
+            d2.line([(cx - 8 / S.GRID * sc, cy), (cx - 4 / S.GRID * sc, cy)], fill=c, width=3)
+            d2.line([(cx, cy + 8 / S.GRID * sc), (cx, cy + 4 / S.GRID * sc)], fill=c, width=3)
+        x = 10 + col * (2 * Z * sc + 10); y = 45 + r * (2 * Z * sc + 28)
+        canvas.paste(im, (x, y + 14))
+        dr.text((x, y), f"D{det} {labels[ep]} ({n} exp.)", fill=(0, 0, 0))
+canvas.save(f"{S.W}/pictures/zoom_visits_marked.png")
+print("ok")

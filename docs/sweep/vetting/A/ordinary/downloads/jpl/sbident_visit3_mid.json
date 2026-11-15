@@ -1,0 +1,28 @@
+{
+ "url": "https://ssd-api.jpl.nasa.gov/sb_ident.api?mpc-code=500&obs-time=2461292.178300&fov-ra-center=18-03-12.98&fov-dec-center=M23-28-05.52&fov-ra-hwidth=0.05&fov-dec-hwidth=0.05&vmag-lim=25&mag-required=true&two-pass=true&suppress-first-pass=true",
+ "answer": {
+  "signature": {
+   "version": "1.1",
+   "source": "NASA/JPL Small-Body Identification API"
+  },
+  "summary": {
+   "fov-dec-center": "M23-28-05.52",
+   "vmag-lim": "25",
+   "mag-required": "true",
+   "suppress-first-pass": "true",
+   "obs-time": "2461292.178300",
+   "fov-ra-hwidth": "0.05",
+   "fov-dec-hwidth": "0.05",
+   "two-pass": "true",
+   "fov-ra-center": "18-03-12.98",
+   "mpc-code": "500"
+  },
+  "warning": "no matching records",
+  "observer": {
+   "fov_offset": "00:00:12.00, +00 03'00.00\"",
+   "fov_center": "18:03:12.98, -23 28'05.52\" (J2000)",
+   "location": "Geocentric",
+   "obs_date": "2026-Sep-08 16:16:45 (2461292.178300 UT)"
+  }
+ }
+}

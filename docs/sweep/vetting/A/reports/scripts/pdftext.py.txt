@@ -1,0 +1,5 @@
+import sys, pypdf
+r = pypdf.PdfReader(sys.argv[1])
+out = "\n".join((p.extract_text() or "") + f"\n[[page {i+1}]]" for i, p in enumerate(r.pages))
+open(sys.argv[2], "w").write(out)
+print(len(r.pages), "pages", len(out), "chars")

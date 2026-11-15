@@ -1,0 +1,38 @@
+Gaia alerts: rows 27076 date range 2014-07-27 19:10:29 2025-01-15 00:59:00
+== Gaia Science Alerts (alerts.csv): 27076 positions parsed; nearest to target 1348" (0.37 deg); entries within 1 deg: 6; within 60": 0
+     1348" : Gaia22cxu,2022-07-15 19:21:42,241.29161,-51.93217,18.41,18.92,0.16,unknown,2022-07-18 07:49:03,~0.4 mag rise in Gaia and wise source,AT2022oyv
+     2154" : Gaia19dsc,2019-08-21 19:42:12,240.82803,-51.95041,17.04,18.85,0.44,unknown,2019-08-25 12:50:39,2 mag outburst of a source in the Galactic plane, CV candidate,AT2019oog
+     2193" : Gaia23cyu,2023-10-17 13:01:52,240.90150,-51.85241,17.83,18.17,0.06,unknown,2023-10-24 11:52:48,~0.3 mag rise in Gaia source,AT2023vsb
+   control V462 Lup: nearest entry 359.4" -> Gaia23apa,2023-02-05 06:48:26,227.10765,-40.07382,18.10,,,SN Ia,2023-02-07 12:11:00,Apparently hostless blue transient,AT2023beg
+   control V7994 Sgr: nearest entry 951.4" -> Gaia23czj,2023-10-18 17:47:49,271.05936,-31.71042,16.46,16.78,0.02,unknown,2023-10-27 10:19:16,0.35 mag brightening in source towards Galactic centre,AT2023vwd
+== ASAS-SN transients page: 9598 positions parsed; nearest to target 3121" (0.87 deg); entries within 1 deg: 1; within 60": 0
+     3121" : 36   17.64    SDSS     DSS     VIZIER    -------    SN candidate, posted to TNS        ASASSN-19xh    ---   -------     16:4:26.9   -52:59:32.3   2019-09-21.09   13.34    SDSS     DSS     VIZIER    -----
+   control V462 Lup: nearest entry 5.6" -> nown SN candidate, zhost=0.025438, discovered 2025/06/05.336, Type unknown        ASASSN-25cm    AT 2025nlr    TNS      15:8:3.27   -40:8:29.5   2025-06-12.87   -8.4    SDSS     DSS     VIZIER    ----
+   control V7994 Sgr: nearest entry 1.3" -> --    known SN candidate, z=0.034, discovered 2026/01/20.317, Type Ia        ---    TCP J18035290-3127298   -------     18:3:52.67   -31:27:26   2026-02-7.37   15.76    SDSS     DSS     VIZIER    ----
+== ogle/ews2025.html: 1528 positions parsed; nearest to target 6751" (1.88 deg); entries within 1 deg: 0; within 60": 0
+   control V462 Lup: nearest entry 61880.2" -> 0812.114 2025-05-16.61 57.123 0.331 3.142 1.243 1.000 19.373 19.373 2025-GD-0003 GD1133.07 8587 16:19:04.60 -52:17:27.7 2460811.433 2025-05-15.93 86.537 0.504 2.170 0.841 1
+   control V7994 Sgr: nearest entry 378.5" -> .367 2025-08-14.87 28.682 0.091 10.993 1.536 0.312 18.449 19.715 2025-BLG-1280 BLG514.04 163343 18:03:25.31 -31:25:05.7 2460895.303 2025-08-07.80 51.794 0.911 1.413 0.376 1
+== ogle/ews2026.html: 952 positions parsed; nearest to target 7520" (2.09 deg); entries within 1 deg: 0; within 60": 0
+   control V462 Lup: nearest entry 56189.7" -> 157.181 2026-04-26.68 140.097 1.485 1.137 0.139 1.000 16.090 16.090 2026-GD-0001 GD1120.10 2132 16:28:35.32 -45:16:14.5 2461137.612 2026-04-07.11 94.052 0.633 1.809 0.644 1
+   control V7994 Sgr: nearest entry 1429.1" -> 54.761 2026-04-24.26 10.594 0.394 2.686 1.073 1.000 14.672 14.672 2026-BLG-0399 BLG515.27 20112 18:04:59.80 -31:46:30.7 2461165.348 2026-05-04.85 23.223 1.662 1.102 0.105 1
+== kmt/2025.html: NO POSITIONS PARSED
+== kmt/2026.html: NO POSITIONS PARSED
+== Mukai recent novae: 200 positions parsed; nearest to target 6280" (1.74 deg); entries within 1 deg: 0; within 60": 0
+   control V462 Lup: nearest entry 0.1" ->  CBET 5574 and 5577 LAT Transient , Swift , ARAS V462 Lup Nova Lupi 2025 ASASSN-25cm AT 2025nlr 15 08 03.27 -40 08 35.2 2025-06-12 5.4 CBET 5570 , ATel 17228 LAT Tran
+   control V7994 Sgr: nearest entry 0.0" ->  CBET 5611 LAT Transient , Swift , ARAS V7994 Sgr Nova Sagittarii 2025 No. 4 TCP J18035290-3127298 18 03 52.76 -31 27 26.6 2025-09-21 6.6 CBET 5612 LAT Transient , ARAS 
+== CBAT TOCP current page (designations): 2681 positions parsed; nearest to target 6279" (1.74 deg); entries within 1 deg: 0; within 60": 0
+   control V462 Lup: nearest entry 4248.8" -> TCP J15124556-4054497
+   control V7994 Sgr: nearest entry 2.6" -> TCP J18035278-3127240
+KMTNet 2025+2026 events parsed: 5596 RA range h 17.38 18.33 nearest to target deg 22.82
+Mukai: 5-24) Galactic Novae in 2018 (15) Designations for Galactic novae that erupted in 2018 (except for V392 Per) are given in Kazarovets &amp; Samus (2018) . Name(s) Position Discovery Peak Disc. Ref Notes V556 Nor Nova Normae 2018 PNV J16143400-5330050 16 14 32.92 -53 30 14.7 2018-10-13 10.16 CBET 4568 , ATel 12142 Swift Gaia18cew (Nova in Ophiuchus) 17 42 38.85 -27 54 37.48 2018-08-13 14.9 ATel 1492
+TOCP: N M31 H 0
+ PNV J09560988+6859108 2018 10 12.151 * 09 56 09.88 +68 59 10.8 20.1 U 197E 284S M81 H 0
+ PNV J16143400-5330050 2018 10 13.414 * 16 14 34.00 -53 30 05.0 10.5 V Nor 0 0
+ PNV J00424012+4117273 2018 10 13.8203* 00 42 40.12 +41 17 27.3 17.5 U 47W 80N M31 8 1 
+ PNV J01334673+3032181 2018 10 13.8803* 01 33 46.73 +30 32 18.1 18.1 U 54W 438S M33 8 1
+ TCP J00420310+4102331 2018 10 15.4568* 00 42 03.10 +41 02 33.1 18.0 U 466W 815S M31 N 0
+ PNV J20541843+1934440 2018 09 26.8611* 20 54 18.43 +19 34 44.0 16.1 R Del 9 9
+ TCP J08371988-0602457 2018 10 20.7821* 08 37 19.88 -06 02 45.7 13.0 U Hya 8 0
+ TCP J17541747-2942531 2018 10 23.9179* 17 54 17.47 -29 42 53.1 14.9 U Sgr 9 0
+ PNV J09555246+6902009 2018 11 6.186 * 09 55 52.46 +69 02 00.9 20.0 U 103E 114S M81 H 1
+ TCP J12192806-0211143 2018 11 0

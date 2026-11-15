@@ -1,0 +1,47 @@
+"""Cut a small piece out of a big remote FITS image with HTTP Range requests (rows only).
+Usage: python -I range_cutout.py <url> <ra> <dec> <half_size_arcsec> <out.fits>"""
+import sys, io, requests, numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+UA = {"User-Agent": "generic-astro-client/1.0"}
+url, ra, dec, half, out = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), sys.argv[5]
+# header: fetch 2880-byte blocks until END
+buf = b""
+while True:
+    r = requests.get(url, headers={**UA, "Range": f"bytes={len(buf)}-{len(buf)+2880*20-1}"}, timeout=120)
+    assert r.status_code == 206, r.status_code
+    buf += r.content
+    cards = [buf[i:i+80] for i in range(0, len(buf), 80)]
+    if any(c.startswith(b"END     ") or c.rstrip() == b"END" for c in cards):
+        break
+nend = next(i for i, c in enumerate(cards) if c.rstrip() == b"END")
+hdr_bytes = (nend + 1) * 80
+data_off = int(np.ceil(hdr_bytes / 2880.0) * 2880)
+h = fits.Header.fromstring(buf[:hdr_bytes].decode("ascii", "replace"))
+nx, ny, bitpix = h["NAXIS1"], h["NAXIS2"], h["BITPIX"]
+bpp = abs(bitpix) // 8
+w = WCS(h)
+if str(h.get("CTYPE1", "")).startswith("GLON"):
+    from astropy.coordinates import SkyCoord
+    g = SkyCoord(ra, dec, unit="deg").galactic
+    x, y = w.all_world2pix(g.l.deg, g.b.deg, 0)
+else:
+    x, y = w.all_world2pix(ra, dec, 0)
+print("pixel", x, y, "of", nx, ny)
+scale = np.sqrt(abs(np.linalg.det(w.pixel_scale_matrix))) * 3600
+hp = int(np.ceil(half / scale))
+x0, x1 = max(0, int(x) - hp), min(nx, int(x) + hp + 1)
+y0, y1 = max(0, int(y) - hp), min(ny, int(y) + hp + 1)
+start = data_off + y0 * nx * bpp
+end = data_off + y1 * nx * bpp - 1
+r = requests.get(url, headers={**UA, "Range": f"bytes={start}-{end}"}, timeout=600)
+assert r.status_code == 206, r.status_code
+dt = {-32: ">f4", -64: ">f8", 16: ">i2", 32: ">i4"}[bitpix]
+arr = np.frombuffer(r.content, dtype=dt).reshape(y1 - y0, nx)[:, x0:x1].astype("float32")
+hw = w[y0:y1, x0:x1].to_header()
+nh = h.copy()
+for k in ("NAXIS1", "NAXIS2"):
+    nh.remove(k, ignore_missing=True)
+nh.update(hw)
+fits.PrimaryHDU(arr, header=nh).writeto(out, overwrite=True)
+print(f"{out}: {arr.shape} px of {scale:.2f} arcsec, rows {y0}-{y1}, cols {x0}-{x1}, downloaded {len(r.content)/1e6:.1f} MB, source at x={x-x0:.1f} y={y-y0:.1f}")

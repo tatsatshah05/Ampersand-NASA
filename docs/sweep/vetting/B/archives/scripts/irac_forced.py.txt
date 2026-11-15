@@ -1,0 +1,44 @@
+import csv, numpy as np, warnings
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
+from astropy.stats import sigma_clipped_stats
+warnings.filterwarnings("ignore")
+B="docs/sweep/vetting/B/archives/"
+cat=list(csv.DictReader(open(B+"data/irsa_glimpse_s07_30as_253.1804_-44.6769.csv")))
+POS={"X":(253.18040,-44.67697),"c":(253.18179,-44.67690),"R":(253.183849,-44.675522)}
+PIXSR=(0.6/206264.806)**2
+def pix(w,ra,dec):
+    g=SkyCoord(ra,dec,unit="deg").galactic; x,y=w.all_world2pix(g.l.deg,g.b.deg,0); return float(x),float(y)
+def ap(img,x,y,r=3.0,rin=8,rout=14):
+    yy,xx=np.mgrid[0:img.shape[0],0:img.shape[1]]; d=np.hypot(xx-x,yy-y)
+    sky=sigma_clipped_stats(img[(d>rin)&(d<rout)&np.isfinite(img)])[1]
+    m=(d<=r)&np.isfinite(img)
+    return (img[m]-sky).sum()*1e6*PIXSR*1e3  # mJy
+out=[]
+for fn,band,epoch in [("glimpseI_I1_06.fits","3.6","2004-09-05 GLIMPSE I"),("glimpseI_I2_06.fits","4.5","2004-09-05 GLIMPSE I"),
+                      ("deepglimpse_I1_06.fits","3.6","2012-11-01 Deep GLIMPSE"),("deepglimpse_I2_06.fits","4.5","2012-11-01 Deep GLIMPSE"),
+                      ("apoglimpse_I1_06.fits","3.6","2017-06-19 APOGLIMPSE"),("apoglimpse_I2_06.fits","4.5","2017-06-19 APOGLIMPSE")]:
+    h=fits.open(B+"img/dl/"+fn)[0]; img=h.data.astype(float); w=WCS(h.header)
+    key={"3.6":"f3_6","4.5":"f4_5"}[band]
+    ratios=[]
+    for r in cat:
+        try: f=float(r[key])
+        except: continue
+        if not (0.3<f<200): continue
+        x,y=pix(w,float(r["ra"]),float(r["dec"]))
+        if not (15<x<img.shape[1]-15 and 15<y<img.shape[0]-15): continue
+        a=ap(img,x,y)
+        if a>0: ratios.append(f/a)
+    corr=np.median(ratios)
+    # empty-aperture noise: random positions at least 3" from any GLIMPSE catalogue source
+    rng=np.random.default_rng(1); cpos=[pix(w,float(r["ra"]),float(r["dec"])) for r in cat]
+    vals=[]
+    while len(vals)<150:
+        x,y=rng.uniform(20,img.shape[1]-20),rng.uniform(20,img.shape[0]-20)
+        if min(np.hypot(x-cx,y-cy) for cx,cy in cpos)<5: continue
+        vals.append(ap(img,x,y)*corr)
+    vals=np.array(vals); noise=1.4826*np.median(np.abs(vals-np.median(vals)))
+    res={k:ap(img,*pix(w,*v))*corr for k,v in POS.items()}
+    print(f"{epoch:24s} [{band}] apcorr={corr:.2f} (n={len(ratios)}, spread {np.std(ratios):.2f})  X={res['X']:6.3f} mJy  c={res['c']:6.3f}  R={res['R']:7.2f}  empty-aperture: median {np.median(vals):.3f} sigma {noise:.3f} mJy  -> X 3-sigma limit {max(res['X'],0)+3*noise:.3f} mJy")
+    out.append((epoch,band,corr,res["X"],res["c"],res["R"],noise))

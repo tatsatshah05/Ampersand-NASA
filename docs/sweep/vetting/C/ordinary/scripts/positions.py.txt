@@ -1,0 +1,43 @@
+"""Positions of C per exposure from own_phot.jsonl, corrected by the reference stars of the same exposure."""
+import json
+import math
+import sys
+
+import numpy as np
+from astropy.time import Time
+
+recs = [json.loads(l) for l in open(sys.argv[1])]
+recs.sort(key=lambda r: r["mjd"])
+rows = []
+print("date              det  um     f1.5    fit_snr sig_px  dE_raw dN_raw | nref refE refN | dE_corr dN_corr  flags")
+for r in recs:
+    if r.get("status") != "measured" or not r.get("fit"):
+        continue
+    g = r["fit"]
+    if g["snr"] < 15 or r["f1.5"] is None or r["f1.5"] < 15:
+        continue
+    refs = r["ref_offsets"]
+    if len(refs) >= 2:
+        re_ = float(np.median([o[0] for o in refs]))
+        rn_ = float(np.median([o[1] for o in refs]))
+    else:
+        re_ = rn_ = float("nan")
+    de, dn = g["d_east"] - re_, g["d_north"] - rn_
+    rows.append((r["mjd"], r["det"], de, dn, g["pos_err_px"] * 6.15, r["f1.5"]))
+    print(f"{Time(r['mjd'], format='mjd').iso[:16]} D{r['det']} {r['um']:.3f} {r['f1.5']:7.1f} {g['snr']:7.0f} {g['sigma_px']:.2f}  "
+          f"{g['d_east']:6.2f} {g['d_north']:6.2f} | {len(refs)} {re_:5.2f} {rn_:5.2f} | {de:6.2f} {dn:6.2f}  "
+          f"{','.join(r['flags1.5'])}")
+a = np.array([(m, d, e, n, s, f) for m, d, e, n, s, f in rows if np.isfinite(e)])
+print("\nN =", len(a))
+for lab, sel in (("all", np.ones(len(a), bool)), ("D3-D6", a[:, 1] >= 3), ("D5-D6", a[:, 1] >= 5)):
+    b = a[sel]
+    if len(b) == 0:
+        continue
+    print(f"{lab}: median dE {np.median(b[:, 2]):.2f} dN {np.median(b[:, 3]):.2f} arcsec; scatter (1.4826 MAD) "
+          f"E {1.4826 * np.median(np.abs(b[:, 2] - np.median(b[:, 2]))):.2f} N {1.4826 * np.median(np.abs(b[:, 3] - np.median(b[:, 3]))):.2f}; n={len(b)}")
+    # linear drift with time (arcsec/day)
+    t = b[:, 0] - b[:, 0].mean()
+    if np.ptp(t) > 1:
+        pe = np.polyfit(t, b[:, 2], 1)
+        pn = np.polyfit(t, b[:, 3], 1)
+        print(f"   drift E {pe[0]:+.3f} arcsec/day, N {pn[0]:+.3f} arcsec/day over {np.ptp(t):.1f} days")

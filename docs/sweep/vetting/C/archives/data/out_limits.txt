@@ -1,0 +1,17 @@
+                 image                   excess_at_pos ring_sigma mJy_per_peak_unit n_calibrators upper_limit_mJy
+---------------------------------------- ------------- ---------- ----------------- ------------- ---------------
+   GLIMPSE I 3.6um (mosaic made 2007-04)        -0.145      0.722             0.203            17            0.44
+   GLIMPSE I 4.5um (mosaic made 2007-04)        0.0979      0.622             0.203            16           0.398
+   GLIMPSE I 5.8um (mosaic made 2007-04)         0.874       1.21             0.226            13            1.02
+   GLIMPSE I 8.0um (mosaic made 2007-06)         -1.29        1.6             0.266             5            1.28
+Deep GLIMPSE 3.6um (mosaic made 2015-07)        -0.221      0.669             0.135            18           0.271
+Deep GLIMPSE 4.5um (mosaic made 2015-07)        -0.101      0.481             0.135            17           0.194
+  APOGLIMPSE 3.6um (mosaic made 2018-09)          0.15      0.719             0.141            18           0.324
+  APOGLIMPSE 4.5um (mosaic made 2018-09)         0.493      0.534             0.133            17           0.279
+      MIPSGAL 24um (DATE_OBS 2006-04-13)        -0.201      0.557              2.63             1             4.4
+              unWISE neo7 W1 (2010-2020)          -715        892           0.00252             6            6.74
+              unWISE neo7 W2 (2010-2020)          -755    1.2e+03           0.00157             6            5.65
+           unWISE allwise W1 (2010-2011)          -762        935           0.00231             7            6.49
+           unWISE allwise W2 (2010-2011)          -934   1.27e+03           0.00146             6            5.58
+  unWISE allwise W3 (2010), Gaussian PSF     -2.45e+03   1.19e+04            0.0002             0            7.18
+  unWISE allwise W4 (2010), Gaussian PSF     -1.08e+04   3.85e+04           0.00018             0            20.8

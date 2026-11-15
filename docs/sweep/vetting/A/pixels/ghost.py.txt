@@ -1,0 +1,106 @@
+"""Can a bright star of the field fake A'? Detector geometry of A' and of every star with 2MASS K < 4.0 or
+AllWISE W2 < 3.0 within 0.6 degrees, in every exposure (full-detector coordinates from the cutout's WCS,
+whose SIP polynomial is the full detector's with CRPIX shifted; active-pixel offset from CRPIX1A/2A).
+Tests: (1) a ghost at a fixed detector offset from its parent; (2) a ghost mirrored through the detector
+centre; (3) same pointing geometry a year apart (visit 1 vs visit 3)."""
+import json, math, warnings, logging, sys
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+warnings.simplefilter("ignore"); logging.getLogger("astropy").setLevel(logging.ERROR)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from measure import CUT, LIST
+D = Path(__file__).resolve().parent
+A = (270.804063, -23.468200)
+cosd = math.cos(math.radians(A[1]))
+stars = {}
+for fn, magcol, lim in (("downloads/bright_2mass.tsv", 6, 4.0), ("downloads/bright_allwise.tsv", 5, 3.0)):
+    for line in open(D / fn):
+        if line.startswith("#") or not line.strip(): continue
+        p = line.rstrip("\n").split("\t")
+        try: ra, de, m = float(p[0]), float(p[1]), float(p[magcol])
+        except (ValueError, IndexError): continue
+        if m < lim:
+            key = (round(ra, 3), round(de, 3))
+            if not any(abs(k[0] - key[0]) < 0.002 and abs(k[1] - key[1]) < 0.002 for k in stars):
+                stars[key] = (ra, de, p[3].strip(), fn.split("_")[1].split(".")[0], m)
+S = sorted(stars.values(), key=lambda s: s[4] if s[3] == "allwise" else s[4] - 2)
+print(f"{len(S)} bright stars:", "; ".join(f"{s[2]} ({s[3]} {s[4]:.2f}, {math.hypot((s[0]-A[0])*cosd, s[1]-A[1])*60:.1f}')" for s in S[:8]), "...")
+F = {(r["obs_id"], r["det"]): r for r in json.load(open(D / "fit2.json"))}
+L = json.load(open(LIST)); L.sort(key=lambda e: e["mjd"])
+ep, cur = [], 0
+for i, e in enumerate(L):
+    if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+    ep.append(cur + 1)
+rows = []
+for e, k in zip(L, ep):
+    with fits.open(CUT / f"{e['obs_id']}_D{e['detector']}.fits") as h:
+        hd = h["IMAGE"].header
+    w = WCS(hd); ox, oy = 1 - float(hd["CRPIX1A"]), 1 - float(hd["CRPIX2A"])
+    ax, ay = (float(v) for v in w.all_world2pix(*A, 0)); ax += ox; ay += oy
+    st = []
+    for ra, de, name, cat, m in S:
+        x, y = (float(v) for v in w.all_world2pix(ra, de, 0)); x += ox; y += oy
+        st.append((name, cat, m, x, y))
+    def det2sky(x, y):
+        return (float(v) for v in w.all_pix2world(x - ox, y - oy, 0))
+    rows.append(dict(e=e, ep=k, ax=ax, ay=ay, st=st, w=w, ox=ox, oy=oy))
+# A' detector positions per detector and visit
+print("\nA' on the detector (active pixels, 0..2039):")
+for det in (6, 5, 3):
+    for k in (1, 2, 3):
+        rr = [r for r in rows if r["e"]["detector"] == det and r["ep"] == k]
+        xs = [r["ax"] for r in rr]; ys = [r["ay"] for r in rr]
+        print(f"  D{det} visit {k}: n={len(rr)} x {min(xs):.0f}-{max(xs):.0f}, y {min(ys):.0f}-{max(ys):.0f}")
+# brightest stars relative to A' (detector vector) in D6
+print("\nDetector vector (dx, dy) from A' to each of the three brightest stars, D6, ranges per visit; on-detector count:")
+for name, cat, m, *_ in [(s[2], s[3], s[4]) for s in S[:3]]:
+    for k in (1, 2, 3):
+        rr = [r for r in rows if r["e"]["detector"] == 6 and r["ep"] == k]
+        v = [(x - r["ax"], y - r["ay"], 0 <= x < 2040 and 0 <= y < 2040) for r in rr for (nm, c, mm, x, y) in r["st"] if nm == name]
+        dx = [a for a, b, c in v]; dy = [b for a, b, c in v]; on = sum(c for a, b, c in v)
+        print(f"  {name} ({cat} {m:.2f}) visit {k}: dx {min(dx):+.0f}..{max(dx):+.0f}, dy {min(dy):+.0f}..{max(dy):+.0f} px; star on the detector in {on}/{len(v)}")
+# Test 2: mirror through the detector centre: ghost at (2039 - x, 2039 - y). Sky scatter of the predicted ghost within a visit.
+print("\nTest 2, ghost mirrored through the detector centre: where would it fall on the sky, D6/D5 visits 2 and 3")
+for name, cat, m in [(s[2], s[3], s[4]) for s in S[:6]]:
+    for det in (6, 5):
+        for k in (2, 3):
+            rr = [r for r in rows if r["e"]["detector"] == det and r["ep"] == k]
+            pos = []
+            for r in rr:
+                for (nm, c, mm, x, y) in r["st"]:
+                    if nm == name:
+                        gx, gy = 2039 - x, 2039 - y
+                        ra, de = (float(v) for v in r["w"].all_pix2world(gx - r["ox"], gy - r["oy"], 0))
+                        pos.append(((ra - A[0]) * cosd * 3600, (de - A[1]) * 3600))
+            pos = np.array(pos)
+            dmin = np.min(np.hypot(pos[:, 0], pos[:, 1]))
+            spread = np.ptp(pos[:, 1]) if len(pos) > 1 else 0
+            print(f"  {name} D{det} v{k}: predicted ghost nearest approach to A' {dmin/60:.1f}', N-S spread over the visit {spread/60:.1f}'")
+# Test 1: fixed detector offset. Offset measured in visit 3 (A' minus star), applied in visit 2's orientation.
+print("\nTest 1, ghost at a fixed detector offset from its parent: offset measured in D6 visit 3, applied in D6 visit 2")
+for name, cat, m in [(s[2], s[3], s[4]) for s in S[:6]]:
+    r3 = [r for r in rows if r["e"]["detector"] == 6 and r["ep"] == 3]
+    r2 = [r for r in rows if r["e"]["detector"] == 6 and r["ep"] == 2]
+    offs = [(r["ax"] - x, r["ay"] - y) for r in r3 for (nm, c, mm, x, y) in r["st"] if nm == name]
+    o = np.median(np.array(offs), axis=0)
+    pred = []
+    for r in r2:
+        for (nm, c, mm, x, y) in r["st"]:
+            if nm == name:
+                ra, de = (float(v) for v in r["w"].all_pix2world(x + o[0] - r["ox"], y + o[1] - r["oy"], 0))
+                pred.append(math.hypot((ra - A[0]) * cosd, de - A[1]) * 3600)
+    print(f"  {name}: visit-3 offset ({o[0]:+.0f}, {o[1]:+.0f}) px; in visit 2 it would put the ghost {np.median(pred)/60:.1f}' from A' (A' itself is where it was, within 0.4\")")
+# Test 3: same geometry a year apart
+print("\nTest 3, visit 1 against visit 3 (same roll): nearest visit-1 exposure to each visit-3 exposure in A' detector position, D6")
+r1 = [r for r in rows if r["e"]["detector"] == 6 and r["ep"] == 1]; r3 = [r for r in rows if r["e"]["detector"] == 6 and r["ep"] == 3]
+PA = {(m["obs_id"], m["det"]): m.get("pa_x", float("nan")) for m in json.load(open(D / "measurements.json"))}
+pa = lambda r: PA[(r["e"]["obs_id"], r["e"]["detector"])]
+seps = []
+for r in r3:
+    b = min(r1, key=lambda q: math.hypot(q["ax"] - r["ax"], q["ay"] - r["ay"]))
+    sep = math.hypot(b["ax"] - r["ax"], b["ay"] - r["ay"]); seps.append(sep)
+    f3 = F[(r["e"]["obs_id"], 6)]; f1 = F[(b["e"]["obs_id"], 6)]
+    print(f"  v3 {r['e']['obs_id']} A' at ({r['ax']:.0f},{r['ay']:.0f}) pa {pa(r):.1f}: {f3.get('A_gauss', float('nan'))*1.194:7.1f} mJy | v1 {b['e']['obs_id']} at ({b['ax']:.0f},{b['ay']:.0f}) pa {pa(b):.1f}: {f1.get('A_gauss', float('nan'))*1.194:6.1f} mJy | {sep:.0f} px apart")
+print(f"  median separation {np.median(seps):.0f} px")

@@ -1,0 +1,39 @@
+"""Plot (Pillow, no matplotlib in the venv) candidate A's own SED per visit from the forced
+two-source fit, log flux vs log wavelength, with the bright neighbour N's fluxes in grey for
+comparison, and the no-extinction blackbody fits printed by sedfit.py drawn as lines.
+Usage: plot_sed.py forced.csv out.png"""
+import csv, math, sys
+import numpy as np
+from PIL import Image, ImageDraw
+
+rows = [r for r in csv.DictReader(open(sys.argv[1])) if float(r["A_core_ok"]) >= 0.8]
+W, H, M = 900, 560, 70
+img = Image.new("RGB", (W, H), (250, 250, 250)); d = ImageDraw.Draw(img)
+lx0, lx1 = math.log10(0.7), math.log10(5.2); ly0, ly1 = math.log10(0.5), math.log10(5000)
+X = lambda l: M + (math.log10(l) - lx0) / (lx1 - lx0) * (W - 2 * M)
+Y = lambda f: H - M - (math.log10(max(f, 0.5)) - ly0) / (ly1 - ly0) * (H - 2 * M)
+d.rectangle([M, M, W - M, H - M], outline=(0, 0, 0))
+for l in (0.8, 1, 1.5, 2, 3, 4, 5):
+    d.line([X(l), H - M, X(l), H - M + 5], fill=(0, 0, 0)); d.text((X(l) - 8, H - M + 8), f"{l:g}", fill=(0, 0, 0))
+for f in (1, 10, 100, 1000):
+    d.line([M - 5, Y(f), M, Y(f)], fill=(0, 0, 0)); d.text((M - 40, Y(f) - 6), f"{f:g}", fill=(0, 0, 0))
+d.text((W / 2 - 120, H - 30), "wavelength (micrometres)", fill=(0, 0, 0))
+d.text((5, M - 25), "flux (mJy), candidate A only (forced 2-source fit)", fill=(0, 0, 0))
+cols = {"1": (120, 120, 120), "2": (200, 40, 40), "3": (40, 80, 200)}
+names = {"1": "Aug-Sep 2025 (A: ~0, plotted at floor)", "2": "Mar-Apr 2026", "3": "Aug-Sep 2026"}
+h, c, k = 6.62607e-34, 2.99792458e8, 1.380649e-23
+def bb(l, T, scale):
+    nu = c / (l * 1e-6); return scale * nu ** 3 / np.expm1(h * nu / (k * T))
+for ep, T in (("2", 878), ("3", 794)):
+    pts = [(float(r["wl"]), float(r["A_mjy"])) for r in rows if r["epoch"] == ep and 4.3 < float(r["wl"]) < 4.6]
+    ref = np.median([f for _, f in pts]); s = ref / bb(4.45, T, 1.0)
+    ls = np.geomspace(0.75, 5.0, 120)
+    d.line([(X(l), Y(bb(l, T, s))) for l in ls], fill=cols[ep], width=1)
+for r in rows:
+    ep = r["epoch"]; l = float(r["wl"]); f = float(r["A_mjy"])
+    x, y = X(l), Y(f)
+    d.ellipse([x - 2.5, y - 2.5, x + 2.5, y + 2.5], fill=cols[ep])
+for i, ep in enumerate(("1", "2", "3")):
+    d.rectangle([M + 10, M + 10 + 16 * i, M + 18, M + 18 + 16 * i], fill=cols[ep]); d.text((M + 24, M + 8 + 16 * i), names[ep], fill=(0, 0, 0))
+d.text((M + 10, M + 60), "lines: blackbody 878 K (Mar) and 794 K (Aug), no extinction, scaled at 4.45 um", fill=(0, 0, 0))
+img.save(sys.argv[2])

@@ -1,0 +1,23 @@
+"""Target spectra per epoch from forced PSF fluxes, with field-star calibration offsets; flags saturated exposures."""
+import json, math, numpy as np
+from astropy.time import Time
+F = json.load(open('out/astro2.json'))['forced']
+cal = json.load(open('out/field_calib.json'))
+ph = json.load(open('<repository>/backend/cache/sweep/photometry/aaf42402fdda3878.json'))
+st = {(p['obs_id'], p['detector']): p for p in ph['points']}
+def ep(m): return 0 if m < 61000 else (1 if m < 61200 else 2)
+out = []
+for p in F:
+    oid = p['file'].rsplit('_D', 1)[0]
+    s = st.get((oid, p['det']), {})
+    sat = s.get('status') == 'saturated'
+    c = cal.get(p['file'])
+    corr = math.exp(-c['median_resid']) if c and c['n'] >= 3 else None
+    out.append({**p, 'ep': ep(p['mjd']), 'saturated_in_aperture': sat, 'cal_factor': corr, 'cal_n': c['n'] if c else 0,
+                'cal_mad': c['mad'] if c else None, 'bandwidth_um': s.get('bandwidth_um'),
+                'flux_cal': p['flux_mjy'] * corr if corr else None})
+json.dump(out, open('out/spectra_points.json', 'w'), indent=1)
+for e in (1, 2):
+    print('=== epoch', e)
+    for p in sorted([q for q in out if q['ep'] == e and q['det'] >= 2], key=lambda q: q['wave_um']):
+        print(f"D{p['det']} {p['wave_um']:.3f} bw {p['bandwidth_um'] or 0:.3f} {Time(p['mjd'],format='mjd').iso[5:10]} raw {p['flux_mjy']:7.1f} cal x{(p['cal_factor'] or float('nan')):.3f} (n {p['cal_n']:2d}, mad {(p['cal_mad'] or float('nan')):.3f}) -> {(p['flux_cal'] or float('nan')):7.1f} {'SAT' if p['saturated_in_aperture'] else ''}")

@@ -1,0 +1,48 @@
+
+=== Mar-Apr 2026 (all): 53 points, 1.10-5.00 um
+  no extinction     : T =    873 +-   12 K, A_K = 0.00, chi2nu =   2.97 | d=3 kpc: L=      478 Lsun R=   4.4 au | d=8 kpc: L=     3400 Lsun R=  11.9 au | d=12 kpc: L=     7651 Lsun R=  17.8 au
+  A_K free          : T =    873 +-   63 K, A_K = 0.00 +- 0.36, chi2nu =   3.03 | d=3 kpc: L=      478 Lsun R=   4.4 au | d=8 kpc: L=     3400 Lsun R=  11.9 au | d=12 kpc: L=     7651 Lsun R=  17.8 au
+  A_K 3 kpc=0.27    : T =    920 +-   14 K, A_K = 0.27, chi2nu =   3.26 | d=3 kpc: L=      531 Lsun R=   4.2 au
+  A_K 8 kpc=1.53    : T =   1208 +-   35 K, A_K = 1.53, chi2nu =   4.78 | d=8 kpc: L=     7161 Lsun R=   9.0 au
+  A_K >=12 kpc=1.86 : T =   1311 +-   45 K, A_K = 1.86, chi2nu =   5.19 | d=12 kpc: L=    19949 Lsun R=  12.7 au
+     1.10-1.40 um: data median     12.5  model      4.7 (n=11)
+     1.40-1.65 um: data median     36.4  model     40.3 (n=9)
+     1.65-1.90 um: data median     79.4  model     98.1 (n=5)
+     1.90-2.20 um: data median    205.8  model    231.5 (n=6)
+     2.20-2.50 um: data median    548.0  model    510.1 (n=2)
+     3.80-4.10 um: data median   1403.3  model   1618.3 (n=6)
+     4.10-4.42 um: data median   2002.7  model   1787.5 (n=7)
+     4.42-4.70 um: data median   1866.6  model   1852.6 (n=4)
+     4.70-5.01 um: data median   2778.6  model   1975.0 (n=3)
+
+=== Mar 25-29 2026 only: 46 points, 1.10-4.52 um
+  no extinction     : T =    878 +-   10 K, A_K = 0.00, chi2nu =   1.87 | d=3 kpc: L=      453 Lsun R=   4.3 au | d=8 kpc: L=     3224 Lsun R=  11.4 au | d=12 kpc: L=     7255 Lsun R=  17.1 au
+  A_K free          : T =    878 +-   55 K, A_K = 0.00 +- 0.30, chi2nu =   1.91 | d=3 kpc: L=      453 Lsun R=   4.3 au | d=8 kpc: L=     3224 Lsun R=  11.4 au | d=12 kpc: L=     7255 Lsun R=  17.1 au
+  A_K 3 kpc=0.27    : T =    925 +-   13 K, A_K = 0.27, chi2nu =   2.15 | d=3 kpc: L=      504 Lsun R=   4.1 au
+  A_K 8 kpc=1.53    : T =   1220 +-   34 K, A_K = 1.53, chi2nu =   3.63 | d=8 kpc: L=     6828 Lsun R=   8.6 au
+  A_K >=12 kpc=1.86 : T =   1327 +-   43 K, A_K = 1.86, chi2nu =   4.02 | d=12 kpc: L=    19088 Lsun R=  12.2 au
+     1.10-1.40 um: data median     12.5  model      4.7 (n=11)
+     1.40-1.65 um: data median     32.8  model     36.3 (n=8)
+     1.65-1.90 um: data median     77.7  model     89.2 (n=4)
+     1.90-2.20 um: data median    205.8  model    224.3 (n=6)
+     2.20-2.50 um: data median    506.9  model    498.7 (n=1)
+     3.80-4.10 um: data median   1403.3  model   1536.6 (n=6)
+     4.10-4.42 um: data median   2002.7  model   1694.2 (n=7)
+     4.42-4.70 um: data median   1830.4  model   1759.2 (n=3)
+
+=== Aug 25-Sep 2 2026: 60 points, 1.11-4.98 um
+  no extinction     : T =    794 +-   12 K, A_K = 0.00, chi2nu =   0.48 | d=3 kpc: L=      166 Lsun R=   3.2 au | d=8 kpc: L=     1183 Lsun R=   8.5 au | d=12 kpc: L=     2663 Lsun R=  12.7 au
+  A_K free          : T =    919 +-   82 K, A_K = 0.92 +- 0.54, chi2nu =   0.41 | d=3 kpc: L=      237 Lsun R=   2.8 au | d=8 kpc: L=     1686 Lsun R=   7.5 au | d=12 kpc: L=     3794 Lsun R=  11.3 au
+  A_K 3 kpc=0.27    : T =    828 +-   13 K, A_K = 0.27, chi2nu =   0.44 | d=3 kpc: L=      183 Lsun R=   3.1 au
+  A_K 8 kpc=1.53    : T =   1018 +-   22 K, A_K = 1.53, chi2nu =   0.42 | d=8 kpc: L=     2226 Lsun R=   7.0 au
+  A_K >=12 kpc=1.86 : T =   1080 +-   26 K, A_K = 1.86, chi2nu =   0.45 | d=12 kpc: L=     5905 Lsun R=  10.2 au
+     1.10-1.40 um: data median     -0.9  model      0.3 (n=11)
+     1.40-1.65 um: data median      2.8  model      4.6 (n=5)
+     1.65-1.90 um: data median     24.0  model     23.0 (n=3)
+     1.90-2.20 um: data median     58.7  model     45.8 (n=1)
+     2.20-2.50 um: data median    122.7  model    133.8 (n=2)
+     2.50-3.10 um: data median    203.5  model    198.7 (n=4)
+     3.80-4.10 um: data median    547.9  model    553.9 (n=8)
+     4.10-4.42 um: data median    575.6  model    617.0 (n=9)
+     4.42-4.70 um: data median    687.4  model    657.0 (n=8)
+     4.70-5.01 um: data median    685.4  model    680.3 (n=9)

@@ -1,0 +1,14 @@
+import re, sys
+import numpy as np
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+for f in sys.argv[1:]:
+    t = open(f, errors="replace").read()
+    ev = re.findall(r'TARGET="event">([^<]+)</A>\s*<TD>(\S+)\s*<TD[^>]*>\s*\d*\s*<TD>([\d:.]+)\s*<TD>([-+\d:.]+)', t)
+    c = SkyCoord([e[2] for e in ev], [e[3] for e in ev], unit=(u.hourangle, u.deg))
+    print(f, len(ev), "events; l range", round(float(np.min(np.where(c.galactic.l.deg > 180, c.galactic.l.deg - 360, c.galactic.l.deg))), 1),
+          round(float(np.max(np.where(c.galactic.l.deg > 180, c.galactic.l.deg - 360, c.galactic.l.deg))), 1))
+    for tag, (r, d) in {"B": (253.18044, -44.67687)}.items():
+        s = SkyCoord(r, d, unit="deg").separation(c).deg
+        for i in np.argsort(s)[:3]:
+            print(f"   {tag}: {ev[i][0]} field {ev[i][1]} {ev[i][2]} {ev[i][3]} sep {s[i]:.2f} deg  l={c[i].galactic.l.deg:.2f} b={c[i].galactic.b.deg:.2f}")

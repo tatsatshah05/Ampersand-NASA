@@ -1,0 +1,36 @@
+"""Pull text from an arXiv HTML paper; print abstract, tables, and every coordinate-like string, with separation from target."""
+import re, sys
+from bs4 import BeautifulSoup
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+T = SkyCoord(241.70931, -52.20484, unit='deg')
+s = BeautifulSoup(open(sys.argv[1], encoding='utf-8', errors='replace').read(), 'html.parser')
+for m in s.find_all('math'):
+    m.replace_with(m.get('alttext', ''))
+txt = re.sub(r'\s+', ' ', s.get_text(' '))
+ab = s.find(class_='ltx_abstract')
+print('ABSTRACT:', re.sub(r'\s+', ' ', ab.get_text(' '))[:2500] if ab else txt[:1500])
+print('\nTABLES:')
+for t in s.find_all(class_=re.compile('ltx_table')):
+    print('---', re.sub(r'\s+', ' ', t.get_text(' '))[:2500])
+print('\nCOORDINATE-LIKE STRINGS:')
+pats = [r'(\d{1,2})[h: ](\d{2})[m: ](\d{2}(?:\.\d+)?)s?\s*,?\s*([+-−–])\s?(\d{1,2})[d°: ](\d{2})[m′\': ](\d{2}(?:\.\d+)?)',
+        r'J(\d{2})(\d{2})(\d{2}(?:\.\d+)?)([+-−–])(\d{2})(\d{2})(\d{2}(?:\.\d+)?)']
+seen = set()
+for p in pats:
+    for m in re.finditer(p, txt):
+        g = m.groups()
+        sign = '-' if g[3] in '-−–' else '+'
+        try:
+            c = SkyCoord(f'{g[0]}h{g[1]}m{g[2]}s {sign}{g[4]}d{g[5]}m{g[6]}s')
+        except Exception:
+            continue
+        key = (round(c.ra.deg, 3), round(c.dec.deg, 3))
+        if key in seen: continue
+        seen.add(key)
+        print(f'  {m.group(0)[:40]:42s} RA {c.ra.deg:.4f} Dec {c.dec.deg:.4f} l {c.galactic.l.deg:.3f} b {c.galactic.b.deg:.3f} sep_from_target {c.separation(T).deg:.2f} deg')
+for m in re.finditer(r'\bG\s?(\d{3}\.\d+)\s?([+-−]\d{1,2}\.\d+)', txt):
+    print('  galactic-name:', m.group(0))
+for kw in ['Norma', '330.4', '241.7', '16:06', '16h06', 'Nor ']:
+    for m in re.finditer(re.escape(kw), txt):
+        print('  keyword', kw, ':', txt[max(0, m.start()-100):m.end()+100])

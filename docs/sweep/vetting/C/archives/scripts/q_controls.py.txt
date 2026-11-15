@@ -1,0 +1,45 @@
+"""Control queries: every catalogue that answered 'nothing' near C is asked again, same service, same table,
+with a larger radius (or at a covered position), to show that it does return rows."""
+import sys, warnings
+warnings.filterwarnings("ignore")
+sys.path.insert(0, __file__.rsplit("/", 1)[0])
+from qlib import *
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+import numpy as np
+g5 = SkyCoord(l=5.0 * u.deg, b=0.0 * u.deg, frame="galactic").icrs
+which = sys.argv[1] if len(sys.argv) > 1 else "all"
+gator = [("iraspsc", 900, None), ("irasfsc", 900, None), ("akari_irc", 600, None), ("redmsx", 1800, None),
+         ("mipsgalc", 300, None), ("varwisepure", 900, None), ("varwiseext", 900, None), ("higal70", 300, None),
+         ("glimpse2_v2cat", 20, (g5.ra.deg, g5.dec.deg)), ("glimpse3d_v1cat_tbl", 20, (g5.ra.deg, g5.dec.deg)),
+         ("glimpse360c", 60, None), ("allsky_2band_p1bs_psd", 60, None)]
+viz = [("J/A+A/568/A41", 600), ("J/MNRAS/473/1059", 600), ("J/ApJS/254/33", 120), ("J/AJ/136/2413", 600),
+       ("J/ApJS/208/11", 1800), ("II/366", 900), ("II/297", 600), ("II/125", 900), ("J/MNRAS/465/3011", 3600),
+       ("II/379/smssdr4", 30), ("II/358/smss", 30), ("II/379/smssdr4", 120), ("B/vsx", 60), ("I/358", 30),
+       ("J/MNRAS/504/2742", 120), ("II/363/unwise", 30), ("II/365/catwise", 30)]
+if which in ("all", "gator"):
+    for tab, rad, pos in gator:
+        ra, dec = pos if pos else (RA, DEC)
+        try:
+            t = irsa_cone(tab, rad, name=f"ctrl_{tab}", ra=ra, dec=dec)
+            near = f"nearest {float(t['sep_arcsec'][0]):.1f}\"" if len(t) else ""
+            print(f"CONTROL Gator {tab} r={rad}\" at {ra:.4f},{dec:.4f}: {len(t)} rows {near}")
+            if len(t):
+                cols = [c for c in t.colnames if c not in ("clon", "clat")][:9] + ["sep_arcsec"]
+                t[cols][:3].pprint(max_width=220)
+        except Exception as e:
+            print(f"CONTROL Gator {tab}: ERROR {e}")
+if which in ("all", "viz"):
+    for src, rad in viz:
+        try:
+            tabs, infos = vizier(src, rad, name="ctrl_viz_" + src.replace("/", "_").replace("+", "p"))
+            if not tabs:
+                print(f"CONTROL VizieR {src} r={rad}\": no table returned")
+            for name, t in tabs:
+                n = len(t) if t is not None else -1
+                near = f"nearest {float(t['_r'][0]):.1f}\"" if n > 0 and "_r" in t.colnames else ""
+                print(f"CONTROL VizieR {src} [{name}] r={rad}\": {n} rows {near}")
+                if n > 0 and src in ("B/vsx", "I/358"):
+                    t.pprint(max_width=220)
+        except Exception as e:
+            print(f"CONTROL VizieR {src}: ERROR {e}")

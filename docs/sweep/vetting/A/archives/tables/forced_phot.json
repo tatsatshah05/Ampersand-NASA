@@ -1,0 +1,230 @@
+[
+ {
+  "image": "2MASS J 1998",
+  "epoch": "1998-06-14",
+  "band": "J",
+  "aperture_arcsec": 4.0,
+  "n_cal_stars": 12,
+  "cal_ratio_spread": [
+   0.0036549252162124853,
+   0.007517835533704943
+  ],
+  "mJy_per_unit": 0.006454454272671266,
+  "P_mJy": -0.42221756585487175,
+  "C_mJy": -0.16528966477495582,
+  "W_mJy_measured": 41.96945905805883,
+  "empty_ap_median_mJy": 0.19551788445370893,
+  "empty_ap_sigma_mJy": 0.5917890294377534,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 1.77536708831326
+ },
+ {
+  "image": "2MASS H 1998",
+  "epoch": "1998-06-14",
+  "band": "H",
+  "aperture_arcsec": 4.0,
+  "n_cal_stars": 15,
+  "cal_ratio_spread": [
+   0.003327443903108938,
+   0.009179175104445955
+  ],
+  "mJy_per_unit": 0.006684116003083394,
+  "P_mJy": -1.075579377352673,
+  "C_mJy": -0.6502960711909739,
+  "W_mJy_measured": 318.371147293372,
+  "empty_ap_median_mJy": 0.6587011920377467,
+  "empty_ap_sigma_mJy": 1.822233668352605,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 5.466701005057815
+ },
+ {
+  "image": "2MASS Ks 1998",
+  "epoch": "1998-06-14",
+  "band": "K",
+  "aperture_arcsec": 4.0,
+  "n_cal_stars": 21,
+  "cal_ratio_spread": [
+   0.003717771286988099,
+   0.014222031847180742
+  ],
+  "mJy_per_unit": 0.007526076566594363,
+  "P_mJy": -1.292451833399419,
+  "C_mJy": -0.3784430457717732,
+  "W_mJy_measured": 696.157263543632,
+  "empty_ap_median_mJy": 1.2046286201051049,
+  "empty_ap_sigma_mJy": 2.7906629740250475,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 8.371988922075143
+ },
+ {
+  "image": "IRAC 3.6 GLIMPSE II",
+  "epoch": "2005-2006",
+  "band": "I1",
+  "aperture_arcsec": 2.4,
+  "n_cal_stars": 72,
+  "cal_ratio_spread": [
+   0.0037876399491064455,
+   0.2484463438515891
+  ],
+  "mJy_per_unit": 0.01187070485532788,
+  "P_mJy": -0.5420935698343954,
+  "C_mJy": -0.7498800964494693,
+  "W_mJy_measured": 674.3677089322846,
+  "empty_ap_median_mJy": 0.36936099490549174,
+  "empty_ap_sigma_mJy": 1.1225243265922868,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 3.3675729797768605
+ },
+ {
+  "image": "IRAC 4.5 GLIMPSE II",
+  "epoch": "2005-2006",
+  "band": "I2",
+  "aperture_arcsec": 2.4,
+  "n_cal_stars": 62,
+  "cal_ratio_spread": [
+   0.003000012839106069,
+   0.05057035277622502
+  ],
+  "mJy_per_unit": 0.01201193959514755,
+  "P_mJy": -0.3487230132122386,
+  "C_mJy": -0.5463064496599048,
+  "W_mJy_measured": 479.88414433498554,
+  "empty_ap_median_mJy": 0.2440046128518266,
+  "empty_ap_sigma_mJy": 0.6988795108383971,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 2.096638532515191
+ },
+ {
+  "image": "IRAC 5.8 GLIMPSE II",
+  "epoch": "2005-2006",
+  "band": "I3",
+  "aperture_arcsec": 2.4,
+  "n_cal_stars": 19,
+  "cal_ratio_spread": [
+   0.01074084006699188,
+   0.03194783972761631
+  ],
+  "mJy_per_unit": 0.014061352439130332,
+  "P_mJy": -0.4117259569577813,
+  "C_mJy": -0.423275867014571,
+  "W_mJy_measured": 439.19247234417696,
+  "empty_ap_median_mJy": 0.11220176132126479,
+  "empty_ap_sigma_mJy": 0.6333320575780708,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 1.8999961727342123
+ },
+ {
+  "image": "IRAC 8.0 GLIMPSE II",
+  "epoch": "2005-2006",
+  "band": "I4",
+  "aperture_arcsec": 2.4,
+  "n_cal_stars": 10,
+  "cal_ratio_spread": [
+   0.011618576510617866,
+   0.023677287709105155
+  ],
+  "mJy_per_unit": 0.01649504038199852,
+  "P_mJy": -1.0910466462434423,
+  "C_mJy": -1.5270263623934959,
+  "W_mJy_measured": 305.1248329441663,
+  "empty_ap_median_mJy": -0.177774844037938,
+  "empty_ap_sigma_mJy": 0.7357578393590994,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 2.207273518077298
+ },
+ {
+  "image": "MIPS 24 MIPSGAL",
+  "epoch": "2005-2006",
+  "band": "M24",
+  "aperture_arcsec": 6.0,
+  "n_cal_stars": 1,
+  "cal_ratio_spread": [
+   0.06390152640164477,
+   0.06390152640164477
+  ],
+  "mJy_per_unit": 0.06390152640164477,
+  "P_mJy": -3.7440500421600955,
+  "C_mJy": -1.217031998754653,
+  "W_mJy_measured": 298.82,
+  "empty_ap_median_mJy": -0.1601248263006791,
+  "empty_ap_sigma_mJy": 3.424253492879475,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 10.272760478638425
+ },
+ {
+  "image": "WISE W1 AllWISE",
+  "epoch": "2010",
+  "band": "W1",
+  "aperture_arcsec": 8.25,
+  "n_cal_stars": 5,
+  "cal_ratio_spread": [
+   0.002243502832719279,
+   0.0067350255456686955
+  ],
+  "mJy_per_unit": 0.0036544475363046005,
+  "P_mJy": -5.503826476289413,
+  "C_mJy": 2.40274664325427,
+  "W_mJy_measured": 358.1972942730097,
+  "empty_ap_median_mJy": 6.333222013920026,
+  "empty_ap_sigma_mJy": 20.482499853987143,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 61.44749956196143
+ },
+ {
+  "image": "WISE W2 AllWISE",
+  "epoch": "2010",
+  "band": "W2",
+  "aperture_arcsec": 8.25,
+  "n_cal_stars": 5,
+  "cal_ratio_spread": [
+   0.0021148822586042407,
+   0.01038716024936852
+  ],
+  "mJy_per_unit": 0.003706851129118475,
+  "P_mJy": -0.4842658856295582,
+  "C_mJy": 7.889752193637846,
+  "W_mJy_measured": 348.99425497401296,
+  "empty_ap_median_mJy": 1.8903855403285659,
+  "empty_ap_sigma_mJy": 9.499812697741028,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 28.499438093223084
+ },
+ {
+  "image": "WISE W3 AllWISE",
+  "epoch": "2010",
+  "band": "W3",
+  "aperture_arcsec": 8.25,
+  "n_cal_stars": 1,
+  "cal_ratio_spread": [
+   0.004429203360949402,
+   0.004429203360949402
+  ],
+  "mJy_per_unit": 0.004429203360949402,
+  "P_mJy": -10.068589759589555,
+  "C_mJy": 6.966081490660058,
+  "W_mJy_measured": 258.51489255663483,
+  "empty_ap_median_mJy": -1.9010561740089424,
+  "empty_ap_sigma_mJy": 10.210446023923614,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 30.63133807177084
+ },
+ {
+  "image": "WISE W4 AllWISE",
+  "epoch": "2010",
+  "band": "W4",
+  "aperture_arcsec": 16.5,
+  "n_cal_stars": 1,
+  "cal_ratio_spread": [
+   0.09853147571576593,
+   0.09853147571576593
+  ],
+  "mJy_per_unit": 0.09853147571576593,
+  "P_mJy": 56.36870018570504,
+  "C_mJy": 104.21236796672089,
+  "W_mJy_measured": 299.59820952109925,
+  "empty_ap_median_mJy": 4.855458855565311,
+  "empty_ap_sigma_mJy": 39.61192927648842,
+  "n_empty": 60,
+  "upper_limit_3sigma_mJy": 170.34902915960498
+ }
+]

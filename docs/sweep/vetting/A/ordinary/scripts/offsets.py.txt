@@ -1,0 +1,14 @@
+"""Print rows of a CSV with offset (arcsec) and position angle (deg E of N) from a position, sorted."""
+import sys, csv, math
+f, ra0, dec0 = sys.argv[1], float(sys.argv[2]), float(sys.argv[3])
+racol = sys.argv[4] if len(sys.argv) > 4 else "ra"; deccol = sys.argv[5] if len(sys.argv) > 5 else "dec"
+rows = list(csv.DictReader(l for l in open(f) if not l.startswith("#")))
+def off(r):
+    ra, dec = float(r[racol]), float(r[deccol])
+    dx = (ra - ra0) * math.cos(math.radians(dec0)) * 3600; dy = (dec - dec0) * 3600
+    return math.hypot(dx, dy), (math.degrees(math.atan2(dx, dy)) % 360), dx, dy
+rows.sort(key=lambda r: off(r)[0])
+print(len(rows), "rows")
+for r in rows:
+    d, pa, dx, dy = off(r)
+    print(f"{d:7.2f}\" PA {pa:5.1f}  dE {dx:+7.2f} dN {dy:+7.2f} | " + " ".join(f"{k}={v}" for k, v in r.items()))

@@ -1,0 +1,5 @@
+D1: n=1 exposures; C sigma median 0.30 px, reference stars median 0.45 px; C/stars per exposure median 0.67, range 0.67-0.67
+D3: n=3 exposures; C sigma median 0.31 px, reference stars median 0.46 px; C/stars per exposure median 0.70, range 0.65-0.95
+D4: n=2 exposures; C sigma median 0.43 px, reference stars median 0.55 px; C/stars per exposure median 0.78, range 0.53-1.03
+D5: n=5 exposures; C sigma median 0.56 px, reference stars median 0.52 px; C/stars per exposure median 1.09, range 0.95-1.40
+D6: n=12 exposures; C sigma median 0.55 px, reference stars median 0.54 px; C/stars per exposure median 1.00, range 0.97-1.29

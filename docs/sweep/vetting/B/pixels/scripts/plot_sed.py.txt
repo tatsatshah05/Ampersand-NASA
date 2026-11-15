@@ -1,0 +1,66 @@
+"""Spectrum per visit (my forced PSF fluxes vs wavelength, log scale) with the fitted blackbodies; drawn with PIL."""
+import json, os, sys
+import numpy as np
+from PIL import Image, ImageDraw
+sys.path.insert(0, os.path.dirname(__file__))
+from common import W
+from sed import bnu
+P = json.load(open(f"{W}/out/per_exposure.json"))
+S = json.load(open(f"{W}/out/sed_fits.json"))
+Wd, Hd = 1100, 640
+L, R, T, B = 80, 1060, 50, 580
+im = Image.new("RGB", (Wd, Hd), (255, 255, 255)); dr = ImageDraw.Draw(im)
+xmin, xmax = 0.7, 5.1; ymin, ymax = -1.0, 3.3   # log10 mJy
+X = lambda l: L + (l - xmin) / (xmax - xmin) * (R - L)
+Y = lambda f: B - (np.log10(max(f, 10 ** ymin)) - ymin) / (ymax - ymin) * (B - T)
+dr.rectangle([L, T, R, B], outline=(0, 0, 0))
+for lv in range(-1, 4):
+    y = Y(10 ** lv); dr.line([(L, y), (R, y)], fill=(220, 220, 220)); dr.text((L - 60, y - 6), f"{10**lv:g} mJy", fill=(0, 0, 0))
+for l in (1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5):
+    x = X(l); dr.line([(x, T), (x, B)], fill=(235, 235, 235)); dr.text((x - 8, B + 6), f"{l:g}", fill=(0, 0, 0))
+dr.text((L + 380, B + 24), "wavelength (micrometres)", fill=(0, 0, 0))
+dr.text((L, 8), "Candidate B: my forced PSF flux in every clean exposure vs its wavelength; lines: fitted blackbodies (visit 2: 567 K; visit 1: 771 K with a 10.8%/day rise)", fill=(0, 0, 0))
+dr.text((L, 22), "grey = Aug-Sep 2025 (values at or below ~1-2 mJy are the level of the faint catalogued stars 3.7-4.8\" away; points < 0.1 mJy drawn at the floor)", fill=(0, 0, 0))
+cols = {0: (150, 150, 150), 1: (30, 110, 220), 2: (220, 50, 40)}
+for f in (2.85, 3.25):
+    pass
+dr.rectangle([X(2.95), T, X(3.15), B], outline=(200, 200, 255)); dr.text((X(2.9), T + 4), "H2O ice", fill=(90, 90, 200))
+dr.line([(X(4.27), T), (X(4.27), B)], fill=(200, 200, 255)); dr.text((X(4.12), T + 16), "CO2 4.27", fill=(90, 90, 200))
+dr.line([(X(4.67), T), (X(4.67), B)], fill=(200, 200, 255)); dr.text((X(4.6), T + 4), "CO 4.67", fill=(90, 90, 200))
+for p in P:
+    if p["forced"] is None or not p["wave"]:
+        continue
+    x, y = X(p["wave"]), Y(p["forced"])
+    c = cols[p["ep"]]
+    dr.ellipse([x - 3, y - 3, x + 3, y + 3], fill=c)
+for ep, key, c in ((2, "bb_time", cols[2]), (1, "bb_time", cols[1])):
+    fit = S[f"ep{ep}"]["fits"][key]
+    A, Tk = fit["p"][0], fit["p"][1]
+    ls = np.linspace(0.75, 5.0, 300)
+    pts = [(X(l), Y(A * bnu(l, Tk) / bnu(4.6, Tk))) for l in ls if A * bnu(l, Tk) / bnu(4.6, Tk) > 10 ** ymin]
+    dr.line(pts, fill=c, width=2)
+for i, (ep, lab) in enumerate(((0, "Aug-Sep 2025"), (1, "Feb-Mar 2026"), (2, "Aug 2026"))):
+    dr.ellipse([L + 10, T + 40 + 16 * i, L + 18, T + 48 + 16 * i], fill=cols[ep]); dr.text((L + 24, T + 38 + 16 * i), lab, fill=(0, 0, 0))
+im.save(f"{W}/pictures/spectrum_by_visit.png")
+
+# light curve: forced flux vs date, by detector
+im = Image.new("RGB", (Wd, Hd), (255, 255, 255)); dr = ImageDraw.Draw(im)
+t0, t1 = 60880, 61285
+X2 = lambda t: L + (t - t0) / (t1 - t0) * (R - L)
+dr.rectangle([L, T, R, B], outline=(0, 0, 0))
+for lv in range(-1, 4):
+    y = Y(10 ** lv); dr.line([(L, y), (R, y)], fill=(220, 220, 220)); dr.text((L - 60, y - 6), f"{10**lv:g} mJy", fill=(0, 0, 0))
+from astropy.time import Time
+for d in ("2025-08-01", "2025-10-01", "2025-12-01", "2026-02-01", "2026-04-01", "2026-06-01", "2026-08-01"):
+    t = Time(d).mjd; x = X2(t); dr.line([(x, T), (x, B)], fill=(235, 235, 235)); dr.text((x - 25, B + 6), d[:7], fill=(0, 0, 0))
+dcol = {1: (120, 120, 120), 2: (0, 160, 0), 3: (0, 160, 200), 4: (120, 60, 200), 5: (230, 140, 0), 6: (220, 40, 40)}
+for p in P:
+    if p["forced"] is None:
+        continue
+    x, y = X2(p["mjd"]), Y(p["forced"]); c = dcol[p["det"]]
+    dr.ellipse([x - 3, y - 3, x + 3, y + 3], fill=c)
+dr.text((L, 8), "Candidate B: my forced PSF flux at the bright place, every clean exposure, by detector (each point its own wavelength)", fill=(0, 0, 0))
+for i, d in enumerate(range(1, 7)):
+    dr.ellipse([L + 10, T + 10 + 16 * i, L + 18, T + 18 + 16 * i], fill=dcol[d]); dr.text((L + 24, T + 8 + 16 * i), f"D{d}", fill=(0, 0, 0))
+im.save(f"{W}/pictures/lightcurve_forced.png")
+print("ok")

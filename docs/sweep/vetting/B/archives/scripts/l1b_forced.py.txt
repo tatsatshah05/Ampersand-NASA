@@ -1,0 +1,41 @@
+import glob, os, sys, numpy as np, warnings
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.stats import sigma_clipped_stats
+warnings.filterwarnings("ignore")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+B = "docs/sweep/vetting/B/archives/"
+X = (253.18040, -44.67697); R = (253.183849, -44.675522); C = (253.18179, -44.67690)
+# other CatWISE sources within 25" (positions from the IRSA CatWISE answer), included as fixed-position components
+import csv
+cw = [(float(r["ra"]), float(r["dec"])) for r in csv.DictReader(open(B + "data/irsa_catwise_2020_30as_253.1804_-44.6769.csv"))]
+ZP = {"W1": 309540.0, "W2": 171787.0}   # mJy for mag 0 (WISE Explanatory Supplement)
+RMAG = {"W1": 9.42, "W2": 9.07}          # R: AllWISE w1mpro 9.418, w2mpro 9.066; NEOWISE visits 9.05-9.12
+def sepas(a, b): return 3600*np.degrees(np.arccos(np.clip(np.sin(np.radians(a[1]))*np.sin(np.radians(b[1]))+np.cos(np.radians(a[1]))*np.cos(np.radians(b[1]))*np.cos(np.radians(a[0]-b[0])), -1, 1)))
+others = [p for p in cw if 1.5 < sepas(p, X) < 22 and sepas(p, R) > 1.5 and sepas(p, C) > 1.5]
+res = {}
+for f in sorted(glob.glob(B + "img/neowise_l1b/*.fits")):
+    tag, band, mjd = os.path.basename(f)[:-5].split("_")
+    h = fits.open(f)[0]; img = h.data.astype(float); w = WCS(h.header)
+    s = {"W1": 6.1, "W2": 6.4}[band] / 2.355 / 2.75
+    pts = [X, R, C] + others
+    xy = [tuple(float(v) for v in w.all_world2pix(p[0], p[1], 0)) for p in pts]
+    yy, xx = np.mgrid[0:img.shape[0], 0:img.shape[1]]
+    x0, y0 = xy[0]
+    box = (np.abs(xx-x0) <= 5) & (np.abs(yy-y0) <= 5) & np.isfinite(img)
+    if box.sum() < 80: continue
+    ring = (np.hypot(xx-x0, yy-y0) > 9) & np.isfinite(img)
+    sky = sigma_clipped_stats(img[ring])[1]
+    z = img[box] - sky
+    A = [np.exp(-((xx[box]-px)**2+(yy[box]-py)**2)/(2*s*s)) for px, py in xy] + [np.ones(box.sum())]
+    A = np.vstack(A).T
+    coef, *_ = np.linalg.lstsq(A, z, rcond=None)
+    rms = np.std(z - A @ coef); cov = np.linalg.pinv(A.T @ A) * rms**2
+    fR_mjy = ZP[band]*10**(-RMAG[band]/2.5)
+    k = fR_mjy / coef[1]
+    res.setdefault((tag, band), []).append((coef[0]*k, np.sqrt(cov[0, 0])*k, coef[2]*k))
+print("NEOWISE single-exposure forced fit at fixed positions (X, R, c + %d other CatWISE sources within 22\"), flux scale from R = AllWISE/NEOWISE-steady" % len(others))
+for key in sorted(res):
+    a = np.array(res[key])
+    med = np.median(a[:, 0]); e_med = 1.2533*np.median(a[:, 1])/np.sqrt(len(a)); scat = 1.4826*np.median(np.abs(a[:, 0]-med))
+    print(f"{key[0]} {key[1]} n={len(a):2d}  X = {med:6.2f} mJy (per-frame fit err {np.median(a[:,1]):.2f}, scatter {scat:.2f}, error of median ~{max(e_med, 1.2533*scat/np.sqrt(len(a))):.2f})   c = {np.median(a[:,2]):5.2f} mJy")

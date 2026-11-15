@@ -1,0 +1,84 @@
+"""Where is the brightening source? Centroid it on bright-epoch D5/D6 cutouts and on bright-minus-faint
+difference stacks, and compare with the sweep position and the nearby catalogued stars.
+usage: python -I centroid.py CUTOUT_DIR OUTPNG"""
+import glob, sys, re, warnings
+import numpy as np
+warnings.filterwarnings("ignore")
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+
+D, outpng = sys.argv[1], sys.argv[2]
+B = SkyCoord(253.18044, -44.67687, unit="deg")
+REF = {"sweep B": B,
+       "CatWISE J165243.63-444036.8 (W2 13.3)": SkyCoord(253.18179, -44.67690, unit="deg"),
+       "2MASS J16524373-4440366 (Ks 13.77)": SkyCoord(253.182237, -44.676834, unit="deg"),
+       "red star 2MASS J16524412-4440318 / AllWISE J165244.11-444031.8 (Ks 10.66, W2 9.07)": SkyCoord(253.183849, -44.675522, unit="deg"),
+       "VIRAC2 14911689004397 (H 17.4, Ks 15.0)": SkyCoord(253.181844, -44.677040, unit="deg"),
+       "GLIMPSE G341.0882-00.4146 ([3.6] 14.2)": SkyCoord(253.179017, -44.676589, unit="deg")}
+
+rows = []
+for f in sorted(glob.glob(D + "/*.fits")):
+    m = re.search(r"(\d{4})W(\d\d)_.*_D(\d)\.fits", f)
+    if not m:
+        continue
+    det = int(m.group(3))
+    if det not in (5, 6):
+        continue
+    with fits.open(f) as h:
+        im = h["IMAGE"].data.astype(float); fl = h["FLAGS"].data; w = WCS(h["IMAGE"].header)
+        mjd = h["IMAGE"].header.get("MJD-AVG") or h["IMAGE"].header.get("MJD-OBS")
+    x0, y0 = w.world_to_pixel(B)
+    if not (8 < x0 < im.shape[1] - 8 and 8 < y0 < im.shape[0] - 8):
+        continue
+    yy, xx = np.mgrid[: im.shape[0], : im.shape[1]]
+    ring = (np.hypot(xx - x0, yy - y0) > 10) & (np.hypot(xx - x0, yy - y0) < 16) & np.isfinite(im)
+    bg = np.nanmedian(im[ring])
+    sub = im - bg
+    # iterate a flux-weighted centroid in a 2-pixel radius window starting at the sweep position
+    cx, cy = x0, y0
+    for _ in range(10):
+        r = np.hypot(xx - cx, yy - cy) < 2.0
+        v = np.clip(np.nan_to_num(sub[r]), 0, None)
+        if v.sum() <= 0:
+            break
+        cx, cy = (xx[r] * v).sum() / v.sum(), (yy[r] * v).sum() / v.sum()
+    peak = np.nanmax(sub[np.hypot(xx - x0, yy - y0) < 2.5])
+    c = w.pixel_to_world(cx, cy)
+    rows.append((f.split("/")[-1], det, mjd, float(peak), c, (x0, y0), sub, w))
+
+year = lambda n: n[:4] + "W" + n[5:7]
+print(f"{len(rows)} D5/D6 cutouts cover B")
+bright = [r for r in rows if r[0].startswith("2026W3")]  # Aug 2026, ~1 Jy
+faint = [r for r in rows if r[0].startswith("2025W3")]
+print(f"Aug 2026: {len(bright)}, Aug 2025: {len(faint)}")
+for name, sel in (("Aug 2026", bright), ("Aug 2025", faint)):
+    seps = [r[4].separation(B).arcsec for r in sel]
+    ras = np.array([r[4].ra.deg for r in sel]); des = np.array([r[4].dec.deg for r in sel])
+    if len(sel) == 0:
+        continue
+    cm = SkyCoord(np.median(ras), np.median(des), unit="deg")
+    sc = np.std([r[4].separation(cm).arcsec for r in sel])
+    print(f"{name}: median centroid RA {cm.ra.deg:.5f} Dec {cm.dec.deg:.5f}; scatter {sc:.1f}\"; offset from sweep B {cm.separation(B).arcsec:.1f}\"")
+    for k, v in REF.items():
+        print(f"     distance to {k}: {cm.separation(v).arcsec:.1f}\"")
+
+# picture: median of Aug 2026 D6 and Aug 2025 D6 stamps, resampled to the sweep position frame by nearest pixel offset
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+fig, axs = plt.subplots(1, 2, figsize=(9, 4.6))
+for ax, (name, sel) in zip(axs, (("Aug 2025 D5+D6", faint), ("Aug 2026 D5+D6", bright))):
+    sel6 = [r for r in sel if r[1] == 6] or sel
+    r = sel6[len(sel6) // 2]  # one real exposure, its own orientation
+    x0, y0 = r[5]; ix, iy = int(round(x0)), int(round(y0)); st = r[6][iy - 6: iy + 7, ix - 6: ix + 7]
+    ax.imshow(st, origin="lower", cmap="gray", extent=(ix - 6.5 - x0, ix + 6.5 - x0, iy - 6.5 - y0, iy + 6.5 - y0))
+    w = r[7]
+    for k, v in REF.items():
+        px, py = w.world_to_pixel(v)
+        ax.plot(px - x0, py - y0, "o", mfc="none", ms=8, label=k[:38])
+    ax.set_title(f"{name}: {r[0]}\npixel offsets from the sweep position (6.15\"/pix)", fontsize=8)
+axs[1].legend(fontsize=5.5, loc="lower left")
+plt.tight_layout(); plt.savefig(outpng, dpi=130)
+print("saved", outpng)

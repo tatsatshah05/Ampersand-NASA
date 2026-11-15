@@ -1,0 +1,21 @@
+import requests, csv, io, math, sys
+UA = {"User-Agent": "generic-astro-client/1.0"}
+URL = "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync"
+def q(adql):
+    r = requests.post(URL, data={"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv", "QUERY": adql}, headers=UA, timeout=240)
+    return r.status_code, r.text
+X = (253.18040, -44.67697)
+for rad in (120, 600):
+    adql = f"""SELECT b.main_id, b.otype, b.ra, b.dec, b.sp_type, DISTANCE(POINT('ICRS', b.ra, b.dec), POINT('ICRS', {X[0]}, {X[1]}))*3600 AS sep
+    FROM basic AS b WHERE CONTAINS(POINT('ICRS', b.ra, b.dec), CIRCLE('ICRS', {X[0]}, {X[1]}, {rad/3600}))=1 ORDER BY sep"""
+    s, t = q(adql)
+    open(f"docs/sweep/vetting/B/archives/data/simbad_{rad}as.csv", "w").write(t)
+    rows = list(csv.DictReader(io.StringIO(t)))
+    print(f"== SIMBAD (CfA mirror) within {rad}\" of X: HTTP {s}, {len(rows)} objects")
+    if rad == 120:
+        for r in rows: print(f"  {float(r['sep']):6.1f}\"  {r['otype']:6s} {r['main_id']}")
+    else:
+        from collections import Counter
+        print("  types:", Counter(r["otype"] for r in rows).most_common())
+        keep = [r for r in rows if r["otype"] not in ("*", "IR", "Star", "PM*", "**", "Y*?", "smm")]
+        for r in keep: print(f"  {float(r['sep']):6.1f}\"  {r['otype']:6s} {r['main_id']}")

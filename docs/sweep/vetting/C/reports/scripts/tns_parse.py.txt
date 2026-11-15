@@ -1,0 +1,17 @@
+import sys
+from bs4 import BeautifulSoup
+for f in sys.argv[1:]:
+    s = BeautifulSoup(open(f, encoding='utf-8', errors='replace').read(), 'html.parser')
+    print('==', f.split('/')[-1], '| title:', s.title.string if s.title else None)
+    tabs = s.find_all('table')
+    print('tables', len(tabs))
+    for t in tabs:
+        rows = t.find_all('tr')
+        hdr = [th.get_text(' ', strip=True) for th in t.find_all('th')][:14]
+        print(' table rows', len(rows), 'hdr', hdr)
+        for r in rows[1:6]:
+            print('   ', [td.get_text(' ', strip=True)[:30] for td in r.find_all('td')][:12])
+    txt = s.get_text(' ', strip=True)
+    for kw in ['No results', 'no results', 'Found', 'results', 'captcha', 'Cloudflare', 'robot']:
+        i = txt.find(kw)
+        if i >= 0: print('  kw', kw, ':', txt[max(0,i-100):i+150])

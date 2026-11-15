@@ -1,0 +1,51 @@
+"""VizieR cone searches through the CfA mirror (vizier.cds.unistra.fr answered HTTP 404 'page unavailable').
+Usage: python -I q_viz.py <scriptsdir> <ra> <dec> <tag> <radius_arcsec> cat1 cat2 ..."""
+import sys, os, time, io
+sys.path.insert(0, sys.argv[1])
+from qlib import *
+
+ra0, dec0, tag, rad = float(sys.argv[2]), float(sys.argv[3]), sys.argv[4], float(sys.argv[5])
+cats = sys.argv[6:]
+URL = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"
+for cat in cats:
+    params = {"-source": cat, "-c": f"{ra0} {dec0}", "-c.rs": f"{rad}", "-out.max": "300",
+              "-out.all": "", "-out.add": "_r,_RAJ,_DEJ", "-sort": "_r", "-oc.form": "dec"}
+    t0 = time.time()
+    try:
+        r = requests.get(URL, params=params, headers=UA, timeout=240)
+        txt, st = r.text, f"HTTP {r.status_code}"
+    except Exception as e:
+        txt, st = "", f"network error {e!r}"
+    name = f"viz_{tag}_{cat.replace('/', '_')}_r{int(rad)}"
+    with open(os.path.join(TAB, name + ".tsv"), "w") as f:
+        f.write(txt)
+    lines = txt.splitlines()
+    titles = [l for l in lines if l.startswith("#Title") or l.startswith("#Name")]
+    errs = [l for l in lines if "#INFO" in l and ("rror" in l or "not found" in l.lower() or "Warning" in l)]
+    data_tables = []
+    cur = None
+    for l in lines:
+        if l.startswith("#Name"):
+            cur = l.split(":", 1)[1].strip(); data_tables.append([cur, 0, None])
+        elif l and not l.startswith("#") and cur is not None:
+            data_tables[-1][1] += 1
+    log(f"{name} {st} {time.time()-t0:.0f}s tables={[(a, b) for a, b, _ in data_tables]}")
+    print(f"=== {cat} r={rad}\" {st} ({time.time()-t0:.0f}s)")
+    for l in titles[:6]:
+        print("   ", l[:160])
+    for l in errs[:4]:
+        print("    !", l[:200])
+    # print the data blocks (header + rows), trimmed
+    block = []
+    for l in lines:
+        if l.startswith("#") or not l.strip():
+            if block:
+                for b in block[:3 + 40]:
+                    print("    " + b[:400])
+                print("    ...") if len(block) > 43 else None
+                block = []
+            continue
+        block.append(l)
+    if block:
+        for b in block[:43]:
+            print("    " + b[:400])

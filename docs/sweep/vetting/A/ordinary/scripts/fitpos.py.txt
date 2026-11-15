@@ -1,0 +1,125 @@
+"""Per-exposure position fits around candidate A on the cached SPHEREx cutouts.
+
+For every exposure of the chosen detectors, a window of radius WIN native pixels around the
+nominal position is fitted with a flat sky plus N circular Gaussians of the header's PSF_FWHM
+(fixed width; free positions and amplitudes). Masked: pixels on the photometry flag list,
+saturated pixels (photometry.saturated_pixels) and empty pixels. Positions are converted to
+sky with the cutout's WCS and given as offsets (arcsec, east and north) from the nominal
+position. Output: a CSV per run. Read-only on the cache.
+
+Usage: fitpos.py OUT.csv DETS NCOMP [start offsets as dE,dN;dE,dN]
+"""
+import json, sys, csv
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from scipy.optimize import least_squares
+
+sys.path.insert(0, ".")
+from backend import photometry  # noqa: E402
+
+RA, DEC = 270.80362, -23.46745
+CACHE = Path("<repository>/backend/cache/sweep")
+CUT = CACHE / "cutouts" / "250d2b7784"
+pts = json.load(open(CACHE / "photometry" / "2c3c31c3c37a6a21.json"))["points"]
+WIN = 5.0
+COSD = np.cos(np.radians(DEC))
+
+
+def sky_to_pix(w, de, dn):
+    ra = RA + de / 3600.0 / COSD
+    dec = DEC + dn / 3600.0
+    x, y = w.all_world2pix(ra, dec, 0)
+    return float(x), float(y)
+
+
+def pix_to_off(w, x, y):
+    ra, dec = w.all_pix2world(x, y, 0)
+    return float((ra - RA) * COSD * 3600), float((dec - DEC) * 3600)
+
+
+def fit(path, starts):
+    with fits.open(path) as h:
+        hdr = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        flags = h["FLAGS"].data
+        var = h["VARIANCE"].data.astype(float)
+        w = WCS(hdr)
+    fwhm_px = float(hdr["PSF_FWHM"]) / 6.15
+    sig = fwhm_px / 2.3548
+    x0, y0 = sky_to_pix(w, 0.0, 0.0)
+    ny, nx = img.shape
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    r = np.hypot(xx - x0, yy - y0)
+    sat = photometry.saturated_pixels(flags, img)
+    bad = ((flags & photometry.PHOTOMETRY_BAD) != 0) | sat | ~np.isfinite(img) | ~np.isfinite(var)
+    use = (r <= WIN) & ~bad
+    nsat_win = int(((r <= WIN) & sat).sum())
+    if use.sum() < 30:
+        return None
+    X, Y, Z, E = xx[use].astype(float), yy[use].astype(float), img[use], np.sqrt(np.maximum(var[use], 1e-6))
+    p0 = [float(np.median(Z))]
+    for de, dn in starts:
+        sx, sy = sky_to_pix(w, de, dn)
+        p0 += [max(float(np.nanmax(Z)), 0.1), sx, sy]
+
+    def model(p):
+        m = np.full_like(Z, p[0])
+        for k in range(len(starts)):
+            a, cx, cy = p[1 + 3 * k: 4 + 3 * k]
+            m += a * np.exp(-((X - cx) ** 2 + (Y - cy) ** 2) / (2 * sig ** 2))
+        return m
+
+    lo = [-np.inf] + [0, x0 - WIN, y0 - WIN] * len(starts)
+    hi = [np.inf] + [np.inf, x0 + WIN, y0 + WIN] * len(starts)
+    res = least_squares(lambda p: (model(p) - Z) / E, p0, bounds=(lo, hi))
+    out = {"nsat_win": nsat_win, "npix": int(use.sum()), "chi2nu": float(np.sum(res.fun ** 2) / max(1, len(Z) - len(p0)))}
+    # covariance for position errors
+    try:
+        J = res.jac
+        cov = np.linalg.inv(J.T @ J) * out["chi2nu"]
+        perr = np.sqrt(np.diag(cov))
+    except Exception:
+        perr = np.full(len(p0), np.nan)
+    pix_area_sr = float(abs(np.linalg.det(w.pixel_scale_matrix))) * (np.pi / 180) ** 2
+    for k in range(len(starts)):
+        a, cx, cy = res.x[1 + 3 * k: 4 + 3 * k]
+        de, dn = pix_to_off(w, cx, cy)
+        out[f"c{k}_de"], out[f"c{k}_dn"] = de, dn
+        out[f"c{k}_err_arcsec"] = float(np.hypot(perr[2 + 3 * k], perr[3 + 3 * k]) * 6.15)
+        # Gaussian total flux, MJy/sr * px -> mJy
+        out[f"c{k}_mjy"] = float(a * 2 * np.pi * sig ** 2 * pix_area_sr * 1e9)
+    return out
+
+
+def main():
+    outf = Path(sys.argv[1])
+    dets = [int(v) for v in sys.argv[2].split(",")]
+    ncomp = int(sys.argv[3])
+    starts = [(0.0, 0.0)] if len(sys.argv) < 5 else [tuple(float(v) for v in s.split(",")) for s in sys.argv[4].split(";")]
+    assert len(starts) == ncomp
+    rows = []
+    for p in sorted(pts, key=lambda p: (p["detector"], p["mjd"])):
+        if p["detector"] not in dets or p["status"] == "off_image":
+            continue
+        f = CUT / f"{p['obs_id']}_D{p['detector']}.fits"
+        if not f.exists():
+            continue
+        o = fit(f, starts)
+        if o is None:
+            continue
+        row = {"obs_id": p["obs_id"], "det": p["detector"], "epoch": p["epoch"], "mjd": round(p["mjd"], 4),
+               "date": p["date"][:10], "wl": round(p["wavelength_um"], 3), "status": p["status"],
+               "flux_ap": None if p["flux_mjy"] is None else round(p["flux_mjy"], 1)}
+        row.update({k: (round(v, 2) if isinstance(v, float) else v) for k, v in o.items()})
+        rows.append(row)
+    with open(outf, "w", newline="") as fh:
+        wr = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        wr.writeheader(); wr.writerows(rows)
+    for r in rows:
+        print(" ".join(f"{k}={v}" for k, v in r.items() if k not in ("obs_id",)))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,21 @@
+== Feb-Mar 2026
+  Pa-beta            peak    5.8 mJy at 1.281 um (bw 0.031) | continuum   3.2 (n=12) | excess    2.6 =   0.8 x continuum | EW_peak ~    251 Angstrom
+  Pa-alpha           peak  199.9 mJy at 1.852 um (bw 0.045) | continuum  19.4 (n=8) | excess  180.5 =   9.3 x continuum | EW_peak ~   4217 Angstrom
+  Br-gamma           peak   70.6 mJy at 2.183 um (bw 0.055) | continuum  38.5 (n=7) | excess   32.1 =   0.8 x continuum | EW_peak ~    460 Angstrom
+  Br-beta            peak  204.4 mJy at 2.602 um (bw 0.074) | continuum  54.6 (n=8) | excess  149.8 =   2.7 x continuum | EW_peak ~   2043 Angstrom
+  Pf-gamma           peak  152.1 mJy at 3.700 um (bw 0.103) | continuum  73.7 (n=3) | excess   78.4 =   1.1 x continuum | EW_peak ~   1092 Angstrom
+  Br-alpha           peak  438.4 mJy at 4.075 um (bw 0.037) | continuum  93.4 (n=9) | excess  345.1 =   3.7 x continuum | EW_peak ~   1357 Angstrom
+  4.30 feature       peak  191.3 mJy at 4.298 um (bw 0.037) | continuum  96.0 (n=6) | excess   95.3 =   1.0 x continuum | EW_peak ~    370 Angstrom
+  Pf-beta+Hu-eps     peak  311.2 mJy at 4.665 um (bw 0.037) | continuum  87.5 (n=8) | excess  223.8 =   2.6 x continuum | EW_peak ~    942 Angstrom
+  4.73-4.77 feature  peak  142.8 mJy at 4.739 um (bw 0.037) | continuum  85.8 (n=8) | excess   57.0 =   0.7 x continuum | EW_peak ~    245 Angstrom
+  [Mg IV]            peak   85.6 mJy at 4.498 um (bw 0.036) | continuum  86.2 (n=2) | excess   -0.7 =  -0.0 x continuum | EW_peak ~     -3 Angstrom
+== Jul-Sep 2026
+  Pa-beta            peak   -0.7 mJy at 1.281 um (bw 0.031) | continuum  -0.7 (n=10) | excess    0.1 =   0.1 x continuum | EW_peak ~     45 Angstrom
+  Pa-alpha           peak    3.7 mJy at 1.886 um (bw 0.047) | continuum   0.1 (n=17) | excess    3.6 =   7.1 x continuum | EW_peak ~   3338 Angstrom
+  Br-gamma           peak    1.9 mJy at 2.126 um (bw 0.053) | continuum   1.1 (n=10) | excess    0.8 =   0.7 x continuum | EW_peak ~    369 Angstrom
+  Br-beta            peak    3.9 mJy at 2.617 um (bw 0.075) | continuum   1.1 (n=3) | excess    2.7 =   2.4 x continuum | EW_peak ~   1810 Angstrom
+  Br-alpha           peak   17.8 mJy at 4.041 um (bw 0.037) | continuum   4.6 (n=8) | excess   13.2 =   2.9 x continuum | EW_peak ~   1057 Angstrom
+  4.30 feature       peak    5.4 mJy at 4.306 um (bw 0.038) | continuum   4.8 (n=7) | excess    0.6 =   0.1 x continuum | EW_peak ~     50 Angstrom
+  Pf-beta+Hu-eps     peak    9.7 mJy at 4.688 um (bw 0.037) | continuum   3.7 (n=9) | excess    5.9 =   1.6 x continuum | EW_peak ~    580 Angstrom
+  4.73-4.77 feature  peak    5.5 mJy at 4.736 um (bw 0.037) | continuum   3.7 (n=13) | excess    1.8 =   0.5 x continuum | EW_peak ~    187 Angstrom
+  [Mg IV]            peak   46.6 mJy at 4.488 um (bw 0.036) | continuum   4.0 (n=10) | excess   42.7 =  10.7 x continuum | EW_peak ~   3809 Angstrom

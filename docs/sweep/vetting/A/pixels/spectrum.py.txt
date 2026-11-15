@@ -1,0 +1,110 @@
+"""Spectrum of A' per visit from this check's own measurements (fit2.json: crowded-field Gaussian fit with
+the neighbour and AllWISE sources modelled; calib.json: saturation at A'). Flux = Gaussian integral x the
+per-detector ap2.5/Gaussian factor from field stars (calib.py). Saturated-at-A' exposures are lower limits
+and are not fitted. Blackbody fits: pure, and reddened (A_K free; A_lambda/A_K = (lambda/2.16)^-2 below
+2.4 um, 0.50 at 3.6, 0.39 at 4.5, 0.36 at 5.0 um, interpolated). Writes spectrum_table.tsv, spectrum.png."""
+import json, math
+from pathlib import Path
+import numpy as np
+from scipy.optimize import least_squares
+from PIL import Image, ImageDraw
+D = Path(__file__).resolve().parent
+F = {(r["obs_id"], r["det"]): r for r in json.load(open(D / "fit2.json"))}
+C = {(r["obs_id"], r["det"]): r for r in json.load(open(D / "calib.json"))}
+FACT = {1: 1.139, 2: 1.166, 3: 1.222, 4: 1.206, 5: 1.207, 6: 1.194}   # ap2.5/Gaussian, field stars (calib.py)
+rows = []
+for k, f in F.items():
+    if f.get("status") != "done" or not f.get("fit_ok"): continue
+    c = C[k]
+    sat = c["A_sat1"] > 0
+    flux = f["A_gauss"] * FACT[f["det"]]
+    err = math.hypot(f["A_gauss_err"] * FACT[f["det"]], 0.05 * abs(flux))
+    rows.append(dict(obs=k[0], det=k[1], epoch=f["epoch"], mjd=f["mjd"], wave=f["wave"], flux=flux, err=err,
+                     sat=sat, ovf=c["A_ovf1"] > 0, nb_sat=c["NB_sat1"] > 0, chi2=f["chi2_dof"]))
+rows.sort(key=lambda r: (r["epoch"], r["wave"]))
+with open(D / "spectrum_table.tsv", "w") as fh:
+    fh.write("epoch\tdet\tobs_id\tmjd\twave_um\tflux_mjy\terr_mjy\tsaturated_at_A\toverflow_at_A\tneighbour_saturated\tfit_chi2dof\n")
+    for r in rows:
+        fh.write(f"{r['epoch']}\t{r['det']}\t{r['obs']}\t{r['mjd']:.3f}\t{r['wave']:.3f}\t{r['flux']:.1f}\t{r['err']:.1f}\t{int(r['sat'])}\t{int(r['ovf'])}\t{int(r['nb_sat'])}\t{r['chi2']:.1f}\n")
+
+h, c_, k_ = 6.62607e-34, 2.99792e8, 1.380649e-23
+def bnu(lam_um, T):
+    lam = lam_um * 1e-6; nu = c_ / lam
+    return 2 * h * nu ** 3 / c_ ** 2 / np.expm1(h * nu / (k_ * T))
+def alam_over_ak(lam):
+    lam = np.asarray(lam, float)
+    out = np.where(lam < 2.4, (lam / 2.16) ** -2.0, np.interp(lam, [2.4, 3.6, 4.5, 5.0], [(2.4 / 2.16) ** -2.0, 0.50, 0.39, 0.36]))
+    return out
+def fit(rs, redden):
+    lam = np.array([r["wave"] for r in rs]); fl = np.array([r["flux"] for r in rs]); er = np.array([r["err"] for r in rs])
+    er = np.maximum(er, 0.1 * np.maximum(fl, 0) + 2.0)    # 10 % + 2 mJy floor: crowding and calibration
+    def model(p):
+        T, lnS, AK = p[0], p[1], (p[2] if redden else 0.0)
+        return np.exp(lnS) * bnu(lam, T) / bnu(4.6, T) * 10 ** (-0.4 * AK * alam_over_ak(lam))
+    best = None
+    for T0 in (300, 500, 800, 1200, 2000, 3500):
+        p0 = [T0, math.log(max(np.median(fl[lam > 4.4]) if (lam > 4.4).any() else fl.max(), 1))] + ([2.0] if redden else [])
+        lo = [100, -10] + ([0] if redden else []); hi = [30000, 20] + ([15] if redden else [])
+        try:
+            r = least_squares(lambda p: (model(p) - fl) / er, p0, bounds=(lo, hi))
+        except Exception:
+            continue
+        if best is None or r.cost < best.cost: best = r
+    chi2 = 2 * best.cost; dof = len(fl) - len(best.x)
+    return best.x, chi2, dof, model(best.x), lam, fl, er
+
+names = {1: "Aug-Sep 2025", 2: "Mar-Apr 2026", 3: "Aug-Sep 2026"}
+summary = {}
+for ep in (1, 2, 3):
+    rs = [r for r in rows if r["epoch"] == ep]
+    clean = [r for r in rs if not r["sat"]]
+    print(f"== {names[ep]}: {len(rs)} exposures fitted, {len(clean)} not saturated at A'")
+    for det in range(1, 7):
+        d = [r for r in clean if r["det"] == det]; s = [r for r in rs if r["det"] == det and r["sat"]]
+        if d or s:
+            fl = np.array([r["flux"] for r in d])
+            print(f"   D{det}: clean n={len(d):2d} median {np.median(fl) if d else float('nan'):8.1f} mJy "
+                  f"(range {fl.min() if d else float('nan'):.1f} to {fl.max() if d else float('nan'):.1f}; waves {min(r['wave'] for r in d) if d else 0:.2f}-{max(r['wave'] for r in d) if d else 0:.2f})"
+                  f"   saturated n={len(s)}" + (f" (Gaussian-from-wings {np.median([r['flux'] for r in s]):.0f})" if s else ""))
+    if ep == 1: continue
+    for redden in (False, True):
+        use = [r for r in clean if r["flux"] > 0 or r["det"] >= 2]
+        p, chi2, dof, m, lam, fl, er = fit(use, redden)
+        resid = (fl - m) / er
+        lab = "reddened BB" if redden else "pure BB"
+        print(f"   {lab}: T = {p[0]:.0f} K" + (f", A_K = {p[2]:.2f}" if redden else "") + f", chi2/dof = {chi2:.1f}/{dof} = {chi2/dof:.2f}")
+        # residual by detector
+        for det in range(1, 7):
+            sel = np.array([r["det"] == det for r in use])
+            if sel.any(): print(f"      D{det} mean residual {np.mean(resid[sel]):+.2f} sigma, median data/model {np.median(fl[sel]/m[sel]):.2f}")
+        summary[(ep, redden)] = (p, chi2, dof)
+
+# picture: log flux vs wavelength
+W, H, ml, mb = 900, 520, 70, 50
+im = Image.new("RGB", (W, H), (250, 250, 250)); dr = ImageDraw.Draw(im)
+x_of = lambda lam: ml + (math.log10(lam) - math.log10(0.7)) / (math.log10(5.2) - math.log10(0.7)) * (W - ml - 20)
+y_of = lambda f: H - mb - (math.log10(max(f, 0.1)) - (-1)) / (4 - (-1)) * (H - mb - 30)
+for dec in range(-1, 5):
+    y = y_of(10 ** dec); dr.line([(ml, y), (W - 20, y)], fill=(220, 220, 220)); dr.text((5, y - 6), f"{10**dec:g} mJy", fill=(60, 60, 60))
+for lam in (0.75, 1, 1.5, 2, 3, 4, 5):
+    x = x_of(lam); dr.line([(x, 30), (x, H - mb)], fill=(230, 230, 230)); dr.text((x - 8, H - mb + 5), f"{lam:g}", fill=(60, 60, 60))
+dr.text((W // 2 - 60, H - 20), "wavelength (micrometres)", fill=(40, 40, 40))
+dr.text((ml, 8), "A' (RA 270.80406 Dec -23.46820), own crowded-field fits; open = saturated at A' (lower limit); |=below 0.1 mJy", fill=(30, 30, 30))
+col = {1: (120, 120, 120), 2: (200, 40, 40), 3: (40, 90, 200)}
+for r in rows:
+    x = x_of(r["wave"]); y = y_of(r["flux"]) if r["flux"] > 0.1 else y_of(0.1)
+    cc = col[r["epoch"]]
+    if r["flux"] <= 0.1: dr.line([(x, y - 4), (x, y + 4)], fill=cc)
+    elif r["sat"]: dr.ellipse([x - 3, y - 3, x + 3, y + 3], outline=cc)
+    else: dr.ellipse([x - 3, y - 3, x + 3, y + 3], fill=cc)
+for ep in (2, 3):
+    if (ep, True) in summary:
+        p, chi2, dof = summary[(ep, True)]
+        pts = []
+        for lam in np.geomspace(0.75, 5.0, 120):
+            f = math.exp(p[1]) * bnu(lam, p[0]) / bnu(4.6, p[0]) * 10 ** (-0.4 * p[2] * alam_over_ak(lam))
+            if f > 0.1: pts.append((x_of(lam), y_of(f)))
+        if len(pts) > 1: dr.line(pts, fill=col[ep], width=1)
+dr.text((ml + 10, 30), "grey: Aug-Sep 2025   red: Mar-Apr 2026   blue: Aug-Sep 2026   lines: reddened blackbody fits", fill=(30, 30, 30))
+im.save(D / "spectrum.png")
+print("saved spectrum.png")

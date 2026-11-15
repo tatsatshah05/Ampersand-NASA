@@ -1,0 +1,27 @@
+"""Deeper field lists over the cutout area (7 arcmin): 2MASS Ks<14 (VizieR CfA), Gaia DR3 G<17 (ESA TAP), CatWISE2020 w2mpro<13 (IRSA Gator)."""
+import sys, time, requests
+W = "docs/sweep/vetting/B/pixels"
+RA, DEC = 253.18044, -44.67687
+UA = {"User-Agent": "python-requests (astronomy data check)"}
+def get(url, params, tries=6):
+    for a in range(tries):
+        try:
+            r = requests.get(url, params=params, headers=UA, timeout=180)
+            if r.status_code == 200 and "QUERY_STATUS=ERROR" not in r.text and "#INFO\tError" not in r.text:
+                return r.text
+            print("bad answer", r.status_code, url, file=sys.stderr)
+        except Exception as e:
+            print(type(e).__name__, file=sys.stderr)
+        time.sleep(3 + 3 * a)
+    return None
+t = get("https://vizier.cfa.harvard.edu/viz-bin/asu-tsv", {"-source": "II/246/out", "-c": f"{RA} {DEC}", "-c.rs": "420",
+        "-out": "2MASS,RAJ2000,DEJ2000,Jmag,Hmag,Kmag,Qflg,Cflg", "Kmag": "<14", "-out.max": "20000", "-out.add": "_r"})
+open(f"{W}/downloads/viz_2mass_deep.tsv", "w").write(t or "NONE"); print("2MASS", None if t is None else t.count("\n"))
+q = (f"SELECT source_id, ra, dec, pmra, pmdec, parallax, phot_g_mean_mag, bp_rp, ruwe FROM gaiadr3.gaia_source "
+     f"WHERE 1=CONTAINS(POINT('ICRS',ra,dec), CIRCLE('ICRS',{RA},{DEC},{420/3600})) AND phot_g_mean_mag < 17")
+t = get("https://gea.esac.esa.int/tap-server/tap/sync", {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv", "QUERY": q})
+open(f"{W}/downloads/gaia_deep.csv", "w").write(t or "NONE"); print("Gaia", None if t is None else t.count("\n"))
+t = get("https://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query", {"catalog": "catwise_2020", "spatial": "cone", "radius": "420",
+        "radunits": "arcsec", "objstr": f"{RA} {DEC}", "outfmt": "1", "constraints": "w2mpro<13.5",
+        "selcols": "source_name,ra,dec,w1mpro,w2mpro,ab_flags"})
+open(f"{W}/downloads/gator_catwise_deep.tbl", "w").write(t or "NONE"); print("CatWISE", None if t is None else t.count("\n"))

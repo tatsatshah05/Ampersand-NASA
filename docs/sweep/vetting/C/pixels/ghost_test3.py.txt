@@ -1,0 +1,61 @@
+"""Roll-dependent excess at each faint-epoch exposure's own predicted ghost place: flux there (that exposure) minus the
+median flux at the same sky place in the Feb-Mar 2026 exposures (same detector), where the ghost hypothesis puts no ghost.
+Same for the candidate place, the other way round. Crops a 45 x 45 px box around each place for speed."""
+import glob, json, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+from measure import ap_sum, sky_level
+G = json.load(open("ghost_test.json")); POS = json.load(open("position.json"))
+R = {(r["obs_id"], r["det"]): r for r in json.load(open("measurements.json"))}
+cache = {}
+def load(p):
+    if p not in cache:
+        with fits.open(p) as h:
+            hd = h["IMAGE"].header; img = h["IMAGE"].data.astype(float); fl = h["FLAGS"].data.astype(np.int64)
+            var = h["VARIANCE"].data.astype(float); zod = h["ZODI"].data.astype(float)
+        data = img - zod
+        with np.errstate(invalid="ignore"): data[img < -10 * np.sqrt(var)] = np.nan
+        w = WCS(hd); cache[p] = (data, fl, w, float(proj_plane_pixel_area(w)) * (np.pi / 180) ** 2 * 1e9)
+    return cache[p]
+def flux_at(p, ra, de):
+    data, fl, w, to = load(p)
+    x, y = (float(t) for t in w.all_world2pix(ra, de, 0))
+    ny, nx = data.shape
+    if not (22 <= x < nx - 22 and 22 <= y < ny - 22): return None
+    xi, yi = int(round(x)), int(round(y))
+    sub = data[yi - 22:yi + 23, xi - 22:xi + 23]; sfl = fl[yi - 22:yi + 23, xi - 22:xi + 23]
+    sx, sy = x - (xi - 22), y - (yi - 22)
+    sky, _, _ = sky_level(sub, sfl, sx, sy, 14, 20)
+    if sky is None: return None
+    v, bits, nbad, _ = ap_sum(sub, sfl, sx, sy, sky, to)
+    return v if nbad == 0 else None
+files = {tuple(os.path.basename(p)[:-5].rsplit("_D", 1)): p for p in glob.glob(os.path.join(HERE, "downloads", "big", "*", "*.fits"))}
+def path(oid, d): return files[(oid, str(d))]
+names = {0: "Jul-Aug 2025", 3: "Jul-Sep 2026"}
+res = {}
+for d in (5, 6):
+    feb = [g for g in G if g["det"] == d and g["ep"] == 1]
+    for ep in (0, 3):
+        diffs = []
+        for g in [g for g in G if g["det"] == d and g["ep"] == ep]:
+            f = flux_at(path(g["obs_id"], d), g["ghost_ra"], g["ghost_dec"])
+            if f is None: continue
+            ref = [flux_at(path(h["obs_id"], d), g["ghost_ra"], g["ghost_dec"]) for h in feb]
+            ref = [r for r in ref if r is not None]
+            if len(ref) < 3: continue
+            diffs.append(f - float(np.median(ref)))
+        diffs = np.array(diffs)
+        res[f"D{d} {names[ep]}"] = diffs.tolist()
+        print(f"D{d} {names[ep]}: excess at the exposure's own predicted ghost place over the same sky place in Feb-Mar 2026: "
+              f"median {np.median(diffs):+6.1f} mJy, MAD {1.4826*np.median(np.abs(diffs-np.median(diffs))):5.1f}, n={len(diffs)}, range {diffs.min():+.1f}..{diffs.max():+.1f}")
+    # the candidate, for scale: Feb-Mar flux minus the faint-epoch median at the same sky place
+    fa = [flux_at(path(g["obs_id"], d), POS["ra"], POS["dec"]) for g in G if g["det"] == d and g["ep"] in (0, 3)]
+    fa = np.median([x for x in fa if x is not None])
+    fb = [flux_at(path(g["obs_id"], d), POS["ra"], POS["dec"]) for g in feb]
+    fb = np.array([x for x in fb if x is not None])
+    print(f"D{d} candidate place: Feb-Mar minus faint epochs median {np.median(fb) - fa:+6.1f} mJy (n={len(fb)})")
+json.dump(res, open("ghost_test3.json", "w"))
