@@ -1,5 +1,6 @@
 """Offline tests of the transit arithmetic. Arrays here are MADE UP (labelled as such) and only
 test arithmetic; no result in the project is built from them."""
+
 import numpy as np
 from astropy.time import Time
 
@@ -10,10 +11,10 @@ def test_trapezoid_values():
     t14, k = 3.79, 0.1109
     t23 = t14 * (1 - k) / (1 + k)
     assert T.trapezoid(0.0, t14, k) == 1.0
-    assert T.trapezoid(t14 / 48, t14, k) == 0.0             # exactly at first contact
+    assert T.trapezoid(t14 / 48, t14, k) == 0.0  # exactly at first contact
     assert T.trapezoid(-t14 / 48, t14, k) == 0.0
-    assert T.trapezoid(t23 / 48, t14, k) == 1.0             # exactly at the start of the flat part
-    mid = (t14 + t23) / 4                                   # half-way up the ingress, in hours
+    assert T.trapezoid(t23 / 48, t14, k) == 1.0  # exactly at the start of the flat part
+    mid = (t14 + t23) / 4  # half-way up the ingress, in hours
     assert abs(T.trapezoid(mid / 24, t14, k) - 0.5) < 1e-12
     assert T.trapezoid(1.0, t14, k) == 0.0
 
@@ -31,8 +32,8 @@ def test_bjd_matches_astropy_reference():
 
 
 def test_template_of_constant_spectrum_is_one():
-    wl = np.linspace(3.8, 4.4, 80)                           # made-up wavelengths
-    flux = np.full(80, 57.0)                                 # made-up constant flux
+    wl = np.linspace(3.8, 4.4, 80)  # made-up wavelengths
+    flux = np.full(80, 57.0)  # made-up constant flux
     use = np.ones(80, bool)
     rel = T.template_divide(wl, flux, use)
     assert np.all(rel == 1.0)
@@ -41,19 +42,24 @@ def test_template_of_constant_spectrum_is_one():
 def test_template_never_uses_the_reading_itself():
     wl = np.linspace(3.8, 4.4, 40)
     flux = np.full(40, 10.0)
-    flux[20] = 1000.0                                        # one made-up spike
+    flux[20] = 1000.0  # one made-up spike
     rel = T.template_divide(wl, flux, np.ones(40, bool))
-    assert rel[20] == 100.0                                  # its own value does not enter its template
+    assert rel[20] == 100.0  # its own value does not enter its template
 
 
 def test_fit_recovers_labelled_synthetic_depth():
     n = 400
-    rng = np.random.default_rng(0)                           # made-up positions and shape
-    cols = {"X": rng.uniform(0, 1000, n), "Y": rng.uniform(0, 1000, n), "fx": rng.uniform(0, 1, n), "fy": rng.uniform(0, 1, n)}
+    rng = np.random.default_rng(0)  # made-up positions and shape
+    cols = {
+        "X": rng.uniform(0, 1000, n),
+        "Y": rng.uniform(0, 1000, n),
+        "fx": rng.uniform(0, 1, n),
+        "fy": rng.uniform(0, 1, n),
+    }
     shape = np.zeros(n)
     shape[:60] = 1.0
     shape[60:80] = 0.5
-    rel = 1.0 - 0.01 * shape                                  # noise-free, labelled synthetic depth 0.01
+    rel = 1.0 - 0.01 * shape  # noise-free, labelled synthetic depth 0.01
     depth, err, resid = T.fit_depth(rel, T.design(cols, shape), 0.01)
     assert abs(depth - 0.01) < 1e-9
     assert np.max(np.abs(resid)) < 1e-9
@@ -87,9 +93,19 @@ def test_analyse_detector_on_pure_noise_has_no_depth_beyond_errors():
     # made-up noise-only readings of a flat star: arithmetic check that the pipeline returns ~0, not a real result
     rng = np.random.default_rng(3)
     n = 600
-    c = {"bjd": 2460800 + np.sort(rng.uniform(0, 300, n)), "det": np.full(n, 5), "flux": 50 * (1 + 0.01 * rng.standard_normal(n)),
-         "err": np.full(n, 0.4), "wl": rng.uniform(3.8, 4.4, n), "X": rng.uniform(-900, -800, n), "Y": rng.uniform(-600, -500, n),
-         "fx": rng.uniform(0, 1, n), "fy": rng.uniform(0, 1, n), "ovf": np.zeros(n, int), "ok": np.ones(n, bool)}
+    c = {
+        "bjd": 2460800 + np.sort(rng.uniform(0, 300, n)),
+        "det": np.full(n, 5),
+        "flux": 50 * (1 + 0.01 * rng.standard_normal(n)),
+        "err": np.full(n, 0.4),
+        "wl": rng.uniform(3.8, 4.4, n),
+        "X": rng.uniform(-900, -800, n),
+        "Y": rng.uniform(-600, -500, n),
+        "fx": rng.uniform(0, 1, n),
+        "fy": rng.uniform(0, 1, n),
+        "ovf": np.zeros(n, int),
+        "ok": np.ones(n, bool),
+    }
     r = T.analyse_detector(c, 4.4119, 2460800.3, 3.79, 0.11, extras=False)
     assert r["status"] == "ok"
     assert abs(r["depth"]) < 4 * r["formal_err"]
