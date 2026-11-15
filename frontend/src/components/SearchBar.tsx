@@ -7,6 +7,7 @@
 // line under the box says what was found. The box sits in the page's top bar and the
 // buttons in the row under it; useSkySearch holds what both share.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { FINDS, findTarget, type Find } from '../finds'
 import { releaseFocusAfterPointer } from '../focus'
 import {
   COORD_EXAMPLES,
@@ -207,6 +208,7 @@ export interface SearchState {
   submit: () => void
   pickPreset: (preset: Preset) => void
   pickLook: (look: OwnLook) => void
+  pickFind: (find: Find) => void
 }
 
 /**
@@ -341,13 +343,24 @@ function useSkySearch(onSelect: OnSelect): SearchState {
       setStatus({ kind: 'idle' })
       onSelectNow.current({ ra: look.ra, dec: look.dec, name: look.name, det: look.det }, look.name)
     },
+    pickFind: (find) => {
+      begin()
+      setText(find.name)
+      setStatus({ kind: 'idle' })
+      onSelectNow.current(findTarget(find), find.name)
+    },
   }
 }
 
 /** The target button for a target shown under `name` (the catalogue's or the button's), if one is. */
 function targetNamed(name: string | null): string | null {
   if (!name) return null
-  return presetNamed(name)?.name ?? OWN_LOOKS.find((look) => sameName(look.name, name))?.name ?? null
+  return (
+    FINDS.find((find) => sameName(find.name, name))?.name ??
+    presetNamed(name)?.name ??
+    OWN_LOOKS.find((look) => sameName(look.name, name))?.name ??
+    null
+  )
 }
 
 /**
@@ -430,7 +443,9 @@ export function SearchField({ search }: { search: SearchState }) {
 }
 
 /**
- * The challenge's five test targets, then what this project turned the tool on itself.
+ * The three candidates our own search found (finds.ts), then the challenge's five test targets,
+ * then what this project turned the tool on itself. A candidate's button carries the referee's
+ * one allowed sentence as its description.
  * The button whose target is on screen is marked: `picked` is the button that was pressed
  * for it, when one was; otherwise the one named `shown` (the name the target is shown under).
  */
@@ -454,6 +469,10 @@ export function TargetButtons({ search, picked, shown }: { search: SearchState; 
   )
   return (
     <div className="target-list">
+      <div className="target-group" role="group" aria-label="Candidates our search found">
+        {FINDS.map((find) => button(find.name, find.allowed, find.name, () => search.pickFind(find)))}
+      </div>
+      <span className="target-divider" aria-hidden="true" />
       <div className="target-group" role="group" aria-label="The challenge's test targets">
         {PRESETS.map((preset) => button(preset.name, preset.about, preset.name, () => search.pickPreset(preset)))}
       </div>

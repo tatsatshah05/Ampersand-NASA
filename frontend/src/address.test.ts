@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { addressOf, chooseUiLevel, DEFAULT_SELECTION, readAddress, readStoredLevel, storeLevel } from './address'
+import { addressOf, chooseUiLevel, DEFAULT_SELECTION, LANDING, readAddress, readStoredLevel, storeLevel, withTarget } from './address'
 import { realSkyAddress, trainingAddress } from './training'
 
 describe('ui in the page address', () => {
@@ -87,6 +87,31 @@ describe('remembering the choice', () => {
     })
     expect(readStoredLevel()).toBeNull()
     expect(() => storeLevel('expert')).not.toThrow()
+  })
+})
+
+describe('what the page opens on', () => {
+  it('an address with no position opens on Candidate B, held still at its corrected place, in detector 6', () => {
+    const { selection, notes } = readAddress('')
+    expect(selection).toEqual(LANDING)
+    expect([selection.name, selection.ra, selection.dec, selection.pmra, selection.pmdec, selection.det]).toEqual(['Candidate B', 253.18038, -44.67697, 0, 0, 6])
+    expect(notes).toEqual([])
+    expect(readAddress('?ui=expert').selection.name).toBe('Candidate B')
+    // Its address reads back as the same view, in Beginner.
+    expect(readAddress(addressOf(LANDING)).selection).toEqual(LANDING)
+  })
+  it('Barnard’s Star stays the example: an unusable position, and a practice round with none, still show it', () => {
+    expect(readAddress('?ra=abc&dec=5').selection.name).toBe("Barnard's Star")
+    expect(readAddress('?train=7&level=easy').selection.ra).toBe(DEFAULT_SELECTION.ra)
+    expect(DEFAULT_SELECTION.det).toBe(5)
+  })
+  it('leaving a candidate in its own detector, a star that suggests none goes back to detector 5', () => {
+    const barnard = { ra: 269.446267, dec: 4.768222, name: "Barnard's Star" }
+    expect(withTarget(LANDING, barnard, 6)?.det).toBe(5)
+    // A detector the visitor chose for themselves on the candidate is kept.
+    expect(withTarget({ ...LANDING, det: 3 }, barnard, 3)?.det).toBe(3)
+    // Anywhere else the usual detector applies, as before.
+    expect(withTarget(DEFAULT_SELECTION, barnard, 6)?.det).toBe(6)
   })
 })
 

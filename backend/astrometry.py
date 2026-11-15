@@ -17,6 +17,14 @@ from astropy.time import Time
 from .spherex import CACHE, ArchiveError, http_get, write_json
 
 GAIA_TAP = "https://gea.esac.esa.int/tap-server/tap/sync"
+# The same Gaia DR3 table (VizieR I/355/gaiadr3) at CfA's copy of VizieR, asked for a cone when
+# ESA's archive does not answer: on 2026-11-15 gea.esac.esa.int took no connections at all. For
+# four cached cones (Barnard's Star, V462 Lup, V572 Vel, Serpens South; 1,850 stars) the copy
+# gave the same stars at the same places (to 2e-8 arcsec, with motions to 0.0005 mas/yr, where
+# compared). RA_ICRS and DE_ICRS are Gaia's own epoch-2016.0 positions, as `ra` and `dec` are
+# in the archive.
+GAIA_COPY = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"
+GAIA_COPY_COLUMNS = ("Source", "RA_ICRS", "DE_ICRS", "pmRA", "pmDE", "Plx", "Gmag")
 GAIA_EPOCH = 2016.0  # reference epoch of Gaia DR3 positions (Julian year)
 # SIMBAD's TAP service. The CfA mirror is first because the Strasbourg original was
 # answering every request with HTTP 404 "Page unavailable" on 2026-11-14.
@@ -56,11 +64,45 @@ def gaia_cone(ra: float, dec: float, radius_deg: float, g_limit: float = 17.0, *
         "FROM gaiadr3.gaia_source WHERE 1=CONTAINS(POINT('ICRS', ra, dec), "
         f"CIRCLE('ICRS', {ra}, {dec}, {radius_deg})) AND phot_g_mean_mag < {g_limit} "
         "ORDER BY phot_g_mean_mag")
-    raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query},
-                   tries=tries, timeout=timeout)
-    sources = _gaia_rows(raw)
+    try:
+        # A few tries only: the copy below holds the same table, so waiting out ten long
+        # timeouts on an archive that takes no connections helps nobody.
+        raw = http_get(GAIA_TAP, {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": query},
+                       tries=min(tries, 3), timeout=min(timeout, 30))
+        sources = _gaia_rows(raw)
+    except ArchiveError as archive_error:
+        try:
+            raw = http_get(GAIA_COPY, {"-source": "I/355/gaiadr3", "-c": f"{ra} {dec}", "-c.rd": f"{radius_deg}",
+                                       "-out": ",".join(GAIA_COPY_COLUMNS), "Gmag": f"<{g_limit}",
+                                       "-out.max": "unlimited", "-sort": "Gmag"},
+                           tries=tries, timeout=timeout)
+        except ArchiveError as copy_error:
+            raise ArchiveError(f"Gaia did not answer ({archive_error}; its CfA copy: {copy_error})") from copy_error
+        sources = _gaia_copy_rows(raw)
     write_json(cache_file, sources)
     return sources
+
+
+def _gaia_copy_rows(raw: bytes) -> list[dict]:
+    """The CfA VizieR copy's tab-separated answer as _gaia_rows gives the archive's, brightest first.
+
+    Lines starting with '#' are comments; the column names, units and dashes lines that
+    follow do not start with a source identifier, so only rows that do are kept. An
+    empty cell (a star with no motion) is None.
+    """
+    def number(text: str) -> float | None:
+        text = text.strip()
+        return float(text) if text else None
+
+    out = []
+    for line in raw.decode("utf-8", "replace").splitlines():
+        cells = line.split("\t")
+        if line.startswith("#") or len(cells) < len(GAIA_COPY_COLUMNS) or not cells[0].strip().isdigit():
+            continue
+        source, ra, dec, pmra, pmdec, plx, gmag = cells[:len(GAIA_COPY_COLUMNS)]
+        out.append({"source_id": source.strip(), "ra": float(ra), "dec": float(dec), "pmra": number(pmra),
+                    "pmdec": number(pmdec), "parallax": number(plx), "gmag": number(gmag)})
+    return sorted(out, key=lambda s: s["gmag"] if s["gmag"] is not None else 99.0)
 
 
 def _gaia_rows(raw: bytes) -> list[dict]:

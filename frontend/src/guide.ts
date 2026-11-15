@@ -94,7 +94,7 @@ const allFrames = (data: FramesReady): Pick<Frame, 'date_start' | 'date_end' | '
 /** The three steps and what "go further" means. */
 export function stepsInfo(): string[] {
   return [
-    'This page shows how one patch of sky changed between SPHEREx’s visits. The first five buttons are well-known objects, used as tests. Nothing here is a new find.',
+    'This page shows how one patch of sky changed between SPHEREx’s visits. The first three buttons are candidates our own search found: nobody has confirmed them yet. The next five are well-known objects, used as tests.',
     'Practise adds a made-up moving object to real photos, and you try to find it. Vote lists what our computer search found, and you say if it looks real. None of those finds is confirmed.',
     'Expert adds more tools for a closer look.',
   ]
