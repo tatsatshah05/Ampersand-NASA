@@ -954,3 +954,10 @@ Distant-world search (2026-11-14, `scripts/check_distant.py`, `docs/distant.md`,
   "hard" are usually below what the search accepts.
 - `address.ts` accepts a parallax up to 3,000,000 mas (it was 10,000) so that a view can follow
   a body a few hundred AU away.
+
+Colour of change (2026-11-14, `backend/colour.py`, `scripts/colour_of_change.py`, `docs/colour-of-change.md`, `docs/colour/`)
+- Each of the 111 watchlist changers (needs eyes and already known) was measured in every exposure from cutouts on disk, and for every pair of visits the ratio later / earlier made only between the SAME wavelength channel in both visits, after removing the field's own visit-to-visit calibration (a line late = f x early + b from 147 steady control stars; 275 field-pair-detector groups) and scaling errors by 1.08 (the steady stars' scatter).
+- Class of the largest change, shapes grey / dust (Wang and Chen 2024, alpha 1.98 +- 0.15) / warm 250-1500 K / hot 2500-10000 K: grey 7, dust 1, warm 26, hot 4, none of these 67, too small 2, too narrow 4, cannot tell 0. A class describes the colours, not a cause. Steady stars: 74 of 80 held-out ones come out "no change" (6.3 sigma bar); smallest colour difference seen: the change at 5 micrometres must differ from that at 1 by about 24 per cent (bright) to 35 per cent (faint).
+- Known objects agree: RW Aurigae D1 1.65, D5 0.52, D6 0.56 (search 1.66, 0.52, 0.54); Serpens South star 5.6 at 3.8-4.4 and 4.2 at 4.4-5.0 micrometres; V462 Lup and V7994 Sgr fade 3 to 4 times more at 4-5 than at 1-2.4 micrometres; HH 17 grey, 0.864 +- 0.007.
+- Ice-band depth changes between the same channels: 17 of 475 measurements exceed 5 times the real error, but steady stars give 6 of 222 (2.7 per cent), so about 13 are expected by chance and no ice change is claimed. Depths themselves are not trustworthy (steady stars: median CO2 depth 0.18).
+- Principal components of the change spectra (75 objects, 10 wavelength bands): two kinds dominate (46 and 35 per cent), a third is 10 per cent; one outlier (V371 Ser).

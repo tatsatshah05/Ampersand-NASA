@@ -187,7 +187,7 @@ def use_s3() -> bool:
     return os.environ.get("SPHEREX_USE_S3", "1") != "0"
 
 
-def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
+def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float, path: Path | None = None) -> Path:
     """Get one cutout (if not cached) and store a slimmed copy.
 
     Two routes give the same file, byte for byte (`scripts/check_s3.py` proves it):
@@ -201,8 +201,11 @@ def fetch_cutout(exp: dict, ra: float, dec: float, size_deg: float) -> Path:
     The cached copy keeps IMAGE, FLAGS, VARIANCE and ZODI, and replaces the WCS-WAVE
     lookup table with two per-pixel images, WAVE and BANDWIDTH (microns). About 260 kB
     at 0.15 deg.
+
+    `path` puts the file somewhere else than the shared cutout folder (a feature that keeps
+    its own cutouts apart, such as `backend/follow.py`).
     """
-    path = _cutout_path(exp, ra, dec, size_deg)
+    path = path or _cutout_path(exp, ra, dec, size_deg)
     if path.exists():
         return path
     if use_s3():
