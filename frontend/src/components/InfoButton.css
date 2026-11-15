@@ -1,0 +1,84 @@
+/* The small "i" buttons and what they open. Quiet on purpose: muted until hovered or
+   focused, and never amber (amber means "measured" and "the chosen one"). */
+
+.info-button {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--size-small);
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.info-button:hover:not(:disabled),
+.info-button:focus-visible,
+.info-button[aria-expanded='true'] {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+/* Inside a line of text: a little air before it. */
+.motion-readout .info-button,
+.detection .info-button,
+.bright-star .info-button {
+  margin-left: 8px;
+  margin-top: -2px;
+}
+
+/* On a finger-sized screen the button is finger-sized too. */
+@media (pointer: coarse) {
+  .info-button {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* The picture's own, in its corner (where the "?" is in Expert). */
+.plate-info {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: rgb(19 20 23 / 0.85);
+}
+
+/* Fixed to the window and placed from the button's rectangle (InfoButton.tsx), so it is
+   never clipped by a scrolling box and never moves the page. */
+.info-popover {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--size-body);
+  line-height: 1.5;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.6);
+}
+
+.info-popover[hidden] {
+  display: none;
+}
+
+.info-popover p {
+  margin: 0 0 8px;
+}
+
+.info-popover p:last-child {
+  margin-bottom: 0;
+}

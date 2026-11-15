@@ -1,6 +1,7 @@
 // The Beginner / Expert switch, and the few plain sentences Beginner shows about the picture.
 import type { UiLevel } from '../address'
 import { releaseFocusAfterPointer } from '../focus'
+import { GO_FURTHER, guideSteps, stepName, type Progress } from '../guide'
 
 export const EXPERT_ADDS =
   'Expert adds the six detectors, difference and sum views, overlays, spectra, brightness charts, the search of a patch, asteroid labels and the search for a distant world (Planet X).'
@@ -33,14 +34,25 @@ export function LevelSwitch({ level, onChange }: { level: UiLevel; onChange: (le
   )
 }
 
-export function BeginnerGuide() {
+/**
+ * Beginner's guide: three steps and a line on where to go next. The step the visitor is on
+ * is marked by the hairline and the text colour only, inside badges of one fixed size, so
+ * nothing moves when a step is done. It is a list, not a set of buttons: it never gets in the way.
+ */
+export function StepGuide({ progress }: { progress: Progress }) {
   return (
-    <section className="guide" aria-labelledby="guide-title">
-      <h2 id="guide-title">What am I looking at?</h2>
-      <p>
-        Real infrared pictures of this patch of sky from NASA's SPHEREx telescope, months apart. Stars stay put, so
-        anything that moves or changes brightness is worth a look. Press Play or Blink to compare.
-      </p>
+    <section className="guide" aria-label="Where to start">
+      <ol className="guide-steps">
+        {guideSteps(progress).map((step) => (
+          <li key={step.n} data-state={step.state} aria-current={step.state === 'now' ? 'step' : undefined}>
+            <span className="guide-n" role="img" aria-label={stepName(step)}>
+              {step.n}
+            </span>
+            {step.label}
+          </li>
+        ))}
+      </ol>
+      <p className="guide-further">{GO_FURTHER}</p>
     </section>
   )
 }

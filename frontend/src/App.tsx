@@ -19,7 +19,8 @@ import { DetectionReadout } from './components/DetectionReadout'
 import { isMarginal } from './detection'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
-import { BeginnerGuide, EXPERT_ADDS, LevelSwitch } from './components/LevelSwitch'
+import { InfoButton } from './components/InfoButton'
+import { LevelSwitch, StepGuide } from './components/LevelSwitch'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
 import { SearchField, SkySearch, TargetButtons, type SearchTarget } from './components/SearchBar'
 import { DistantMarkers, DistantPanel } from './components/DistantPanel'
@@ -34,6 +35,7 @@ import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
 import { PlateLoading, PlateMessage } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
+import { infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
 import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
 import type { Candidate } from './distant'
@@ -111,6 +113,34 @@ export function Viewer() {
   const player = usePlayer(data?.key ?? '', data?.frames.length ?? 0)
   const frame = data?.frames[player.current] ?? null
 
+  // Beginner's step guide: what the visitor has actually done. The player starts playing by
+  // itself, so only a press of theirs counts as flipping through the visits.
+  const [progress, setProgress] = useState<Progress>(NO_PROGRESS)
+  const mark = useCallback((what: keyof Progress) => setProgress((was) => (was[what] ? was : { ...was, [what]: true })), [])
+  const { togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
+  const togglePlay = useCallback(() => {
+    playerTogglePlay()
+    mark('flipped')
+  }, [playerTogglePlay, mark])
+  const toggleBlink = useCallback(() => {
+    playerToggleBlink()
+    mark('flipped')
+  }, [playerToggleBlink, mark])
+  const step = useCallback(
+    (by: number) => {
+      playerStep(by)
+      mark('flipped')
+    },
+    [playerStep, mark],
+  )
+  const showVisit = useCallback(
+    (index: number) => {
+      playerShow(index)
+      mark('flipped')
+    },
+    [playerShow, mark],
+  )
+
   // ---- the page address -------------------------------------------------------------------
 
   const latest = useRef(selection)
@@ -151,10 +181,11 @@ export function Viewer() {
       const next = withTarget(latest.current, target, usualDetector.current)
       if (next) {
         show(next, 'push')
+        mark('chose')
         setPicked(button ? { name: button, ra: next.ra, dec: next.dec } : null)
       } else setNotes(['That position could not be used: a declination has to be between -90 and 90 degrees.'])
     },
-    [show],
+    [show, mark],
   )
   const pickedHere = picked && picked.ra === selection.ra && picked.dec === selection.dec ? picked.name : null
   // The name to show: the target button's own ("Epsilon Indi B") when one was pressed for this, else the catalogue's.
@@ -203,8 +234,10 @@ export function Viewer() {
 
   // ---- keyboard: the space bar plays and pauses, the arrow keys step ---------------------
 
-  const { togglePlay, step } = player
   const severalFrames = (data?.frames.length ?? 0) > 1 && !busy
+  // Reaching the last visit, after flipping through them, counts as having read the changes.
+  const atLast = severalFrames && player.current === (data?.frames.length ?? 0) - 1
+  if (atLast && progress.flipped && !progress.read) setProgress({ ...progress, read: true })
   useEffect(() => {
     if (!severalFrames) return
     const onKey = (e: KeyboardEvent) => {
@@ -333,6 +366,18 @@ export function Viewer() {
 
   const visits: Visit[] = data ? data.frames.map((f) => ({ src: f.image, label: frameLabel(f, data), ...visitCaption(f, data) })) : []
 
+  // Beginner's small "i" buttons: what exactly is going on, in words computed from what is on screen (guide.ts). None in Expert.
+  const infoButton = (key: InfoKey, className?: string, id?: string) =>
+    !expert && (
+      <InfoButton
+        name={INFO_NAMES[key]}
+        text={infoFor(key, data, frame, starsData?.bright_nearby)}
+        className={className}
+        id={id}
+        onOpen={() => mark('read')}
+      />
+    )
+
   return (
     <div className="app">
       <div className="shell" ref={shell}>
@@ -344,6 +389,7 @@ export function Viewer() {
                 <h1 className="brand">SPHEREx sky-change viewer</h1>
                 <SearchField search={skySearch} />
                 <LevelSwitch level={selection.ui} onChange={changeLevel} />
+                {infoButton('level')}
               </header>
 
               <nav className="targets" aria-label="Targets">
@@ -444,7 +490,8 @@ export function Viewer() {
                     </button>
                   </PlateMessage>
                 )}
-                <PlateHelp expert={expert} />
+                {/* Expert keeps the "?" with how to work the picture; Beginner has the "i", which also tells how the picture was made. */}
+                {expert ? <PlateHelp expert /> : infoButton('picture', 'plate-info', PICTURE_INFO_ID)}
               </div>
 
               <Transport
@@ -452,12 +499,20 @@ export function Viewer() {
                 disabled={busy}
                 playback={player.playback}
                 speedMs={player.speedMs}
-                onTogglePlay={player.togglePlay}
-                onToggleBlink={player.toggleBlink}
-                onStep={player.step}
+                onTogglePlay={togglePlay}
+                onToggleBlink={toggleBlink}
+                onStep={step}
                 onSpeed={player.setSpeedMs}
+                info={infoButton('player')}
               />
-              <VisitStrip visits={visits} current={player.current} disabled={busy} onShow={player.show} />
+              {expert ? (
+                <VisitStrip visits={visits} current={player.current} disabled={busy} onShow={showVisit} />
+              ) : (
+                <div className="strip-row">
+                  <VisitStrip visits={visits} current={player.current} disabled={busy} onShow={showVisit} />
+                  {infoButton('visits')}
+                </div>
+              )}
             </div>
           </section>
 
@@ -499,13 +554,21 @@ export function Viewer() {
                     {player.playback === 'blinking' && <span className="tag">{player.current === 0 ? 'First' : 'Last'}</span>}
                     {frameLabel(frame, data)}
                   </p>
-                  <p className="motion-readout">{motionSentence(frame, data)}</p>
-                  <DetectionReadout frame={frame} detectionOnly={!expert} />
+                  <p className="motion-readout">
+                    {motionSentence(frame, data)}
+                    {infoButton('movement')}
+                  </p>
+                  <DetectionReadout frame={frame} detectionOnly={!expert} info={infoButton('detection')} />
                 </div>
               )}
               {expert && saturation && <p className="notice">{saturation}</p>}
               {/* Shown at both levels and whether or not the overlay is on: it warns about shapes in the picture itself. */}
-              {starsData?.bright_note && <p className="hint bright-star">{starsData.bright_note}</p>}
+              {starsData?.bright_note && (
+                <p className="hint bright-star">
+                  {starsData.bright_note}
+                  {infoButton('bright')}
+                </p>
+              )}
             </div>
 
             {expert ? (
@@ -686,10 +749,7 @@ export function Viewer() {
                 </details>
               </>
             ) : (
-              <>
-                <BeginnerGuide />
-                <p className="expert-adds">{EXPERT_ADDS}</p>
-              </>
+              <StepGuide progress={progress} />
             )}
 
             <footer className="credits">

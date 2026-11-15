@@ -3,7 +3,7 @@
 // blink comparator's rack. Both keep their size whatever is loaded, so nothing around
 // them moves; while a view loads they stay in place with their buttons switched off.
 // (The practice screen keeps the older PlayerControls, with its slider.)
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { releaseFocusAfterPointer } from '../focus'
 import { SPEEDS, type Playback } from '../usePlayer'
 
@@ -18,9 +18,11 @@ interface TransportProps {
   onToggleBlink: () => void
   onStep: (by: number) => void
   onSpeed: (ms: number) => void
+  /** A small button at the end of the row (Beginner's "i"). */
+  info?: ReactNode
 }
 
-export function Transport({ several, disabled, playback, speedMs, onTogglePlay, onToggleBlink, onStep, onSpeed }: TransportProps) {
+export function Transport({ several, disabled, playback, speedMs, onTogglePlay, onToggleBlink, onStep, onSpeed, info }: TransportProps) {
   const off = disabled || !several
   const moving = playback !== 'paused' && several
   return (
@@ -103,6 +105,7 @@ export function Transport({ several, disabled, playback, speedMs, onTogglePlay, 
           ))}
         </select>
       </label>
+      {info}
     </div>
   )
 }

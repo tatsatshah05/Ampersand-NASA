@@ -121,7 +121,7 @@ describe('the page while a view loads', () => {
     // Play, or Pause when the player was playing: either way it is there and cannot be pressed.
     expect(html).toMatch(/class="play-button"[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*(Play|Pause)<\/button>/)
     const strip = html.slice(html.indexOf('class="visit-strip"'), html.indexOf('</aside>'))
-    expect(strip.split('<button').length - 1).toBe(3)
+    expect(strip.match(/class="visit"/g)).toHaveLength(3)
     expect(html).toMatch(/class="visit"[^>]*disabled=""/)
     expect(html).toContain('class="readout-block busy"')
     expect(html).toContain('Visit 1: 2025-01-10 to 2025-01-12, 4 exposures')
@@ -162,6 +162,18 @@ describe('the page with a view loaded', () => {
     const block = html.slice(html.indexOf('class="readout-block'))
     expect(block).toContain('Visit 1: 2025-01-10 to 2025-01-12, 4 exposures')
     expect(block).toContain('This is where it started. Later frames are measured against it.')
+  })
+
+  it('Beginner has an i button on the movement and the detection lines, and the stage is described by the picture\'s', () => {
+    const html = pageWith({ state: 'ready', data: view('new') })
+    const block = html.slice(html.indexOf('class="readout-block'))
+    expect(block).toContain('aria-label="About the movement line"')
+    expect(html).toContain('aria-describedby="stage-help"')
+    expect(html).toContain('aria-controls="stage-help"')
+    expect(html).toContain('aria-label="About this picture"')
+    // The strip of visits and the player have theirs, and Expert has none of them.
+    expect(html).toContain('class="strip-row"')
+    expect(pageWith({ state: 'ready', data: view('new') }, '?ui=expert')).not.toContain('info-button')
   })
 
   it('Expert has the same readout block, with the tools under it', () => {

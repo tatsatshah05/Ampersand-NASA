@@ -683,28 +683,78 @@
   font-size: var(--size-small);
 }
 
-/* Beginner: a few plain sentences, then what Expert adds. */
+/* Beginner: where to start. Three steps and a line on where to go next. The step the
+   visitor is on is told by the badge's hairline and the text colour, never by size or
+   weight, and every badge is the same size, so nothing moves when a step is done. */
 .guide {
   margin-top: 4px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
 }
 
-.guide h2 {
-  margin: 0 0 6px;
-  font-size: var(--size-body);
-  font-weight: 700;
+.guide-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
 }
 
-.guide p {
-  margin: 0;
+.guide-steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 24px;
+  color: var(--muted);
+}
+
+.guide-n {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: var(--size-small);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.guide-steps li[data-state='now'] {
   color: var(--text);
 }
 
-.expert-adds {
-  margin: 12px 0 0;
+.guide-steps li[data-state='now'] .guide-n {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.guide-steps li[data-state='done'] .guide-n {
+  border-color: var(--line-strong);
+  background: var(--surface-press);
+}
+
+.guide-further {
+  margin: 14px 0 0;
   font-size: var(--size-small);
   color: var(--muted);
+}
+
+/* Under the player: the strip of visits, and the small button that explains it. */
+.strip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.strip-row .visit-strip {
+  flex: 1 1 auto;
+}
+
+.strip-row .info-button {
+  margin-top: 15px;
 }
 
 /* Expert: sections under hairlines. */

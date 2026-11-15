@@ -2,7 +2,8 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Viewer } from '../App'
-import { BeginnerGuide, EXPERT_ADDS, LevelSwitch } from './LevelSwitch'
+import { GO_FURTHER, INFO_NAMES, levelInfo, NO_PROGRESS } from '../guide'
+import { EXPERT_ADDS, LevelSwitch, StepGuide } from './LevelSwitch'
 
 const viewerAt = (search: string) => {
   vi.stubGlobal('window', { location: { search }, localStorage: { getItem: () => null, setItem: () => undefined } })
@@ -25,7 +26,7 @@ describe('the page at each level', () => {
     const html = viewerAt('')
     expect(html).toContain('Practise: find a planted object')
     expect(html).toContain('Help check what the search found')
-    expect(html).toContain('What am I looking at?')
+    expect(html).toContain('class="guide-steps"')
     expect(html).not.toContain('class="selectors"')
     expect(html).not.toContain('Difference (what changed)')
     expect(html).not.toContain('Field of view')
@@ -41,12 +42,40 @@ describe('the page at each level', () => {
     expect(viewerAt('?ra=133.759765&dec=-7.242182&det=6&mode=difference')).toContain('class="selectors"')
   })
   it('the beginner guide uses no expert words', () => {
-    expect(renderToStaticMarkup(<BeginnerGuide />)).not.toMatch(/detector|epoch|flux/i)
+    expect(renderToStaticMarkup(<StepGuide progress={NO_PROGRESS} />)).not.toMatch(/detector|epoch|flux|sigma|centroid/i)
   })
-  it('Beginner names what Expert adds, the search for a distant world among it', () => {
+  it('Beginner points to Practise, helping check and Expert in the guide, and says what Expert adds in the switch', () => {
     const html = viewerAt('')
-    expect(html).toContain(`class="expert-adds">${EXPERT_ADDS.replace(/'/g, '&#x27;')}<`)
+    expect(html).toContain(`class="guide-further">${GO_FURTHER}<`)
+    expect(html).toContain('aria-label="About Beginner and Expert"')
+    expect(levelInfo().join(' ')).toContain('a search for a distant world (Planet X)')
+    // Expert's own tooltip on the switch is unchanged.
     expect(EXPERT_ADDS).toContain('the search for a distant world (Planet X)')
+  })
+  it('Beginner no longer has the old "What am I looking at?" paragraph or the line under it', () => {
+    const html = viewerAt('')
+    expect(html).not.toContain('What am I looking at?')
+    expect(html).not.toContain('class="expert-adds"')
+  })
+  it('Beginner has the steps; Expert has neither the steps nor any i button', () => {
+    const beginner = viewerAt('')
+    expect(beginner).toContain('class="guide-steps"')
+    expect(beginner).toContain('Choose a star above')
+    expect(beginner).toContain('Flip through the visits')
+    expect(beginner).toContain('Read what changed')
+    const expert = viewerAt('?ui=expert')
+    expect(expert).not.toContain('class="guide')
+    expect(expert).not.toContain('info-button')
+  })
+  it('Beginner has an i button for the picture, the visits, Play and Blink, and the switch, each with a name', () => {
+    const html = viewerAt('')
+    for (const name of [INFO_NAMES.picture, INFO_NAMES.visits, INFO_NAMES.player, INFO_NAMES.level]) {
+      expect(html).toMatch(new RegExp(`class="info-button[^"]*"[^>]*aria-label="${name}"[^>]*aria-expanded="false"[^>]*aria-controls="`))
+    }
+  })
+  it('Expert keeps its "?" for how to work the picture', () => {
+    expect(viewerAt('?ui=expert')).toContain('aria-label="How to move and zoom the picture"')
+    expect(viewerAt('')).not.toContain('aria-label="How to move and zoom the picture"')
   })
 })
 

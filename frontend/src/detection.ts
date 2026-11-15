@@ -7,7 +7,7 @@ import type { Measured, StarsInCircle } from './spectrum'
 import { listVisits } from './wording'
 
 /** A number of times the background scatter: one decimal under 10, whole above. */
-const times = (n: number) => (n < 10 ? n.toFixed(1) : n >= 1000 ? 'over 1000' : String(Math.round(n)))
+export const times = (n: number) => (n < 10 ? n.toFixed(1) : n >= 1000 ? 'over 1000' : String(Math.round(n)))
 
 /** One line on how strongly the target is detected in this frame; null when the response does not say. */
 export function detectionSentence(frame: Frame): string | null {
