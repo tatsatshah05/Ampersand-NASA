@@ -5,6 +5,7 @@ Run:  .venv/bin/python scripts/comets_table.py [DIR]       (DIR defaults to docs
 One row per body: how many exposures contain it, how many gave a usable measurement, and for each gas band the
 best visit (the one with the largest excess over its error) in the large circle, with the verdict.
 """
+
 from __future__ import annotations
 
 import json
@@ -29,10 +30,19 @@ def best_visit(res: dict, band: str, key: str = "bands_large") -> str:
     )
 
 
+def nights(res: dict, band: str) -> str:
+    """The nights on which a window of the per-sequence scan on this band reached 5 times its error (either circle)."""
+    found = set()
+    for key in ("scan", "scan_large"):
+        found |= set(res.get(key, {}).get("bands", {}).get(band, {}).get("nights_with_5_sigma", []))
+    return ", ".join(sorted(found)) if found else "none"
+
+
 def main() -> None:
     folder = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "docs" / "comets"
     print("| Body | Exposures containing it | Measured | Usable | Predicted mag | H2O 2.7 | CO2 4.26 | CO 4.67 |")
     print("|---|---|---|---|---|---|---|---|")
+    extra = []
     for f in sorted(folder.glob("*.json")):
         res = json.loads(f.read_text())
         if "points" not in res:
@@ -44,6 +54,13 @@ def main() -> None:
             f"| {res['name']} | {res['n_in_footprint']} | {res['n_followed']} | {counts.get('ok', 0)} | {mags} | "
             f"{best_visit(res, 'H2O')} | {best_visit(res, 'CO2')} | {best_visit(res, 'CO')} |"
         )
+        extra.append(f"| {res['name']} | {nights(res, 'H2O')} | {nights(res, 'CO2')} | {nights(res, 'CO')} |")
+    print()
+    print("Nights on which the per-sequence scan reached 5 times its error on a band:")
+    print()
+    print("| Body | H2O | CO2 | CO |")
+    print("|---|---|---|---|")
+    print("\n".join(extra))
 
 
 if __name__ == "__main__":

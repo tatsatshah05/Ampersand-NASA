@@ -211,3 +211,58 @@ seen for Pluto: water, carbon dioxide and carbon monoxide are all "not seen" (0.
 
 Searched: "SPHEREx Pluto spectrum methane ice 0.75-5 micron observation": no SPHEREx paper on Pluto came back. That
 does not show that none exists; it is one web search.
+
+## Limits (read before relying on any number)
+
+- **The measuring circle.** A comet's coma is bigger than the 12.3 arcsec circle (3I/ATLAS' carbon dioxide coma
+  reaches 3 arcmin), so the small circle holds only the inner part, and the 36.9 arcsec circle holds more but also more
+  stars. The sky ring (86 to 148 arcsec) lies inside such a coma, so it takes some of the coma away with the sky; for
+  3I/ATLAS moving it to 221 to 295 arcsec changed the 4.26 micrometre flux by less than 3 per cent, but for a brighter
+  or closer comet it could matter. In kilometres at the body the circles are 12.3 x 725 x delta km and 36.9 x 725 x
+  delta km (delta in au): every point in the JSON files carries `radius_small_km` and `radius_large_km`.
+- **Saturation.** A body bright enough to saturate pixels in the circle is given no number (Vesta: 258 of 312
+  exposures; every exposure at 0.75 to 3.8 micrometres). Nothing is made up for them.
+- **Stars in the way.** The check measures the same sky place in up to 4 exposures of other days of the same
+  detector. A star that is faint at the wavelength of those exposures but bright at the body's (or the reverse) is
+  not caught; a body that sits on a bright star in all exposures is `star_in_the_way`, but whether the star's flux can be
+  taken away, I did not try. In crowded fields (3I/ATLAS in August 2025, Pluto) this removes 4 to 17 per cent of
+  the exposures.
+- **Calibration features.** The six detectors meet at 1.09, 1.63, 2.42, 3.82 and 4.42 micrometres. A step in
+  the calibration between two detectors would put a false bump or dip there. The carbon dioxide continuum (4.02 to
+  4.52) spans the boundary between detectors 5 and 6 at 4.42; I did not test for a step there beyond the other-places
+  test, and I did not check the SPHEREx Explanatory Supplement for channels with known problems.
+- **Time changes between the exposures of a "spectrum".** Each channel of a spectrum comes from a different exposure
+  at a different time. A rotating body (Vesta 5.3 hours, Pluto 6.4 days) or a comet that brightens or outbursts changes
+  between them. The gas-band arithmetic is done within a visit (a few days) to limit this, and its other-places test
+  is what shows the remaining scatter; the per-night scan (`scan_sequences`) compares channels taken within 15 minutes
+  of each other.
+- **Fast bodies.** A body moving faster than about 300 arcsec an hour (C/2025 R2 at its closest, 776 arcsec an hour;
+  C/2025 K1, 630) moves 4 pixels during one 113-second exposure: it is smeared along its path beyond the 12.3 arcsec
+  circle, and only the large circle is dependable. The exposure search looks at the two ends of every stretch of
+  at most 0.7 degree, so a body that crosses an image between the two ends could be missed for such a fast body.
+- **Too close to the Sun.** SPHEREx observed 80 to 128 degrees from the Sun in the lists measured; a body outside 70
+  to 140 degrees is not searched for. C/2025 A6 (Lemmon) was at 4 magnitude in October and November 2025 but at
+  elongation under 70 degrees: SPHEREx did not observe it then.
+- **Predicted magnitudes.** The predicted magnitude is Horizons' formula; for a comet it can be off by several
+  magnitudes (3I/ATLAS "15 to 26"; it was about 100 times brighter than a plain formula would say in December). It
+  is only used to choose bodies to look at.
+- **Pluto and Charon** are measured together. A body fainter than about V 17 gives one-exposure measurements too
+  noisy to use (see Makemake and the others below).
+- **Archive coverage.** Only public SPHEREx exposures: the later data are released in batches. Exposures newer than
+  the archive's last release do not exist for this tool.
+- **Network.** The first run of a body takes 10 to 30 minutes (hundreds of IRSA searches and cutouts); the second takes
+  seconds. If JPL or IRSA cannot be reached the run stops with the reason, and nothing is filled in.
+
+## Repeat any of it
+
+```
+.venv/bin/python scripts/follow_body.py "C/2025 R2" --strip 6
+.venv/bin/python scripts/follow_body.py Pluto --strip 6 --moving 6
+.venv/bin/python scripts/follow_body.py "C/2025 R2" --sequence "2025-12-25T19:@5"
+.venv/bin/python scripts/comets_table.py
+```
+
+Needs the project's Python environment and the network the first time; `SPHEREX_CACHE_DIR` points to the cache (the
+cutouts and answers of this feature are in its `follow/` folder: about 2 GB for everything in this document).
+Tests: `pytest tests/test_follow.py` (from saved real JPL and IRSA answers and real measured points in
+`tests/data/follow/`; no network).

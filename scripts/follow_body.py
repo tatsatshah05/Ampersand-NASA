@@ -361,7 +361,12 @@ def main() -> None:
     res["scan"] = follow.scan_summary(follow.scan_sequences(res["points"]))
     res["scan_large"] = follow.scan_summary(follow.scan_sequences(res["points"], "flux_large_mjy"))
     slug = follow._slug(a.name)
-    (out / f"{slug}.json").write_text(json.dumps(res, indent=1))
+    # the file paths in the cache are this machine's own: left out of the copy that is kept with the documents
+    public = {
+        **res,
+        "points": [{k: v for k, v in p.items() if k not in ("file", "other_files")} for p in res["points"]],
+    }
+    (out / f"{slug}.json").write_text(json.dumps(public, indent=1))
     print(table(res))
     if res["n_followed"]:
         spectrum_chart(res, f"{res['name']}: spectrum from SPHEREx exposures").render().save(
