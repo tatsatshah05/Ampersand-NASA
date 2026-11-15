@@ -72,7 +72,7 @@ from scipy.stats import chi2 as chi2_dist
 
 from . import astrometry, pipeline, search, spherex, training
 
-VERSION = 5
+VERSION = 6
 DISTANT_DIR = spherex.CACHE / "distant"
 ARCSEC_PER_RADIAN = 206264.806
 
@@ -507,8 +507,13 @@ def _judge(chosen: dict[int, dict], visits: list[dict], psf_arcsec: float, stren
         got = strength_at(m, *places[m]) if strength_at else None
         if got is not None and expected >= EXPECT_SIGMA * got[1] and got[0] < 0.5 * expected:
             return None
-        skipped.append({"visit": m, "reason": "no data at the predicted place" if got is None
-                        else "too faint to show there"})
+        if got is None:
+            reason = "no data at the predicted place"
+        elif expected < EXPECT_SIGMA * got[1]:
+            reason = "too faint to show there"
+        else:
+            reason = "something is at the predicted place, but not a source that comes and goes"
+        skipped.append({"visit": m, "reason": reason})
     return {"members": chosen, "fit": fit, "body": body, "distance_au": distance, "drift_arcsec_per_year": drift,
             "jump_arcsec": jump, "places": places, "skipped": skipped}
 
@@ -903,10 +908,11 @@ def _answer(candidates: list[dict], fields: list[dict], best_limit: list[dict], 
         return "Nothing was found, and this picture is too small for an object at any distance to stay in view."
     near, far = best_limit[0], best_limit[-1]
     deepest = min(best_limit, key=lambda r: r["faintest_mjy"])
+    widest = max(r["share_of_picture"] for r in best_limit)
     return ("Nothing here moves the way a distant world must. An object between "
-            f"{near['distance_au']:,} and {far['distance_au']:,} times the Earth-Sun distance would have been found "
-            f"if it were brighter than about {deepest['faintest_mjy']} mJy (at the best distance; the table gives "
-            "every distance) and stayed inside this picture.")
+            f"{near['distance_au']:,} and {far['distance_au']:,} times the Earth-Sun distance, brighter than about "
+            f"{deepest['faintest_mjy']} mJy, would have been found over up to {widest:.0%} of this picture. The "
+            "table gives the figure for every distance.")
 
 
 def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int, ...] = (5, 6), *,
