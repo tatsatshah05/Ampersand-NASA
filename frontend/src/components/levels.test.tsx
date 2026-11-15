@@ -2,7 +2,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Viewer } from '../App'
-import { BeginnerGuide, LevelSwitch } from './LevelSwitch'
+import { BeginnerGuide, EXPERT_ADDS, LevelSwitch } from './LevelSwitch'
 
 const viewerAt = (search: string) => {
   vi.stubGlobal('window', { location: { search }, localStorage: { getItem: () => null, setItem: () => undefined } })
@@ -42,5 +42,40 @@ describe('the page at each level', () => {
   })
   it('the beginner guide uses no expert words', () => {
     expect(renderToStaticMarkup(<BeginnerGuide />)).not.toMatch(/detector|epoch|flux/i)
+  })
+  it('Beginner names what Expert adds, the search for a distant world among it', () => {
+    const html = viewerAt('')
+    expect(html).toContain(`class="expert-adds">${EXPERT_ADDS.replace(/'/g, '&#x27;')}<`)
+    expect(EXPERT_ADDS).toContain('the search for a distant world (Planet X)')
+  })
+})
+
+describe('the same frame at both levels', () => {
+  // Rendered before any frames arrive: the plate, the player, the strip and the readout block are there all the same.
+  for (const [level, search] of [
+    ['Beginner', ''],
+    ['Expert', '?ui=expert'],
+  ]) {
+    it(`${level} has the plate, the player, the strip of visits and the readout block of fixed height`, () => {
+      const html = viewerAt(search)
+      expect(html).toContain('class="stage stage-empty"')
+      expect(html).toMatch(/class="play-button"/)
+      expect(html).toContain('aria-label="Next frame"')
+      expect(html).toContain('class="visit-strip"')
+      expect(html).toMatch(/class="readout-block( busy)?"/)
+      expect(html).not.toContain('type="range"')
+    })
+  }
+
+  it('the target row has the five challenge targets and the three of our own, each with its tooltip', () => {
+    const html = viewerAt('')
+    for (const name of ["Barnard&#x27;s Star", 'Epsilon Indi B', 'WISE 0855', 'RW Aurigae', 'R Draconis']) {
+      expect(html).toMatch(new RegExp(`class="target"[^>]*title="[^"]+"[^>]*>${name}</button>`))
+    }
+    for (const name of ['Young star in Serpens South', 'Nova V462 Lupi', 'Nova V572 Velorum']) {
+      expect(html).toMatch(new RegExp(`class="target"[^>]*title="[^"]+"[^>]*aria-label="${name}"`))
+    }
+    // The address's target is the one marked as on screen.
+    expect(html).toMatch(/aria-current="true">Barnard&#x27;s Star</)
   })
 })

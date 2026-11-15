@@ -1,122 +1,1055 @@
-/* The page is two columns: the picture on the left, everything about the picture on
-   screen on the right. The picture is as large as fits the window's height, so that it
-   and the player beside it are in view together. Below 820px wide it is one column. */
-main {
-  --stage: min(640px, max(340px, calc(100vh - 270px)));
-  --stage: min(640px, max(340px, calc(100dvh - 270px)));
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px;
+/* The main page is a blink comparator: a top bar, a row of targets, then the picture (the
+   "plate") with its player under it on the left, and on the right the "inspector", which
+   says what is on the plate. Together they fill the window exactly; nothing in them moves
+   when the visit or the star changes. Expert's tool panels open below, full width.
+   Below 1000px wide everything stacks and the page scrolls.
+
+   Sizes that keep things still: the top bar and the target row have fixed heights, the
+   player and the strip of visits under the plate too, and the plate is the largest square
+   that fits above them. */
+
+.app {
+  --topbar-h: 56px;
+  --targets-h: 44px;
+  --transport-h: 44px;
+  --strip-h: 62px;
+  --col-gap: 10px;
+  --inspector-w: 384px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.shell {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 520px;
   display: grid;
-  grid-template-columns: minmax(0, var(--stage)) minmax(300px, 1fr);
-  /* The last of these rows takes up any height the picture has to spare, so the two
-     blocks on the right sit together at the top. */
-  grid-template-rows: auto auto 1fr;
-  gap: 12px 24px;
-  align-items: start;
+  grid-template-rows: var(--topbar-h) var(--targets-h) minmax(0, 1fr);
 }
 
-main > header,
-main > footer {
-  grid-column: 1 / -1;
-}
+/* ---- the top bar: title, search, level ------------------------------------------------- */
 
-main > header {
-  grid-row: 1;
-}
-
-.viewer {
-  grid-column: 1;
-  grid-row: 2 / span 2;
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line);
   min-width: 0;
 }
 
-.now {
-  grid-column: 2;
-  grid-row: 2;
-  min-width: 0;
+.brand {
+  flex: none;
+  margin: 0;
+  font-size: var(--size-read);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-/* Under the player: the frame details and the sky context view. The spectrum and
-   brightness panels are .panels too; they span both columns (see their own files). */
-.side {
-  grid-column: 2;
-  grid-row: 3;
-  display: grid;
-  gap: 16px;
-  min-width: 0;
+.topbar .searchbar {
+  flex: 1 1 auto;
+  max-width: 520px;
 }
 
-@media (max-width: 820px) {
-  main {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-  }
-
-  .viewer,
-  .now,
-  .side {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  .stage {
-    max-width: 640px;
-  }
+.level-switch {
+  flex: none;
+  margin-left: auto;
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
 }
 
-/* ---- top of the page: what is shown and how ------------------------------------------- */
-
-h1 {
-  margin: 4px 0 0;
-  font-size: 1.5rem;
-  line-height: 1.25;
-}
-
-.tagline {
-  margin: 2px 0 10px;
-  max-width: 72ch;
+.level-switch .segment {
+  padding: 4px 14px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
   color: var(--muted);
 }
 
-/* The search box's place. It takes no room until something is put in it. */
-.search-slot:empty {
+.level-switch .segment:hover:not(:disabled):not([aria-pressed='true']) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.level-switch .segment[aria-pressed='true'] {
+  background: var(--surface-press);
+  color: var(--measured);
+  font-weight: 700;
+}
+
+/* ---- the target row ------------------------------------------------------------------- */
+
+.targets {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+
+.target-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.target-list::-webkit-scrollbar {
   display: none;
 }
 
-.search-slot {
-  margin: 0 0 10px;
+/* In a narrow window the list scrolls sideways; a soft edge then says there is more. It
+   follows the list's own scrolling, so it is there only when the list is too long. */
+@supports (animation-timeline: scroll()) {
+  .target-list {
+    animation: more-to-the-right linear both;
+    animation-timeline: scroll(self inline);
+  }
 }
 
-.where {
-  margin: 0 0 8px;
+@keyframes more-to-the-right {
+  from {
+    mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+  }
+
+  99% {
+    mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+  }
+
+  to {
+    mask-image: none;
+  }
+}
+
+.target-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.target-divider {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  margin: 0 8px;
+  background: var(--line-strong);
+}
+
+/* Quiet buttons. The target on the plate is amber, with a bar under it like a tab. */
+.target {
+  position: relative;
+  flex: none;
+  height: 100%;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.target:hover:not(:disabled) {
+  background: var(--surface);
+}
+
+.target[aria-current='true'] {
+  color: var(--measured);
+  font-weight: 700;
+}
+
+.target[aria-current='true']::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  background: var(--measured);
+}
+
+.target:focus-visible {
+  outline-offset: -2px;
+}
+
+.target-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quiet {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--size-body);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.quiet:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+
+/* ---- the bench: plate and inspector ---------------------------------------------------- */
+
+.bench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--inspector-w);
+  min-height: 0;
+}
+
+/* The plate's column is a size container, so the plate can be the largest square that
+   fits with the player and the strip under it. */
+.stagecol {
+  container-type: size;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.plate-col {
+  --below: calc(var(--transport-h) + var(--strip-h) + 2 * var(--col-gap));
+  width: max(240px, min(100cqw, 100cqh - var(--below)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--col-gap);
+}
+
+.plate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #000;
+}
+
+/* A plate has square corners. */
+.plate > .stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.plate.busy > .stage {
+  opacity: 0.32;
+}
+
+.stage-empty {
+  background: #000;
+}
+
+/* ---- over the plate: loading, nothing here, an error ------------------------------------ */
+
+.plate-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  text-align: center;
+  pointer-events: none;
+  animation: appear 0.2s both;
+}
+
+.plate-status.message {
+  pointer-events: auto;
+}
+
+/* A first load: wait a moment before saying anything, so a quick answer does not flash. */
+.plate:not(:has(.stage-surface)) .plate-status.loading {
+  animation-delay: 0.25s;
+}
+
+.plate-status-text {
+  max-width: 44ch;
+}
+
+/* Over the dimmed pictures, the words get a dark ground of their own. */
+.plate-status.loading .plate-status-text,
+.plate-status.message .plate-status-text {
+  padding: 16px 20px 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.72);
+}
+
+.plate-status-text p {
+  margin: 0 0 10px;
+  color: var(--muted);
+}
+
+.plate-status-text p.plate-status-title {
+  margin-bottom: 8px;
+  font-size: var(--size-read);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.plate-status.error .plate-status-title {
+  color: var(--error);
+}
+
+.plate-status button {
+  pointer-events: auto;
+}
+
+.plate-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.plate-progress span {
+  display: block;
+  width: 30%;
+  height: 100%;
+  background: var(--text);
+  animation: travel 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes travel {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(233%);
+  }
+}
+
+.elapsed {
   font-variant-numeric: tabular-nums;
 }
 
-.where abbr {
-  text-decoration: none;
+@media (prefers-reduced-motion: reduce) {
+  .plate-status,
+  .plate-progress span {
+    animation: none;
+  }
+
+  .plate-progress span {
+    display: none;
+  }
 }
 
-.selectors {
+/* How to work the picture: a small button in its corner, and what it opens. */
+.plate-help-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 5px;
+  background: rgb(19 20 23 / 0.85);
+  font-weight: 700;
+  anchor-name: --plate-help;
+}
+
+.plate-help {
+  margin: 0;
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--size-body);
+  line-height: 1.5;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.6);
+}
+
+.plate-help p {
+  margin: 0;
+}
+
+@supports (anchor-name: --a) {
+  .plate-help {
+    position-anchor: --plate-help;
+    inset: auto;
+    right: anchor(right);
+    bottom: calc(anchor(top) + 8px);
+  }
+}
+
+/* ---- under the plate: the player and the strip of visits -------------------------------- */
+
+.transport {
+  container-type: inline-size;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin: 0 0 8px;
+  align-items: center;
+  gap: 8px;
+  height: var(--transport-h);
+  min-width: 0;
 }
 
-.field {
+.transport button,
+.transport select {
+  height: 36px;
+}
+
+/* The one primary action on the page. */
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 96px;
+  padding: 0 16px 0 14px;
+  border-color: var(--measured);
+  background: var(--measured);
+  color: #000;
+  font-weight: 700;
+}
+
+.play-button:hover:not(:disabled) {
+  border-color: var(--measured-hover);
+  background: var(--measured-hover);
+}
+
+.play-button:active:not(:disabled) {
+  background: var(--measured);
+  transform: translateY(1px);
+}
+
+.blink-button {
+  white-space: nowrap;
+}
+
+.transport-steps {
+  display: inline-flex;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  padding: 0;
+}
+
+.transport-steps .icon-button:first-child {
+  border-radius: 5px 0 0 5px;
+}
+
+.transport-steps .icon-button:last-child {
+  margin-left: -1px;
+  border-radius: 0 5px 5px 0;
+}
+
+.transport-speed {
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
-.field select {
-  max-width: 100%;
+/* A narrow plate: the menu says its speed on its own. */
+@container (max-width: 470px) {
+  .transport-speed-word {
+    display: none;
+  }
 }
 
-.mode-note {
+.visit-strip {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  height: var(--strip-h);
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* Each visit is one plate in the rack: its picture, its number and its date. */
+.visit {
+  flex: 1 1 0;
+  min-width: 112px;
+  max-width: 200px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+}
+
+.visit img {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 2px;
+  background: #000;
+  object-fit: cover;
+}
+
+.visit-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.visit-name {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.visit-when {
+  font-size: var(--size-small);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.visit[aria-current='true'] {
+  border-color: var(--measured);
+  box-shadow: inset 0 0 0 1px var(--measured);
+}
+
+.visit[aria-current='true'] .visit-name {
+  color: var(--measured);
+}
+
+.visit:focus-visible {
+  outline-offset: 1px;
+}
+
+/* ---- the inspector: what is on the plate ------------------------------------------------ */
+
+.inspector {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px 16px;
+  border-left: 1px solid var(--line);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* Room for a name and two lines of position, so the block under it stays put from one target to the next. */
+.object {
+  flex: none;
+  min-height: 72px;
+}
+
+.object-name {
+  margin: 0 0 4px;
+  font-size: var(--size-title);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.object-where {
   margin: 0;
-  max-width: 88ch;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A position with no name: the coordinates are the heading. */
+.object-where.object-name {
+  font-size: var(--size-read);
+  color: var(--text);
+}
+
+.object-where abbr {
+  text-decoration: none;
+}
+
+.notices {
+  margin-top: 12px;
+}
+
+/* Everything that changes with the visit, in a block that never changes height. When the
+   text is longer than the block, the block scrolls, and a soft edge says there is more. */
+.readout-block {
+  flex: none;
+  height: clamp(180px, 30vh, 300px);
+  height: clamp(180px, 30dvh, 300px);
+  margin-top: 16px;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--line);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  transition: opacity 0.2s ease;
+  background:
+    linear-gradient(var(--bg) 40%, rgb(0 0 0 / 0)) top / 100% 28px no-repeat local,
+    linear-gradient(rgb(0 0 0 / 0), var(--bg) 60%) bottom / 100% 28px no-repeat local,
+    linear-gradient(rgb(255 255 255 / 0), rgb(255 255 255 / 0.07)) bottom / 100% 22px no-repeat scroll;
+}
+
+.readout-block.busy {
+  opacity: 0.4;
+}
+
+/* Beginner has fewer sentences per visit, so its block is shorter and leaves less empty space. */
+.inspector.beginner .readout-block {
+  height: clamp(170px, 24vh, 220px);
+  height: clamp(170px, 24dvh, 220px);
+}
+
+/* Which visit: a quiet line over the result. */
+.readout-block .frame-label {
+  margin: 0 0 6px;
+  font-size: var(--size-body);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+.tag {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 0 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font-size: var(--size-small);
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+/* What was measured: the largest words in the inspector. */
+.motion-readout {
+  margin: 0 0 10px;
+  font-size: var(--size-read);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+.detection-readout {
+  margin: 0;
+}
+
+.detection-readout p {
+  margin: 0 0 6px;
+  text-wrap: pretty;
+}
+
+.detection-readout .detection-extra {
+  color: var(--muted);
+}
+
+.readout-block .notice,
+.readout-block .bright-star {
+  margin: 10px 0 4px;
+}
+
+.readout-block .bright-star {
+  padding-left: 10px;
+  border-left: 2px solid var(--line-strong);
+  font-size: var(--size-small);
+}
+
+/* Beginner: a few plain sentences, then what Expert adds. */
+.guide {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.guide h2 {
+  margin: 0 0 6px;
+  font-size: var(--size-body);
+  font-weight: 700;
+}
+
+.guide p {
+  margin: 0;
+  color: var(--text);
+}
+
+.expert-adds {
+  margin: 12px 0 0;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+/* Expert: sections under hairlines. */
+.ins-section {
+  padding: 14px 0 16px;
+  border-top: 1px solid var(--line);
+}
+
+.ins-section:first-of-type {
+  margin-top: 4px;
+}
+
+.ins-section h3,
+.fold summary {
+  margin: 0 0 10px;
+  font-size: var(--size-body);
+  font-weight: 700;
+}
+
+.inspector .selectors {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px 12px;
+  margin: 0;
+}
+
+.inspector .field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.inspector .field:nth-child(n + 3) {
+  grid-column: 1 / -1;
+}
+
+.inspector .field select {
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  font-size: var(--size-body);
+  color: var(--text);
+}
+
+.inspector .mode-note {
+  margin: 10px 0 0;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 5px 10px;
+}
+
+.inspector .legend {
+  margin: 12px 0 0;
+  gap: 2px 14px;
+  font-size: var(--size-small);
+}
+
+.inspector .legend svg {
+  height: 16px;
+  margin-right: 5px;
+  vertical-align: -4px;
+}
+
+.inspector .readout,
+.inspector .hint {
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.inspector .ins-section .readout,
+.inspector .ins-section .hint {
+  margin: 10px 0 0;
+}
+
+.tool-buttons {
+  display: grid;
+  gap: 6px;
+}
+
+.tool-buttons button {
+  padding: 8px 12px;
+  text-align: left;
+}
+
+/* Folded extras: catalogue notes, frame details, sky context. */
+.fold {
+  border-top: 1px solid var(--line);
+}
+
+.fold summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 12px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A small chevron that turns when the section is open. */
+.fold summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.fold[open] summary::after {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+.fold summary:hover {
+  color: var(--text);
+}
+
+.fold > :not(summary) {
+  margin-top: 0;
+}
+
+.fold[open] {
+  padding-bottom: 14px;
+}
+
+/* Opened on purpose, so read at full size: the comparison with the catalogue is a result. */
+.inspector .fold .readout {
+  margin: 0 0 8px;
+  font-size: var(--size-body);
+  color: var(--text);
+}
+
+/* The frame details and sky context inside a fold: no card of their own, and the fold's own title instead of theirs. */
+.inspector .panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.inspector .fold .panel > h2 {
+  display: none;
+}
+
+/* Values keep their line (a date range should not break); a long label wraps instead. */
+.inspector .panel dl {
+  grid-template-columns: minmax(0, 1fr) fit-content(62%);
+  font-size: var(--size-body);
+}
+
+.inspector .fold > button {
+  margin-top: 10px;
+}
+
+.credits {
+  margin-top: auto;
+  padding-top: 20px;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.credits p {
+  margin: 0 0 4px;
+}
+
+/* ---- Expert's tool panels, below the picture ---------------------------------------------- */
+
+.tool-panels {
+  font-size: var(--size-read);
+}
+
+.tool-slot {
+  padding: 28px 24px 32px;
+  border-top: 1px solid var(--line);
+}
+
+/* The last panel can always be scrolled to the top of the window, even while it is short. */
+.tool-slot:last-child {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.tool-slot > .panel {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  scroll-margin-top: 28px;
+}
+
+.back-to-plate {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 30;
+  padding: 10px 16px;
+  border-color: var(--line-strong);
+  background: var(--surface);
+  font-weight: 700;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.7);
+}
+
+/* ---- narrower windows -------------------------------------------------------------------- */
+
+@media (max-width: 1199px) {
+  .app {
+    --inspector-w: 340px;
+  }
+
+  .topbar {
+    gap: 16px;
+    padding: 0 16px;
+  }
+
+  .stagecol {
+    padding: 16px;
+  }
+
+  .inspector {
+    padding: 18px 18px 14px;
+  }
+}
+
+/* Stacked: bars, plate, player, inspector, and the page scrolls. */
+@media (max-width: 999px) {
+  .shell {
+    height: auto;
+    min-height: 0;
+    display: block;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 10px 16px;
+  }
+
+  .brand {
+    flex: 1 1 auto;
+    font-size: 15px;
+  }
+
+  .level-switch .segment {
+    padding: 4px 9px;
+  }
+
+  .topbar .searchbar {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .targets {
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 0;
+  }
+
+  .target-list {
+    flex: 1 1 100%;
+    height: var(--targets-h);
+    padding: 0 8px;
+  }
+
+  .target-actions {
+    flex: 1 1 100%;
+    padding: 0 8px 6px;
+    flex-wrap: wrap;
+  }
+
+  .bench {
+    display: block;
+  }
+
+  .stagecol {
+    container-type: inline-size;
+    padding: 12px 16px;
+  }
+
+  .plate-col {
+    width: min(100cqw, 640px);
+  }
+
+  .transport {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--transport-h);
+    row-gap: 8px;
+  }
+
+  .visit {
+    min-width: 104px;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+  }
+
+  .visit img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .inspector {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    overflow: visible;
+    padding: 16px;
+  }
+
+  .readout-block {
+    height: 200px;
+  }
+
+  .tool-slot {
+    padding: 20px 16px 28px;
+  }
+
+  .back-to-plate {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+/* ---- shared by every screen ------------------------------------------------------------- */
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 0.85em;
   color: var(--muted);
 }
 
@@ -125,8 +1058,8 @@ h1 {
   margin: 8px 0 0;
   max-width: 88ch;
   padding: 6px 12px;
-  border-left: 3px solid var(--notice);
-  background: #1d1b14;
+  border-left: 2px solid var(--notice);
+  background: rgb(240 195 106 / 0.07);
   color: var(--notice);
 }
 
@@ -135,15 +1068,110 @@ h1 {
   padding: 2px 10px;
 }
 
-/* ---- the picture ---------------------------------------------------------------------- */
+.mode-note {
+  margin: 0;
+  max-width: 88ch;
+  color: var(--muted);
+}
+
+.readout {
+  margin: 4px 0;
+}
+
+.key {
+  font-weight: 700;
+}
+
+.key.gaia {
+  color: var(--gaia);
+}
+
+.key.measured {
+  color: var(--measured);
+}
+
+.key.nodata {
+  color: rgb(70 130 255);
+}
+
+.key.saturated {
+  color: rgb(255 60 60);
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9em;
+  color: var(--muted);
+}
+
+.legend svg {
+  height: 20px;
+  margin-right: 6px;
+  vertical-align: -5px;
+}
+
+.legend-note {
+  flex-basis: 100%;
+}
+
+/* Panels: the tool panels, frame details, sky context. */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.panel dt {
+  color: var(--muted);
+}
+
+.panel dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.aladin {
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 8px 0;
+}
+
+.context-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ---- the picture (here and on the practice screen) ------------------------------------- */
 
 .stage {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
   background: #000;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 1px solid var(--line);
   overflow: hidden;
 }
 
@@ -169,7 +1197,7 @@ h1 {
    pan. Sky with no data is transparent in the frame, and shows this hatching. */
 .stage-zoom {
   position: absolute;
-  background: repeating-linear-gradient(45deg, #0b0c10 0 6px, #20242d 6px 7px);
+  background: repeating-linear-gradient(45deg, #08090b 0 6px, #1c1e23 6px 7px);
 }
 
 .stage-zoom img,
@@ -259,6 +1287,13 @@ h1 {
   vector-effect: non-scaling-stroke;
 }
 
+/* A marginal detection is a dashed ring, a clear one a solid ring. */
+.mark-line.mark-marginal,
+.mark-marginal {
+  stroke-dasharray: 3 3;
+  stroke-linecap: butt;
+}
+
 .compass {
   position: absolute;
   top: 8px;
@@ -283,7 +1318,7 @@ h1 {
 .compass text {
   fill: #fff;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .scale-bar {
@@ -294,7 +1329,7 @@ h1 {
   flex-direction: column;
   gap: 2px;
   color: #fff;
-  font-size: 0.8rem;
+  font-size: var(--size-small);
   line-height: 1.2;
   pointer-events: none;
   text-shadow:
@@ -321,30 +1356,140 @@ h1 {
 .stage-buttons button {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   line-height: 1;
-  background: rgb(23 26 34 / 0.88);
+  background: rgb(19 20 23 / 0.85);
 }
 
 .stage-buttons button:hover:not(:disabled) {
-  background: var(--control-hover);
+  background: var(--surface-hover);
 }
 
-.hint {
-  margin: 8px 0 0;
-  font-size: 0.85rem;
+/* Blue where there is no data, red where saturated; see-through so the image shows. */
+.stage-zoom img.flags {
+  opacity: 0.75;
+  image-rendering: pixelated; /* keep each flagged pixel's edges sharp */
+}
+
+/* The layers let the pointer through, except the field-star circles, which show their
+   Gaia details on hover. A press on one still reaches the stage, so it can be dragged. */
+.field-star {
+  fill: transparent;
+  stroke: var(--gaia);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+  pointer-events: all;
+}
+
+.field-star:hover {
+  stroke-opacity: 1;
+  stroke-width: 2;
+}
+
+/* ---- the practice and watchlist screens --------------------------------------------------- */
+
+/* Both were made for a 16px page. The watchlist lays itself out (WatchlistView.css). */
+main.training,
+main.watchlist {
+  font-size: var(--size-read);
+}
+
+main h1 {
+  margin: 4px 0 0;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+/* The practice screen keeps the earlier one-page layout: picture left, player right. */
+main.training {
+  --stage: min(640px, max(340px, calc(100vh - 270px)));
+  --stage: min(640px, max(340px, calc(100dvh - 270px)));
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, var(--stage)) minmax(300px, 1fr);
+  grid-template-rows: auto auto 1fr;
+  gap: 12px 24px;
+  align-items: start;
+}
+
+main.training > header,
+main.training > footer {
+  grid-column: 1 / -1;
+}
+
+main.training > header {
+  grid-row: 1;
+}
+
+main.training .tagline {
+  margin: 2px 0 10px;
+  max-width: 72ch;
   color: var(--muted);
+}
+
+main.training .frame-label {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.viewer {
+  grid-column: 1;
+  grid-row: 2 / span 2;
+  min-width: 0;
+}
+
+.now {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+}
+
+@media (max-width: 820px) {
+  main.training {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .viewer,
+  .now {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .viewer .stage {
+    max-width: 640px;
+  }
+}
+
+.selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 8px;
+}
+
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field select {
+  max-width: 100%;
 }
 
 .now .hint {
   margin: 0 0 10px;
 }
 
-/* ---- in place of the picture: loading, nothing found, an error -------------------------- */
-
+/* The practice screen's box in place of the picture: loading, an error. */
 .stage-status {
   display: grid;
   place-items: center;
@@ -372,23 +1517,15 @@ h1 {
   margin-left: 8px;
 }
 
-/* A view that was asked for before comes back at once. Waiting a moment before the
-   message appears keeps it from flashing past. */
 .loading .status-card {
   animation: appear 0.2s 0.25s both;
-}
-
-@keyframes appear {
-  from {
-    opacity: 0;
-  }
 }
 
 .progress {
   height: 3px;
   margin: 12px 0 8px;
   border-radius: 2px;
-  background: var(--border);
+  background: var(--line-strong);
   overflow: hidden;
 }
 
@@ -401,19 +1538,8 @@ h1 {
   animation: travel 1.6s ease-in-out infinite alternate;
 }
 
-@keyframes travel {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(233%);
-  }
-}
-
-.elapsed {
+.status-card .elapsed {
   color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -427,29 +1553,7 @@ h1 {
   }
 }
 
-/* ---- beside the picture: what is on screen, and the player ------------------------------- */
-
-.frame-label {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.tag {
-  display: inline-block;
-  margin-right: 8px;
-  padding: 0 7px;
-  border: 1px solid var(--muted);
-  border-radius: 4px;
-  font-size: 0.8em;
-}
-
-.motion-readout {
-  margin: 4px 0 12px;
-  font-variant-numeric: tabular-nums;
-}
-
+/* The practice screen's player (PlayerControls): buttons, then the scrubber. */
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -469,10 +1573,16 @@ h1 {
 .controls button.play {
   min-width: 78px;
   height: 38px;
-  font-weight: 600;
+  border-color: var(--measured);
+  background: var(--measured);
+  color: #000;
+  font-weight: 700;
 }
 
-/* The scrubber, with each frame's name under its place on it. */
+.controls button.play:hover:not(:disabled) {
+  background: var(--measured-hover);
+}
+
 .scrubber {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -485,7 +1595,7 @@ h1 {
   grid-column: 2;
   width: 100%;
   margin: 0;
-  accent-color: var(--text);
+  accent-color: var(--measured);
 }
 
 .ticks-title {
@@ -516,159 +1626,12 @@ h1 {
   text-decoration: underline;
 }
 
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 18px;
-  margin: 0 0 10px;
-  padding: 0;
-  list-style: none;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.legend svg {
-  height: 20px;
-  margin-right: 6px;
-  vertical-align: -5px;
-}
-
-.legend-note {
-  flex-basis: 100%;
-}
-
-.readout {
-  margin: 4px 0;
-}
-
-.key {
-  font-weight: 700;
-}
-
-.key.gaia {
-  color: var(--gaia);
-}
-
-.key.measured {
-  color: var(--measured);
-}
-
-.status.error {
-  color: var(--error);
-}
-
-/* ---- panels (frame details, spectrum) and the foot of the page --------------------------- */
-
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-
-.panel h2 {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-}
-
-.panel dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 12px;
-  margin: 0;
-}
-
-.panel dt {
-  color: var(--muted);
-}
-
-.panel dd {
-  margin: 0;
-}
-
-footer {
+main.training footer {
   margin-top: 16px;
   font-size: 0.85rem;
   color: var(--muted);
 }
 
-footer a {
-  color: var(--text);
-}
-
-footer p {
+main.training footer p {
   margin: 0 0 6px;
-}
-
-/* ---- flags layer, field stars and sky context (issues #12 and #10) ---------------------- */
-
-/* Blue where there is no data, red where saturated; see-through so the image shows. */
-.stage-zoom img.flags {
-  opacity: 0.75;
-  image-rendering: pixelated; /* keep each flagged pixel's edges sharp */
-}
-
-/* The layers let the pointer through, except the field-star circles, which show their
-   Gaia details on hover. A press on one still reaches the stage, so it can be dragged. */
-.field-star {
-  fill: transparent;
-  stroke: var(--gaia);
-  stroke-opacity: 0.55;
-  stroke-width: 1;
-  pointer-events: all;
-}
-
-.field-star:hover {
-  stroke-opacity: 1;
-  stroke-width: 2;
-}
-
-.key.nodata {
-  color: rgb(70 130 255);
-}
-
-.key.saturated {
-  color: rgb(255 60 60);
-}
-
-.aladin {
-  width: 100%;
-  aspect-ratio: 1;
-  margin: 8px 0;
-}
-
-.context-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-
-/* A marginal detection is a dashed ring, a clear one a solid ring. */
-.mark-line.mark-marginal,
-.mark-marginal {
-  stroke-dasharray: 3 3;
-  stroke-linecap: butt;
-}
-
-.detection-readout {
-  margin: 0.25rem 0;
-}
-
-.detection-readout p {
-  margin: 0.15rem 0;
-}
-
-.detection-readout .detection {
-  font-weight: 600;
-}
-
-/* The Beginner / Expert switch. */
-.level-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.level-switch .hint {
-  margin: 0.4rem 0 0;
 }
