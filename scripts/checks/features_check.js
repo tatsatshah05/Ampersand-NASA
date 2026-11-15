@@ -84,10 +84,10 @@ async function setLevel(page, label) {
       check(!!bar, `${tag}: there is a navigation bar named "Features"`);
       if (!bar) { await page.close(); continue; }
       // RULE CHANGED (15 Nov 2026). The team lead: "can we have the 10 things about that star ... on the side bar so
-      // that one can jump from one to another without keeping on going up and down". In a window 1000 px or wider
-      // the features are a list down the left edge; narrower, a strip along the top. Both stay where they are when
+      // that one can jump from one to another without keeping on going up and down". In a window 1200 px or wider
+      // the features are a list down the left edge; under 1000 px, a strip along the top. Both stay where they are when
       // the page scrolls: checked below, each time a tool has been pressed and the page has scrolled to it.
-      if (w >= 1000) check(bar.left >= -0.5 && bar.left <= 1 && bar.right <= 240 && bar.top <= 1, `${tag}: the features are a list down the left edge (from ${Math.round(bar.left)} to ${Math.round(bar.right)} px across)`);
+      if (w >= 1200) check(bar.left >= -0.5 && bar.left <= 1 && bar.right <= 240 && bar.top <= 1, `${tag}: the features are a list down the left edge (from ${Math.round(bar.left)} to ${Math.round(bar.right)} px across)`);
       else check(bar.top >= 0 && bar.bottom <= 120, `${tag}: the bar is at the top of the page (from ${Math.round(bar.top)} to ${Math.round(bar.bottom)} px)`);
       const want = FEATURES.map((f) => f[mode]);
       const got = bar.items.map((i) => i.text);

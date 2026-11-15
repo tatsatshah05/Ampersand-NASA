@@ -617,9 +617,12 @@
 
 /* ---- the ten features stay in view ------------------------------------------------------- */
 /* Asked for on 2026-11-15: to go from one feature of a star to another without scrolling back up
-   to the bar. In a wide window the bar is a list down the left edge that stays where it is while
-   the page scrolls, and the page keeps to the right of it. In a narrow window the bar is a strip
-   fixed along the top, and the page starts under it. Same ten items, same order, same marks.
+   to the bar. In a wide window (1200 px and up) the bar is a list down the left edge that stays
+   where it is while the page scrolls, and the page keeps to the right of it. In a narrow window
+   (under 1000 px) the bar is a strip fixed along the top, and the page starts under it. Between
+   the two the bar is where it always was, in the top row: there the picture, the player's row
+   and the side column have no 168 px to give (measured at 1024 px: the player's row was cut).
+   Same ten items, same order, same marks.
 
    A fixed element is placed against the nearest ancestor with a backdrop filter instead of the
    window, so the top bar gives up its blur: nothing ever scrolled under it, so nothing is lost. */
@@ -641,7 +644,7 @@
   background: var(--bg);
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 1200px) {
   #root {
     padding-left: var(--rail-w);
   }
@@ -687,6 +690,15 @@
     width: auto;
     height: 1px;
     margin: 8px 12px;
+  }
+}
+
+/* A short, wide window (1280x720): App.css gives the side column 640 px there, which with the list at the
+   left would leave the picture's column 408 px, less than the player's row needs (524 px: its last button
+   ended up under the side column). The side column gives the list's width back. */
+@media (min-width: 1200px) and (max-height: 800px) {
+  .app {
+    --inspector-w: calc(640px - var(--rail-w));
   }
 }
 

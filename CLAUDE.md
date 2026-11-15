@@ -1217,10 +1217,12 @@ last pill overruns by under 1 px). The Beginner | Expert switch is fixed at the 
 
 The features stay in view, and the guided tour (2026-11-15, branch `agent/demo-tour`; asked for by the team lead for the
 presentation):
-- The ten features are no longer a bar that scrolls away. In a window 1000 px or wider `nav.feature-bar` is a list down
+- The ten features are no longer a bar that scrolls away. In a window 1200 px or wider `nav.feature-bar` is a list down
   the left edge, fixed while the page scrolls (`polish.css`, "the ten features stay in view": `--rail-w` 184 px, 168 px
-  below 1440 px, and `#root` is padded by it); narrower, it is a strip fixed along the top (`--bar-h` 42 px, `#root`
-  padded at the top, the practice screen's SIMULATION banner sticks under it). Same markup, order and marks; every item
+  below 1440 px, and `#root` is padded by it); under 1000 px it is a strip fixed along the top (`--bar-h` 42 px, `#root`
+  padded at the top, the practice screen's SIMULATION banner sticks under it); from 1000 to 1199 px it is where it
+  was, in the top row (the player's row has no 168 px to give there). In a short wide window the side column gives
+  the list's width back (`--inspector-w: calc(640px - var(--rail-w))`), or the player's last button ends up under it. Same markup, order and marks; every item
   carries `data-feature=<key>`. A fixed element is placed against an ancestor with a backdrop filter, so `.topbar` has
   none any more. The row of stars is one step tighter below 1440 px so that all eleven names fit from 1280 px up. The
   page's sentences say "in the list of features", not "in the bar at the top". `features_check.js` now checks the list
