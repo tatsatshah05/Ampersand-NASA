@@ -3,7 +3,8 @@
 // shared link brings the same view back:
 //     ?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal
 // plus, when they apply: pmra, pmdec, parallax (the object's known motion, as
-// /api/resolve returns it), reference (difference mode), track (sum mode) and name.
+// /api/resolve returns it), reference (difference mode), track (sum mode), name, and
+// ui (`expert`, or `beginner` where an address would otherwise be taken for an expert's).
 import type { FramesQuery, Mode, Reference, Track } from './api'
 import type { SearchTarget } from './components/SearchBar'
 
@@ -30,7 +31,14 @@ const TRACKS: readonly Track[] = ['sky', 'target']
 export type Level = 'easy' | 'medium' | 'hard'
 export const LEVELS: readonly Level[] = ['easy', 'medium', 'hard']
 
+/** How much of the page is shown. Beginner is the picture and what moved; Expert is everything. */
+export type UiLevel = 'beginner' | 'expert'
+const UI_LEVELS: readonly UiLevel[] = ['beginner', 'expert']
+const STORAGE_KEY = 'spherex-ui-level'
+
 export interface Selection {
+  /** How much of the page to show (`ui=expert` in the address; absent means Beginner). */
+  ui: UiLevel
   ra: number // degrees, 0 up to 360
   dec: number // degrees, -90 to 90
   /** What the visitor called this place, when they looked it up by name. Display only. */
@@ -51,6 +59,7 @@ export interface Selection {
 
 // Barnard's Star where it is in 2026 (see CLAUDE.md), shown when the address gives no position.
 export const DEFAULT_SELECTION: Selection = {
+  ui: 'beginner',
   ra: 269.446267,
   dec: 4.768222,
   name: "Barnard's Star",
@@ -102,16 +111,57 @@ function oneOf<T extends string>(raw: string | null, allowed: readonly T[]): T |
   return allowed.find((v) => v === raw) ?? null
 }
 
+/** True when a mode, detector or field of view other than the defaults is asked for: what only Expert can change. */
+function hasExpertSettings(search: string): boolean {
+  const p = new URLSearchParams(search)
+  const mode = oneOf(p.get('mode'), MODES)
+  if (mode !== null && mode !== DEFAULT_SELECTION.mode) return true
+  const det = [p.get('det'), p.get('detector')].map(numberFrom).find(validDetector)
+  if (det !== undefined && det !== DEFAULT_SELECTION.det) return true
+  const fov = numberFrom(p.get('fov'))
+  return validFov(fov) && fov !== DEFAULT_SELECTION.fov
+}
+
+/**
+ * Which level an address opens in. `ui` in the address wins. Without it, an address that
+ * carries an expert-only setting (so that links made before the switch existed keep
+ * showing what they showed) opens in Expert; otherwise the visitor's last choice
+ * (`stored`), and a first-time visitor gets Beginner.
+ */
+export function chooseUiLevel(search: string, stored: string | null = null): UiLevel {
+  const asked = oneOf(new URLSearchParams(search).get('ui'), UI_LEVELS)
+  if (asked) return asked
+  if (hasExpertSettings(search)) return 'expert'
+  return oneOf(stored, UI_LEVELS) ?? 'beginner'
+}
+
+/** The level the visitor chose last time, or null (nothing stored, or storage is not available). */
+export function readStoredLevel(): string | null {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function storeLevel(level: UiLevel) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, level)
+  } catch {
+    // Storage blocked or full: the choice still holds for this page and its address.
+  }
+}
+
 /**
  * The selection an address asks for. A missing or unusable value falls back to its
  * default, and `notes` says so in plain words for each one that was given but could
  * not be used. Right ascension and declination are one position: if only one of them
  * is usable it is not paired with the default of the other.
  */
-export function readAddress(search: string): { selection: Selection; notes: string[] } {
+export function readAddress(search: string, stored: string | null = null): { selection: Selection; notes: string[] } {
   const p = new URLSearchParams(search)
   const notes: string[] = []
-  const s: Selection = { ...DEFAULT_SELECTION }
+  const s: Selection = { ...DEFAULT_SELECTION, ui: chooseUiLevel(search, stored) }
 
   // Position: both or neither.
   const raRaw = p.get('ra')
@@ -211,7 +261,7 @@ export function readAddress(search: string): { selection: Selection; notes: stri
 }
 
 // The parameters this module owns. Anything else in the address is left as it is.
-const OWN_KEYS = ['ra', 'dec', 'fov', 'det', 'detector', 'mode', 'pmra', 'pmdec', 'parallax', 'reference', 'track', 'name', 'train', 'level']
+const OWN_KEYS = ['ra', 'dec', 'fov', 'det', 'detector', 'mode', 'pmra', 'pmdec', 'parallax', 'reference', 'track', 'name', 'train', 'level', 'ui']
 
 /** The query string ("?ra=...") for a selection, keeping other parameters of `current`. */
 export function addressOf(s: Selection, current = ''): string {
@@ -232,6 +282,10 @@ export function addressOf(s: Selection, current = ''): string {
   if (s.mode === 'difference') p.set('reference', s.reference)
   if (s.mode === 'sum') p.set('track', s.track)
   if (s.name) p.set('name', s.name)
+  // Beginner is what an address without `ui` means, unless it carries a setting that makes it
+  // look like an expert's (a target's own detector, say): then it says so.
+  if (s.ui === 'expert') p.set('ui', 'expert')
+  else if (s.mode !== DEFAULT_SELECTION.mode || s.det !== DEFAULT_SELECTION.det || s.fov !== DEFAULT_SELECTION.fov) p.set('ui', 'beginner')
   if (s.train !== null) {
     p.set('train', String(s.train))
     p.set('level', s.level)

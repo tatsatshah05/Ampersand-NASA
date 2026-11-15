@@ -662,3 +662,13 @@ footer p {
 .detection-readout .detection {
   font-weight: 600;
 }
+
+/* The Beginner / Expert switch. */
+.level-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.level-switch .hint {
+  margin: 0.4rem 0 0;
+}

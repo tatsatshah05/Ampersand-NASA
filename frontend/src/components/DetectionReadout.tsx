@@ -4,9 +4,10 @@
 import type { Frame } from '../api'
 import { blendSentences, detectionSentence, positionSentence } from '../detection'
 
-export function DetectionReadout({ frame }: { frame: Frame }) {
+/** `detectionOnly` leaves out the position and neighbouring-star lines (Beginner shows just how clearly it is seen). */
+export function DetectionReadout({ frame, detectionOnly = false }: { frame: Frame; detectionOnly?: boolean }) {
   const detection = detectionSentence(frame)
-  const lines = [positionSentence(frame), ...blendSentences(frame)].filter((l): l is string => l !== null)
+  const lines = (detectionOnly ? [] : [positionSentence(frame), ...blendSentences(frame)]).filter((l): l is string => l !== null)
   if (!detection && lines.length === 0) return null
   return (
     <div className="detection-readout">

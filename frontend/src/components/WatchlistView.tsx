@@ -96,7 +96,7 @@ export function WatchlistView() {
     <main className="watchlist">
       <header>
         <p>
-          <a href="/">Back to the viewer</a>
+          <a href={new URLSearchParams(window.location.search).get('ui') === 'expert' ? '/?ui=expert' : '/'}>Back to the viewer</a>
         </p>
         <h1>Help check what the search found</h1>
         <p className="intro">{INTRO}</p>
