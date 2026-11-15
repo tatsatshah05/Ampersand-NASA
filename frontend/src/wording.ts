@@ -227,9 +227,11 @@ export function shiftDoubt(row: VisitRow, data: FramesReady): 'within error' | '
 }
 
 /**
- * Beginner's cell: what happened to it in this visit, in plain words. "start", "5.9 north,
- * 0.9 west", "1.2 south, 1.2 east, within error", "maybe another spot", "not found"; "only
- * just seen" is added for a marginal detection.
+ * Beginner's cell: how far it was from where it started at this visit, in arcseconds (the
+ * column says so): "start", "6.0", "1.7, within error", "maybe another spot", "same place",
+ * "not found"; "only just seen" is added for a marginal detection. The way it went is said
+ * once, for the whole run, in the sentence over the table (Expert's table has each visit's
+ * east and north).
  */
 export function plainResult(row: VisitRow, data: FramesReady): string {
   let words: string
@@ -241,7 +243,8 @@ export function plainResult(row: VisitRow, data: FramesReady): string {
     // When nothing moved, the sentence over the table already says every shift is within error.
     const doubt = shiftDoubt(row, data)
     const said = overallKind(data) === 'still' || overallKind(data) === 'other spot'
-    words = `${shiftWords(row.shift)}${said || !doubt ? '' : doubt === 'within error' ? ', within error' : ', maybe another spot'}`
+    const far = row.shift.total < 0.05 ? 'same place' : row.shift.total.toFixed(1)
+    words = `${far}${said || !doubt ? '' : doubt === 'within error' ? ', within error' : ', maybe another spot'}`
   }
   return isMarginal(row.frame) ? `${words}, only just seen` : words
 }
@@ -416,7 +419,15 @@ function overallKind(data: FramesReady): OverallKind {
   return measured.some((r) => r.real) ? 'came back' : 'still'
 }
 
-const BRIGHTNESS_ELSEWHERE = 'For brightness, see Expert’s Brightness over time.'
+/**
+ * True when the run shows no movement to speak of (nothing moved, it came back, or the marked
+ * spot may be another one): then what changed may be its brightness, and the movement line's
+ * "i" points to the Brightness tool in the bar at the top.
+ */
+export function brightnessMayBeTheChange(data: FramesReady): boolean {
+  const kind = overallKind(data)
+  return kind === 'still' || kind === 'came back' || kind === 'other spot'
+}
 
 /**
  * Beginner's sentence about the whole run, from the first visit with a position to the last,
@@ -424,15 +435,15 @@ const BRIGHTNESS_ELSEWHERE = 'For brightness, see Expert’s Brightness over tim
  * found, and never calls a shift movement unless it is real (motion.ts) and a known object is
  * listed at the centre. The sentence is the same whichever visit is on screen.
  */
-export function overallResult(data: FramesReady): { sentence: string; more: string[]; pointer: string | null } {
+export function overallResult(data: FramesReady): { sentence: string; more: string[] } {
   const kind = overallKind(data)
-  if (kind === 'sum') return { sentence: 'Every visit is added into this one picture, so nothing moves in it.', more: [], pointer: null }
-  if (kind === 'alone') return { sentence: 'This is the only visit so far, so there is nothing to compare yet.', more: [], pointer: null }
+  if (kind === 'sum') return { sentence: 'Every visit is added into this one picture, so nothing moves in it.', more: [] }
+  if (kind === 'alone') return { sentence: 'This is the only visit so far, so there is nothing to compare yet.', more: [] }
   const rows = visitRows(data)
   const measured = measuredRows(rows)
-  if (kind === 'none found') return { sentence: 'No position could be measured in any visit.', more: [], pointer: null }
+  if (kind === 'none found') return { sentence: 'No position could be measured in any visit.', more: [] }
   if (kind === 'found once') {
-    return { sentence: `It was found only in visit ${measured[0].frame.epoch}, so there is nothing to compare.`, more: [], pointer: null }
+    return { sentence: `It was found only in visit ${measured[0].frame.epoch}, so there is nothing to compare.`, more: [] }
   }
   const [first, last] = runEnds(data) as [VisitRow, VisitRow] // two or more measured: kind says so
   const a = first.frame
@@ -445,13 +456,12 @@ export function overallResult(data: FramesReady): { sentence: string; more: stri
   const overall = last.shift as Shift // a measured row after the start
   const check = catalogueLine(data)
   if (kind === 'moved') {
-    return { sentence: `It moved ${overall.total.toFixed(1)} arcseconds ${compassWord(overall)} ${when}.`, more: check ? [check] : [], pointer: null }
+    return { sentence: `It moved ${overall.total.toFixed(1)} arcseconds ${compassWord(overall)} ${when}.`, more: check ? [check] : [] }
   }
   if (kind === 'other spot') {
     return {
       sentence: `The marked spot shifted ${overall.total.toFixed(1)} arcseconds ${when}.`,
       more: ['No known object is listed at the centre, so this may be a different spot, not movement.'],
-      pointer: BRIGHTNESS_ELSEWHERE,
     }
   }
   if (kind === 'came back') {
@@ -459,12 +469,11 @@ export function overallResult(data: FramesReady): { sentence: string; more: stri
     return {
       sentence: `Its place changed by up to ${most.toFixed(1)} arcseconds ${when}, then came back.`,
       more: ['Its first and last places are within the measuring error of each other.', ...(check ? [check] : [])],
-      pointer: BRIGHTNESS_ELSEWHERE,
     }
   }
   // The honest reason, and the catalogue's own expectation, in one line.
   const why = overall.total < SMALL_SHIFT_ARCSEC ? 'Any shift was under a third of a pixel.' : 'Any shift was within the measuring error.'
-  return { sentence: `No movement seen ${when}.`, more: [check ? `${why} ${check}` : `${why} It may be a measuring error.`], pointer: BRIGHTNESS_ELSEWHERE }
+  return { sentence: `No movement seen ${when}.`, more: [check ? `${why} ${check}` : `${why} It may be a measuring error.`] }
 }
 
 export interface CatalogueCheck {
@@ -495,8 +504,20 @@ export function catalogueCheck(data: FramesReady): CatalogueCheck | null {
 }
 
 /**
+ * True when the measurement and the catalogue agree that it moved: a real shift (motion.ts),
+ * an expected one of at least a third of a pixel, and the two within error of each other.
+ * Only then is it said to be drifting across the sky (in the movement line's "i").
+ */
+export function isDrifting(data: FramesReady): boolean {
+  const check = catalogueCheck(data)
+  const ends = runEnds(data)
+  return check !== null && check.agree && ends !== null && ends[1].real && check.expected >= SMALL_SHIFT_ARCSEC
+}
+
+/**
  * Beginner's line under the overall sentence: what the catalogue expected over the same dates
- * and whether the two agree. "Drifting across the sky" is said only when both say it moved.
+ * and whether the two agree. What that means ("drifting across the sky") is in the movement
+ * line's "i", so the side column stays short.
  */
 export function catalogueLine(data: FramesReady): string | null {
   const check = catalogueCheck(data)
@@ -504,9 +525,7 @@ export function catalogueLine(data: FramesReady): string | null {
   const who = check.by === 'Gaia' ? 'Gaia, a star catalogue,' : 'Its catalogue motion'
   const expected = check.expected.toFixed(1)
   if (!check.agree) return `${who} expected ${expected}. The two do not agree, so take care.`
-  const ends = runEnds(data)
-  const moved = ends !== null && ends[1].real && check.expected >= SMALL_SHIFT_ARCSEC
-  if (moved) return `${who} expected ${expected}. The two agree: this nearby object really is drifting across the sky.`
+  if (isDrifting(data)) return `${who} expected ${expected}: the two agree.`
   return `${who} expected ${expected}: it barely moves.`
 }
 

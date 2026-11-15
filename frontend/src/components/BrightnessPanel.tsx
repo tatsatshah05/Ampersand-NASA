@@ -245,6 +245,7 @@ type Load = { state: 'loading' } | { state: 'error'; message: string } | { state
 interface Props {
   request: SpectrumRequest
   onClose: () => void
+  level?: import('../address').UiLevel
 }
 
 export function BrightnessPanel({ request, onClose }: Props) {

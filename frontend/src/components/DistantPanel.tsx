@@ -61,6 +61,7 @@ interface Props {
   onCandidates?: (candidates: Candidate[], simulation: boolean) => void
   /** Centre the viewer on a sky position. */
   onLook?: (ra: number, dec: number) => void
+  level?: import('../address').UiLevel
 }
 
 /** Mount with a fresh `key` for each patch: the search starts when it appears. */

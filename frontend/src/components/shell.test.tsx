@@ -197,7 +197,7 @@ describe('the page with a view loaded', () => {
     expect(pageWith({ state: 'ready', data: view('new') }, '?ui=expert')).not.toContain('info-button')
   })
 
-  it('Expert has the same readout block holding the full table, with the tools under it', () => {
+  it('Expert has the same readout block holding the full table; its tools are in the bar at the top', () => {
     const html = pageWith({ state: 'ready', data: view('new') }, '?ui=expert')
     expect(html).toContain('class="readout-block"')
     const block = html.slice(html.indexOf('class="readout-block'), html.indexOf('<p class="sr-only" aria-live="polite">'))
@@ -210,15 +210,40 @@ describe('the page with a view loaded', () => {
     expect(visits[0]).toMatch(/^ aria-current="true"/)
     expect(visits[1]).toContain('aria-label="Show visit 2"')
     expect(visits[1]).toContain('10–12 Feb 2025 · 4 exp. · ±0.5″')
-    // The tools, with their long names kept for screen readers (and the checks).
-    expect(html).toContain('aria-label="Search for a distant world (Planet X)"')
-    expect(html).toContain('aria-label="Search this patch for anything that moved or changed"')
-    expect(html).toContain('aria-label="Spectrum of the target"')
-    expect(html).toContain('>Brightness over time<')
-    expect(html).toContain('>Asteroids and comets<')
-    // The three folds, closed, with nothing inside them in the page until opened.
-    expect(html.match(/<details class="fold"><summary>(Catalogue notes|Visit details|Sky context)<\/summary><\/details>/g)).toHaveLength(3)
+    // The six tools are in the bar at the top, each with its sentence as its title, and can be
+    // pressed now that the view is here; the side column no longer has a section of tool buttons.
+    const top = html.slice(html.indexOf('<header class="topbar">'), html.indexOf('</header>'))
+    for (const [label, title] of [
+      ['Light curve', 'Light curve: the target&#x27;s brightness'],
+      ['Spectrum', 'Spectrum: one brightness measurement per exposure'],
+      ['Blind search', 'Blind search: everything in the field that moved or changed brightness'],
+      ['Planet X search', 'Planet X search: looks for a body'],
+      ['Small bodies', 'Small bodies: known asteroids and comets'],
+      ['Sky context', 'Sky context: the same field in WISE, 2MASS and DSS images'],
+    ]) {
+      expect(top).toMatch(new RegExp(`<button class="feature-item" title="${title}[^"]*" type="button"><span class="feature-text" data-text="${label}">`))
+    }
+    expect(top).not.toContain('aria-disabled')
+    expect(html).not.toContain('Measure and search')
+    expect(html).not.toContain('tool-buttons')
+    // The two folds, closed, with nothing inside them in the page until opened; the sky context is a tool panel now.
+    expect(html.match(/<details class="fold"><summary>(Catalogue notes|Visit details)<\/summary><\/details>/g)).toHaveLength(2)
+    expect(html).not.toContain('<summary>Sky context</summary>')
     expect(html).not.toContain('Frame details')
+    // No tool is open until one is asked for.
+    expect(html).toContain('<div class="tool-panels"></div>')
+  })
+
+  it('opens the tool the address asks for only once the pictures are ready, at either level', () => {
+    // Before the pictures, nothing is open (the tools need them); the address keeps the tool for later.
+    for (const ui of ['beginner', 'expert']) {
+      const waiting = pageWith({ state: 'loading', previous: null, slow: false }, `?ui=${ui}&tool=brightness`)
+      expect(waiting).toContain('<div class="tool-panels"></div>')
+      expect(waiting).not.toContain('The address asks to open a tool')
+    }
+    // An unknown tool is ignored, with a note in the side column as for the other parameters.
+    const unknown = pageWith({ state: 'ready', data: view('new') }, '?ui=expert&tool=telescope')
+    expect(unknown).toContain('The address asks to open a tool called &quot;telescope&quot;.')
   })
 
   it('Visit details holds every visit at once, each with its own cautions in detection.ts words', () => {

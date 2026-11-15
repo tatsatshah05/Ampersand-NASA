@@ -4,8 +4,8 @@
 // else is looked up as a name by the backend (resolve.ts), so a named object's position
 // and motion are always the catalogue's, moved to 2026: the only sky positions in this
 // file are the fixed ones of OWN_LOOKS. Either way the result goes to `onSelect`, and a
-// line under the box says what was found. The box sits in the page's top bar and the
-// buttons in the row under it; useSkySearch holds what both share.
+// line under the box says what was found. The box opens the row of target buttons (choosing
+// what to look at is one job); useSkySearch holds what both share.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { releaseFocusAfterPointer } from '../focus'
 import {
@@ -247,7 +247,12 @@ function useSkySearch(onSelect: OnSelect): SearchState {
     return latest.current
   }
 
-  async function lookUp(name: string, mine: number, preset: Preset | undefined) {
+  /**
+   * `pressed`: the lookup is for a target button. Its name, position and motion are then on the
+   * page under the button's own name, so screen readers hear only that it was found; the
+   * catalogue's details are for a name typed into the box (the three buttons of our own say nothing).
+   */
+  async function lookUp(name: string, mine: number, preset: Preset | undefined, pressed: boolean) {
     const stop = new AbortController()
     pending.current = { name, stop }
     setStatus({ kind: 'working', text: `Looking up ${name}…` })
@@ -263,7 +268,7 @@ function useSkySearch(onSelect: OnSelect): SearchState {
     }
     if (mine !== latest.current) return
     pending.current = null
-    setStatus({ kind: 'found', text: foundText(found) })
+    setStatus({ kind: 'found', text: pressed && preset ? `Found ${preset.name}.` : foundText(found) })
     const target: SearchTarget = {
       ra: found.ra,
       dec: found.dec,
@@ -320,7 +325,7 @@ function useSkySearch(onSelect: OnSelect): SearchState {
       })
       return
     }
-    void lookUp(name, mine, preset ?? presetNamed(name))
+    void lookUp(name, mine, preset ?? presetNamed(name), preset !== undefined)
   }
 
   return {

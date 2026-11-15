@@ -1,6 +1,71 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { addressOf, chooseUiLevel, DEFAULT_SELECTION, readAddress, readStoredLevel, storeLevel } from './address'
+import { addressOf, chooseUiLevel, DEFAULT_SELECTION, readAddress, readStoredLevel, storeLevel, toolFrom, withTool, withUi, writeTool } from './address'
+import { TOOL_KEYS } from './features'
 import { realSkyAddress, trainingAddress } from './training'
+
+describe('the tool open under the picture (tool=<key>)', () => {
+  it('reads each of the six tools, and nothing else', () => {
+    for (const key of TOOL_KEYS) expect(toolFrom(`?ra=10&dec=5&tool=${key}`)).toBe(key)
+    expect(toolFrom('?ra=10&dec=5')).toBeNull()
+    expect(toolFrom('?tool=watch')).toBeNull()
+    expect(toolFrom('?tool=Spectrum')).toBeNull()
+    expect(toolFrom('?tool=')).toBeNull()
+  })
+
+  it('ignores an unknown tool with a note, as for the other parameters, and keeps the rest of the address', () => {
+    const read = readAddress('?ra=10&dec=5&tool=telescope')
+    expect(read.notes).toEqual([
+      'The address asks to open a tool called "telescope". The tools are brightness, spectrum, search, distant, smallbodies, context, so none is opened.',
+    ])
+    expect(read.selection.ra).toBe(10)
+    expect(readAddress('?ra=10&dec=5&tool=spectrum').notes).toEqual([])
+    expect(readAddress('?ra=10&dec=5').notes).toEqual([])
+  })
+
+  it('sets the tool on screen in the address, and drops it for Watch, leaving every other parameter', () => {
+    expect(withTool('?ra=10&dec=5&ui=expert', 'distant')).toBe('?ra=10&dec=5&ui=expert&tool=distant')
+    expect(withTool('?ra=10&dec=5&tool=distant&ui=expert', 'context')).toBe('?ra=10&dec=5&tool=context&ui=expert')
+    expect(withTool('?ra=10&dec=5&tool=distant', null)).toBe('?ra=10&dec=5')
+    expect(withTool('', 'spectrum')).toBe('?tool=spectrum')
+  })
+
+  it('stays in the address when the view changes (addressOf keeps it), and is not carried to a practice round', () => {
+    const next = addressOf({ ...DEFAULT_SELECTION, ra: 20 }, '?ra=10&dec=5&tool=brightness')
+    expect(toolFrom(next)).toBe('brightness')
+    expect(next.match(/tool=/g)).toHaveLength(1)
+    expect(toolFrom(trainingAddress(DEFAULT_SELECTION, 7))).toBeNull()
+  })
+
+  afterEach(() => vi.unstubAllGlobals())
+  it('is written in place (replaceState), and only when it changes', () => {
+    const calls: string[] = []
+    const page = {
+      location: { search: '?ra=10&dec=5' },
+      history: {
+        replaceState: (_: unknown, __: string, url: string) => {
+          calls.push(url)
+          page.location.search = url
+        },
+      },
+    }
+    vi.stubGlobal('window', page)
+    writeTool('search')
+    writeTool('search')
+    writeTool(null)
+    writeTool(null)
+    expect(calls).toEqual(['?ra=10&dec=5&tool=search', '?ra=10&dec=5'])
+  })
+})
+
+describe('the level carried by the links between screens', () => {
+  it('says the level outright, in place of any the address had', () => {
+    expect(withUi('?watchlist=1', 'beginner')).toBe('?watchlist=1&ui=beginner')
+    expect(withUi('?watchlist=1&ui=beginner', 'expert')).toBe('?watchlist=1&ui=expert')
+    expect(withUi('', 'expert')).toBe('?ui=expert')
+    expect(readAddress(withUi(trainingAddress(DEFAULT_SELECTION, 7), 'beginner'), 'expert').selection.ui).toBe('beginner')
+    expect(readAddress(withUi(trainingAddress(DEFAULT_SELECTION, 7), 'expert'), 'beginner').selection.ui).toBe('expert')
+  })
+})
 
 describe('ui in the page address', () => {
   it('round-trips expert, and leaves Beginner out of the address', () => {

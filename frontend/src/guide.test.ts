@@ -1,9 +1,14 @@
 // The words of Beginner's guide and "i" popovers: true to the data, and plain.
 import { describe, expect, it } from 'vitest'
 import type { Frame, FramesReady } from './api'
+import barnardJson from './fixtures/frames/barnard_d5.json'
+import rwAurJson from './fixtures/frames/rwaur_request_d5.json'
+import novaJson from './fixtures/frames/v572vel_d2.json'
 import { placePopover } from './popover'
 import { motionSentence } from './wording'
 import {
+  BRIGHTNESS_POINTER,
+  brightLine,
   brightStarInfo,
   dayMonthYear,
   detectionInfo,
@@ -17,6 +22,7 @@ import {
   pictureInfo,
   playerInfo,
   stepName,
+  stepsInfo,
   visitsInfo,
   type InfoKey,
 } from './guide'
@@ -73,8 +79,16 @@ describe('the steps', () => {
     expect(stepName(guideSteps(NO_PROGRESS)[0])).toBe('Step 1, you are here')
     expect(stepName(guideSteps({ chose: true, flipped: false, read: false })[0])).toBe('Step 1, done')
   })
-  it('end with where to go further: Practise, helping check, and Expert', () => {
-    expect(GO_FURTHER).toMatch(/practise.*vote.*Expert/i)
+  it('end by pointing to the other tools, in the bar at the top', () => {
+    expect(GO_FURTHER).toBe('Then try the other tools in the bar at the top.')
+  })
+  it('explain the bar, not the two links it replaced, and keep saying no find is confirmed', () => {
+    const text = stepsInfo().join(' ')
+    expect(text).toContain('The bar at the top lists every tool')
+    expect(text).toContain('Practise, Vote and Three tools open pages of their own.')
+    expect(text).toContain('None of those finds is confirmed.')
+    expect(text).toContain('Nothing here is a new find.')
+    expect(text).not.toMatch(/Expert adds more tools/)
   })
 })
 
@@ -193,8 +207,12 @@ describe('the bright-star warning and the switch', () => {
     expect(brightStarInfo([{ gmag: 4.3 }])[0]).toContain('gives it a brightness of 4.3')
     expect(brightStarInfo(null)[0]).toContain('very bright')
   })
-  it('the switch says what Expert adds', () => {
-    expect(levelInfo().join(' ')).toContain('search for a far-off planet')
+  it('the switch says both levels have every tool, written differently, and what only Expert adds', () => {
+    const text = levelInfo().join(' ')
+    expect(text).toContain('Both levels have every tool in the bar at the top.')
+    expect(text).toContain('plain words')
+    expect(text).toContain('Expert also adds other infrared colours, a picture of what changed, and one sum of all visits.')
+    expect(text).toContain('remembered on this device')
   })
 })
 
@@ -246,6 +264,34 @@ describe('the corrected claims', () => {
       const n = infoFor(k, d, [{ gmag: 4.3 }]).join(' ').split(/\s+/).length
       expect(n, k).toBeLessThanOrEqual(k === 'picture' ? 150 : 115)
     }
+  })
+})
+
+describe('what the side column says in its "i" instead (real saved answers)', () => {
+  const barnard = barnardJson as unknown as FramesReady
+  const rwAur = rwAurJson as unknown as FramesReady
+  const nova = novaJson as unknown as FramesReady
+  it('a mover the catalogue agrees with: the "i" says it is drifting across the sky', () => {
+    const text = movementInfo(barnard).join(' ')
+    expect(text).toContain('That fits what we measured. This nearby object really is drifting across the sky.')
+    expect(text).not.toContain(BRIGHTNESS_POINTER)
+  })
+  it('no movement, or a spot that may be another one: the "i" points to Brightness in the bar', () => {
+    expect(movementInfo(rwAur)).toContain(BRIGHTNESS_POINTER)
+    expect(movementInfo(rwAur).join(' ')).not.toContain('drifting')
+    expect(movementInfo(nova)).toContain(BRIGHTNESS_POINTER)
+    expect(BRIGHTNESS_POINTER).toBe('To see if it got brighter or fainter, press Brightness in the bar at the top.')
+  })
+  it('the bright-star warning on the page is one sentence and keeps its caution; the "i" says exactly where', () => {
+    const middle = [{ gmag: 6.37, distance_arcmin: 0, inside_picture: true }]
+    const inside = [{ gmag: 5, distance_arcmin: 1, inside_picture: true }]
+    const outside = [{ gmag: 6.75, distance_arcmin: 6.8, inside_picture: false }]
+    expect(brightLine(middle)).toBe('The star in the middle is so bright that its rings can look like movement.')
+    expect(brightLine(inside)).toBe('A very bright star in this picture can leave rings that look like movement.')
+    expect(brightLine(outside)).toBe('A very bright star nearby can leave rings that look like movement.')
+    expect(brightLine(null)).toBe('A very bright star nearby can leave rings that look like movement.')
+    expect(brightStarInfo(outside)[0]).toContain('just outside this picture')
+    for (const b of [middle, inside, outside, null]) expect(brightLine(b)).toMatch(/rings .*look like movement\.$/)
   })
 })
 

@@ -64,6 +64,7 @@ interface Props {
   ra: number
   dec: number
   fov: number // SPHEREx field of view in degrees
+  level?: import('../address').UiLevel
 }
 
 type AladinModule = typeof import('aladin-lite').default

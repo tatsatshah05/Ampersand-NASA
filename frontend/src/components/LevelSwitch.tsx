@@ -1,14 +1,15 @@
-// The Beginner / Expert switch, and the few plain sentences Beginner shows about the picture.
+// The Beginner / Expert switch (shown in LevelDock, at the bottom right of every screen), and
+// Beginner's step guide.
 import type { ReactNode } from 'react'
 import type { UiLevel } from '../address'
 import { releaseFocusAfterPointer } from '../focus'
 import { GO_FURTHER, guideSteps, stepName, type Progress } from '../guide'
 
 export const EXPERT_ADDS =
-  'Expert adds the six detectors, difference and sum views, overlays, spectra, brightness charts, the search of a patch, asteroid labels and the search for a distant world (Planet X).'
+  'Every tool written for scientists, with all the numbers, plus the six detectors, the difference and sum views and the overlays.'
 
 const SIDES: { level: UiLevel; label: string; about: string }[] = [
-  { level: 'beginner', label: 'Beginner', about: 'The picture and what moved.' },
+  { level: 'beginner', label: 'Beginner', about: 'Every tool, written in plain words.' },
   { level: 'expert', label: 'Expert', about: EXPERT_ADDS },
 ]
 

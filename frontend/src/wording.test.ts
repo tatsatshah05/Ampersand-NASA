@@ -12,12 +12,14 @@ import rwAurJson from './fixtures/frames/rwaur_request_d5.json'
 import novaJson from './fixtures/frames/v572vel_d2.json'
 import wiseJson from './fixtures/frames/wise0855_request_d6.json'
 import {
+  brightnessMayBeTheChange,
   catalogueCheck,
   catalogueLine,
   compassWord,
   dateSpan,
   expertCells,
   flagsNote,
+  isDrifting,
   monthYearLong,
   overallResult,
   plainResult,
@@ -65,16 +67,19 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
     // First and last measured places 10.40 arcseconds apart (CLAUDE.md, step 1: -2.21, +10.16).
     expect(overallResult(barnard)).toEqual({
       sentence: 'It moved 10.4 arcseconds north between August 2025 and August 2026.',
-      more: ['Gaia, a star catalogue, expected 10.3. The two agree: this nearby object really is drifting across the sky.'],
-      pointer: null,
+      more: ['Gaia, a star catalogue, expected 10.3: the two agree.'],
     })
+    // What that means is in the movement line's "i" (guide.ts), so the column stays short.
+    expect(isDrifting(barnard)).toBe(true)
+    expect(brightnessMayBeTheChange(barnard)).toBe(false)
     const check = catalogueCheck(barnard)
     expect(check?.differ).toBeCloseTo(1.44, 2) // measured minus predicted, visit 1 to 3
     expect(check?.bar).toBeCloseTo(4.24, 2) // three times the two 1-arcsecond position errors
     expect(seenLine(barnard)).toBe('Seen clearly in all 3 visits.')
   })
-  it("gives Beginner one row per visit: the visit and how far it had moved", () => {
-    expect(plain(barnard)).toEqual(['start', '5.9 north, 0.9 west', '10.2 north, 2.2 west'])
+  it("gives Beginner one row per visit: the visit and how far it had moved, in arcseconds", () => {
+    // The totals of Expert's rows (6.0 and 10.4); the way it went is in the sentence over the table.
+    expect(plain(barnard)).toEqual(['start', '6.0', '10.4'])
     expect(tableNotes(barnard, 'beginner')).toEqual([])
   })
   it('gives Expert every number of every visit, two lines each', () => {
@@ -104,19 +109,21 @@ describe("a mover: Barnard's Star, detector 5 (Gaia's own star at the centre)", 
 describe('a target given with its own motion (the name lookup)', () => {
   it('compares with the motion given, not with Gaia', () => {
     expect(tableCaption(request)).toBe('Shift since visit 1 in ″, east and north; + from the motion given.')
-    expect(catalogueLine(request)).toBe('Its catalogue motion expected 10.3. The two agree: this nearby object really is drifting across the sky.')
+    expect(catalogueLine(request)).toBe('Its catalogue motion expected 10.3: the two agree.')
   })
 })
 
 describe('an object that stayed in place: RW Aurigae', () => {
-  it('says no movement, why, and where brightness changes are, never "it did not move" alone', () => {
+  it('says no movement and why, never "it did not move" alone; brightness may be the change', () => {
     expect(overallResult(rwAur)).toEqual({
       sentence: 'No movement seen between September 2025 and September 2026.',
       more: ['Any shift was under a third of a pixel. Its catalogue motion expected 0.0: it barely moves.'],
-      pointer: 'For brightness, see Expert’s Brightness over time.',
     })
+    // The movement line's "i" then points to the Brightness tool in the bar (guide.ts).
+    expect(brightnessMayBeTheChange(rwAur)).toBe(true)
+    expect(isDrifting(rwAur)).toBe(false)
     // The sentence says "within error" for every row, so the rows do not repeat it.
-    expect(plain(rwAur)).toEqual(['start', '0.2 south, 0.8 east', '0.2 south, 0.8 east'])
+    expect(plain(rwAur)).toEqual(['start', '0.8', '0.9'])
   })
   it('keeps every caution in Expert, said once', () => {
     expect(tableNotes(rwAur, 'expert')).toEqual([
@@ -156,7 +163,7 @@ describe('a marginal detection and a blended neighbour: WISE 0855, detector 6', 
 
 describe('four visits, one of them within error: Epsilon Indi B', () => {
   it('marks only that row, and explains once', () => {
-    expect(plain(epsInd)).toEqual(['start', '1.2 south, 1.2 east, within error', '2.0 south, 4.0 east', '3.8 south, 5.0 east'])
+    expect(plain(epsInd)).toEqual(['start', '1.7, within error', '4.4', '6.3'])
     expect(tableNotes(epsInd, 'beginner')).toEqual(['Within error: too small to be sure.'])
     expect(expert(epsInd)[1].about).toMatch(/· within error$/)
     expect(overallResult(epsInd).sentence).toBe('It moved 6.3 arcseconds south-east between May 2025 and September 2026.')
@@ -166,7 +173,7 @@ describe('four visits, one of them within error: Epsilon Indi B', () => {
 describe('difference mode: each visit minus visit 1', () => {
   it('has one row fewer (visit 1 is subtracted) and measures from visit 1', () => {
     expect(tableRows(difference).map((r) => r.frame.epoch)).toEqual([2, 3])
-    expect(plain(difference)).toEqual(['5.9 north, 0.9 west', '10.2 north, 2.2 west'])
+    expect(plain(difference)).toEqual(['6.0', '10.4'])
     expect(tableNotes(difference, 'expert').slice(0, 2)).toEqual([
       'Visit 1 is the one subtracted, so the shifts are measured from it.',
       "The positions were measured in each visit's own image, not in the difference.",
@@ -203,7 +210,7 @@ describe('built cases', () => {
     ),
   }
   it('a visit with no position: "not found", and the run is measured between the visits that have one', () => {
-    expect(plain(lost)).toEqual(['start', 'not found', '10.2 north, 2.2 west'])
+    expect(plain(lost)).toEqual(['start', 'not found', '10.4'])
     expect(expert(lost)[1].measured).toBe('not found')
     expect(tableNotes(lost, 'beginner')).toEqual(['Not found in visit 2: no clear spot could be measured there.'])
     expect(tableNotes(lost, 'expert')).toContain('Visit 2: no position could be measured. Visit details says why.')
@@ -214,7 +221,7 @@ describe('built cases', () => {
     const firstLost: FramesReady = { ...barnard, frames: barnard.frames.map((f, i) => (i === 0 ? ({ ...f, centroid: null } as Frame) : f)) }
     // Measured from visit 2, and the sentence says which visits.
     expect(overallResult(firstLost).sentence).toMatch(/^It moved 4\.\d arcseconds .* between visit 2 \(March 2026\) and visit 3 \(August 2026\)\.$/)
-    expect(plain(firstLost)).toEqual(['not found', 'start', expect.stringMatching(/north/)])
+    expect(plain(firstLost)).toEqual(['not found', 'start', expect.stringMatching(/^4\.\d$/)])
     const once: FramesReady = { ...barnard, frames: barnard.frames.map((f, i) => (i === 2 ? f : ({ ...f, centroid: null } as Frame))) }
     expect(overallResult(once).sentence).toBe('It was found only in visit 3, so there is nothing to compare.')
     const none: FramesReady = { ...barnard, frames: barnard.frames.map((f) => ({ ...f, centroid: null }) as Frame) }
@@ -226,7 +233,7 @@ describe('built cases', () => {
   const many: FramesReady = { ...barnard, frames: [...barnard.frames, later(4, '02'), later(5, '07'), later(6, '12')] }
   it('more than four visits: one row each, the screen reader counts them all', () => {
     expect(tableRows(many)).toHaveLength(6)
-    expect(plain(many).slice(3)).toEqual(['10.2 north, 2.2 west', '10.2 north, 2.2 west', '10.2 north, 2.2 west'])
+    expect(plain(many).slice(3)).toEqual(['10.4', '10.4', '10.4'])
     expect(rowAnnouncement(many, 5)).toBe('Visit 6 of 6, December 2027: moved 10.2 arcseconds north, 2.2 west.')
     expect(seenLine(many)).toBe('Seen clearly in all 6 visits.')
   })

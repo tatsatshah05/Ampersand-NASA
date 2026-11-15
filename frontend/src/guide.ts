@@ -10,7 +10,7 @@
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady } from './api'
 import { times } from './detection'
 import { measuredRows, realShiftBar, shiftBetween, visitRows } from './motion'
-import { catalogueCheck, listVisits, monthYear, monthYearLong } from './wording'
+import { brightnessMayBeTheChange, catalogueCheck, isDrifting, listVisits, monthYear, monthYearLong } from './wording'
 
 // ---- the step guide ------------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ export function guideSteps(progress: Progress, still = false): Step[] {
 export const stepName = (step: Step): string =>
   `Step ${step.n}, ${step.state === 'done' ? 'done' : step.state === 'now' ? 'you are here' : 'still to do'}`
 
-export const GO_FURTHER = 'Then go further: Practise, Vote, or Expert.'
+export const GO_FURTHER = 'Then try the other tools in the bar at the top.'
 
 // ---- the small "i" buttons -----------------------------------------------------------------
 
@@ -91,12 +91,12 @@ const listNumbers = (ns: (number | string)[]): string => (ns.length < 2 ? ns.joi
 const allFrames = (data: FramesReady): Pick<Frame, 'date_start' | 'date_end' | 'n_exposures'>[] =>
   data.reference_frame ? [data.reference_frame, ...data.frames] : data.frames
 
-/** The three steps and what "go further" means. */
+/** The three steps, and the bar at the top that the last line points to. */
 export function stepsInfo(): string[] {
   return [
     'This page shows how one patch of sky changed between SPHEREx’s visits. The first five buttons are well-known objects, used as tests. Nothing here is a new find.',
-    'Practise adds a made-up moving object to real photos, and you try to find it. Vote lists what our computer search found, and you say if it looks real. None of those finds is confirmed.',
-    'Expert adds more tools for a closer look.',
+    'The bar at the top lists every tool, one after another. Brightness, Colours and the next four open under the picture. Watch brings you back.',
+    'Practise, Vote and Three tools open pages of their own. Practise hides a made-up moving object in real photos. Vote shows what our computer search found. None of those finds is confirmed.',
   ]
 }
 
@@ -197,10 +197,13 @@ export function movementInfo(data: FramesReady | null): string[] {
   const to = b.centroid!
   const shift = shiftBetween(from, to)
   const when = `Its first and last places are from ${monthYearLong(a.date_mean)} and ${monthYearLong(b.date_mean)}.`
+  // When nothing moved, what changed may be its brightness: the tool for that is in the bar.
+  const brightness = brightnessMayBeTheChange(data) ? [BRIGHTNESS_POINTER] : []
   if (!data.target) {
     return [
       how,
       `${unit} ${when} The marked spot is ${shift.total.toFixed(1)} arcseconds from where it was first marked. No known object is listed at the centre, so it may be a different spot, not something moving.${gaps}`,
+      ...brightness,
     ]
   }
   const here =
@@ -213,10 +216,13 @@ export function movementInfo(data: FramesReady | null): string[] {
   const catalogue = check
     ? ` Its catalogue motion says it should have moved ${check.expected.toFixed(1)} arcseconds by then.${
         check.agree ? ' That fits what we measured.' : ' That is not what we measured, so take care.'
-      }`
+      }${isDrifting(data) ? ' This nearby object really is drifting across the sky.' : ''}`
     : ''
-  return [how, `${unit} ${when} ${here} ${care}${catalogue}${gaps}`]
+  return [how, `${unit} ${when} ${here} ${care}${catalogue}${gaps}`, ...brightness]
 }
+
+/** Where to look when what changed may be the brightness, not the place. */
+export const BRIGHTNESS_POINTER = 'To see if it got brighter or fainter, press Brightness in the bar at the top.'
 
 /** The line about how clearly the object is seen, in every visit at once. */
 export function detectionInfo(data: FramesReady | null): string[] {
@@ -259,9 +265,15 @@ export interface BrightStar {
 const brightest = (bright: BrightStar[] | null | undefined): BrightStar | null =>
   bright && bright.length > 0 ? bright.reduce((a, b) => (b.gmag < a.gmag ? b : a)) : null
 
-/** The short warning Beginner shows on the page; the popover says the rest. */
+/**
+ * The short warning Beginner shows on the page, in one sentence; the popover says the rest,
+ * exactly where the star is and how bright Gaia says it is.
+ */
 export function brightLine(bright: BrightStar[] | null | undefined): string {
-  return `${brightWhere(brightest(bright))} Its rings can look like movement.`
+  const top = brightest(bright)
+  if (top && top.distance_arcmin !== undefined && top.distance_arcmin < 0.1) return 'The star in the middle is so bright that its rings can look like movement.'
+  if (top?.inside_picture) return 'A very bright star in this picture can leave rings that look like movement.'
+  return 'A very bright star nearby can leave rings that look like movement.'
 }
 
 function brightWhere(top: BrightStar | null): string {
@@ -292,8 +304,8 @@ export function brightStarInfo(bright: BrightStar[] | null | undefined): string[
 /** The Beginner | Expert switch. */
 export function levelInfo(): string[] {
   return [
-    'Beginner shows the picture and what moved. Expert adds more ways to look. Your choice is remembered on this device.',
-    'Expert adds other infrared colours, a picture of what changed, and one sum of all visits. It adds brightness charts, a patch search, and a list of known asteroids and comets. It also has a search for a far-off planet some people think may exist.',
+    'Both levels have every tool in the bar at the top. Beginner says what each one shows in plain words. Expert shows it as scientists read it, with every number in view.',
+    'Expert also adds other infrared colours, a picture of what changed, and one sum of all visits. Your choice is remembered on this device.',
   ]
 }
 

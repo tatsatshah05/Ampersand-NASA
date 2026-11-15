@@ -45,6 +45,7 @@ interface Props {
   onLook: (ra: number, dec: number) => void
   /** The objects to mark on the picture, or an empty list when there are none. */
   onObjects: (objects: SearchObject[]) => void
+  level?: import('../address').UiLevel
 }
 
 /** Mount with a fresh `key` for each patch: the search starts when it appears. */

@@ -13,6 +13,7 @@ type Load = { state: 'loading' } | { state: 'error'; message: string } | { state
 interface Props {
   query: SmallBodiesQuery
   onClose: () => void
+  level?: import('../address').UiLevel
 }
 
 export function SmallBodiesPanel({ query, onClose }: Props) {

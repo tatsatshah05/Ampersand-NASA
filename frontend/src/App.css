@@ -186,6 +186,13 @@
   gap: 4px;
 }
 
+/* The search field opens the target row: choosing what to look at is one job. The top bar
+   holds the bar of features instead, so the page has no more rows than before. */
+.targets .searchbar {
+  flex: 0 1 260px;
+  min-width: 160px;
+}
+
 .quiet {
   display: inline-flex;
   align-items: center;
@@ -1191,6 +1198,102 @@
   box-shadow: 0 6px 24px rgb(0 0 0 / 0.7);
 }
 
+/* ---- room for the Beginner | Expert dock at the bottom right (LevelDock) ------------------- */
+
+/* The dock is 32px tall, 16px from the bottom. The side column ends above it (it scrolls
+   inside itself), and the foot of the tool panels and of the other screens keeps room for it,
+   so it covers nothing at rest and the last line can always be scrolled clear of it. */
+.app,
+main.training,
+main.watchlist {
+  --dock-room: 56px;
+}
+
+@media (min-width: 1000px) {
+  .bench > .inspector {
+    margin-bottom: var(--dock-room);
+  }
+
+  /* Beginner's block of the sentence and the table gives up the dock's room. */
+  .bench > .inspector.beginner .readout-block {
+    height: clamp(300px, calc(100dvh - 440px), 440px);
+  }
+
+  .bench > .inspector .credits {
+    padding-top: 12px;
+  }
+}
+
+/* A short window: Beginner's steps and the credits closer together, and Expert's "View"
+   heading kept for screen readers only, so the side column still fits over the dock. */
+@media (min-width: 1000px) and (max-height: 800px) {
+  .bench > .inspector.beginner .readout-block {
+    height: clamp(300px, calc(100dvh - 406px), 440px);
+  }
+
+  .bench > .inspector .guide {
+    padding-top: 8px;
+  }
+
+  .bench > .inspector .guide-steps {
+    gap: 4px;
+  }
+
+  .bench > .inspector .guide-further {
+    margin-top: 6px;
+  }
+
+  .bench > .inspector .credits {
+    padding-top: 6px;
+  }
+
+  .bench > .inspector {
+    padding-bottom: 0;
+  }
+
+  .bench > .inspector:not(.beginner) .readout-block {
+    height: 226px;
+  }
+
+  .bench > .inspector:not(.beginner) #ins-view {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Beginner's line under the steps: a little air before its "i". */
+.guide-further .info-button {
+  margin-left: 8px;
+}
+
+.tool-panels:not(:empty) {
+  padding-bottom: var(--dock-room);
+}
+
+/* "Back to the picture" sits over the dock. */
+.app > .back-to-plate {
+  right: 16px;
+  bottom: var(--dock-room);
+}
+
+/* The same patch in other surveys, as a panel under the picture: its own Close, and a sky
+   atlas of a sensible size instead of the panel's full width. */
+.tool-slot-close {
+  max-width: 1280px;
+  margin: 0 auto 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.context-slot .aladin {
+  max-width: min(100%, 640px);
+}
+
 /* ---- narrower windows -------------------------------------------------------------------- */
 
 @media (max-width: 1199px) {
@@ -1345,6 +1448,33 @@
   .back-to-plate {
     right: 16px;
     bottom: 16px;
+  }
+
+  /* The search field on a line of its own over the target buttons. */
+  .targets .searchbar {
+    flex: 1 1 100%;
+    padding: 8px 16px 0;
+  }
+
+  /* The page scrolls: its foot keeps room for the dock, so the last line can be read clear of it. */
+  .app {
+    --col-gap: 8px;
+    padding-bottom: var(--dock-room);
+  }
+
+  /* A little tighter above the strip of visits, so on a phone the dock at the bottom right
+     clears the strip when the page opens. */
+  .bench > .stagecol {
+    padding-top: 8px;
+  }
+
+  .bench .transport {
+    row-gap: 6px;
+  }
+
+  .bench > .inspector.beginner .guide {
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 
@@ -1723,6 +1853,23 @@ main.training {
 main.training > header,
 main.training > footer {
   grid-column: 1 / -1;
+}
+
+/* The practice and watchlist screens have the same top bar as the viewer, and room at their
+   foot for the dock of the level switch. */
+.topbar.screen-topbar {
+  height: 56px;
+}
+
+main.training,
+main.watchlist {
+  padding-bottom: calc(16px + var(--dock-room));
+}
+
+@media (max-width: 999px) {
+  .topbar.screen-topbar {
+    height: auto;
+  }
 }
 
 main.training > header {

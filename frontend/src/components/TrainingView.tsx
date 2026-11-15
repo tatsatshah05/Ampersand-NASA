@@ -2,9 +2,27 @@
 // visitor can practise spotting a distant world by the way it moves between visits.
 // A separate screen (address: ?train=<seed>): none of the ordinary view's panels
 // appear here, and a banner says "simulation" the whole time. Nothing on it is called
-// a detection or a discovery: the object is "made-up" or "planted".
+// a detection or a discovery: the object is "made-up" or "planted". The bar of features is
+// at the top, as on every screen, with Practise as the current one, and the level switch
+// in its dock at the bottom right.
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { LEVELS, readAddress, writeAddress, type Level, type Selection } from '../address'
+import {
+  addressOf,
+  LEVELS,
+  readAddress,
+  readStoredLevel,
+  storeLevel,
+  TOOLS_ADDRESS,
+  withTool,
+  withUi,
+  writeAddress,
+  type Level,
+  type Selection,
+  type UiLevel,
+} from '../address'
+import { WATCHLIST_ADDRESS } from '../watchlist'
+import { FeatureBar, type FeatureLinks } from './FeatureBar'
+import { LevelDock } from './LevelDock'
 import { keyBelongsToControl, releaseFocusAfterPointer } from '../focus'
 import { toPicture } from '../motion'
 import { skyToPixel, type Grid } from '../projection'
@@ -58,7 +76,7 @@ const allVisitsLabel = (frames: TrainingFrame[], difference: boolean) => {
 }
 
 export function TrainingView() {
-  const [selection, setSelection] = useState<Selection>(() => readAddress(window.location.search).selection)
+  const [selection, setSelection] = useState<Selection>(() => readAddress(window.location.search, readStoredLevel()).selection)
   const [attempt, setAttempt] = useState(0)
   const seed = selection.train ?? 0
   const round = `${seed}|${selection.level}`
@@ -80,7 +98,7 @@ export function TrainingView() {
     writeAddress(next, how)
   }, [])
   useEffect(() => {
-    const onPop = () => setSelection(readAddress(window.location.search).selection)
+    const onPop = () => setSelection(readAddress(window.location.search, readStoredLevel()).selection)
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
@@ -137,12 +155,33 @@ export function TrainingView() {
   const lastClick = progress.last && grid ? skyToPixel(progress.last.ra, progress.last.dec, grid) : null
   const banner = data?.notice ?? FALLBACK_NOTICE
 
+  // The level is the app's: kept in the address and on this device, and carried by every link.
+  const level = selection.ui
+  const changeLevel = (ui: UiLevel) => {
+    storeLevel(ui)
+    change({ ...selection, ui }, 'replace')
+  }
+  // The real sky at this place, in the level in use (Beginner's viewer shows the normal view).
+  const realSky = withUi(realSkyAddress({ ...selection, mode: level === 'beginner' ? 'normal' : selection.mode }), level)
+  // The bar: this round is the current feature; Watch and the tools go back to the real sky,
+  // opening the tool pressed.
+  const links: FeatureLinks = {
+    practise: withUi(addressOf(selection), level),
+    vote: withUi(WATCHLIST_ADDRESS, level),
+    tools: withUi(TOOLS_ADDRESS, level),
+    viewer: (tool) => withTool(realSky, tool),
+  }
+
   return (
     <>
       {/* Always on screen: sticky, with no way to close it. The backend's own notice text. */}
       <div className="sim-banner" role="note" aria-label="This is a simulation">
         <strong>SIMULATION.</strong> {banner}
       </div>
+      <header className="topbar screen-topbar">
+        <p className="brand">SPHEREx sky-change viewer</p>
+        <FeatureBar level={level} current="practise" links={links} />
+      </header>
       <main className="training">
         <header>
           <h1>Practice: find a made-up object</h1>
@@ -190,7 +229,7 @@ export function TrainingView() {
             <button type="button" onClick={() => startRound({ train: newSeed() })}>
               New round
             </button>
-            <a className="button-link" href={realSkyAddress(selection)}>
+            <a className="button-link" href={realSky}>
               Back to the real sky
             </a>
           </div>
@@ -216,7 +255,7 @@ export function TrainingView() {
                 <button type="button" onClick={() => startRound({ train: newSeed() })}>
                   New round
                 </button>
-                <a className="button-link" href={realSkyAddress(selection)}>
+                <a className="button-link" href={realSky}>
                   Back to the real sky
                 </a>
               </div>
@@ -343,6 +382,7 @@ export function TrainingView() {
           Images: NASA/JPL-Caltech SPHEREx, served by NASA/IPAC Infrared Science Archive (IRSA).
         </footer>
       </main>
+      <LevelDock level={level} onChange={changeLevel} />
     </>
   )
 }

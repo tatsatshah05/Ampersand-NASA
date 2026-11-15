@@ -1,0 +1,36 @@
+/* The dock of the Beginner | Expert switch (LevelDock.tsx): fixed 16px from the bottom right
+   corner of the window, over the page, 32px tall. Each screen keeps room for it at its foot
+   (App.css, --dock-room), so it covers no picture, visit or control. Colours only through the
+   tokens: the level in use is told by the ink of the chosen item, bold type and a hairline
+   round it, so it is seen without colour. */
+
+.level-dock {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.level-dock .level-switch {
+  margin-left: 0;
+  background: var(--bg);
+}
+
+.level-dock .level-switch .segment[aria-pressed='true'] {
+  color: var(--ink, var(--text));
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px var(--ink, var(--text));
+}
+
+/* A phone: a little lower, so the strip of visits under the picture stays clear of it. */
+@media (max-width: 999px) {
+  .level-dock .level-switch .segment {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+}
