@@ -31,6 +31,10 @@
   line-height: 1.4;
 }
 
+.real-mover + .how-to-look-fold {
+  margin-top: 14px;
+}
+
 .how-to-look {
   margin: 12px 0 0;
   max-width: 72ch;
