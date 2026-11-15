@@ -1,0 +1,293 @@
+{
+ "eris": {
+  "centre": [
+   27.37815,
+   -0.11998
+  ],
+  "visit": {
+   "mjd_first": 60866.085821,
+   "mjd_last": 60881.439791,
+   "duration_days": 15.35,
+   "n_exposures": 57,
+   "n_used": 57,
+   "mjd_t0": 60877.296038909,
+   "distance_leverage_arcsec_per_inv_au": [
+    1580,
+    604
+   ]
+  },
+  "n_trials": 24439,
+  "control": {
+   "best_reversed_snr": 6.404559431890559
+  },
+  "limit": {
+   "threshold_snr": 8.0,
+   "faintest_mean_flux_mjy_matched_filter_scale": 0.0333,
+   "faintest_mean_flux_mjy_aperture_scale": 0.049,
+   "searched_area_deg2": 0.0169
+  },
+  "top_peaks": [
+   null,
+   {
+    "snr": 6.789
+   },
+   null,
+   null,
+   null
+  ],
+  "candidate": {
+   "ra": 27.378296,
+   "dec": -0.119667,
+   "mjd_t0": 60877.296038909,
+   "offset_arcsec": [
+    0.52,
+    1.13
+   ],
+   "drift_arcsec_day": [
+    4.109,
+    -3.326
+   ],
+   "snr": 14.8,
+   "coarse_snr": 14.69,
+   "mean_flux_mjy_matched_filter_scale": 0.0698,
+   "per_detector": {
+    "D1": {
+     "n_exposures": 19,
+     "flux_mjy": 0.1047,
+     "flux_error_mjy": 0.0089,
+     "snr": 11.93
+    },
+    "D2": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0664,
+     "flux_error_mjy": 0.0087,
+     "snr": 7.68
+    },
+    "D3": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0488,
+     "flux_error_mjy": 0.0076,
+     "snr": 6.4
+    }
+   },
+   "still_there": [
+    {
+     "mjd": [
+      61035.5,
+      61060.2
+     ],
+     "flux_mjy": -0.0005,
+     "error_mjy": 0.0039,
+     "there": false
+    },
+    {
+     "mjd": [
+      61232.7,
+      61243.4
+     ],
+     "flux_mjy": -0.0018,
+     "error_mjy": 0.004,
+     "there": false
+    }
+   ],
+   "track_checks": {
+    "usable_span_days": 13.66,
+    "n_usable": 46
+   },
+   "delta_s2_infinite": 47.8,
+   "snr_at_infinity": 13.08,
+   "reversed_earth_snr_mirror_distance": 8.71,
+   "distance_measured": true,
+   "epoch_resampling": {
+    "n_epochs": 14,
+    "leave_one_epoch_out_delta_s2": [
+     17.2,
+     40.3,
+     46.7,
+     39.0,
+     47.3,
+     45.5,
+     49.7,
+     51.6,
+     47.6,
+     43.3,
+     53.8,
+     47.8,
+     36.3,
+     47.8
+    ],
+    "leave_one_epoch_out_min_delta_s2": 17.2,
+    "n_bootstrap": 40,
+    "bootstrap_distance_au_68": [
+     100.0,
+     142.9
+    ],
+    "bootstrap_distance_au_95": [
+     76.5,
+     null
+    ],
+    "bootstrap_share_unbounded": 0.05
+   },
+   "profile": {
+    "inv_d": [
+     -0.012,
+     -0.011,
+     -0.01,
+     -0.009,
+     -0.008,
+     -0.007,
+     -0.006,
+     -0.005,
+     -0.004,
+     -0.003,
+     -0.002,
+     -0.001,
+     0.0,
+     0.001,
+     0.002,
+     0.003,
+     0.004,
+     0.005,
+     0.006,
+     0.007,
+     0.008,
+     0.009,
+     0.01,
+     0.011,
+     0.012,
+     0.013,
+     0.014,
+     0.015,
+     0.016,
+     0.017,
+     0.018,
+     0.019,
+     0.02
+    ],
+    "snr": [
+     9.09,
+     8.84,
+     8.69,
+     8.71,
+     8.67,
+     8.65,
+     8.63,
+     8.5,
+     8.39,
+     8.38,
+     8.23,
+     7.7,
+     8.37,
+     9.78,
+     9.93,
+     10.78,
+     11.45,
+     14.32,
+     14.59,
+     14.7,
+     14.75,
+     14.8,
+     14.79,
+     14.77,
+     14.7,
+     14.5,
+     14.48,
+     14.32,
+     14.1,
+     13.89,
+     13.67,
+     13.43,
+     13.21
+    ]
+   },
+   "distance_au": 111.1,
+   "interval_2sigma_au_statistical_only": [
+    81.9,
+    156.2
+   ],
+   "known_distant_body": [
+    {
+     "name": "136199 Eris",
+     "separation_arcsec": 1.2,
+     "vmag": 18.655
+    }
+   ],
+   "verdict": "known distant body (136199 Eris, JPL Horizons within 60 arcsec): known-answer, not a candidate"
+  },
+  "scored_against_jpl": {
+   "separation_arcsec": 1.24,
+   "observer_distance_au": 95.5061410823939,
+   "jpl_linear_drift": [
+    3.914,
+    -3.606
+   ]
+  },
+  "checks": {
+   "A1 within 4 arcsec of JPL": true,
+   "A2 S/N >= 12": true,
+   "A4 epoch-bootstrap 68% range contains JPL distance, best within 25%": false,
+   "A5 delta S^2 vs infinity >= 25 (all exposures)": true,
+   "A5b delta S^2 vs infinity >= 9 with any one epoch left out": true,
+   "A6 drift within 0.5 arcsec/day of JPL's": true
+  },
+  "passed": false
+ },
+ "sedna": {
+  "top_peaks": [
+   {
+    "snr": 10.411
+   },
+   null,
+   null,
+   null,
+   null
+  ],
+  "forced_along_jpl": {
+   "all": {
+    "snr": 7.51
+   }
+  },
+  "passed": true
+ },
+ "eris_shift": {
+  "centre": [
+   27.411483406417283,
+   -0.14498
+  ],
+  "control": {
+   "best_reversed_snr": 8.352847462770582
+  },
+  "candidate": {
+   "snr": 15.63,
+   "delta_s2_infinite": 54.6,
+   "epoch_resampling": {
+    "leave_one_epoch_out_min_delta_s2": 22.8,
+    "bootstrap_distance_au_68": [
+     90.9,
+     138.1
+    ],
+    "bootstrap_distance_au_95": [
+     52.6,
+     null
+    ]
+   },
+   "distance_au": 117.6,
+   "interval_2sigma_au_statistical_only": [
+    89.1,
+    147.3
+   ]
+  },
+  "scored_against_jpl": {
+   "separation_arcsec": 1.14
+  },
+  "checks": {
+   "A1 within 4 arcsec of JPL": true,
+   "A2 S/N >= 12": true,
+   "A4 epoch-bootstrap 68% range contains JPL distance, best within 25%": true,
+   "A5 delta S^2 vs infinity >= 25 (all exposures)": true,
+   "A5b delta S^2 vs infinity >= 9 with any one epoch left out": true,
+   "A6 drift within 0.5 arcsec/day of JPL's": true
+  },
+  "passed": true
+ }
+}
