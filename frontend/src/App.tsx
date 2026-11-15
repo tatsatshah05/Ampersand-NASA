@@ -30,6 +30,8 @@ import { SmallBodiesPanel } from './components/SmallBodiesPanel'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
 import { TrainingView } from './components/TrainingView'
+import { ToolsView } from './components/ToolsView'
+import { isToolsAddress } from './tools'
 import { Transport, VisitStrip, type Visit } from './components/Transport'
 import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
@@ -72,6 +74,7 @@ const prefersStillness = () => typeof window !== 'undefined' && window.matchMedi
 // Practice mode (?train=<seed>) is a separate screen: none of the viewer below is mounted for it.
 export default function App() {
   if (isWatchlistAddress(window.location.search)) return <WatchlistView />
+  if (isToolsAddress(window.location.search)) return <ToolsView />
   return readAddress(window.location.search).selection.train !== null ? <TrainingView /> : <Viewer />
 }
 

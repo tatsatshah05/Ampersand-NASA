@@ -1,0 +1,1160 @@
+/* The "Three tools" screen. Colour only through the page's tokens (index.css), so that the
+   restyle of those tokens restyles this screen too. Amber (--measured) and cyan (--gaia) are only
+   for marks inside charts and pictures and for the small key marks; every word is --text or
+   --muted. The main button and the chosen item use var(--ink, var(--text)) as their fill. */
+
+.tools {
+  --tool-ink: var(--ink, var(--text));
+  max-width: calc(680px + 32px);
+  margin: 0 auto;
+  padding: 0 16px 24px;
+  font-size: var(--size-read);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  overflow-wrap: break-word;
+}
+
+.tools p {
+  margin: 0 0 8px;
+}
+
+.tools h1,
+.tools h2 {
+  font-size: var(--size-title);
+  line-height: 1.3;
+  margin: 0 0 12px;
+}
+
+.tools h3 {
+  font-size: var(--size-read);
+  margin: 24px 0 8px;
+}
+
+.tools h2:focus {
+  outline: none;
+}
+
+.tools h2:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tools .nowrap {
+  white-space: nowrap;
+}
+
+/* ---- the top and the header ---- */
+
+.tools .tools-top {
+  padding: 8px 0;
+}
+
+.tools .tools-back {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  margin-left: -12px;
+  font-size: var(--size-body);
+}
+
+.tools .tools-header {
+  padding: 8px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tools .tools-boxed {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border: none;
+  border-left: 2px solid var(--text);
+  border-radius: 0;
+}
+
+.tools .tools-boxed p:last-child {
+  margin-bottom: 0;
+}
+
+.tools .tools-small {
+  font-size: var(--size-body);
+}
+
+.tools .tools-small.hint {
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.tools .tools-notfinal {
+  color: var(--notice);
+}
+
+.tools .tools-key {
+  margin: 16px 0;
+  font-size: var(--size-small);
+  color: var(--text);
+}
+
+.tools .tools-key p {
+  margin: 0 0 8px;
+}
+
+.tools .key-button {
+  display: inline-block;
+  width: 16px;
+  height: 10px;
+  margin-right: 4px;
+  vertical-align: 0;
+  border-radius: 3px;
+  background: var(--tool-ink);
+}
+
+.tools .key-sketch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  border: 1px dashed var(--line-strong);
+}
+
+.tools .key-ring {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  border: 1.5px solid var(--measured);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.tools .tl-mark {
+  display: inline-block;
+  vertical-align: -1px;
+  margin-right: 4px;
+  flex: none;
+}
+
+.tools .tl-mark-measured circle {
+  fill: var(--measured);
+}
+
+.tools .tl-mark-known path {
+  stroke: var(--gaia);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.tools .tl-mark-band rect {
+  fill: var(--measured);
+  opacity: 0.35;
+}
+
+.tools .tl-mark-greydot circle {
+  fill: var(--muted);
+}
+
+.tools .tl-mark-greyband rect {
+  fill: var(--muted);
+  opacity: 0.3;
+}
+
+.tools .tl-mark-line path {
+  stroke: var(--gaia);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.tools .tl-mark-grey path {
+  stroke: var(--muted);
+  stroke-width: 1.8;
+  fill: none;
+}
+
+.tools .tools-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tools .tools-jump li {
+  flex: 1 1 180px;
+}
+
+.tools .tools-jump-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--size-body);
+}
+
+.tools .tools-jump-link:hover {
+  background: var(--surface-hover);
+}
+
+/* ---- each tool ---- */
+
+.tools .tool {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.tools .tool-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.tools .tool-of {
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.tools .tl-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  font-size: var(--size-small);
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.tools .tl-chip-notice {
+  color: var(--notice);
+  border-color: var(--notice);
+}
+
+.tools .tools-fixture {
+  font-size: var(--size-body);
+}
+
+.tools .result-line {
+  font-weight: 700;
+}
+
+.tools .answer-line {
+  margin-top: 24px;
+  font-weight: 700;
+}
+
+.tools .result-small {
+  font-weight: 700;
+}
+
+.tools .caption,
+.tools figcaption.caption,
+.tools .chart-key,
+.tools .tl-fold-body {
+  font-size: var(--size-body);
+}
+
+.tools .caption {
+  color: var(--text);
+}
+
+.tools .hint {
+  font-size: var(--size-body);
+  color: var(--muted);
+}
+
+.tools .tools-missing {
+  color: var(--text);
+}
+
+.tools .tools-missing button,
+.tools .picture-missing button {
+  margin-left: 8px;
+}
+
+/* ---- numbers ---- */
+
+.tools .numbers-row {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+@media (min-width: 600px) {
+  .tools .numbers-row {
+    grid-template-columns: 3fr 2fr;
+    gap: 24px;
+  }
+}
+
+.tools .figure {
+  font-size: var(--size-title);
+  line-height: 1.3;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.tools .figure .tl-mark {
+  vertical-align: 2px;
+}
+
+.tools .figure-range {
+  font-size: var(--size-body);
+}
+
+.tools .figure-readout {
+  font-size: var(--size-read);
+  font-weight: 700;
+}
+
+/* ---- controls ---- */
+
+.tools button,
+.tools .seg {
+  min-height: 44px;
+  border-radius: 6px;
+}
+
+.tools .try-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.tools button.primary,
+.tools button.primary:hover:not(:disabled),
+.tools button.primary:active:not(:disabled) {
+  background: var(--tool-ink);
+  border-color: var(--tool-ink);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.tools button.primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.tools button.primary:active:not(:disabled) {
+  opacity: 0.78;
+}
+
+/* On/off buttons: a box before the words, filled with a tick when on. Not amber. */
+.tools button.toggle[aria-pressed='true']::before {
+  content: '\2713';
+  border-color: var(--tool-ink);
+  background: var(--tool-ink);
+  color: var(--bg);
+  font-size: 10px;
+  line-height: 9px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.tools .switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 12px 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.tools .switch legend {
+  font-size: var(--size-body);
+  color: var(--muted);
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.tools .seg {
+  position: relative;
+  flex: 1 1 33%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  text-align: center;
+  font-size: var(--size-body);
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.tools .seg {
+  border-radius: 0;
+}
+
+.tools .seg:first-of-type {
+  border-radius: 6px 0 0 6px;
+}
+
+.tools .seg:last-of-type {
+  border-radius: 0 6px 6px 0;
+}
+
+.tools .seg + .seg {
+  margin-left: -1px;
+}
+
+.tools .seg:hover {
+  background: var(--surface-hover);
+}
+
+.tools .seg.on {
+  background: var(--tool-ink);
+  border-color: var(--tool-ink);
+  color: var(--bg);
+  font-weight: 700;
+  z-index: 1;
+}
+
+.tools .seg input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.tools .seg:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  z-index: 2;
+}
+
+@media (max-width: 420px) {
+  .tools .switch {
+    flex-direction: column;
+  }
+
+  .tools .seg + .seg {
+    margin-left: 0;
+    margin-top: -1px;
+  }
+
+  .tools .seg:first-of-type {
+    border-radius: 6px 6px 0 0;
+  }
+
+  .tools .seg:last-of-type {
+    border-radius: 0 0 6px 6px;
+  }
+}
+
+/* Sliders and the dial: native ranges, a thumb in the text colour, stops as ticks. */
+.tools .stops {
+  margin: 16px 0 8px;
+}
+
+.tools .stops-label {
+  display: block;
+  font-size: var(--size-body);
+  color: var(--muted);
+}
+
+.tools .stops-value {
+  font-size: var(--size-read);
+  font-weight: 700;
+  margin: 4px 0 0;
+}
+
+.tools .stops-track {
+  position: relative;
+  padding-top: 20px;
+}
+
+.tools .stops input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tools .stops input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.tools .stops input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.tools .stops input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--text);
+}
+
+.tools .stops input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--text);
+}
+
+.tools .tl-ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(20px + 30px);
+  height: 8px;
+  pointer-events: none;
+}
+
+.tools .tl-tick {
+  position: absolute;
+  width: 1px;
+  height: 8px;
+  margin-left: -0.5px;
+  background: var(--muted);
+}
+
+.tools .known-tick {
+  position: absolute;
+  top: 6px;
+  width: 2px;
+  height: 22px;
+  margin-left: -1px;
+  background: var(--gaia);
+  pointer-events: none;
+}
+
+.tools .known-tick-label {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: var(--size-small);
+  color: var(--text);
+}
+
+.tools .known-tick-label::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: 3px;
+  background: var(--gaia);
+}
+
+.tools .stops-track:has(.known-tick) {
+  padding-top: 36px;
+}
+
+.tools .stops-track:has(.known-tick) .tl-ticks {
+  top: calc(36px + 30px);
+}
+
+.tools .stops-under {
+  position: relative;
+  height: 20px;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.tools .stops-under span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.tools .stops-under span.first {
+  transform: translateX(-11px);
+}
+
+.tools .stops-under span.last {
+  transform: translateX(calc(-100% + 11px));
+}
+
+.tools .stops-ends {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+/* ---- fold-outs ---- */
+
+.tools .tl-fold {
+  margin: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.tools .tl-fold + .tl-fold {
+  margin-top: -13px;
+}
+
+.tools .tl-fold summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--size-read);
+}
+
+.tools .tl-fold summary::-webkit-details-marker {
+  display: none;
+}
+
+.tools .tl-fold summary::after {
+  content: '\25B8';
+  margin-left: 8px;
+  color: var(--muted);
+}
+
+.tools .tl-fold[open] summary::after {
+  content: '\25BE';
+}
+
+.tools .tl-fold-body {
+  padding: 0 0 12px;
+}
+
+.tools .answers .tl-fold-body p + p {
+  margin-top: 12px;
+}
+
+.tools .scientists .tl-fold-body p {
+  margin-bottom: 12px;
+}
+
+.tools .next-link.quiet {
+  height: 44px;
+  margin-top: 16px;
+  padding: 0 12px;
+  margin-left: -12px;
+  font-size: var(--size-body);
+}
+
+/* ---- pictures ---- */
+
+.tools .picture-box {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 1;
+  margin: 12px 0 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+}
+
+.tools .picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.tools .picture-marks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.tools .mk-measured {
+  fill: none;
+  stroke: var(--measured);
+  stroke-width: 2;
+}
+
+.tools .mk-known {
+  fill: none;
+  stroke: var(--gaia);
+  stroke-width: 2;
+}
+
+.tools .mk-known.dotted {
+  stroke-dasharray: 2 4;
+}
+
+.tools .tl-mark-label {
+  position: absolute;
+  padding: 2px 6px;
+  font-size: var(--size-small);
+  line-height: 1.3;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--measured);
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.tools .tl-mark-label-known {
+  border-left-color: var(--gaia);
+}
+
+.tools .tl-mark-label.side-left {
+  transform: translate(-100%, -50%);
+}
+
+.tools .tl-mark-label.side-below {
+  transform: translate(-50%, 0);
+  white-space: normal;
+  width: max-content;
+  max-width: 55%;
+  text-align: center;
+}
+
+.tools .tl-compass {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 4px 6px;
+  font-size: var(--size-small);
+  line-height: 1.2;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+}
+
+.tools .picture-missing {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px;
+  font-size: var(--size-body);
+}
+
+.tools .loading-box {
+  border-style: solid;
+}
+
+/* ---- sketches (drawings, not data): thin outline in --muted, dashed frame, label top left ---- */
+
+.tools .sketch {
+  margin: 16px 0;
+  padding: 8px 12px 12px;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+}
+
+.tools .sketch-label {
+  font-size: var(--size-small);
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.tools .sketch-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+.tools .sketch-panel {
+  flex: 1 1 300px;
+  max-width: 300px;
+  min-width: 0;
+}
+
+.tools .sk-title {
+  font-size: var(--size-small);
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.tools .sketch p.sk-title {
+  margin: 0 0 4px;
+}
+
+.tools .sketch-bend .sketch-svg {
+  margin: 0 auto;
+}
+
+.tools .sketch-svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.tools .sk-line,
+.tools .sk-thin,
+.tools .sk-thick,
+.tools .sk-dashed {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tools .sk-thin {
+  stroke-width: 1;
+}
+
+.tools .sk-thick {
+  stroke-width: 4;
+}
+
+.tools .sk-dashed {
+  stroke-dasharray: 5 4;
+}
+
+.tools .sk-dotted {
+  stroke-dasharray: 1.5 3;
+}
+
+.tools .sk-soft {
+  fill: currentColor;
+  fill-opacity: 0.1;
+}
+
+.tools .sk-fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.tools .sk-fill-soft {
+  fill: currentColor;
+  fill-opacity: 0.1;
+  stroke-width: 2.5;
+}
+
+.tools .sk-text {
+  font-family: var(--font);
+  font-size: 12px;
+  fill: var(--muted);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.tools .sk-dot {
+  fill: currentColor;
+}
+
+.tools .sk-sub {
+  fill: var(--text);
+}
+
+/* ---- charts (real numbers): solid axes, a key or caption ---- */
+
+.tools .chart {
+  margin: 16px 0;
+}
+
+.tools .chart-title {
+  font-size: var(--size-body);
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.tools .chart-key p {
+  margin: 0 0 4px;
+}
+
+.tools .chart-axis-label {
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.tools .chart-axis-label {
+  margin: 0 0 4px;
+}
+
+.tools .chart-axis-label.across {
+  text-align: center;
+}
+
+.tools .ch-frame {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.tools .ch-axis {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.tools .ch-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.tools .ch-text {
+  font-family: var(--font);
+  font-size: 12px;
+  fill: var(--muted);
+}
+
+.tools .ch-cross {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+}
+
+.tools .ch-dot {
+  fill: var(--measured);
+  stroke: var(--bg);
+  stroke-width: 1;
+}
+
+.tools .ch-ring {
+  fill: none;
+  stroke: var(--measured);
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+.tools .ch-known {
+  fill: none;
+  stroke: var(--gaia);
+  stroke-width: 2;
+}
+
+.tools .ch-known.dashed {
+  stroke-dasharray: 6 4;
+}
+
+.tools .ch-measured-line {
+  fill: none;
+  stroke: var(--measured);
+  stroke-width: 2;
+}
+
+.tools .ch-err {
+  stroke: var(--measured);
+  stroke-width: 1.5;
+}
+
+.tools .ch-grey-dot {
+  fill: var(--muted);
+  opacity: 0.6;
+}
+
+.tools .ch-band {
+  fill: var(--muted);
+  opacity: 0.12;
+}
+
+.tools .faded {
+  opacity: 0.4;
+}
+
+/* The ruler (chart 1-b), laid out in HTML so its labels stay 12 px at every width. */
+.tools .ruler-body {
+  position: relative;
+  height: 64px;
+  margin: 0 8px;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.tools .ruler-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 28px;
+  height: 0;
+  border-top: 1px solid var(--muted);
+}
+
+.tools .ruler-name {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.tools .ruler-name:first-child {
+  transform: translateX(-4px);
+}
+
+.tools .ruler-planet {
+  position: absolute;
+  top: 24px;
+  width: 1px;
+  height: 9px;
+  background: var(--text);
+}
+
+.tools .ruler-band {
+  position: absolute;
+  top: 22px;
+  height: 12px;
+  background: var(--measured);
+  opacity: 0.3;
+}
+
+.tools .ruler-band.open {
+  border-right: none;
+}
+
+.tools .ruler-dot {
+  position: absolute;
+  top: 22px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--measured);
+  border: 1px solid var(--bg);
+}
+
+.tools .ruler-cross {
+  position: absolute;
+  top: 21px;
+  margin-left: -7px;
+}
+
+.tools .ruler-cross path {
+  stroke: var(--gaia);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.tools .ruler-tick {
+  position: absolute;
+  top: 40px;
+  transform: translateX(-50%);
+}
+
+.tools .ruler-tick::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  width: 1px;
+  height: 5px;
+  background: var(--muted);
+}
+
+/* The meter. */
+.tools .meter-label {
+  font-size: var(--size-body);
+  margin: 0 0 8px;
+}
+
+.tools .meter-body {
+  position: relative;
+  height: 12px;
+}
+
+.tools .meter-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 5.5px;
+  border-top: 1px solid var(--muted);
+}
+
+.tools .meter-fill {
+  position: absolute;
+  top: 0;
+  height: 12px;
+  background: var(--measured);
+}
+
+.tools .meter-zero {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 20px;
+  margin-left: -1px;
+  background: var(--text);
+}
+
+.tools .meter-value {
+  position: absolute;
+  top: -2px;
+  width: 0;
+  height: 16px;
+}
+
+.tools .meter-ends {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  min-height: 36px;
+  margin-top: 8px;
+  font-size: var(--size-small);
+  color: var(--muted);
+}
+
+.tools .meter-tick-label {
+  position: absolute;
+  top: 18px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--text);
+}
+
+/* Inset 2-d and chart 3-c. */
+.tools .inset-svg {
+  display: block;
+  width: 100%;
+  max-width: 358px;
+  height: auto;
+}
+
+.tools .dip-chart > svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.tools .static-chart img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- footer ---- */
+
+.tools .tools-footer {
+  padding: 24px 0 8px;
+  font-size: var(--size-body);
+  color: var(--muted);
+}
+
+.tools .tools-footer p {
+  margin: 0 0 8px;
+}
