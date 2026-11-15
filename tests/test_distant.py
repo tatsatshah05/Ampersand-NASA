@@ -298,3 +298,18 @@ def test_trimming_a_visit_cuts_the_smear_of_a_near_object():
     plx = distant.ARCSEC_PER_RADIAN / 500.0                 # a body at 500 AU
     assert distant._loss(plx, {"smear": smear_whole}, psf) < 0.15     # a streak: under a sixth of its peak is left
     assert distant._loss(plx, {"smear": smear_tight}, psf) > 0.75     # a point
+
+
+def test_a_crowded_catalogue_shrinks_the_share_of_the_picture_searched():
+    grid, n = pipeline.make_grid(RA, DEC, FOV)
+    rng = np.random.default_rng(1)
+    half = FOV / 2.0
+    def rows(count: int, mag: float) -> list[dict]:
+        return [{"ra": RA + rng.uniform(-half, half), "dec": DEC + rng.uniform(-half, half), "pmra": 0.0, "pmdec": 0.0,
+                 "w1": mag, "w2": mag} for _ in range(count)]
+    assert distant.catalogue_free(None, grid, n, 0.2) == 1.0
+    assert distant.catalogue_free(rows(100, 12.0), grid, n, 0.2) == pytest.approx(0.955, abs=0.01)
+    crowded = distant.catalogue_free(rows(3000, 12.0), grid, n, 0.2)
+    assert 0.2 < crowded < 0.35                       # most objects would land on a catalogued source somewhere
+    # Catalogue sources far too faint to be mistaken for an object at the limit block nothing.
+    assert distant.catalogue_free(rows(3000, 19.5), grid, n, 0.2) == 1.0

@@ -12,6 +12,7 @@ import {
   chanceSentence,
   followAddress,
   practiceAddress,
+  SHARE_NOTE,
   limitSentence,
   mjy,
   patchSentence,
@@ -266,7 +267,7 @@ export function Answer({ result, onLook }: { result: DistantResult; onLook?: (ra
             </tbody>
           </table>
           <p className="hint">
-            The best detector and the better of the two passes are used at each distance. {PASS_NOTE} Hover a row, or open the notes below, for it as a sentence.
+            The best detector and the better of the two passes are used at each distance. {PASS_NOTE} {SHARE_NOTE} Hover a row, or open the notes below, for it as a sentence.
           </p>
         </>
       )}

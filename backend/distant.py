@@ -36,7 +36,8 @@ Method, in the order the code runs
    weeks, and is a faint streak in the whole stack but a point in a few days' worth.
 7. The limit: the noise of each visit, raised for whatever smearing is left, and the
    share of the picture in which an object at each distance stays in view in every
-   visit and the sky is clear. At each distance the better of the two passes counts.
+   visit, the sky is clear, and none of its places falls on a catalogued source. At
+   each distance the better of the two passes counts.
 
 Limits
 - At least three visits are needed, on both sides of the Earth's orbit.
@@ -71,7 +72,7 @@ from scipy.stats import chi2 as chi2_dist
 
 from . import astrometry, pipeline, search, spherex, training
 
-VERSION = 4
+VERSION = 5
 DISTANT_DIR = spherex.CACHE / "distant"
 ARCSEC_PER_RADIAN = 206264.806
 
@@ -628,6 +629,22 @@ def clear_share(maps: dict[int, dict[str, np.ndarray]]) -> float:
     return float(clear.mean()) if clear is not None else 0.0
 
 
+def catalogue_free(catalogue: list[dict] | None, grid: WCS, n: int, faintest_mjy: float) -> float:
+    """Chance that none of a body's three places falls on a catalogued source (which would set it
+    aside): the catalogue sources in the picture bright enough to count against an object at
+    the limit, each blocking a disc of MATCH_ARCSEC, three places to keep free. In a crowded
+    field this is the largest loss: 3,639 catalogued sources lie in 0.2 degrees around
+    Barnard's Star, and a quarter of planted objects there landed on one."""
+    if not catalogue:
+        return 1.0
+    x, y = grid.all_world2pix([r["ra"] for r in catalogue], [r["dec"] for r in catalogue], 0)
+    inside = (x >= 0) & (x < n) & (y >= 0) & (y < n)
+    bright = np.array([_catalogue_flux(r) >= CATALOGUE_SHARE * faintest_mjy for r in catalogue])
+    area = (n * pipeline.GRID_ARCSEC) ** 2
+    blocked = 1.0 - math.exp(-int((inside & bright).sum()) * math.pi * MATCH_ARCSEC ** 2 / area)
+    return (1.0 - blocked) ** 3
+
+
 def limit_table(visits: list[dict], noise_mjy: dict[int, float], ra: float, dec: float, fov: float,
                 psf_arcsec: float, clear: float = 1.0) -> list[dict]:
     """For each distance: the faintest object the search would have found, and where it could look."""
@@ -748,11 +765,13 @@ def search_stacks(grid: WCS, n: int, images: dict[int, np.ndarray], items: dict[
     chance = link(usable, visits, psf_arcsec, strength_at, reverse=True) if can_search else []
     noise_mjy = {k: flux_mjy(float(np.nanmedian(maps[k]["noise"])), sigma_px) for k in maps}
     clear = clear_share(maps)
+    free = catalogue_free(catalogue, grid, n, DETECT_SIGMA * float(np.median(list(noise_mjy.values()))))
     return {"detector": detector, "visits": visits, "epochs": epochs, "maps": maps, "grid": grid, "n": n,
             "sigma_px": sigma_px, "psf_arcsec": psf_arcsec, "sources": sources, "members": members,
             "usable": usable, "links": links, "chance_links": chance, "can_search": can_search,
             "noise_mjy": noise_mjy, "catalogue_answered": catalogue is not None, "clear_share": clear,
-            "limit": limit_table(visits, noise_mjy, ra, dec, fov, psf_arcsec, clear) if can_search else []}
+            "catalogue_free_share": free,
+            "limit": limit_table(visits, noise_mjy, ra, dec, fov, psf_arcsec, clear * free) if can_search else []}
 
 
 def _planted_images(ra: float, dec: float, fov: float, detector: int, grid: WCS, n: int, stacks: dict[int, dict],
@@ -1013,7 +1032,8 @@ def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int
             "set_aside_catalogued": sum(1 for s in f["members"] if s["catalogued"]),
             "set_aside_not_point_like": sum(1 for s in f["members"] if not s["point_like"] and not s["catalogued"]),
             "linked_from": len(f["usable"]), "links": len(f["links"]), "chance_links": len(f["chance_links"]),
-            "clear_share": round(f["clear_share"], 2), "limit": f["limit"]} for f in fields],
+            "clear_share": round(f["clear_share"], 2),
+            "catalogue_free_share": round(f["catalogue_free_share"], 2), "limit": f["limit"]} for f in fields],
         "catalogue": {"name": "CatWISE2020", "asked": catalogues, "answered": catalogue is not None,
                       "sources_in_field": len(catalogue) if catalogue is not None else None, "error": catalogue_error},
         "failures": failures, "limits": LIMITS_TEXT,

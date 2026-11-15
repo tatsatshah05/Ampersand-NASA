@@ -111,6 +111,8 @@ export interface PerDetector {
   links: number
   chance_links: number
   clear_share: number
+  /** Chance that none of an object's three places falls on a catalogued source (already part of `share_of_picture`). */
+  catalogue_free_share?: number
   limit: LimitRow[]
 }
 
@@ -407,3 +409,7 @@ export function practiceAddress(result: DistantResult): string | null {
     level: planted.level,
   })
 }
+
+/** What "share of the picture" in the limit table means, for the line under the table. */
+export const SHARE_NOTE =
+  'Share of the picture: where an object at that distance would stay in view in every visit, clear of the glow of bright stars, and with no catalogued source at any of its places.'
