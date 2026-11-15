@@ -55,7 +55,7 @@ The page opens on Candidate B. A view is shared through its address, for example
 | Following a comet or asteroid and its spectrum | [docs/comets.md](docs/comets.md) |
 | The colour of a change | [docs/colour-of-change.md](docs/colour-of-change.md) |
 | Text for the project page, and the demo video's shot list | [docs/project-page.md](docs/project-page.md), [docs/demo-script.md](docs/demo-script.md) |
-| How to deploy, and the warm-up after deploying | [docs/deploy.md](docs/deploy.md) |
+| How to deploy, and the warm-up after deploying | [docs/deploy.md](docs/deploy.md); on Render: [docs/deploy-render.md](docs/deploy-render.md) |
 | The project brief and the verified facts about the SPHEREx archive | [CLAUDE.md](CLAUDE.md) |
 | Who does what, and the lint and typecheck rules | [plan.md](plan.md) |
 
@@ -77,7 +77,8 @@ Then open http://localhost:8000/. The backend serves the built app from `fronten
 The first request for a new position reads about 60 image cutouts per detector from NASA's public copy of the
 archive on Amazon S3, with IRSA's cutout service as the automatic fallback. They are kept in `backend/cache/`
 (`SPHEREX_CACHE_DIR` moves it), so a repeat is instant. Deploying, and the warm-up that prepares every view the
-page opens or links to, are in [docs/deploy.md](docs/deploy.md); nothing is deployed yet.
+page opens or links to, are in [docs/deploy.md](docs/deploy.md); the short path for Render is
+[docs/deploy-render.md](docs/deploy-render.md).
 
 ## Run the checks
 

@@ -1225,3 +1225,12 @@ behaves):
   which was gone after the machine restarted that day.
 How to run them: `scripts/checks/README.md`. After deploying, the warm-up of every place the page opens or links to:
 `docs/deploy.md`, "After deploying: warm-up".
+
+Deploying (2026-11-15): the team chose Render. `render.yaml` is its blueprint (one free web service from the
+`Dockerfile`, redeployed on every push to the branch it was made from, `main`). The `Dockerfile` downloads the
+pre-built demo results (release file `demo-cache-1` of this repository: about 240 MB of finished views and answers
+for the eleven buttons, no cutouts) and unpacks them into the cache folder, so the site opens at once on a host
+with a slow processor and no disk; `scripts/seed_cache.py` packs, fetches and copies them. After a change of
+`pipeline.VERSION` or `photometry.VERSION` the packed results are stale: warm the cache, pack and publish a new
+release, and change `SEED_URL` in the `Dockerfile`. Steps, limits of the free plan and what was tested:
+`docs/deploy-render.md`.
