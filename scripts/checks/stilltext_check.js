@@ -66,6 +66,10 @@ async function ensurePlaying(page) {
       await page.waitForTimeout(1500);
 
       // 1. While the visits play: the picture changes, the words do not.
+      // FINDER REPAIRED (15 Nov, finish-page): the landing candidate opens blinking between two visits;
+      // Blink is turned off first, so that Play goes through every visit (the same rule, on all of them).
+      const blinkOn = page.getByRole('button', { name: /^Blink (first and last|before and after)$/, pressed: true });
+      if (await blinkOn.count()) { await blinkOn.first().click(); await page.waitForTimeout(300); }
       check(await ensurePlaying(page), `${tag}: the visits are playing for this test`);
       const played = await watch(page, 9000);
       check(played.pictures >= 2, `${tag}: the picture did change while playing (${played.pictures} different pictures seen)`);
@@ -93,9 +97,12 @@ async function ensurePlaying(page) {
       //    and it covers every visit (so it need not be rewritten when the visit changes).
       if (mode === 'expert') {
         // FINDER REPAIRED (15 Nov): the page now opens on one of Dev's candidates, which no catalogue
-        // predicts, so there is no measured-against-Gaia comparison on it. The comparison is looked for
-        // where it exists, on Barnard's Star at the old landing address (Gaia's own star, no motion given), with the same rule.
-        await page.goto(`${base}/?ui=${mode}&ra=269.446267&dec=4.768222&name=Barnard%27s+Star`);
+        // predicts (the page says so), so there is no measured-against-Gaia comparison on it. The
+        // comparison, and the side column's controls below, are looked for where they exist: on
+        // Barnard's Star, reached as a visitor reaches it, by pressing its button in the star row
+        // (finish-page: the button, not a typed address), with the same rules.
+        await page.locator('nav[aria-label="Targets"] button.target', { hasText: /^Barnard's Star$/ }).first().click();
+        await page.waitForFunction(() => { const h2 = document.querySelector('.object-name'); return h2 && h2.textContent.trim() === "Barnard's Star" && !document.querySelector('.plate.busy') && !document.querySelector('.readout-block.busy') && document.querySelector('.expert-verdict'); }, null, { timeout: 180000 }).catch(() => {});
         await page.waitForSelector('.stage img', { timeout: 120000 });
         await page.waitForTimeout(1500);
         const where = await page.evaluate(() => {

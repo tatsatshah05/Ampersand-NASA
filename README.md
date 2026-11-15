@@ -6,7 +6,9 @@ NASA's SPHEREx telescope photographs the whole sky in infrared light about every
 its real pictures of any patch, one visit after another like a short film, and searches them for what moved or
 changed, in plain words (Beginner) or a scientist's (Expert). Our first sweep of the Milky Way's plane found two
 known novae by itself and three sources that we found in no catalogue or report we checked: candidates, which
-nobody has confirmed. Everything shown is real SPHEREx data, except one clearly marked practice round.
+nobody has confirmed. All data shown are real (SPHEREx, and the catalogues and older surveys it is compared with),
+except the clearly marked made-up object of the practice round, which the Planet X search can also plant, marked
+as a simulation; the drawings in What is it? say that they are drawings.
 
 Words used: a **visit** is one pass of SPHEREx over a patch of sky (its photos are added up into one picture). A
 **detector** is one of the six infrared cameras, together covering 0.75 to 5.0 micrometres.
@@ -26,7 +28,7 @@ A bar across the top of every screen lists every feature, in this order (Beginne
 | 6 | Asteroids | Small bodies | Known asteroids and comets that JPL predicts in the patch | `tool=smallbodies` |
 | 7 | What is it? | Object card | What Gaia DR3 and SIMBAD know about the object, a drawing made from their numbers ("Illustration drawn from measurements. Not a photograph."), and the patch in older surveys | `tool=context` |
 | 8 | Practise | Training | SIMULATION: real pictures with one made-up moving object, to practise on | `?train=<seed>` |
-| 9 | Observe anomalies | Anomalies | What the searches found, for people to look at and vote on: first the three candidates ("Not reported anywhere we could find"), then a choice of region, then the blind searches' groups. Being built on 2026-11-15; until it is merged this item reads Vote / Watchlist | `?watchlist=1` |
+| 9 | Observe anomalies | Anomalies | What the searches found, for people to look at and vote on: first the three candidates ("Not reported anywhere we could find"), then "Choose a region", then the chosen region's groups. On the branch `agent/anomalies` (commit `674b595`), not yet merged: until it is, this item reads Vote / Watchlist and shows only the blind searches' groups | `?watchlist=1` |
 | 10 | Three tools | Methods | "Three tools, three known worlds": three planet-finding methods, each tested on a known world | `?tools=1` |
 
 The page opens on Candidate B. A view is shared through its address, for example

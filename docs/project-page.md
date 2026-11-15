@@ -1,14 +1,16 @@
 # Project page text
 
 Text to paste into the NASA Space Apps project page (issue #16). Rewritten on 2026-11-15 against the running
-page (built from `Dev` at commit `500e7fd`) and the project's records. Check the submission form for length
-limits before pasting: a short and a long version are given.
+page (built from `Dev` at commit `0221046`) and the project's records, then corrected after an independent
+review of this text. Check the submission form for length limits before pasting: a short and a long version
+are given.
 
 **Read before pasting.** Every number and claim below is in the code, in a results file or in a write-up in the
 repository; the write-up is named where it matters. Three things must be supplied or checked by a person and
-are marked **[TO CONFIRM]**: the public web address (nothing is deployed yet), the name of the ninth item of the
-bar (it is being renamed while this is written; see "What a visitor can do"), and the answer about AI tools,
-which the team must agree is complete. Do not paste a marked sentence as it stands.
+are marked **[TO CONFIRM]**: the public web address (nothing is deployed yet), the ninth item of the bar
+(Observe anomalies: built on the branch `agent/anomalies`, commit `674b595`, and not yet merged into `Dev`; it
+was read from that commit, built and run on a laptop; see "What a visitor can do"), and the answer about AI
+tools, which the team must agree is complete. Do not paste a marked sentence as it stands.
 
 Rules this text keeps, and any edit must keep: the three sweep sources are **candidates**, "found in no
 catalogue or report we checked" and "not confirmed"; their three sentences are the referee's, word for word
@@ -36,8 +38,9 @@ see what changed. It stopped in August 2024. NASA's SPHEREx telescope now photog
 light again and again. Our web tool shows anyone the real SPHEREx pictures of any patch of sky, like a short
 film, and searches them for things that moved or changed. It measures Barnard's Star moving 10.4 arcseconds in a
 year; the Gaia catalogue predicts 10.3. Our first sweep of the Milky Way's plane found two known novae by itself,
-and three infrared sources that were too faint to detect in 2025 and much brighter in 2026. We found these three
-in no catalogue or report we checked. They are candidates: nobody has confirmed them.
+and three infrared sources that SPHEREx could not detect in its pictures of July to September 2025 and saw much
+brighter in 2026. We found these three in no catalogue or report we checked. They are candidates: nobody has
+confirmed them.
 
 ## Full description
 
@@ -47,6 +50,14 @@ From 2014 to August 2024, NASA's NEOWISE telescope looked at the whole sky in in
 Dust in the Milky Way blocks visible light, so a star that erupts behind the dust can be missed by ordinary
 telescopes; in infrared light it can still be seen. NEOWISE has stopped. NASA's SPHEREx telescope now
 photographs the whole sky in infrared light about every six months, in 102 colours from 0.75 to 5 micrometres.
+
+What sets our tool apart: it searches SPHEREx's repeat pictures for change without being told where to look,
+and it shows anyone the before and the after. Others have used SPHEREx to study objects that change: Karambelkar
+and colleagues (2026) measured SPHEREx spectra of eight transients that NEOWISE had found (novae and outbursts
+of young stars), and other astronomers reported SPHEREx observations of the nova V572 Velorum (Astronomer's
+Telegrams 17601 and 18127). When we searched arXiv on 15 November 2026 (SPHEREx with transient, outburst, nova
+and variability), that was the only paper about SPHEREx and transients that we found
+(`docs/sweep/vetting/B/reports/searches_B.tsv`, `docs/novae.md`).
 
 Our tool does three things with SPHEREx's pictures:
 
@@ -63,9 +74,9 @@ and the picture with it.
 ### The three candidates from our sweep of the Milky Way's plane
 
 We ran the project's sweep over 472.6 square degrees of the Milky Way's plane, the part around the centre of
-our Galaxy (63 patches; 1,162,894 sources compared between three SPHEREx visits: August to September 2025,
-February to April 2026, August to September 2026). The sweep was not told where anything was. It found two known
-novae, V7994 Sagittarii and V0691 Serpentis, by itself. It was left with three sources that it could not
+our Galaxy (63 patches; 1,162,894 sources compared between three SPHEREx visits: about July to September
+2025, February to April 2026, and July to September 2026). The sweep was not told where anything was. It found
+two known novae, V7994 Sagittarii and V0691 Serpentis, by itself. It was left with three sources that it could not
 explain. Four independent reviewers attacked each one, and a referee ruled. The referee allowed one sentence
 about each for a public page. Here they are, word for word:
 
@@ -84,14 +95,15 @@ about each for a public page. Here they are, word for word:
 
 What "candidate" means here: a real source, seen in many photos and in more than one detector, at one fixed
 place on the sky, that we found in no catalogue or report we checked. Nobody has confirmed any of the three.
-What each one is, is not known.
+Nobody knows yet what any of them is.
 
-**Searches for earlier reports.** After the ruling we searched more than 30 public catalogues and alert lists
-for each candidate. Each search was first tested on a known object, to show that it worked. A keyword search
-of the Astronomer's Telegrams followed. None found an earlier report at any of the three places. Some sources
-have not been searched in full: no person has read the telegrams in full yet, NASA's Astrophysics Data System
-has had only a first search, and the SIMBAD database at CDS was down. So this does not prove that no one else
-has seen them. Every search, with its date and its test object, is in `docs/sweep/searches-for-earlier-reports.md`.
+**Searches for earlier reports.** In two rounds of searches, one for the ruling and a wider one after it, we
+checked more than 30 public catalogues and alert lists for each candidate. We counted a search only if it also
+found a known object that it should find, which shows that it worked. A keyword search of the Astronomer's
+Telegrams followed. None found an earlier report at any of the three places. Some sources have not been
+searched in full: no person has read the telegrams in full yet, NASA's Astrophysics Data System has had only a
+first search, and the SIMBAD database at CDS was down. So this does not prove that no one else has seen them.
+Every search, with its date and its test object, is in `docs/sweep/searches-for-earlier-reports.md`.
 
 **Nothing has been reported yet.** We have sent no report to anyone. A person must first finish the checklist in
 that file, and a professional astronomer must check the numbers. Draft texts are ready, and not sent.
@@ -127,14 +139,16 @@ and Barnard's Star checked again with separate code, `docs/verification.md`):
   a neighbouring star removed, measures it moving 8.4 arcseconds west in a year (give or take 0.4), where the
   catalogue predicts 8.0. By the third visit that ordinary star, 4 arcseconds away, gives about a quarter of the
   light at 4.4 to 5 micrometres, and SPHEREx cannot separate the two.
-- **RW Aurigae**, a young variable star. Between September 2025 and September 2026 it became about 1.7 times
-  brighter at the shortest wavelengths, as observers on the ground (AAVSO) also recorded, and about half as
-  bright at 3.9 to 5 micrometres. Our September 2025 photos fell in a dip that lasted a few days. The fading at
-  3.9 to 5 micrometres has no outside check. RW Aurigae is a close pair that SPHEREx measures as one.
+- **RW Aurigae**, a young variable star. Between September 2025 and September 2026 it became about 1.6 times as
+  bright at 0.75 to 1.1 micrometres in SPHEREx's pictures, as the page shows, and about half as bright at 3.9 to
+  5 micrometres. Ground observers (AAVSO) saw it brighten 1.7 times from one September to the next. Our September
+  2025 photos fell in a dip that lasted a few days, so at 0.75 to 0.84 micrometres alone the factor is 2.0 to 2.6.
+  The fading at 3.9 to 5 micrometres has no outside check. RW Aurigae is a close pair that SPHEREx measures as one.
 - **R Draconis**, a bright long-period variable star. It overexposes the detectors in every photo, so no
-  brightness can be given. The light in a ring just around the star, in detectors 5 and 6, rises and falls in
-  step with the 246-day cycle that AAVSO observers record. The same measure on Barnard's Star, which does not
-  vary, stays flat to about 5 per cent. It is a relative measure, not a brightness.
+  brightness can be given. Over three visits, the light in a ring just around the star, in detectors 5 and 6,
+  rises and falls by a factor of about 2 to 3, in step with the 246-day cycle that AAVSO observers record and a
+  few weeks behind it. The same measure on Barnard's Star, which does not vary, stays flat to about 5 per cent.
+  It is a relative measure, not a brightness.
 
 **Planet X.** A planet far beyond Neptune does not creep across the picture. It jumps between visits, because
 SPHEREx sees it from opposite sides of the Earth's path round the Sun, and the size of the jump gives its
@@ -147,9 +161,10 @@ distance. The tool's **Far-off planet** search (Expert: **Planet X search**) loo
   motion reversed (a test of chance links).
 - How we know it works: made-up objects planted in real pictures were found 177 times out of the 205 that were
   bright enough in three visits, with the distance right to about a per cent.
-- The honest limit: around WISE 0855, anything brighter than about 0.2 millijanskys between 1,000 and 30,000
-  times the Earth-Sun distance would have been found. That is not deeper than earlier searches of WISE data. It
-  is no new limit on Planet Nine, and it does not rule Planet X in or out.
+- The honest limit: around WISE 0855, an object brighter than about 0.2 millijanskys, between 1,000 and 30,000
+  times the Earth-Sun distance, would have been found if it lay in the part of the picture the search can use:
+  a fifth of it at 1,000 times that distance, about two thirds at 30,000. That is not deeper than earlier
+  searches of WISE data. It is no new limit on Planet Nine, and it does not rule Planet X in or out.
 
 A second method, **Follow the bend**, measures the distance of a far-off world from one visit. It found the
 dwarf planet Eris in a patch centred on Eris (see "Three tools, three known worlds"). It cannot test Planet
@@ -186,33 +201,42 @@ plain words; Expert adds the numbers, the detector and the settings.
    measurements. Not a photograph." The same patch in older surveys (WISE, 2MASS, DSS) is shown below it.
 8. **Practise** (Expert: **Training**). Real SPHEREx pictures with one made-up moving object added, to learn
    what a mover looks like. A banner that cannot be closed and the word SIMULATION in every picture say that
-   it is practice. It is the only simulated thing in the project.
-9. **Observe anomalies** (Expert: **Anomalies**) **[TO CONFIRM: being built while this is written; check the
-   name in the bar before pasting. Until it is merged the item reads "Vote" (Expert: "Watchlist").]** The list
-   of what the searches found, for people to look at and vote on. It starts with a group headed "Not reported
-   anywhere we could find": Candidates A, B and C, each with two real pictures, its allowed sentence, the
-   result of the search for earlier reports, its status, and a link "Watch it appear". Then "Choose a region"
-   (everywhere, the Milky Way sweep, or each searched patch), and the groups of the blind searches: those that
-   need eyes, those already known, and those set aside as artefacts, with votes. A vote is an opinion, not a
-   confirmation, and it never changes the machine's order. Scientists can download the whole list as a CSV file.
+   it is practice. The same made-up object is used in one other place a visitor can open: the planted run of
+   the Planet X search, in Expert, which is also marked as a simulation. To test that search we also planted
+   made-up objects in real pictures and counted how many it found (the 177 of 205 above). Everything else is
+   real data: SPHEREx's pictures, and the catalogues and older surveys they are compared with.
+9. **Observe anomalies** (Expert: **Anomalies**) **[TO CONFIRM: seen running only as a build of the branch
+   `agent/anomalies` (commit `674b595`), which is not yet merged into `Dev`; check the screen before pasting.
+   Until it is merged the item reads "Vote" (Expert: "Watchlist").]** Everything our searches saw change, for people to look at.
+   It first says what an anomaly is. Then comes a group headed "Not reported anywhere we could find":
+   Candidates A, B and C, each with two real SPHEREx pictures ("Not seen" and "At its brightest"), its allowed
+   sentence, what it probably is, the sentence about the search for earlier reports ("Has anyone reported
+   it?"), its status ("Not confirmed. Not yet reported to astronomers.") and a link "Watch it appear". Then
+   "Choose a region": everywhere, the Milky Way's plane, or each searched patch by its constellation, each with
+   how many were found. Below that, the chosen region's groups: from the patch searches, "In no catalogue",
+   "Already known" and "Set aside as false alarms" (Expert: "Needs eyes", "Already known", "Set aside as
+   artefacts"), with votes; from the sweep of the plane, its 14 survivors in four groups. A vote is an opinion,
+   not a confirmation, and it never changes the machine's order. Scientists can download the whole list as a
+   CSV file.
 10. **Three tools** (Expert: **Methods**). Three ways to learn about hidden worlds, each tested on a world that
     astronomers already know, on a screen of its own (below).
 
 ### Three tools, three known worlds
 
 Each method was built on SPHEREx data and then attacked by independent reviewers. Each was tested on a known
-world, so its answer can be checked. As far as we could find, nobody has used these ideas on SPHEREx data
-before; similar ideas have been used with other telescopes. The screen states each verdict at the top.
+world, so its answer can be checked. We do not know of these ideas having been used on real SPHEREx data
+before (we searched published papers, preprints and telegrams); the ideas themselves are old and have been used
+with other telescopes. The screen states each verdict at the top.
 
 - **Follow the bend** (`docs/reflex.md`). It adds up all the photos of one 15-day visit along paths that
   include the curve the Earth's motion puts in the path of a distant body. Verdict on the screen: "Found its
   test world. Distance only rough." In a patch centred on the dwarf planet Eris it found Eris about 1 to 2
   arcseconds from where JPL puts it. The bend in its path gives a distance of about 110 to 120 times the
-  Earth-Sun distance, where JPL gives 95.5; the honest range is roughly 90 to 145, with no far end at 95 per
-  cent. This is a known-answer test on one known world: the patch was centred on Eris, and the method's
+  Earth-Sun distance, where JPL gives 95.5; the honest range is roughly 90 to 145, and at 95 per cent confidence
+  the range has no upper end. This is a known-answer test on one known world: the patch was centred on Eris, and the method's
   settings were chosen after an earlier look had found it.
-- **Line up the dips** (`docs/transits.md`). It folds thousands of readings of one star on a known planet's
-  published timetable. Verdict on the screen: "Showed one known planet's dip. Mixed on a second." For the hot
+- **Line up the dips** (`docs/transits.md`). SPHEREx photographs some stars thousands of times; this method
+  lines up one star's readings (484 usable ones for WASP-62) on a known planet's published timetable. Verdict on the screen: "Showed one known planet's dip. Mixed on a second." For the hot
   Jupiter WASP-62 b, in one detector, the star dims by about 1.1 to 1.2 per cent at the right times, against a
   published 1.2; none of 598 wrong timetables gave a dip as deep. It is a re-measurement of a known planet in
   one detector, not a blind test: the method was developed on the same readings. A second known planet, WASP-100
@@ -221,7 +245,8 @@ before; similar ideas have been used with other telescopes. The screen states ea
   centre sideways in redder light. Verdict on the screen: "Not proven yet". On the one known partner tried,
   VHS 1256 b, the centre moved about 0.18 arcseconds toward the partner, but that is only about 2 times our
   usual error once the instrument's own offsets are counted; our rule, set before the test, asks for 4. The
-  method was developed on this star, and two of its own checks failed. It has found nothing.
+  method was developed on this star, it failed two of its seven pre-set checks and its null test, and it has
+  found nothing.
 
 ### What we do not claim
 
@@ -236,7 +261,8 @@ before; similar ideas have been used with other telescopes. The screen states ea
   them (`docs/search.md`).
 - **Nova V572 Velorum**: the dust we measured in it was already reported by others (ATel 18127). Our measurement
   is an independent one (`docs/novae.md`).
-- **The practice object** is made up. It is marked as a simulation everywhere it appears.
+- **The practice object** is made up, and so is the object of the Planet X search's planted run. Both are
+  marked as a simulation everywhere they appear.
 
 ### Limits, stated plainly
 
@@ -285,21 +311,24 @@ a search for change, checks against catalogues, and plain words for every result
 and in the team's own words before pasting.]**
 
 AI agents (Anthropic's Claude, working in Claude Code) wrote most of the code and drafted the write-ups, under
-the team's direction. Every scientific claim was attacked by independent AI reviewers before we kept it: separate
-AI sessions, each with its own code, re-measured the result from the real data, searched the catalogues and the
-literature, and tried to find an ordinary explanation. For the sweep's candidates a referee then ruled on what may
-be said. Claims were withdrawn or corrected as a result. Two examples:
+the team's direction. The main scientific claims were attacked by independent AI reviewers before we kept them:
+the sweep's three candidates (four reviewers each, then a referee who ruled on what may be said), the three
+methods, and four of the five test targets (`docs/verification.md`). Separate AI sessions, each with its own
+code, re-measured those results from the real data, searched the catalogues and the literature, and tried to
+find an ordinary explanation. The write-ups of the other results (Epsilon Indi B, the Planet X search, the blind
+searches, the novae) record no separate review. Claims were withdrawn or corrected as a result. Two examples:
 
 - **The sweep's first description of its three candidates was withdrawn.** The reviewers showed that its 2025
   brightness values for A and B were the light of neighbouring steady stars, that two of its positions were 3
   arcseconds off, that its named "counterparts" were other stars, and that C's bright readings fell on emission
   lines (`docs/sweep.md`, "What the sweep's first write-up got wrong").
 - **RW Aurigae's change was corrected.** An earlier figure, "2.5 times brighter", compared a dip of a few days
-  with a normal state. Year on year it is about 1.7 times, as ground observers also found
+  with a normal state. From one September to the next, ground observers (AAVSO) found about 1.7 times
   (`docs/verification.md`, section 2).
 
-The rule for the whole project: real data only, nothing simulated except the clearly marked practice object, and
-anything unexplained is a candidate, never a discovery.
+The rule for the whole project: real data only, nothing simulated except the clearly marked made-up object of
+the practice round and of the Planet X search's planted run, and anything unexplained is a candidate, never a
+discovery.
 
 ## Data and credits
 

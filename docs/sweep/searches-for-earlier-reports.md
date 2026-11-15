@@ -62,6 +62,15 @@ Closest things found, from the verdict:
 The verdict ends: "This verdict therefore records which searches ran, that they worked and what they returned;
 it is not proof that no one else has seen these objects. Nothing has been submitted anywhere."
 
+The referee's process notes for the team, from the same verdict: aavso.org's robots.txt allows all agents in
+general, but under a "training crawlers" heading it disallows Anthropic's named crawlers (ClaudeBot, anthropic-ai,
+Claude-Web). The searchers read this differently: searcher A made no aavso.org request, searcher C read AAVSO
+campaign and forum pages, and the first round asked VSX live. UCL Discovery is the same case (A held back, and B
+read one PDF there). C sent two arXiv API lookups before reading that host's "Disallow: /", and reported it. TNS
+disallows "/search/" with a slash, and the first round's queries were "/search?...". In the referee's words:
+"None of these reads changes a verdict. A person can repeat them (steps 4 and 5 of the checklist) if the team
+wants to be strict."
+
 ### What may be said, per candidate
 
 These are the referee's sentences (`what_can_be_said`), written before the telegram check in (b):
@@ -294,9 +303,9 @@ of 2026-11-15.
 
 **For all three:**
 
-- **The Astronomer's Telegram, read in full by a person.** The first round read titles and opening lines only
-  (942 telegrams for A, 1,217 for B, 847 for C). The telegram check (b) then searched the full text by keyword
-  through the site's own form and read every position in the titles and opening sentences of the 942 telegrams
+- **The Astronomer's Telegram, read in full by a person.** The first round read titles and opening lines (942
+  telegrams for A, 1,217 for B, 847 for C) and, for A, ran 22 keyword searches through the site's own form. The
+  telegram check (b) then searched the full text by keyword through the site's own form and read every position in the titles and opening sentences of the 942 telegrams
   of June 2025 to 14 November 2026. What that does not cover, in its own words: "A telegram that reports something
   at one of the three places without the constellation's name or abbreviation, without "SPHEREx", and without a
   position or coordinate-style name in its title or opening sentences." Searching "18:03" and "18 03" in the form
@@ -339,9 +348,12 @@ vsnet-chat and Lasair. Blind here: Gaia alerts (ended), ZTF, Fink/LSST, KMTNet, 
 ## (d) The checklist for a person
 
 This is the wider search's `checklist_for_a_person`, complete and word for word. The only additions are the
-lines marked **Done:** after each check, where the date, the UTC time, what was typed and what came back are
-written. Write the answers here: this section is the "'Searched' list" that the first paragraph speaks of, and
-`docs/sweep.md` and `docs/sweep/report-draft.md` point here. Where a check has already been made, by a person or
+lines marked **Done:** and **Result of step**, where the date, the UTC time, what was typed and what came back
+are written; the short notes under them on what has already been done and by whom; and, marked **Also, from
+the ruling's own lists**, the search words of the referee's earlier ruling (`docs/sweep/vetting/ruling.json`,
+`for_a_person_to_do`) that this checklist does not repeat. Write the answers here: this section is the
+"'Searched' list" that the first paragraph speaks of, and `docs/sweep.md` and `docs/sweep/report-draft.md` point
+here. Where a check has already been made, by a person or
 by an automated reader, the line says so and by whom.
 
 These checks only read pages. Do not submit, post or report anything while doing them. For each check, write down the date, the UTC time, what you typed and what came back, in the 'Searched' list for that candidate in docs/sweep.md.
@@ -389,6 +401,9 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   telegram, because the form does not search punctuation, so they tell nothing. "16:52", "16 52", "16:06" and
   "16 06" were not run.
 
+  **Also, from the ruling's own lists:** in the same search box, infrared (all three); Norma and Ara (B); nova
+  (C). **Done:** By a person: ____________
+
 - Open every telegram dated 1 Aug 2025 or later about a nova, transient, outburst, young star or infrared source, and compare its position with the boxes.
 
   **Done:** By a person: ____________
@@ -427,6 +442,12 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   the full list of results were not written down. Repeat it and write them here: ____________
   **Done (B):** By a person: ____________
   **Done (C):** By a person: ____________
+
+  **Also, from the ruling's own lists:** the short constellation names, which telegrams use in names such as
+  "V8056 Sgr" (in the telegram site's own form, Sgr found 8 telegrams and Sagittarius 1: section (b)), and for B
+  the neighbouring constellation Norma: `bibstem:ATel year:2025-2026 abs:Sgr` (A); the same with `abs:Sco` and
+  with `abs:Norma` (B); the same with `abs:Nor`, and `abs:nova abs:Norma year:2025-2026` (C).
+  **Done (A):** ____________ **Done (B):** ____________ **Done (C):** ____________
 
 - Read the title and abstract of every result about a transient, nova, outburst or infrared brightening, and compare any position given with the boxes.
 - Meaning: if nothing falls inside a box, write 'ADS: no report found'.
@@ -470,6 +491,10 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   **Done (A):** ____________
   **Done (B):** ____________
   **Done (C):** ____________
+
+  **Also, from the ruling's own lists (C):** at https://asd.gsfc.nasa.gov/Koji.Mukai/novae/novae.html, look at
+  the 2025-2026 entries for any nova in Norma. **Done:** ____________ (The first round read Mukai's lists for C
+  with a control: the nearest nova is V556 Nor, of 2018, 1.74 deg away; section (a).)
 
 5. Optional: AAVSO. The automated searches were refused or held back there.
 - Open https://www.aavso.org/apps/campaigns and https://www.aavso.org/apps/campaigns/archived .

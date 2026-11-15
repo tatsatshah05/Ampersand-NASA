@@ -8,11 +8,12 @@ Record from the deployed site, not a laptop server, so that what the judges see 
 **The public web address is not known yet** (nothing is deployed); it is written `<SITE>` below. **[TO CONFIRM]**
 Replace `<SITE>` with the real address and run "Before recording" on it.
 
-Rebuilt on 2026-11-15. Every control name below was read off the running page (built from `Dev` at commit
-`500e7fd`) in a headless browser at 1440 x 900 and 1280 x 720, in Beginner and in Expert, except shot 5, which
-is **written from the design** of a screen still being built (see shot 5). Nobody has played the video in real
-time on the deployed site or tried a phone. Nothing is simulated, except the practice round in shot 4, which says
-so on screen. If something shows nothing, say so on camera: that is the result.
+Rebuilt on 2026-11-15 and checked again after an independent review. Every control name below was read off the
+running page (built from `Dev` at commit `0221046`) in a headless browser at 1440 x 900, in Beginner and in
+Expert, except shot 5. Shot 5's screen, Observe anomalies, is on the branch `agent/anomalies` (commit `674b595`)
+and not yet merged into `Dev`; its names were read off a build of that commit (see shot 5). Nobody has played the video in
+real time on the deployed site or tried a phone. Nothing is simulated, except the made-up object of the practice
+round in shot 4, which says so on screen. If something shows nothing, say so on camera: that is the result.
 
 How the page is laid out (the names are the page's own):
 
@@ -21,8 +22,8 @@ How the page is laid out (the names are the page's own):
   Spectrum, Blind search, Planet X search, Small bodies, Object card, Training, Anomalies, Methods. (Until the
   Observe anomalies screen is merged, its place reads Vote, in Expert Watchlist.)
 - **The switch** "Beginner | Expert" is at the bottom right of every screen.
-- **The row of buttons** under the search box: Candidate A, Candidate B, Candidate C, Barnard's Star, Epsilon Indi
-  B, WISE 0855, RW Aurigae, R Draconis, Young star in Serpens South, Nova V462 Lupi, Nova V572 Velorum.
+- **The row of buttons** beside the search box ("Search the sky"): Candidate A, Candidate B, Candidate C,
+  Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae, R Draconis, Serpens South, V462 Lupi, V572 Velorum.
 - **The side column** beside the picture: one sentence about the whole run of visits and one table of all
   visits. These words do not change while the pictures play; only the mark of the visit on screen moves.
 
@@ -38,7 +39,11 @@ Words: a **visit** is one pass of SPHEREx over a patch of sky; a **detector** is
 - [ ] Open every address below once on the recording machine. A position the server has never been asked for
       can take up to a minute the first time; after that it is instant.
 - [ ] The practice round: open its address (shot 4) once, so the round is built before recording. The same
-      `train=1` gives the same made-up object every time, so you can rehearse it.
+      `train=1` gives the same made-up object every time, so you can rehearse it. The bar's **Practise** link
+      does not: it starts a new round, with a random made-up object at the position on screen.
+- [ ] Open shots 2, 3 and 7 from their addresses, not from the row of buttons. A button keeps some of the last
+      view's settings: pressed straight after shot 1, **Barnard's Star** opens already blinking, and pressed
+      after Barnard's Star, **RW Aurigae** opens in detector 6 instead of 5 (seen on 15 November).
 - [ ] Browser zoom 100%, window 1280 x 720 or 1440 x 900, no bookmarks bar, notifications off.
 - [ ] The operating system's "reduce motion" setting is off. With it on, a candidate's view opens still on its
       "before" picture instead of blinking.
@@ -72,7 +77,10 @@ name service is down, these addresses do the same without it.
   marked "Before · Aug 2025" and "After · Mar 2026". The button **Blink before and after** is pressed. The side
   column reads "Candidate B", then "Not seen in August 2025. Clearly there by March 2026.", a table (Visit 1 Aug
   2025 not seen; Visit 2 Mar 2026 seen clearly; Visit 3 Aug 2026 seen clearly, brighter), and the candidate's
-  sentence. Keep the sentence in the picture.
+  sentence. Keep the sentence in the picture. (Once the branch `agent/finish-page`, commit `49de312`, is
+  merged, Beginner shows the short line "A candidate: we found it in no catalogue or report we checked, and
+  nobody has confirmed it yet." with the full sentence behind its "i": press the "i" to show it. Read from that
+  commit's message, not seen running.)
 - **Say:** "For ten years NASA's NEOWISE telescope looked at the whole sky in infrared light, twice a year. It
   stopped in August 2024. NASA's SPHEREx telescope now photographs the whole infrared sky, again and again. Our
   tool searches those pictures for change, and shows anyone the before and the after. This is a source in
@@ -86,8 +94,10 @@ name service is down, these addresses do the same without it.
 ### 2. The page's own steps: a star that moves (0:25 to 0:55)
 
 - **Show:** the three numbered steps under the table: "1 Pick any star", "2 Press Play or Blink", "3 Read what
-  changed". Then press **Barnard's Star** in the row of buttons (or open its address). It opens paused: press
-  **Play**. Let the three visits play; then press **Blink first and last**.
+  changed". Then open the shot-2 address: Barnard's Star opens paused, so press **Play**. (If you press the
+  **Barnard's Star** button straight after shot 1 instead, it opens already blinking, with **Blink first and
+  last** pressed: press it once to stop the blink, then press **Play**.) Let the three visits play; then press
+  **Blink first and last**.
 - **On screen, the side column reads:** "It moved 10.4 arcseconds north between August 2025 and August 2026. Its
   catalogue motion predicted 10.3 arcseconds: they agree." and "Seen clearly in all 3 visits." Keep it in the
   picture while the visits play: the words do not change, only the mark of the visit on screen moves.
@@ -101,11 +111,12 @@ name service is down, these addresses do the same without it.
 
 ### 3. The bar and the switch: one tool at two levels (0:55 to 1:25)
 
-- **Show:** press **RW Aurigae** in the row, then **Brightness** in the bar (or open the shot-3 address). The
-  panel "Brightness over time" opens under the picture. In Beginner it reads: "It changed between September 2025
-  and September 2026. In SPHEREx's shortest infrared colours it became about 1.6 times as bright. In SPHEREx's
-  longest infrared colours the light just around it became about half as bright." and "Another star is so close
-  that its light is mixed into these numbers."
+- **Show:** open the shot-3 address, which opens RW Aurigae in detector 5 with **Brightness** open (pressed
+  after Barnard's Star, the **RW Aurigae** button kept detector 6 on 15 November; the panel's words are the
+  same, the picture is not the rehearsed one). The panel "Brightness over time" opens under the picture. In
+  Beginner it reads: "It changed between September 2025 and September 2026. In SPHEREx's shortest infrared
+  colours it became about 1.6 times as bright. In SPHEREx's longest infrared colours the light just around it
+  became about half as bright." and "Another star is so close that its light is mixed into these numbers."
 - **Then press Expert** on the switch at the bottom right. The bar now reads Viewer, Light curve, Spectrum ...
   and the same panel shows "brighter in D1 (+64%, visit 1 to visit 3)", "The star's outer light also shows a
   change: fainter in D5 (−48%), fainter in D6 (−44%)", and a table per detector. Then press **Beginner** again.
@@ -120,32 +131,45 @@ name service is down, these addresses do the same without it.
 
 ### 4. Practice: can you spot a mover? (1:25 to 1:45)
 
-- **Show:** press **Practise** in the bar, or open `<SITE>/?train=1&level=easy&ui=beginner`. The screen
-  "Practice: find a made-up object" opens with a banner that reads "SIMULATION. One made-up moving object has been
-  added to these real SPHEREx images. It is not a real detection, and nothing here is a discovery." The word
-  SIMULATION is drawn in the corner of every picture. Keep both in the frame. In the **Frames** menu choose
+- **Show:** open `<SITE>/?train=1&level=easy&ui=beginner`, the round you rehearsed. Do not press **Practise**
+  in the bar for the recording: it starts a new round, with a random made-up object at the position on
+  screen. The screen "Practice: find a made-up object" opens with a banner that reads "SIMULATION. One made-up
+  moving object has been added to these real SPHEREx images. It is not a real detection, and nothing here is a
+  discovery." The word SIMULATION is drawn in the corner of every picture. Keep both in the frame. In the **Frames** menu choose
   **Difference frames**, press **Play**, click where you think the object is, then press **Show me**.
 - **Say:** "To learn what a mover looks like, there is a practice round. It adds one made-up object to real
-  SPHEREx pictures, and it says so in a banner that cannot be closed. This is the only made-up thing in the
-  whole tool."
+  SPHEREx pictures, and it says so in a banner that cannot be closed. Apart from the same made-up object in the
+  Planet X search's planted run, which is also marked as a simulation, this is the only made-up thing in the
+  tool."
 - **Do not say:** that the practice object is real, or a detection.
 - **Basis:** `CLAUDE.md`, "Training mode"; the running page.
 
 ### 5. Observe anomalies (1:45 to 2:15)
 
-**Written from the design.** This screen was being built while this outline was written (branch
-`agent/anomalies-final` did not exist yet). Check every name below on the deployed page before recording.
+**Not yet in `Dev`.** This screen is on the branch `agent/anomalies` (commit `674b595`, 15 November); the
+branch `agent/anomalies-final` did not exist. The names below were read off that commit, built and run on a
+laptop server against the shared cache at 1440 x 900, in Beginner and in Expert. Check every name on the
+deployed page before recording: the branch may still change.
 
-- **Show:** press **Observe anomalies** in the bar (`<SITE>/?watchlist=1&ui=beginner`). The first group is headed
-  "Not reported anywhere we could find": Candidates A, B and C, each with two real pictures, its sentence, the
-  sentence about the search for earlier reports, and a status line. Press **Watch it appear** on Candidate A:
-  its view opens, blinking between "Before" and "After". Go back, then show **Choose a region** (everywhere, the
-  Milky Way's plane sweep, each searched patch by constellation, with counts). Scroll to the groups below (those
-  that need eyes, those already known, and those set aside as an artefact) and to the vote buttons **Looks
-  real**, **Looks like an artefact** and **Not sure**.
+- **Show:** press **Observe anomalies** in the bar (`<SITE>/?watchlist=1&ui=beginner`). The screen opens with
+  three sentences on what an anomaly is, the last "A few are in no catalogue or report we could find, and those
+  are candidates, not discoveries." The first group is headed "Not reported anywhere we could find": one card
+  each for Candidates A, B and C, with two real SPHEREx pictures side by side ("Not seen" and "At its
+  brightest", each with its dates; for A, 24 Aug–4 Sep 2025 and 28 Mar–1 Apr 2026), the candidate's sentence,
+  what it probably is, "Has anyone reported it?" with the sentence about the search for earlier reports, and the
+  status line "Not confirmed. Not yet reported to astronomers." Press **Watch it appear** on Candidate A: its view
+  opens, blinking between "Before" and "After" (**Blink before and after** pressed). Go back, then show **Choose
+  a region**: "Everywhere · 156 found", "The Milky Way's plane (472.6 square degrees swept) · 14 found", and each
+  searched patch by its constellation (for example "Scorpius: Candidate B · 7 found"). Below it, "Found by
+  searching small patches" with the tabs **In no catalogue**, **Already known** and **Set aside as false alarms**
+  and the vote buttons **Looks real**, **Looks like an artefact** and **Not sure**; then "Found by the sweep of
+  the Milky Way's plane": Candidates (3), Known novae (2), Known stars that change (6), Set aside after a closer
+  look (3). (Expert names the tabs Needs eyes, Already known and Set aside as artefacts. The counts were those
+  of 15 November.)
 - **Say:** "Our sweep compared 472.6 square degrees of the Milky Way's plane between SPHEREx's visits. It found
   two known novae by itself, and three sources we could not explain. Four independent reviewers attacked each
-  one. We searched more than thirty catalogues and alert lists for earlier reports, and found none. They are
+  one. We searched more than thirty catalogues and alert lists for earlier reports and found none, but some
+  sources are not yet searched in full, so this does not prove that no one else has seen them. They are
   candidates: nobody has confirmed them, and we have not reported them yet. Everything else our searches found
   is here too, for anyone to look at and vote on. A vote is an opinion, not a confirmation."
 - **Do not say:** discovery, new, first, confirmed; that nobody else has seen them (some sources are not yet
@@ -184,8 +208,8 @@ name service is down, these addresses do the same without it.
 
 ### 7. What is it? (2:50 to 3:10)
 
-- **Show:** press **Watch** in the bar, press **Barnard's Star**, then **What is it?** in the bar (or open the
-  shot-7 address). The card reads "SIMBAD lists it as an M dwarf: a small, cool star (astronomers call these red
+- **Show:** open the shot-7 address (Barnard's Star with **What is it?** open; on camera you may then press
+  **What is it?** in the bar to show where it lives). The card reads "SIMBAD lists it as an M dwarf: a small, cool star (astronomers call these red
   dwarfs)." Beside it, a drawing of the star next to the Sun, marked "Illustration drawn from measurements. Not a
   photograph." and "DRAWING, NOT A PHOTO", and "How far: 5.96 light-years (Gaia)."
 - **Say:** "What is it? says what the star catalogues know about any object, in plain words, and draws it from
@@ -198,9 +222,10 @@ name service is down, these addresses do the same without it.
 ### 8. Close: what is and is not claimed (3:10 to 3:30)
 
 - **On screen:** the site address, the team name and the credits line.
-- **Say:** "Everything here is real SPHEREx data, except the practice round, which says so. We claim no discovery
-  and no new planet. The three sources are candidates that we found in no catalogue or report we checked; a
-  bigger telescope's spectrum and SPHEREx's next visits will tell what they are. Type any star or position, and
+- **Say:** "Everything you saw is real data, from SPHEREx and the star catalogues, except the made-up object of
+  the practice round and of the Planet X search's planted run, which say so; the drawings say that they are
+  drawings. We claim no discovery and no new planet. The three sources are candidates that we found in no catalogue or report we
+  checked; a bigger telescope's spectrum and SPHEREx's next visits will tell what they are. Type any star or position, and
   watch that patch of sky change. Built by Team Ampersand for NASA Space Apps 2026."
 - **Credits on screen (must be legible):** Data: NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive
   (IRSA); ESA Gaia DR3. Names: SIMBAD (CDS, Strasbourg). Brightness checks: NEOWISE (NASA/IPAC IRSA) and AAVSO
@@ -267,3 +292,7 @@ About the rest:
 - Not "2.5 times" for RW Aurigae, and not "flux" or "brightness in physical units" for R Draconis.
 - Not "new" or "erupted" about the Serpens South star: it came back from a dip.
 - Not that the practice object is real. Keep its banner in view.
+- Not "the only made-up thing" without the Planet X search's planted run, and not "everything is real" without
+  the made-up objects and the drawings.
+- Not "nobody has done this with SPHEREx before": say "we do not know of it having been done with real SPHEREx
+  data".

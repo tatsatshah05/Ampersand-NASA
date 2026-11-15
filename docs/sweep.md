@@ -38,11 +38,12 @@ What that means:
   checks only a person can make, then decide whether to report. The checks are the checklist in
   `docs/sweep/searches-for-earlier-reports.md`, section (d); the ready texts (not sent) are in
   `docs/sweep/report-draft.md`.
-- **No earlier report has been found.** After the ruling a wider search checked more than 30 public catalogues
-  and alert lists per candidate, each tested on a known object, and a keyword search of the Astronomer's
-  Telegrams followed. Neither found a report at any of the three places. Some sources have not been searched in
-  full (no person has read the telegrams in full; NASA ADS has had only its control and one search; SIMBAD at CDS
-  was down), so this does not prove that no one else has seen them. The record: `docs/sweep/searches-for-earlier-reports.md`.
+- **No earlier report has been found.** Two rounds of searches, one for the ruling and a wider one after it,
+  checked more than 30 public catalogues and alert lists per candidate, each tested on a known object, and a
+  keyword search of the Astronomer's Telegrams followed. None found a report at any of the three places. Some
+  sources have not been searched in full (no person has read the telegrams in full; NASA ADS has had only its
+  control and one search; SIMBAD at CDS was down), so this does not prove that no one else has seen them. The
+  record: `docs/sweep/searches-for-earlier-reports.md`.
 - **The sweep's first write-up of the three was wrong** in several ways (its 2025 numbers for A and B were other
   stars' light, two positions were 3 arcsec off, its "counterparts" were other stars, C's bright readings were
   emission lines). See "What the sweep's first write-up got wrong". Every number about A, B and C is the reviewers', except the rerun table, which is the fixed code's own.

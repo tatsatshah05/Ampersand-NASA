@@ -220,7 +220,7 @@ Steps:
 7. Check it worked:
    - `--check` printed `RESULT: every view loaded from disk in under a second`.
    - In the shell, `ls /var/data` lists `cutouts`, `frames`, `photometry`, `queries`.
-   - From a phone, the site opens Barnard's Star at once.
+   - From a phone, the site opens Candidate B at once.
    - A position nobody has asked for works after about a minute. Look at the
      service's log for errors afterwards.
 
@@ -282,7 +282,8 @@ Measured on 2026-11-14 after warming the five targets (six detectors, field of v
 estimate only: at about 260 kB per exposure (below), the three candidates' 327, 370 and
 425 exposures (`docs/sweep.md`, the rerun) come to about 85 to 110 MB each. The searches
 of the warm-up's step 4 keep their own cutouts (`search2/`), and the watchlist folder of
-step 6 is about 2 MB. Choose 5 GB.
+step 6 is about 9 MB once every picture strip is made (8.7 MB, 143 pictures, on 15
+November). Choose 5 GB.
 
 | Target | Exposures (all detectors) | Cutouts on disk |
 |---|---|---|
@@ -314,8 +315,9 @@ six tools and three screens of their own. Each needs something on the server's d
 these steps in order. Steps 1 and 2 run in the checkout, before the image is built; the
 others on the server, or against it. Nothing here was run on a hosting service yet. On a
 laptop on 2026-11-15, against the shared cache: step 1 (`export_lab.py --check`: "lab
-files are up to date with the results files"), step 2 (both checks passed, the bar check in
-its earlier copy, which expects Vote / Watchlist: see `scripts/checks/README.md`), step 3's
+files are up to date with the results files"), step 2 (on `Dev` before the Observe
+anomalies and finish-page branches are merged, the copies in `scripts/checks/` fail in
+known ways, and the layout check passed: see `scripts/checks/README.md`), step 3's
 `--check` (661 views of the eleven objects, every one from disk in under a second with
 the network blocked, 1.7 minutes), step 4's loop for Candidate B, step 5 (5 seconds, its
 search already on disk), step 6.1 on a copy of the list (0 new rows; one field, IC 5146,
@@ -332,11 +334,14 @@ python scripts/export_lab.py --check
 It exits 1 if a file is out of date; then run `python scripts/export_lab.py` (it needs the
 cached cutouts of the three methods; see its docstring) and commit the new files. This
 check reads `docs/`, which is not in the image (`.dockerignore`), so it cannot run on the
-server. **[TO CONFIRM when the Observe anomalies screen is merged]** That screen reads
+server. **Once the Observe anomalies screen is merged** (branch `agent/anomalies`, commit
+`674b595`, not in `Dev` when this was written), that screen reads
 `frontend/public/anomalies/sweep.json`, made from `docs/sweep/summary.json` and
 `docs/sweep.md` by `scripts/export_anomalies.py`; check it the same way before building:
-`python scripts/export_anomalies.py --check`. Both scripts were written so that their
-`--check` mode catches a file that has drifted from the write-ups.
+`python scripts/export_anomalies.py --check` (offline; it also compares the known objects'
+catalogue rows when the sweep's tile records are in the cache, and otherwise says they were
+not checked). Both scripts were written so that their `--check` mode catches a file that
+has drifted from the write-ups.
 
 **2. Before building, optionally: the browser checks.** Run `scripts/checks/` against a
 local server built from the same commit (`scripts/checks/README.md`).
@@ -352,14 +357,15 @@ python scripts/warm_cache.py --check
 **4. The tools the bar opens on those views (against the server).** Find changes, Far-off
 planet, Asteroids and What is it? work on the view on screen, starting with Candidate B.
 Each starts a search or asks an outside catalogue the first time, and keeps the answer on
-disk. Ask for them once for the three candidates and the five targets. From any machine
+disk. Ask for them once for all eleven objects of the row of buttons. From any machine
 with `curl` and `python3`, in `bash` (not `zsh`), with `SITE` set to the public address:
 
 ```
 SITE=https://<the public address>
 for v in "253.18038 -44.67697 6" "270.80408 -23.46818 6" "241.70906 -52.20564 6" \
          "269.446267 4.768222 5" "331.096653 -56.800663 5" "133.759765 -7.242182 6" \
-         "76.956587 30.401291 5" "248.167233 66.755024 5"; do
+         "76.956587 30.401291 5" "248.167233 66.755024 5" \
+         "277.50547 -2.06198 6" "227.01362 -40.14308 6" "156.30783 -53.522 2"; do
   set -- $v
   for q in "search?ra=$1&dec=$2&fov=0.1&detectors=123456" "distant?ra=$1&dec=$2&fov=0.2&detectors=56"; do
     until curl -s "$SITE/api/$q" | python3 -c 'import json,sys; sys.exit(json.load(sys.stdin)["status"] not in ("done", "failed"))'; do
@@ -377,8 +383,10 @@ view (0.1 degrees) in all six detectors, the distant-world search on 0.2 degrees
 detectors 5 and 6, What is it? at the view's centre, and the small bodies in the view's
 detector. Each search runs in the background, one at a time; the loop asks again every 15
 seconds until it is done. A first search of a patch takes from under a minute (cutouts
-on disk) to a few minutes. The loop was run on a laptop server for Candidate B; the other
-seven were not timed.
+on disk) to a few minutes. The positions and detectors are the row's own
+(`frontend/src/components/SearchBar.tsx`; the last three are Serpens South, V462 Lupi and
+V572 Velorum). The loop was run on a laptop server for Candidate B; the other ten were not
+timed.
 
 **5. The distant-world check (on the server).** It runs the same distant-world search the
 Far-off planet panel shows, for WISE 0855, and prints its answer and its limit at every

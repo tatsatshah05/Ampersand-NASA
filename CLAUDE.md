@@ -1075,7 +1075,12 @@ The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the refe
 
 ## The page as of 2026-11-15: addresses, rules and checks (read before changing the frontend)
 
-What a session needs that the code does not say in one place. Written from `Dev` at `500e7fd`.
+What a session needs that the code does not say in one place. Written from `Dev` at `500e7fd` and checked again at
+`0221046`. Two branches were not merged when this was written and change parts of it: `agent/anomalies` (`674b595`,
+Observe anomalies, below) and `agent/finish-page` (`49de312`: after the landing every star opens paused and in detector
+5; Beginner's short candidate line with the allowed sentence behind an "i"; What is it? asks about a pressed star; a
+name's Gaia motion carried as `src=gaia`, so Expert reads "Gaia DR3 predicts"). Read their commits before relying on
+the lines they touch.
 
 The page's address (`frontend/src/address.ts`, `readAddress`; every unusable value falls back and is named in a note):
 - `ra`, `dec` (both or neither), `fov` (above 0.02, at most 0.5), `det` (1 to 6; older links say `detector`), `mode`
@@ -1103,11 +1108,13 @@ search, in the background, `status` queued, running, done or failed). `GET /api/
 
 The bar (`frontend/src/features.ts`, `components/FeatureBar.tsx`), ten items, Beginner / Expert: Watch / Viewer,
 Brightness / Light curve, Colours / Spectrum, Find changes / Blind search, Far-off planet / Planet X search, Asteroids /
-Small bodies, What is it? / Object card, Practise / Training, Vote / Watchlist, Three tools / Methods. The ninth is being
-renamed Observe anomalies / Anomalies (branch `agent/anomalies`, not merged when this was written; its design: a first
-group "Not reported anywhere we could find" with the three candidates, then "Choose a region"; in progress there:
-`GET /api/watchlist/regions` and `frontend/public/anomalies/sweep.json` made by `scripts/export_anomalies.py`). The
-Beginner | Expert switch is fixed at the bottom right (`components/LevelDock.tsx`).
+Small bodies, What is it? / Object card, Practise / Training, Vote / Watchlist, Three tools / Methods. On the branch
+`agent/anomalies` (commit `674b595`, not merged when this was written) the ninth is Observe anomalies / Anomalies, still
+at `?watchlist=1`: a first group "Not reported anywhere we could find" with one card per candidate (status from
+`finds.ts` `status`, link "Watch it appear"), then "Choose a region", then the chosen region's groups; with it come
+`GET /api/watchlist/regions` and `frontend/public/anomalies/sweep.json`, made by `scripts/export_anomalies.py` (which has
+a `--check` mode). That commit adds its own paragraph on the screen to this file. The Beginner | Expert switch is fixed
+at the bottom right (`components/LevelDock.tsx`).
 
 Rules of the page:
 - **The words hold still while the visits play.** The side column has one sentence about the whole run and one table
@@ -1130,17 +1137,23 @@ The sweep's three candidates, in three lines (detail, numbers and evidence: `doc
 - A, Sagittarius, RA 270.80408 Dec -23.46818: not detected in Aug-Sep 2025, more than 100 times brighter by late March 2026.
 - B, Scorpius, RA 253.18038 Dec -44.67697: not detected in Aug-Sep 2025, at least 250 times brighter by August 2026 (the landing view).
 - C, Norma, RA 241.70906 Dec -52.20564: not detected in Jul-Aug 2025, at least 30 times brighter in Feb-Mar 2026, faded again by Aug 2026.
-All three are candidates: found in no catalogue or report we checked, confirmed by nobody, reported to nobody. A wider
-search after the ruling (more than 30 catalogues and alert lists each, each tested on a known object) and a keyword
-search of the Astronomer's Telegrams found no earlier report. No person has yet read the telegrams in full, NASA ADS has
-had only its control and one search, and SIMBAD at CDS was down, so a person must still work through the checklist.
+All three are candidates: found in no catalogue or report we checked, confirmed by nobody, reported to nobody. Two
+rounds of searches, for the ruling and after it (more than 30 catalogues and alert lists each across both rounds, each
+tested on a known object), and a keyword search of the Astronomer's Telegrams found no earlier report. No person has
+yet read the telegrams in full, NASA ADS has had only its control and one search, and SIMBAD at CDS was down, so a
+person must still work through the checklist.
 The app's own sentences about them are in `frontend/src/finds.ts`, quoted in `docs/sweep.md` (`finds.test.ts`).
 
-Checks that guard the page (each takes `<playwright-core path> <base url> <out dir>`; all three passed on `500e7fd`):
-- `scripts/checks/stilltext_check.js`: the words hold still while the visits play (the rule above).
+Checks that guard the page (each takes `<playwright-core path> <base url> <out dir>`). Each copy in the repository is
+the latest one, written for the two branches above; how each behaves on `Dev` before they are merged is in
+`scripts/checks/README.md`:
+- `scripts/checks/stilltext_check.js`: the words hold still while the visits play (the rule above). It looks for the
+  measured-against-Gaia comparison on Barnard's Star reached by its button, which names Gaia only with
+  `agent/finish-page`.
 - `scripts/checks/features_check.js`: the bar, its order and labels at both levels, the switch, Beginner's words. It
-  keeps its own copy of the ten labels: change it together with `features.ts`. The copy in the repository already
-  expects Observe anomalies / Anomalies for the ninth item, so it fails on that item until that screen is merged.
+  keeps its own copy of the ten labels (`FEATURES`, line 27 for the ninth): change it together with `features.ts`. It
+  expects Observe anomalies / Anomalies, so on a build without that screen it fails and then stops with a
+  TimeoutError.
 - `layout_check.js` (the page fits the window; nothing moves when the visit or the star changes) is not in the
   repository. On 2026-11-15 it was in a temporary folder,
   `/private/tmp/claude-501/-Users-tatsatshah-Desktop-NASA-Hackathon/f9f1be33-c465-4da8-a5bb-6363d5f480f1/scratchpad/layout_check.js`.
