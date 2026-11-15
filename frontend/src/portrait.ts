@@ -26,11 +26,13 @@ export const SMALL_RADIUS_RSUN = 0.2
  */
 export const NEAREST_STAR_LY = 4.25
 /**
- * Below about this temperature an object gives off almost no light the eye can see
- * (a blackbody at 1,000 K puts about one part in 100,000 of its light between 380 and
- * 780 nm; it starts to glow a dull red near 800 K, the Draper point). It is drawn dark.
+ * Below this temperature an object gives off no light the eye can see: a hot body starts
+ * to glow a dull red near 798 K, the Draper point (J. W. Draper, 1847). Above it the glow
+ * is visible but faint (a blackbody at 1,000 K puts about one part in 100,000 of its light
+ * between 380 and 780 nm). Below it the object is drawn dark, with an outline, and the card
+ * says it is too cool to glow in light our eyes can see.
  */
-export const GLOW_MIN_K = 1000
+export const GLOW_MIN_K = 800
 /**
  * Limb darkening: the linear law I(mu) / I(centre) = 1 - u (1 - mu), with mu the cosine of
  * the angle between the line of sight and the surface normal (mu = sqrt(1 - (r/R)^2) at a
@@ -123,8 +125,10 @@ export type Rgb = [number, number, number]
  * The colour of a blackbody's surface as the eye would see it, in linear sRGB with the
  * brightest channel 1. Below about 1,900 K the colour lies outside what a screen can show
  * (blue comes out negative); the smallest amount of white that brings every channel to
- * zero or above is added, which keeps the hue. Brightness is not shown: every colour is
- * scaled to full.
+ * zero or above is added, which moves the colour straight toward white and keeps its
+ * dominant wavelength. (Below about 880 K green goes negative too, and the line to white
+ * enters the screen's range on its red-to-blue edge, so 800 K comes out (255, 0, 40).)
+ * Brightness is not shown: every colour is scaled to full.
  */
 export function blackbodyLinear(temperatureK: number): Rgb {
   const rgb = linearSrgb(blackbodyXyz(temperatureK))
@@ -161,13 +165,14 @@ export function glowsVisibly(temperatureK: number): boolean {
 
 /**
  * The colour in a word or two, by temperature, matched to what blackbodyRgb255 gives:
- * 1,200 K (255, 79, 0) red-orange, 3,100 K (255, 187, 116) orange, 4,500 K (255, 222, 188)
+ * 900 K (255, 9, 0) red, 1,200 K (255, 79, 0) red-orange, 3,100 K (255, 187, 116) orange, 4,500 K (255, 222, 188)
  * pale orange, 5,772 K (255, 241, 234) white with a warm tint, 7,000 K (244, 242, 255)
  * white, 10,000 K (205, 217, 255) blue-white, 20,000 K (171, 193, 255) pale blue
  * (portrait.test.ts checks each).
  */
 export function colourWord(temperatureK: number): string | null {
   if (!glowsVisibly(temperatureK)) return null
+  if (temperatureK < 1000) return 'red'
   if (temperatureK < 1600) return 'red-orange'
   if (temperatureK < 3700) return 'orange'
   if (temperatureK < 5200) return 'pale orange'
@@ -243,12 +248,23 @@ export interface Portrait {
 }
 
 export const PICTURE_WIDTH = 400
+/**
+ * Type sizes in picture units. The picture is drawn 400 units wide and shown at most 400 px
+ * wide (ObjectCard.css); on a 390 px phone it is about 300 px wide, so 16 units still render
+ * at 12 px and 17 units at about 12.8 px.
+ */
+export const DISC_LABEL_SIZE = 17
+export const SCALE_TEXT_SIZE = 17
+export const TAG_SIZE = 16
+/** Width of one character of a label at DISC_LABEL_SIZE, roughly (system sans, 0.55 em). */
+export const LABEL_CHAR = 9.35
+/** Width of one character at SCALE_TEXT_SIZE, roughly. */
+export const SCALE_CHAR = 9.4
 const MAX_R = 64 // the largest disc's radius
 const TOP = 18
-const GAP = 22
-const MIN_DOT = 0.75 // the smallest radius drawn
+const GAP = 20
+const MIN_DOT = 0.75 // the smallest radius drawn; a body drawn this size is flagged `dot`
 const NOMINAL_R = 46 // a disc whose size is not measured: its size means nothing
-const LABEL_CHAR = 7.1 // width of a label character at 13 px, roughly
 
 /**
  * Lay out the picture. With a radius: the object and the Sun to scale (and Jupiter and the
@@ -299,7 +315,10 @@ export function portraitLayout(input: PortraitInput): Portrait {
     return { ...s, rToScale, width: Math.max(2 * rToScale, s.label.length * LABEL_CHAR) }
   })
   const total = slots.reduce((sum, s) => sum + s.width, 0) + GAP * (slots.length - 1)
-  let x = (PICTURE_WIDTH - total) / 2
+  // Four bodies with a long label can need more than 400 units: then the picture is wider
+  // (and is shown a little smaller), never cut off.
+  const width = Math.max(PICTURE_WIDTH, Math.ceil(total + 16))
+  let x = (width - total) / 2
   const bodies: Body[] = slots.map((s) => {
     const cx = x + s.width / 2
     x += s.width + GAP
@@ -317,7 +336,7 @@ export function portraitLayout(input: PortraitInput): Portrait {
       dot,
     }
   })
-  return { width: PICTURE_WIDTH, height, bodies, kind: hasT ? 'colour-and-size' : 'size-only', labelY }
+  return { width, height, bodies, kind: hasT ? 'colour-and-size' : 'size-only', labelY }
 }
 
 // ------------------------------------------------------------------ the distance line
@@ -365,7 +384,8 @@ export function distanceScale(ly: number | null, low: number | null = null, high
   if (ly == null || !Number.isFinite(ly) || ly <= 0) return null
   const width = PICTURE_WIDTH
   const x0 = 24
-  const x1 = width - 24
+  // room on the right for the last tick's label ("100,000" at SCALE_TEXT_SIZE, 66 units), centred on its tick
+  const x1 = width - 34
   const far = Math.max(high ?? ly, ly, NEAREST_STAR_LY)
   const step = niceCeil(far / 4)
   const maxLy = Math.ceil((far * 1.08) / step) * step
@@ -374,7 +394,7 @@ export function distanceScale(ly: number | null, low: number | null = null, high
   for (let v = 0; v <= maxLy + 1e-9; v += step) ticks.push({ x: at(v), label: v.toLocaleString('en-US') })
   return {
     width,
-    height: 86,
+    height: 94,
     x0,
     x1,
     maxLy,

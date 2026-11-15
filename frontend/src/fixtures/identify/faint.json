@@ -38,11 +38,17 @@
    "dec": 4.762901,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 269.4485157,
+   "dec": 4.762901,
+   "epoch": 2026.0
+  },
   "catalogue_position": {
    "ra": 269.44852449165984,
    "dec": 4.762902502432067,
    "epoch": 2016.0
   },
+  "possibly_spurious": false,
   "values": [
    {
     "key": "parallax",
@@ -57,7 +63,9 @@
     "error_column": "parallax_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmra",
@@ -72,7 +80,9 @@
     "error_column": "pmra_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmdec",
@@ -87,7 +97,9 @@
     "error_column": "pmdec_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "phot_g_mean_mag",
@@ -102,7 +114,9 @@
     "error_column": "from phot_g_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "bp_rp",
@@ -117,7 +131,9 @@
     "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "ruwe",
@@ -132,7 +148,9 @@
     "error_column": null,
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "teff_gspphot",
@@ -150,7 +168,9 @@
      "teff_gspphot_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": true
    },
    {
     "key": "radius_flame",
@@ -168,7 +188,14 @@
      "radius_flame_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_flame",
+     "value": "20",
+     "meaning": null,
+     "lowest_quality": false
+    },
+    "model": true
    },
    {
     "key": "radius_gspphot",
@@ -186,7 +213,9 @@
      "radius_gspphot_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": true
    },
    {
     "key": "lum_flame",
@@ -204,7 +233,14 @@
      "lum_flame_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_flame",
+     "value": "20",
+     "meaning": null,
+     "lowest_quality": false
+    },
+    "model": true
    },
    {
     "key": "distance_gspphot",
@@ -222,12 +258,18 @@
      "distance_gspphot_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": true
    }
   ]
  },
  "simbad": null,
  "match": null,
+ "choice": {
+  "how": "light",
+  "text": "It is the only Gaia source within the radius."
+ },
  "derived": {
   "from": "Gaia DR3",
   "distance": {
@@ -291,7 +333,9 @@
     "teff_gspphot_upper"
    ],
    "reference": null,
-   "note": null
+   "note": null,
+   "flags": null,
+   "model": true
   },
   "radius": {
    "key": "radius_flame",
@@ -309,7 +353,14 @@
     "radius_flame_upper"
    ],
    "reference": null,
-   "note": null
+   "note": null,
+   "flags": {
+    "column": "gaiadr3.astrophysical_parameters.flags_flame",
+    "value": "20",
+    "meaning": null,
+    "lowest_quality": false
+   },
+   "model": true
   },
   "luminosity": {
    "key": "lum_flame",
@@ -327,7 +378,14 @@
     "lum_flame_upper"
    ],
    "reference": null,
-   "note": null
+   "note": null,
+   "flags": {
+    "column": "gaiadr3.astrophysical_parameters.flags_flame",
+    "value": "20",
+    "meaning": null,
+    "lowest_quality": false
+   },
+   "model": true
   }
  },
  "neighbours": [
@@ -335,6 +393,7 @@
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 4472835876150421504",
    "source_id": "4472835876150421504",
+   "display_name": "Gaia DR3 4472835876150421504",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 6.2,
@@ -345,12 +404,16 @@
    "bp_rp": 1.18,
    "parallax": -1.599,
    "parallax_error": 2.253,
+   "astrometric_params_solved": 31,
+   "visibility_periods_used": 10,
+   "possibly_spurious": false,
    "same_pixel": false
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 4472835876150406784",
    "source_id": "4472835876150406784",
+   "display_name": "Gaia DR3 4472835876150406784",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 7.02,
@@ -361,12 +424,16 @@
    "bp_rp": 1.12,
    "parallax": -0.703,
    "parallax_error": 1.4,
+   "astrometric_params_solved": 95,
+   "visibility_periods_used": 13,
+   "possibly_spurious": false,
    "same_pixel": false
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 4472835979229627392",
    "source_id": "4472835979229627392",
+   "display_name": "Gaia DR3 4472835979229627392",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 11.82,
@@ -377,13 +444,16 @@
    "bp_rp": 1.0,
    "parallax": null,
    "parallax_error": null,
+   "astrometric_params_solved": 3,
+   "visibility_periods_used": 4,
+   "possibly_spurious": false,
    "same_pixel": false
   }
  ],
  "notes": [
-  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
   "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
-  "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty."
+  "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty.",
+  "Gaia DR3 parallaxes carry a small known offset (about -0.02 mas; Lindegren et al. 2021) that is not corrected here. At this parallax (0.492 mas), correcting it would bring the distance about 4% closer."
  ],
  "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"
 }

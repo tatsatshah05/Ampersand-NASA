@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import re
 import shutil
 from pathlib import Path
 
@@ -22,14 +23,17 @@ from backend import identify, spherex
 
 DATA = Path(__file__).parent / "data" / "identify"
 FRONT = Path(__file__).parents[1] / "frontend" / "src" / "fixtures" / "identify"
+# (ra, dec, epoch): the places on the pictures, as scripts/check_identify.py lists them.
 PLACES = {
-    "barnard": (269.446267, 4.768222),
-    "epsindib": (331.096653, -56.800663),
-    "wise0855": (133.759765, -7.242182),
-    "rwaur": (76.956587, 30.401291),
-    "rdra": (248.167233, 66.755024),
-    "faint": (269.448524, 4.762903),
-    "candidate": (253.18038, -44.67697),
+    "barnard": (269.446267, 4.768222, 2026.0),
+    "epsindib": (331.096653, -56.800663, 2026.0),
+    "wise0855": (133.759765, -7.242182, 2026.0),
+    "rwaur": (76.956587, 30.401291, 2026.0),
+    "rdra": (248.167233, 66.755024, 2026.0),
+    "faint": (269.448524, 4.762903, 2026.0),
+    "candidate": (253.18038, -44.67697, 2026.0),
+    "barnard_visit3": (269.446116, 4.770171, 2026.676),
+    "rdra_offset": (248.16885, 66.755363, 2026.0),
 }
 
 
@@ -46,7 +50,7 @@ def saved(cache_dir: Path) -> Path:
 @pytest.fixture(scope="session")
 def answers(saved: Path, network_log: list[str]) -> dict[str, dict]:
     network_log.clear()
-    out = {key: identify.identify(ra, dec) for key, (ra, dec) in PLACES.items()}
+    out = {key: identify.identify(ra, dec, epoch=epoch) for key, (ra, dec, epoch) in PLACES.items()}
     assert network_log == [], "every answer must come from the saved files"
     return out
 
@@ -86,7 +90,7 @@ def test_every_object_type_in_the_table_is_a_simbad_type():
 
 @pytest.mark.parametrize(("code", "label", "plain"), [
     ("BY*", "BY Draconis variable", "a cool star whose brightness changes a little as it spins"),
-    ("BD*", "brown dwarf", "bigger than a planet, too small to shine like a star"),
+    ("BD*", "brown dwarf", "heavier than a planet, too light to burn hydrogen like a star"),
     ("Mi*", "Mira variable", "a cool giant star that swells and shrinks over many months"),
     ("Or*", "Orion variable", "a young star whose brightness changes unevenly"),
     ("TT*", "T Tauri star", "a very young star, still forming"),
@@ -99,7 +103,16 @@ def test_object_types_in_plain_words(code: str, label: str, plain: str):
 def test_candidate_types_say_possibly():
     assert identify.object_type_words("BD?") == {
         "code": "BD?", "label": "brown dwarf (candidate)",
-        "plain": "possibly bigger than a planet, too small to shine like a star", "candidate": True}
+        "plain": "possibly heavier than a planet, too light to burn hydrogen like a star", "candidate": True}
+
+
+def test_no_type_words_name_a_colour():
+    """The colour on the card is the one computed from a measured temperature; a type that said
+    "red" beside a disc computed as orange would contradict it."""
+    colours = re.compile(r"\b(red|orange|yellow|white|blue|bluest)\b")
+    for words in [*identify.SPECTRAL_CLASSES.values(), *identify.SPECTRAL_DWARFS.values(),
+                  *identify.SPECTRAL_GIANTS.values()]:
+        assert not colours.search(words[1].replace("red dwarfs", "")), words
     assert identify.object_type_words("Y*?")["label"] == "young stellar object (candidate)"
     assert identify.object_type_words("Q?")["label"] == "quasar (candidate)"
 
@@ -191,6 +204,47 @@ def test_speed_error_matches_a_numerical_derivative():
     assert err == pytest.approx(math.sqrt(jac @ cov @ jac), rel=1e-6)
 
 
+def test_light_at_place_weights_flux_by_a_one_pixel_blur():
+    at_place = identify._light_at_place({"phot_g_mean_mag": 15.0, "_sep": 0.0})
+    assert at_place == pytest.approx(10 ** -6.0, rel=1e-12)
+    # At half the FWHM the weight is one half, by definition of the FWHM.
+    half = identify._light_at_place({"phot_g_mean_mag": 15.0, "_sep": identify.CHOOSE_FWHM_ARCSEC / 2})
+    assert half == pytest.approx(at_place / 2, rel=1e-12)
+    # A star at the place beats one 2.5 times brighter 4 arcsec away; one 2 arcsec away 5 times brighter wins.
+    brighter_far = identify._light_at_place({"phot_g_mean_mag": 15.0 - 2.5 * math.log10(2.5), "_sep": 4.0})
+    assert brighter_far < at_place
+    brighter_near = identify._light_at_place({"phot_g_mean_mag": 15.0 - 2.5 * math.log10(5.0), "_sep": 2.0})
+    assert brighter_near > at_place
+    assert identify._light_at_place({"phot_g_mean_mag": None, "_sep": 0.0}) == 0.0
+
+
+def test_temperature_choice_prefers_gaias_own_for_ultracool_and_hot_stars():
+    def q(key: str, value: float) -> dict:
+        return {"key": key, "value": value}
+    assert identify._choose_temperature([q("teff_gspphot", 3000), q("teff_espucd", 2400)])["key"] == "teff_espucd"
+    assert identify._choose_temperature([q("teff_gspphot", 3000), q("teff_espucd", 2900)])["key"] == "teff_gspphot"
+    assert identify._choose_temperature([q("teff_gspphot", 9000), q("teff_esphs", 15000)])["key"] == "teff_esphs"
+    assert identify._choose_temperature([q("teff_gspspec", 4250)])["key"] == "teff_gspspec"
+    assert identify._choose_temperature([]) is None
+
+
+def test_the_last_mirror_of_a_service_is_always_asked(saved: Path, network: list[str], monkeypatch):
+    """One failure must not take a service away from every visitor for ten minutes."""
+    def down(url: str, params: dict, **_: object) -> bytes:
+        network.append(url)
+        raise spherex.ArchiveError("down (test)")
+
+    monkeypatch.setattr(identify, "_get", down)
+    monkeypatch.setattr(identify, "_down", {})
+    with pytest.raises(identify._Unanswered):
+        identify._tap("gaia", "SELECT 1 -- first")
+    network.clear()
+    with pytest.raises(identify._Unanswered):
+        identify._tap("gaia", "SELECT 1 -- second")
+    # The ESA archive failed a moment ago and is skipped; the last mirror is asked again.
+    assert network == [identify.GAIA_TAPS[-1][1]]
+
+
 def test_simbad_error_ellipse():
     east, north = identify._simbad_pm_error({"pm_err_maj": 2.0, "pm_err_min": 1.0, "pm_err_angle": 90})
     assert (east, north) == pytest.approx((2.0, 1.0))         # major axis pointing east
@@ -208,7 +262,11 @@ def test_barnards_star(answers: dict[str, dict]):
     assert g["source_id"] == "4472832130942575872" and g["separation_arcsec"] < 0.1
     assert s["main_id"] == "NAME Barnard's star" and s["display_name"] == "Barnard's star"
     assert a["match"]["same"] is True and a["match"]["how"] == "identifier"
+    assert "NAME" not in a["match"]["text"]
+    assert a["choice"]["how"] == "named"
     assert s["type"]["code"] == "BY*" and s["spectral_type"]["label"] == "M dwarf"
+    assert s["spectral_type"]["plain"] == "a small, cool star (astronomers call these red dwarfs)"
+    assert g["resolve_position"] == {"ra": pytest.approx(269.4462669), "dec": pytest.approx(4.7682223), "epoch": 2026.0}
     assert s["references"] == 924
     assert [p["display_name"] for p in s["planets"]] == ["Barnard's Star b", "Barnard's Star c", "Barnard's Star d",
                                                         "Barnard's Star e"]
@@ -228,11 +286,28 @@ def test_barnards_star(answers: dict[str, dict]):
     assert v["gaiadr3.gaia_source.parallax"]["error"] == pytest.approx(0.040116, abs=1e-6)
     assert v["gaiadr3.gaia_source.phot_g_mean_mag"]["value"] == pytest.approx(8.194, abs=1e-3)
     assert v["gaiadr3.gaia_source.bp_rp"]["value"] == pytest.approx(2.834, abs=1e-3)
+    # Gaia's model values say so, and carry their quality flags.
+    assert t["model"] is True and v["gaiadr3.gaia_source.parallax"]["model"] is False
+    assert r["flags"] == {"column": "gaiadr3.astrophysical_parameters.flags_flame", "value": "20", "meaning": None,
+                          "lowest_quality": False}
+    assert v["gaiadr3.astrophysical_parameters.teff_gspspec"]["flags"]["value"].startswith("1000013")
+    # A parallax this large needs no zero-point remark.
+    assert not any("offset" in n for n in a["notes"])
     # SIMBAD's own list of published temperatures: shown to experts, not drawn (Gaia's is there).
     assert s["temperatures"]["n"] == 55 and s["temperatures"]["median"] == 3243
     # A faint background star shares the pixel; nothing else does.
     same = [n for n in a["neighbours"] if n["same_pixel"]]
     assert [(n["source_id"], n["g_mag"]) for n in same] == [("4472835979229621248", 20.9)]
+
+
+def test_barnard_on_a_visit_3_picture_is_still_barnard(answers: dict[str, dict]):
+    """Pressed on a picture of 2026-09-04, where it is 7 arcsec from its 2026.0 place."""
+    a = answers["barnard_visit3"]
+    assert a["query"]["epoch"] == 2026.676 and a["nothing_catalogued"] is False
+    assert a["gaia"]["source_id"] == "4472832130942575872" and a["gaia"]["separation_arcsec"] < 0.1
+    assert a["simbad"]["main_id"] == "NAME Barnard's star"
+    # Its place at 2026.0, for "Look at this one", is the same as the 2026.0 lookup's.
+    assert a["gaia"]["resolve_position"] == answers["barnard"]["gaia"]["resolve_position"]
 
 
 def test_epsilon_indi_b_never_gets_the_bright_stars_numbers(answers: dict[str, dict]):
@@ -241,9 +316,13 @@ def test_epsilon_indi_b_never_gets_the_bright_stars_numbers(answers: dict[str, d
     assert g["source_id"] == "6412596012146801152" and s["main_id"] == "* eps Ind B"
     assert s["spectral_type"]["pair"] is True and s["spectral_type"]["parts"] == ["T1V", "T6V"]
     assert s["type"]["code"] == "BD*"
+    assert s["type"]["plain"] == "heavier than a planet, too light to burn hydrogen like a star"
     t = a["portrait"]["temperature"]
     assert t["column"] == "gaiadr3.astrophysical_parameters.teff_espucd"
     assert (t["value"], t["error"]) == pytest.approx((1417.0, 98.1), abs=0.1)
+    # ESP-UCD's own quality class for it is the lowest of three.
+    assert t["flags"]["value"] == "20" and t["flags"]["lowest_quality"] is True
+    assert t["model"] is True
     assert a["portrait"]["radius"] is None
     assert a["derived"]["distance"]["ly"] == pytest.approx(12.05, abs=0.01)
     # Epsilon Indi A (G = 4.3, 6.7 arcmin away) is nowhere in the answer.
@@ -275,15 +354,22 @@ def test_wise_0855_has_simbad_numbers_only(answers: dict[str, dict]):
     assert first["separation_arcsec"] == pytest.approx(6.81, abs=0.01) and first["same_pixel"] is False
 
 
-def test_rw_aurigae_is_a_close_pair(answers: dict[str, dict]):
+def test_rw_aurigae_is_a_close_pair_and_the_brighter_star_is_the_object(answers: dict[str, dict]):
+    """The place is SIMBAD's entry for the system, V* RW Aur, which names no Gaia source. Of the two
+    stars in the blur, A (G 12.18, 1.65 arcsec) puts more light there than B (G 13.04, 0.18 arcsec)."""
     a = answers["rwaur"]
-    assert a["gaia"]["source_id"] == "156430817820015232" and a["simbad"]["main_id"] == "V* RW Aur B"
-    assert a["match"]["how"] == "identifier"
-    assert a["simbad"]["type"]["code"] == "Or*"
-    assert "V* RW Aur" in [p["name"] for p in a["simbad"]["parents"]]
+    assert a["gaia"]["source_id"] == "156430822114424576" and a["simbad"]["main_id"] == "V* RW Aur A"
+    assert a["choice"]["how"] == "light" and a["match"]["how"] == "identifier"
+    assert a["simbad"]["type"]["code"] == "Or*" and a["simbad"]["references"] == 45
+    system = next(p for p in a["simbad"]["parents"] if p["name"] == "V* RW Aur")
+    assert system["references"] == 828
     pair = [n for n in a["neighbours"] if n["same_pixel"]]
-    assert [(n["simbad_name"], n["g_mag"]) for n in pair] == [("V* RW Aur A", 12.18)]
-    assert pair[0]["separation_arcsec"] == pytest.approx(1.65, abs=0.02)
+    assert [(n["simbad_name"], n["display_name"], n["g_mag"]) for n in pair] == [("V* RW Aur B", "RW Aur B", 13.04)]
+    assert pair[0]["separation_arcsec"] == pytest.approx(0.18, abs=0.02)
+    assert pair[0]["from_object_arcsec"] == pytest.approx(1.52, abs=0.02)
+    # A's own parallax: 509 light-years, not B's 598 from a RUWE-16 fit.
+    assert a["derived"]["distance"]["ly"] == pytest.approx(509.1, abs=0.1)
+    assert values_by_column(a["gaia"])["gaiadr3.gaia_source.ruwe"]["value"] == pytest.approx(1.50, abs=0.01)
     assert a["portrait"]["temperature"] is None and a["portrait"]["radius"] is None
 
 
@@ -292,8 +378,24 @@ def test_r_draconis_has_no_gaia_temperature_or_radius(answers: dict[str, dict]):
     assert a["gaia"]["source_id"] == "1648328016354496384" and a["simbad"]["main_id"] == "V* R Dra"
     assert a["simbad"]["type"]["code"] == "Mi*"
     assert a["portrait"] == {"temperature": None, "radius": None, "luminosity": None}
-    assert values_by_column(a["gaia"])["gaiadr3.gaia_source.phot_variable_flag"]["value"] == "VARIABLE"
+    v = values_by_column(a["gaia"])
+    assert v["gaiadr3.gaia_source.phot_variable_flag"]["value"] == "VARIABLE"
+    # Its G "error" is the spread of a variable star's measurements, and says so.
+    assert "variable" in v["gaiadr3.gaia_source.phot_g_mean_mag"]["note"]
     assert a["derived"]["distance"]["ly"] == pytest.approx(2607, abs=1)
+    # The two faint sources 4 arcsec away have only 2-parameter solutions from 3 and 4 visibility
+    # periods beside a star 13 magnitudes brighter: marked as possibly not real.
+    assert [(n["source_id"], n["possibly_spurious"]) for n in a["neighbours"]] == [
+        ("1648328016354500352", True), ("1648328016354504064", True)]
+
+
+def test_a_press_beside_r_draconis_is_still_r_draconis(answers: dict[str, dict]):
+    """2.6 arcsec off R Dra and 1.5 arcsec from a faint false-looking source: the star wins."""
+    a = answers["rdra_offset"]
+    assert a["gaia"]["source_id"] == "1648328016354496384" and a["simbad"]["main_id"] == "V* R Dra"
+    assert a["gaia"]["separation_arcsec"] == pytest.approx(2.6, abs=0.05)
+    assert a["choice"]["how"] == "light"
+    assert a["neighbours"][0]["separation_arcsec"] == pytest.approx(1.53, abs=0.02)
 
 
 def test_an_ordinary_faint_star(answers: dict[str, dict]):
@@ -303,6 +405,11 @@ def test_an_ordinary_faint_star(answers: dict[str, dict]):
     assert a["portrait"]["radius"]["value"] == pytest.approx(1.158, abs=1e-3)
     assert a["derived"]["distance"]["parallax_over_error"] == pytest.approx(7.80, abs=0.01)
     assert a["derived"]["distance"]["ly"] == pytest.approx(6629, abs=1)
+    # Gaia's two radius models disagree; both are in the answer.
+    v = values_by_column(a["gaia"])
+    assert v["gaiadr3.astrophysical_parameters.radius_gspphot"]["value"] == pytest.approx(0.8916, abs=1e-4)
+    # A parallax of 0.49 mas: the uncorrected zero-point offset is said, with its size.
+    assert any("offset" in n and "4% closer" in n for n in a["notes"])
 
 
 def test_the_candidate_place_has_nothing_catalogued(answers: dict[str, dict]):
@@ -312,7 +419,9 @@ def test_the_candidate_place_has_nothing_catalogued(answers: dict[str, dict]):
     assert a["portrait"] == {"temperature": None, "radius": None, "luminosity": None}
     # The sweep notes a G = 19.35 star 3.5 to 4.7 arcsec away; it is the nearest catalogued thing.
     assert a["nearest_catalogued"] == {"catalogue": "Gaia DR3", "name": "Gaia DR3 5964332607636528768",
-                                       "simbad_name": None, "separation_arcsec": 4.9, "g_mag": 19.35}
+                                       "display_name": "Gaia DR3 5964332607636528768", "simbad_name": None,
+                                       "separation_arcsec": 4.9, "g_mag": 19.35, "bp_rp": 3.6, "same_pixel": True,
+                                       "possibly_spurious": False}
     near_ten = [n for n in a["neighbours"] if 9.5 < n["separation_arcsec"] < 11]
     assert [n["source_id"] for n in near_ten] == ["5964332607629792768"]
 
@@ -334,13 +443,13 @@ def test_a_catalogue_that_does_not_answer_is_named_and_nothing_is_filled_in(save
         return real(kind, adql)
 
     monkeypatch.setattr(identify, "_tap", gaia_down)
-    a = identify.identify(*PLACES["barnard"])
+    a = identify.identify(*PLACES["barnard"][:2])
     assert a["unreachable"] == ["Gaia DR3"] and a["services"]["gaia"]["error"]
     assert a["gaia"] is None and a["simbad"]["main_id"] == "NAME Barnard's star"
     # SIMBAD's own values are what is shown; the temperature is SIMBAD's, labelled so.
     assert {v["catalogue"] for v in a["simbad"]["values"]} == {"SIMBAD"}
     assert a["portrait"]["temperature"]["catalogue"] == "SIMBAD" and a["portrait"]["radius"] is None
-    a = identify.identify(*PLACES["candidate"])
+    a = identify.identify(*PLACES["candidate"][:2])
     assert a["nothing_catalogued"] is None       # not "nothing there": Gaia was not asked
     assert a["neighbours"] == []
 

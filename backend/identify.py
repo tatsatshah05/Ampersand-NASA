@@ -1,17 +1,22 @@
 """What is known about the thing at a place on the sky: the "What is it?" card's lookup.
 
 GET /api/identify?ra=&dec=&radius=&epoch= (backend/app.py) calls identify(). For a
-position it returns
+position on the SPHEREx pictures at `epoch` (the date of the picture it was read from;
+positions are moved there with astrometry.propagate, so a fast star is found on any
+visit) it returns
 
-- the nearest Gaia DR3 source within `radius` arcsec at the date of the SPHEREx
-  pictures (positions moved there with astrometry.propagate), with its parallax,
-  proper motion, G magnitude, BP-RP colour and, where Gaia's astrophysical parameters
-  give them, temperature, radius, luminosity and distance: every value with its error
-  or range and the table and column it was read from;
-- the nearest SIMBAD object within the radius: its main name, object type and
-  spectral type, both turned into plain words by the tables below, and its number of
-  references (how well studied it is); for an object Gaia does not list, SIMBAD's own
-  parallax and proper motion and nothing more;
+- the Gaia DR3 source that is the object there: the one SIMBAD's object at the place
+  names, or else, of the sources within `radius` arcsec, the one that puts the most light
+  at the place (see _light_at_place: a 6.15 arcsec SPHEREx pixel is filled by the
+  brightest star in it, not by the nearest faint one). With its parallax, proper motion,
+  G magnitude, BP-RP colour and, where Gaia's astrophysical parameters give them,
+  temperature, radius, luminosity and distance with their quality flags: every value with
+  its error or range and the table and column it was read from;
+- the SIMBAD object that is the same thing (matched by the Gaia identifier SIMBAD lists,
+  else by position): its main name, object type and spectral type, both turned into plain
+  words by the tables below, the systems it belongs to, and its number of references (how
+  well studied it is); for an object Gaia does not list, SIMBAD's own parallax and proper
+  motion and nothing more;
 - every other catalogued source within 15 arcsec, with its brightness, because a
   SPHEREx pixel is 6.15 arcsec wide and the blur seen on the picture can hold several;
 - `nothing_catalogued` true when neither catalogue lists anything within the radius,
@@ -68,7 +73,30 @@ GAIA_TAPS = (("ESA Gaia archive", astrometry.GAIA_TAP),
              ("ARI Heidelberg Gaia mirror", "https://gaia.ari.uni-heidelberg.de/tap/sync"))
 SIMBAD_TAPS = (("SIMBAD (CfA mirror)", astrometry.SIMBAD_TAP[0]), ("SIMBAD (Strasbourg)", astrometry.SIMBAD_TAP[1]))
 SERVICE_NAMES = {"gaia": "Gaia DR3", "simbad": "SIMBAD"}
-RETRY_AFTER_S = 600.0           # a mirror that failed is skipped for this long
+# A mirror that failed is skipped for this long, unless it is the last one left for its
+# service: that one is always asked, so one failure never takes a service away from everyone.
+RETRY_AFTER_S = 600.0
+
+# Choosing the object among the Gaia sources within the radius: each source's G-band light
+# is weighted by a Gaussian blur one SPHEREx pixel wide (FWHM 6.15 arcsec) centred on it,
+# and the source that puts the most light at the place wins. A rule for choosing, not a
+# model of SPHEREx's optics: it lets a bright star 2 arcsec away win over a faint one at
+# 1 arcsec, and a star right at the place win over one 2.5 times brighter 4 arcsec away.
+CHOOSE_FWHM_ARCSEC = PIXEL_ARCSEC
+# A Gaia source is marked as possibly not real when it has only a 2-parameter solution
+# (astrometric_params_solved = 3), from fewer visibility periods than the 9 Gaia DR3 asks
+# of a full solution, within one SPHEREx pixel of a source at least 8 magnitudes brighter:
+# the usual look of the spurious sources Gaia lists beside very bright stars.
+SPURIOUS_DMAG = 8.0
+FULL_SOLUTION_PERIODS = 9
+# Gaia's temperatures: ESP-UCD is its own for ultracool dwarfs (below about 2,700 K), ESP-HS
+# for hot stars (above about 7,500 K); either is preferred in its own range.
+UCD_MAX_K = 2700.0
+HOT_MIN_K = 7500.0
+# Gaia DR3 parallaxes have a small known offset (Lindegren et al. 2021, A&A 649, A4: about
+# -0.02 mas, from quasars) that is not corrected here; below this parallax the card says so.
+ZERO_POINT_MAS = 0.02
+ZERO_POINT_NOTE_BELOW_MAS = 2.0
 
 # Physical constants for the derived values.
 # 1 au per Julian year in km/s: 149,597,870.7 km / (365.25 x 86,400 s). A proper motion of
@@ -87,13 +115,15 @@ GAIA_SOURCE_COLUMNS = (
     "source_id", "ref_epoch", "ra", "dec", "parallax", "parallax_error", "pm", "pmra", "pmra_error", "pmdec",
     "pmdec_error", "pmra_pmdec_corr", "parallax_pmra_corr", "parallax_pmdec_corr", "radial_velocity",
     "radial_velocity_error", "phot_g_mean_mag", "phot_g_mean_flux_over_error", "bp_rp",
-    "phot_bp_mean_flux_over_error", "phot_rp_mean_flux_over_error", "ruwe", "phot_variable_flag")
+    "phot_bp_mean_flux_over_error", "phot_rp_mean_flux_over_error", "ruwe", "phot_variable_flag",
+    "astrometric_params_solved", "visibility_periods_used", "duplicated_source", "ipd_frac_multi_peak")
 GAIA_AP_COLUMNS = (
     "teff_gspphot", "teff_gspphot_lower", "teff_gspphot_upper", "teff_espucd", "teff_espucd_uncertainty",
     "teff_esphs", "teff_esphs_uncertainty", "teff_gspspec", "teff_gspspec_lower", "teff_gspspec_upper",
     "radius_flame", "radius_flame_lower", "radius_flame_upper", "radius_gspphot", "radius_gspphot_lower",
     "radius_gspphot_upper", "lum_flame", "lum_flame_lower", "lum_flame_upper", "distance_gspphot",
-    "distance_gspphot_lower", "distance_gspphot_upper")
+    "distance_gspphot_lower", "distance_gspphot_upper", "flags_espucd", "flags_esphs", "flags_flame",
+    "flags_gspspec")
 # Not asked for: spectraltype_esphs, Gaia's one-letter class from the BP/RP spectra. It gives
 # "B" for RW Aur B (a K2 T Tauri star) and "F" for a 4,800 K star, so it cannot be put into
 # plain words without saying something false.
@@ -101,13 +131,23 @@ SIMBAD_BASIC_COLUMNS = (
     "oid", "main_id", "ra", "dec", "pmra", "pmdec", "pm_err_maj", "pm_err_min", "pm_err_angle", "pm_bibcode",
     "plx_value", "plx_err", "plx_bibcode", "otype", "sp_type", "sp_bibcode", "nbref")
 
-# Which Gaia temperature and radius the picture is drawn from: the first that exists, in
-# this order. GSP-Phot (from the BP/RP spectra) covers the most stars and is the one FLAME's
-# radius and luminosity are built on; ESP-UCD is Gaia's own for ultracool dwarfs, ESP-HS for
-# hot stars; GSP-Spec (RVS spectra) is last because it fails for cool dwarfs (4,250 K for
-# Barnard's Star, against 3,100 K from GSP-Phot and 3,083 to 3,530 K in SIMBAD's list).
+# Which Gaia temperature and radius the picture is drawn from. ESP-UCD below UCD_MAX_K and
+# ESP-HS above HOT_MIN_K are Gaia's own for those stars (see _choose_temperature); otherwise
+# the first that exists, in this order. GSP-Phot (from the BP/RP spectra) covers the most
+# stars and is the one FLAME's radius and luminosity are built on; GSP-Spec (RVS spectra) is
+# last because it can be far off for cool dwarfs (4,250 K for Barnard's Star, against
+# 3,100 K from GSP-Phot and 3,083 to 3,530 K in SIMBAD's list).
 TEMPERATURE_ORDER = ("teff_gspphot", "teff_espucd", "teff_esphs", "teff_gspspec")
 RADIUS_ORDER = ("radius_flame", "radius_gspphot")
+# The quality flag of each astrophysical parameter, in the same table.
+AP_FLAGS = {"teff_espucd": "flags_espucd", "teff_esphs": "flags_esphs", "teff_gspspec": "flags_gspspec",
+            "radius_flame": "flags_flame", "lum_flame": "flags_flame"}
+# ESP-UCD's first flag digit is its quality class (Gaia DR3 documentation, section 11.3.9;
+# Creevey et al. 2023, A&A 674, A26): from the distance to the nearest training template
+# and the signal-to-noise of the RP spectrum.
+ESPUCD_QUALITY = {"0": "the best of ESP-UCD's three quality classes",
+                  "1": "the middle one of ESP-UCD's three quality classes",
+                  "2": "the lowest of ESP-UCD's three quality classes"}
 
 
 class _Unanswered(spherex.ArchiveError):
@@ -186,9 +226,10 @@ def _tap(kind: str, adql: str) -> tuple[list[dict[str, Any]], str]:
     mirrors, fmt, parse = ((GAIA_TAPS, "votable", _votable_rows) if kind == "gaia"
                            else (SIMBAD_TAPS, "json", _json_rows))
     errors: list[str] = []
-    for name, url in mirrors:
+    for i, (name, url) in enumerate(mirrors):
+        last = i == len(mirrors) - 1        # the last mirror of a service is always asked
         with _down_lock:
-            if time.time() - _down.get(url, 0.0) < RETRY_AFTER_S:
+            if not last and time.time() - _down.get(url, 0.0) < RETRY_AFTER_S:
                 errors.append(f"{name}: did not answer a few minutes ago")
                 continue
         try:
@@ -265,7 +306,10 @@ OBJECT_TYPES: dict[str, tuple[str, str]] = {
     "PM*": ("high proper-motion star", "a star that moves quickly across the sky"),
     "MS*": ("main-sequence star", "an ordinary star, steadily shining like the Sun"),
     "LM*": ("low-mass star", "a star with much less mass than the Sun"),
-    "BD*": ("brown dwarf", "bigger than a planet, too small to shine like a star"),
+    # Brown dwarfs are about as wide as Jupiter (old ones 0.8 to 1 Jupiter radius) and they do
+    # glow, dimly: what sets them apart is mass, about 13 to 80 Jupiters, too little to burn
+    # ordinary hydrogen in the core as a star does.
+    "BD*": ("brown dwarf", "heavier than a planet, too light to burn hydrogen like a star"),
     "WD*": ("white dwarf", "the small, dense leftover core of a star that has died"),
     "V*": ("variable star", "a star whose brightness changes"),
     "BY*": ("BY Draconis variable", "a cool star whose brightness changes a little as it spins"),
@@ -363,15 +407,17 @@ def object_type_words(code: str | None) -> dict[str, Any] | None:
 
 # Spectral classes (Morgan-Keenan and the brown-dwarf classes L, T and Y) in plain words,
 # first without a luminosity class, then for the dwarfs (V) and giants (III, II) that
-# change the meaning. D is a white dwarf (DA, DB, DC, ...).
+# change the meaning. D is a white dwarf (DA, DB, DC, ...). No colour words: the colour a
+# visitor reads is the one computed from the measured temperature (and called that), so a
+# type that says "red" beside a colour that says "orange" never happens.
 SPECTRAL_CLASSES: dict[str, tuple[str, str]] = {
-    "O": ("O-type star", "the hottest, bluest kind of star"),
-    "B": ("B-type star", "a very hot, blue-white star"),
-    "A": ("A-type star", "a hot, white star"),
-    "F": ("F-type star", "a white star a little hotter than the Sun"),
-    "G": ("G-type star", "a yellow-white star like the Sun"),
-    "K": ("K-type star", "an orange star a little cooler than the Sun"),
-    "M": ("M-type star", "a cool, red star"),
+    "O": ("O-type star", "the hottest kind of star"),
+    "B": ("B-type star", "a very hot star"),
+    "A": ("A-type star", "a hot star"),
+    "F": ("F-type star", "a star a little hotter than the Sun"),
+    "G": ("G-type star", "a star like the Sun"),
+    "K": ("K-type star", "a star a little cooler than the Sun"),
+    "M": ("M-type star", "a cool star, of the coolest ordinary kind"),
     "L": ("L dwarf", "a very cool, dim object: a tiny star or a brown dwarf"),
     "T": ("T dwarf", "a cool brown dwarf"),
     "Y": ("Y dwarf", "the coldest kind of brown dwarf known"),
@@ -381,14 +427,14 @@ SPECTRAL_CLASSES: dict[str, tuple[str, str]] = {
     "W": ("Wolf-Rayet star", "a very hot, heavy star losing its outer layers"),
 }
 SPECTRAL_DWARFS: dict[str, tuple[str, str]] = {
-    "M": ("M dwarf", "a small, cool, red star"),
-    "K": ("K dwarf", "an orange star, a little smaller and cooler than the Sun"),
+    "M": ("M dwarf", "a small, cool star (astronomers call these red dwarfs)"),
+    "K": ("K dwarf", "a star a little smaller and cooler than the Sun"),
     "G": ("G dwarf", "a star much like the Sun"),
 }
 SPECTRAL_GIANTS: dict[str, tuple[str, str]] = {
-    "M": ("M giant", "a huge, cool, red star late in its life"),
-    "K": ("K giant", "a swollen orange star late in its life"),
-    "G": ("G giant", "a swollen yellow star late in its life"),
+    "M": ("M giant", "a huge, cool star late in its life"),
+    "K": ("K giant", "a swollen, cool star late in its life"),
+    "G": ("G giant", "a swollen star late in its life"),
 }
 _SPECTRAL = re.compile(r"^\s*(?:sd|esd|usd|d|g)?\s*(O|B|A|F|G|K|M|L|T|Y|D[ABCOQZX]?|C|S|W[NCO]?)"
                        r"(?:[0-9.]+(?:\s*[-/]\s*[0-9.]+)?)?\s*(?:[-/]?\s*[OBAFGKMLTY][0-9.]*)?\s*"
@@ -435,20 +481,36 @@ def spectral_words(sp_type: str | None) -> dict[str, Any] | None:
 
 # --------------------------------------------------------------------------- measured values
 
-def _quantity(key: str, label: str, value: float | None, unit: str, catalogue: str, column: str, *,
+def _quantity(key: str, label: str, value: float | str | None, unit: str, catalogue: str, column: str, *,
               error: float | None = None, error_column: str | None = None, lower: float | None = None,
               upper: float | None = None, range_columns: list[str] | None = None, reference: str | None = None,
-              note: str | None = None) -> dict[str, Any] | None:
+              note: str | None = None, flags: dict[str, Any] | None = None,
+              model: bool = False) -> dict[str, Any] | None:
     """One measured value as the card shows it, or None when the catalogue gives no value.
 
     `error` is a one-sigma error; `lower` and `upper` a range (for Gaia's astrophysical
-    parameters, the 16th and 84th percentiles of its own posterior).
+    parameters, the 16th and 84th percentiles of its own posterior). `flags` is the
+    catalogue's own quality flag for the value; `model` is true for a value Gaia fitted
+    with a model of stars to the object's colours and brightness (its astrophysical
+    parameters), rather than measured directly.
     """
     if value is None:
         return None
     return {"key": key, "label": label, "value": value, "error": error, "lower": lower, "upper": upper,
             "unit": unit, "catalogue": catalogue, "column": column, "error_column": error_column,
-            "range_columns": range_columns, "reference": reference, "note": note}
+            "range_columns": range_columns, "reference": reference, "note": note, "flags": flags, "model": model}
+
+
+def _ap_flags(row: dict[str, Any], column: str) -> dict[str, Any] | None:
+    """The quality flag Gaia gives with an astrophysical parameter, with its meaning where it is documented."""
+    flag_column = AP_FLAGS.get(column)
+    value = row.get(flag_column) if flag_column else None
+    if flag_column is None or value is None:
+        return None
+    text = str(value)
+    meaning = ESPUCD_QUALITY.get(text[:1]) if flag_column == "flags_espucd" else None
+    return {"column": f"{GAIA_AP}.{flag_column}", "value": text, "meaning": meaning,
+            "lowest_quality": flag_column == "flags_espucd" and text[:1] == "2"}
 
 
 def _gaia_quantity(row: dict[str, Any], column: str, label: str, unit: str, *, table: str = GAIA_SOURCE,
@@ -460,7 +522,8 @@ def _gaia_quantity(row: dict[str, Any], column: str, label: str, unit: str, *, t
         range_columns = [f"{column}_lower", f"{column}_upper"]
     return _quantity(column, label, row.get(column), unit, "Gaia DR3", f"{table}.{column}",
                      error=row.get(error) if error else None, error_column=error, lower=lower, upper=upper,
-                     range_columns=range_columns, note=note)
+                     range_columns=range_columns, note=note, flags=_ap_flags(row, column) if table == GAIA_AP else None,
+                     model=table == GAIA_AP)
 
 
 def _gaia_values(row: dict[str, Any]) -> list[dict[str, Any]]:
@@ -472,13 +535,19 @@ def _gaia_values(row: dict[str, Any]) -> list[dict[str, Any]]:
         # The photometric zero-point uncertainty (a few thousandths of a magnitude) is not included.
         return MAG_PER_RELATIVE_FLUX * math.sqrt(sum(1.0 / float(s) ** 2 for s in snrs if s is not None))
 
+    # Gaia's mean-flux error comes from the scatter of the single measurements (Riello et al.
+    # 2021), so for a star Gaia flags as variable it is mostly the star's own changes.
+    variable = row.get("phot_variable_flag") == "VARIABLE"
+    scatter = ("Gaia flags it as variable: this error comes from the spread of its single measurements, so it "
+               "is mostly the star's own changes in brightness, not measurement error.") if variable else None
     g = _quantity("phot_g_mean_mag", "G magnitude (visible light)", row.get("phot_g_mean_mag"), "mag", "Gaia DR3",
                   f"{GAIA_SOURCE}.phot_g_mean_mag", error=snr_to_mag(row.get("phot_g_mean_flux_over_error")),
-                  error_column="from phot_g_mean_flux_over_error")
+                  error_column="from phot_g_mean_flux_over_error", note=scatter)
     colour = _quantity("bp_rp", "BP-RP colour", row.get("bp_rp"), "mag", "Gaia DR3", f"{GAIA_SOURCE}.bp_rp",
                        error=snr_to_mag(row.get("phot_bp_mean_flux_over_error"),
                                         row.get("phot_rp_mean_flux_over_error")),
-                       error_column="from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error")
+                       error_column="from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
+                       note=scatter)
     ap = GAIA_AP
     values = [
         _gaia_quantity(row, "parallax", "Parallax", "mas", error="parallax_error"),
@@ -499,12 +568,30 @@ def _gaia_values(row: dict[str, Any]) -> list[dict[str, Any]]:
         _gaia_quantity(row, "distance_gspphot", "Distance, GSP-Phot (model estimate)", "pc", table=ap,
                        ranged=True),
     ]
-    flag = row.get("phot_variable_flag")
-    if flag == "VARIABLE":     # the other values, NOT_AVAILABLE and CONSTANT (unused in DR3), say nothing
-        values.append({"key": "phot_variable_flag", "label": "Photometric variability flag", "value": flag,
-                       "error": None, "lower": None, "upper": None, "unit": "", "catalogue": "Gaia DR3",
-                       "column": f"{GAIA_SOURCE}.phot_variable_flag", "error_column": None, "range_columns": None,
-                       "reference": None, "note": None})
+    if variable:     # the other values, NOT_AVAILABLE and CONSTANT (unused in DR3), say nothing
+        values.append(_quantity("phot_variable_flag", "Photometric variability flag", "VARIABLE", "", "Gaia DR3",
+                                f"{GAIA_SOURCE}.phot_variable_flag"))
+    # Signs of a troubled astrometric solution, shown only when they say something.
+    solved = row.get("astrometric_params_solved")
+    if solved == 3:
+        values.append(_quantity("astrometric_params_solved", "Astrometric solution", "2 parameters (position only)",
+                                "", "Gaia DR3", f"{GAIA_SOURCE}.astrometric_params_solved",
+                                note="Gaia measured no parallax or motion for it."))
+    periods = row.get("visibility_periods_used")
+    if periods is not None and periods < FULL_SOLUTION_PERIODS:
+        values.append(_quantity("visibility_periods_used", "Visibility periods used", periods, "", "Gaia DR3",
+                                f"{GAIA_SOURCE}.visibility_periods_used",
+                                note=f"fewer than the {FULL_SOLUTION_PERIODS} Gaia DR3 asks of a full solution"))
+    if row.get("duplicated_source"):
+        values.append(_quantity("duplicated_source", "Duplicated source", "yes", "", "Gaia DR3",
+                                f"{GAIA_SOURCE}.duplicated_source",
+                                note="Gaia merged several detections into this source: a sign of a double or of "
+                                     "a false detection."))
+    multi = row.get("ipd_frac_multi_peak")
+    if multi is not None and multi > 10:
+        values.append(_quantity("ipd_frac_multi_peak", "Windows with more than one peak", multi, "%", "Gaia DR3",
+                                f"{GAIA_SOURCE}.ipd_frac_multi_peak",
+                                note="a high share is a sign of a close double that Gaia sometimes sees as two"))
     return [v for v in values if v is not None]
 
 
@@ -698,13 +785,50 @@ def _r(value: float | None, digits: int) -> float | None:
     return None if value is None else round(float(value), digits)
 
 
+def _resolve_position(row: dict[str, Any], ref_epoch: float) -> dict[str, Any]:
+    """Where the entry is at 2026.0, the date /api/resolve gives positions for and the page centres on."""
+    ra, dec = _place(row, row.get("ref_epoch") or ref_epoch, astrometry.RESOLVE_EPOCH)
+    return {"ra": _r(ra, 7), "dec": _r(dec, 7), "epoch": astrometry.RESOLVE_EPOCH}
+
+
 def _gaia_entry(row: dict[str, Any], epoch: float) -> dict[str, Any]:
     return {"source_id": str(row["source_id"]), "name": f"Gaia DR3 {row['source_id']}",
             "separation_arcsec": _r(row["_sep"], 2), "east_arcsec": _r(row["_east"], 2),
             "north_arcsec": _r(row["_north"], 2),
             "position": {"ra": _r(row["_ra"], 7), "dec": _r(row["_dec"], 7), "epoch": epoch},
+            "resolve_position": _resolve_position(row, astrometry.GAIA_EPOCH),
             "catalogue_position": {"ra": row["ra"], "dec": row["dec"], "epoch": row.get("ref_epoch")},
+            "possibly_spurious": bool(row.get("_spurious")),
             "values": _gaia_values(row)}
+
+
+def _light_at_place(row: dict[str, Any]) -> float:
+    """A source's G-band flux (relative: 10^(-0.4 G)) times a Gaussian of FWHM CHOOSE_FWHM_ARCSEC
+    at its distance from the place: exp(-4 ln 2 (sep / FWHM)^2). Zero without a G magnitude."""
+    g = row.get("phot_g_mean_mag")
+    if g is None:
+        return 0.0
+    return float(10.0 ** (-0.4 * g) * math.exp(-4.0 * math.log(2.0) * (row["_sep"] / CHOOSE_FWHM_ARCSEC) ** 2))
+
+
+def _mark_spurious(rows: list[dict[str, Any]]) -> None:
+    """Set `_spurious` on each Gaia row that looks like a false source beside a very bright star.
+
+    "Beside" is measured at Gaia's own epoch (the catalogue positions, 2016.0), where the
+    bright star was when Gaia saw it: Barnard's Star was 100 arcsec from where it is now, so
+    a faint source beside its 2026 place is not one of its artefacts.
+    """
+    def apart(a: dict[str, Any], b: dict[str, Any]) -> float:
+        return math.hypot(*astrometry.offset_arcsec(a["ra"], a["dec"], b["ra"], b["dec"]))
+
+    for r in rows:
+        g = r.get("phot_g_mean_mag")
+        periods = r.get("visibility_periods_used")
+        r["_spurious"] = bool(
+            r.get("astrometric_params_solved") == 3 and g is not None
+            and (periods is None or periods < FULL_SOLUTION_PERIODS)
+            and any(o is not r and o.get("phot_g_mean_mag") is not None and g - o["phot_g_mean_mag"] >= SPURIOUS_DMAG
+                    and apart(o, r) <= PIXEL_ARCSEC for o in rows))
 
 
 def _family(rows: list[dict[str, Any]], oid: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -732,6 +856,7 @@ def _simbad_entry(obj: dict[str, Any], epoch: float, gaia_ids: dict[int, list[st
             "separation_arcsec": _r(obj["_sep"], 2), "east_arcsec": _r(obj["_east"], 2),
             "north_arcsec": _r(obj["_north"], 2),
             "position": {"ra": _r(obj["_ra"], 7), "dec": _r(obj["_dec"], 7), "epoch": epoch},
+            "resolve_position": _resolve_position(obj, astrometry.SIMBAD_EPOCH),
             "type": object_type_words(obj.get("otype")),
             "spectral_type": spectral_words(obj.get("sp_type")),
             "spectral_type_reference": obj.get("sp_bibcode"),
@@ -743,6 +868,18 @@ def _simbad_entry(obj: dict[str, Any], epoch: float, gaia_ids: dict[int, list[st
 def _pick(values: list[dict[str, Any]], order: tuple[str, ...]) -> dict[str, Any] | None:
     by_key = {v["key"]: v for v in values}
     return next((dict(by_key[k]) for k in order if k in by_key), None)
+
+
+def _choose_temperature(values: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Gaia's temperature for the picture: ESP-UCD for an ultracool dwarf, ESP-HS for a hot star,
+    else the first of TEMPERATURE_ORDER."""
+    by_key = {v["key"]: v for v in values}
+    ucd, hot = by_key.get("teff_espucd"), by_key.get("teff_esphs")
+    if ucd is not None and ucd["value"] < UCD_MAX_K:
+        return dict(ucd)
+    if hot is not None and hot["value"] >= HOT_MIN_K:
+        return dict(hot)
+    return _pick(values, TEMPERATURE_ORDER)
 
 
 def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC,
@@ -777,6 +914,7 @@ def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC
         rows = [dict(r) for r in gaia_rows]
         _locate(rows, astrometry.GAIA_EPOCH, epoch, ra, dec)
         gaia_near = sorted((r for r in rows if r["_sep"] <= reach), key=lambda r: r["_sep"])
+        _mark_spurious(gaia_near)
     simbad_near: list[dict[str, Any]] = []
     if simbad_rows is not None:
         rows = [dict(r, parallax=r.get("plx_value")) for r in simbad_rows if r.get("ra") is not None]
@@ -802,31 +940,65 @@ def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC
     # The object at the place. Planets are listed at their star's position and are not candidates.
     g_in = [g for g in gaia_near if g["_sep"] <= radius_arcsec]
     s_in = [s for s in simbad_near if s["_sep"] <= radius_arcsec and s.get("otype") not in ("Pl", "Pl?")]
-    g0 = g_in[0] if g_in else None
     s0 = s_in[0] if s_in else None
-    main_g, main_s, match = g0, None, None
-    if g0 is not None:
-        sid = str(g0["source_id"])
-        named = next((s for s in s_in if sid in gaia_ids.get(int(s["oid"]), [])), None)
+    name = astrometry._display_name
+
+    def ids_of(s: dict[str, Any]) -> list[str]:
+        return gaia_ids.get(int(s["oid"]), [])
+
+    main_g: dict[str, Any] | None = None
+    main_s: dict[str, Any] | None = None
+    match: dict[str, Any] | None = None
+    choice: dict[str, Any] | None = None
+    by_id = {str(g["source_id"]): g for g in g_in}
+    named_here = [by_id[i] for i in ids_of(s0) if i in by_id] if s0 is not None and \
+        s0["_sep"] <= SAME_PLACE_ARCSEC else []
+    if s0 is not None and named_here:
+        # 1. The SIMBAD object at the place names a Gaia source here: that is the object (a place
+        #    the page resolved from a name is that object's own position, to a few mas).
+        main_g, main_s = min(named_here, key=lambda g: _separation(g, s0)), s0
+        choice = {"how": "named", "text": f"{name(s0['main_id'])} is listed in SIMBAD at the place asked, and SIMBAD "
+                                          f"names this Gaia source as the same object."}
+    elif g_in:
+        # 2. Otherwise the Gaia source that puts the most light at the place (possibly false
+        #    sources only when there is nothing else).
+        real = [g for g in g_in if not g["_spurious"]] or g_in
+        main_g = max(real, key=lambda g: (_light_at_place(g), -g["_sep"]))
+        others = len(g_in) - 1
+        choice = {"how": "light", "text": (
+            "It is the only Gaia source within the radius." if others == 0 else
+            f"Of the {len(g_in)} Gaia sources within the radius, it puts the most light at the place (its G-band "
+            f"flux, blurred to the width of one SPHEREx pixel).")}
+    if main_g is not None and main_s is None:
+        sid = str(main_g["source_id"])
+        named = next((s for s in s_in if sid in ids_of(s)), None)
         if named is not None:
-            main_s, match = named, {"same": True, "how": "identifier",
-                                    "text": f"SIMBAD lists Gaia DR3 {sid} among the names of {named['main_id']}."}
-        elif s0 is not None and not gaia_ids.get(int(s0["oid"])) and _separation(s0, g0) <= SAME_PLACE_ARCSEC:
+            main_s = named
+        elif s0 is not None and not ids_of(s0) and _separation(s0, main_g) <= SAME_PLACE_ARCSEC:
             main_s, match = s0, {"same": True, "how": "position",
-                                 "text": f"SIMBAD names no Gaia DR3 source for {s0['main_id']}; it is "
-                                         f"{_separation(s0, g0):.1f} arcsec from the Gaia source, so the two are "
-                                         "taken as one object by position alone."}
-        elif s0 is not None and s0["_sep"] < g0["_sep"]:
-            # The nearer of the two is the object; the other is a different one nearby.
+                                 "text": f"SIMBAD names no Gaia DR3 source for {name(s0['main_id'])}; it is "
+                                         f"{_separation(s0, main_g):.1f} arcsec from the Gaia source, so the two "
+                                         "are taken as one object by position alone."}
+        elif s0 is not None and not ids_of(s0) and s0["_sep"] < main_g["_sep"] and \
+                not any(_separation(s0, g) <= SAME_PLACE_ARCSEC for g in gaia_near):
+            # 3. SIMBAD lists something nearer the place that Gaia does not (a cold brown dwarf, an
+            #    embedded source): that is the object, and the Gaia source is a neighbour.
             main_g, main_s = None, s0
+            choice = {"how": "simbad", "text": f"{name(s0['main_id'])} is nearer the place than any Gaia source, "
+                                               "and Gaia does not list it."}
             match = {"same": False, "how": "different",
-                     "text": f"The nearest Gaia source is not {s0['main_id']}; it is listed among the neighbours."}
+                     "text": f"The Gaia source nearby is not {name(s0['main_id'])}; it is listed among the neighbours."}
         elif s0 is not None:
             match = {"same": False, "how": "different",
-                     "text": f"The nearest SIMBAD object, {s0['main_id']}, is not this Gaia source; it is listed "
-                             "among the neighbours."}
-    else:
+                     "text": f"The nearest SIMBAD object, {name(s0['main_id'])}, is not this Gaia source; it is "
+                             "listed among the neighbours."}
+    if main_g is not None and main_s is not None and match is None:
+        match = {"same": True, "how": "identifier",
+                 "text": f"SIMBAD lists Gaia DR3 {main_g['source_id']} among the names of {name(main_s['main_id'])}."}
+    if main_g is None and main_s is None and s0 is not None:
         main_s = s0
+        choice = {"how": "simbad", "text": "Gaia lists nothing within the radius."
+                  if services["gaia"]["answered"] else "Gaia did not answer."}
 
     gaia: dict[str, Any] | None = _gaia_entry(main_g, epoch) if main_g is not None else None
     simbad: dict[str, Any] | None = None
@@ -875,14 +1047,13 @@ def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC
     derived = _derived(astro, main_g)
 
     # What the picture is drawn from: only values measured for this object.
-    temperature = _pick(gaia["values"], TEMPERATURE_ORDER) if gaia else None
+    temperature = _choose_temperature(gaia["values"]) if gaia else None
     if temperature is None and simbad and simbad["temperatures"] and simbad["temperatures"]["n"]:
         t = simbad["temperatures"]
-        temperature = {"key": "mesFe_h.teff", "label": "Temperature, median of the values SIMBAD lists",
-                       "value": t["median"], "error": None, "lower": t["min"], "upper": t["max"], "unit": "K",
-                       "catalogue": "SIMBAD", "column": "mesFe_h.teff", "error_column": None,
-                       "range_columns": ["lowest and highest listed"], "reference": None,
-                       "note": f"median of {t['n']} published values"}
+        temperature = _quantity("mesFe_h.teff", "Temperature, median of the values SIMBAD lists", t["median"], "K",
+                                "SIMBAD", "mesFe_h.teff", lower=t["min"], upper=t["max"],
+                                range_columns=["lowest and highest listed"],
+                                note=f"median of {t['n']} published values")
     radius = _pick(gaia["values"], RADIUS_ORDER) if gaia else None
     luminosity = _pick(gaia["values"], ("lum_flame",)) if gaia else None
 
@@ -903,12 +1074,16 @@ def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC
         named_s = name_of_gaia.get(sid)
         neighbours.append({
             "catalogue": "Gaia DR3", "name": f"Gaia DR3 {sid}", "source_id": sid,
+            "display_name": name(named_s["main_id"]) if named_s else f"Gaia DR3 {sid}",
             "simbad_name": named_s["main_id"] if named_s else None,
             "simbad_type": object_type_words(named_s.get("otype")) if named_s else None,
             "separation_arcsec": _r(g["_sep"], 2), "east_arcsec": _r(g["_east"], 2), "north_arcsec": _r(g["_north"], 2),
             "from_object_arcsec": _r(_separation(centre, g), 2),
             "g_mag": _r(g.get("phot_g_mean_mag"), 2), "bp_rp": _r(g.get("bp_rp"), 2),
-            "parallax": _r(g.get("parallax"), 3), "parallax_error": _r(g.get("parallax_error"), 3)})
+            "parallax": _r(g.get("parallax"), 3), "parallax_error": _r(g.get("parallax_error"), 3),
+            "astrometric_params_solved": g.get("astrometric_params_solved"),
+            "visibility_periods_used": g.get("visibility_periods_used"),
+            "possibly_spurious": bool(g["_spurious"])})
     named_oids = {int(s["oid"]) for s in name_of_gaia.values()}
     for s in simbad_near:
         oid = int(s["oid"])
@@ -916,11 +1091,12 @@ def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC
                 or s.get("otype") in ("Pl", "Pl?"):
             continue
         neighbours.append({
-            "catalogue": "SIMBAD", "name": s["main_id"], "oid": oid, "simbad_name": s["main_id"],
-            "simbad_type": object_type_words(s.get("otype")),
+            "catalogue": "SIMBAD", "name": s["main_id"], "oid": oid, "display_name": name(s["main_id"]),
+            "simbad_name": s["main_id"], "simbad_type": object_type_words(s.get("otype")),
             "separation_arcsec": _r(s["_sep"], 2), "east_arcsec": _r(s["_east"], 2), "north_arcsec": _r(s["_north"], 2),
             "from_object_arcsec": _r(_separation(centre, s), 2), "g_mag": None, "bp_rp": None,
             "parallax": s.get("plx_value"), "parallax_error": s.get("plx_err"),
+            "astrometric_params_solved": None, "visibility_periods_used": None, "possibly_spurious": False,
             "gaia_dr3_ids": gaia_ids.get(oid, [])})
     neighbours.sort(key=lambda n: n["separation_arcsec"])
     for n in neighbours:
@@ -932,20 +1108,26 @@ def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC
     nearest = None
     if not found and neighbours:
         n = neighbours[0]
-        nearest = {k: n[k] for k in ("catalogue", "name", "simbad_name", "separation_arcsec", "g_mag")}
+        nearest = {k: n[k] for k in ("catalogue", "name", "display_name", "simbad_name", "separation_arcsec", "g_mag",
+                                     "bp_rp", "same_pixel", "possibly_spurious")}
     unreachable = [s["name"] for s in services.values() if not s["answered"]]
     if services["simbad"]["partial"]:
         notes.append("SIMBAD answered only in part: " + "; ".join(services["simbad"]["partial"]))
     if not ids_known and main_s is not None:
         notes.append("SIMBAD's list of Gaia identifiers did not come back, so Gaia and SIMBAD were matched by "
                      "position only.")
-    if services["gaia"]["via"] and services["gaia"]["via"] != GAIA_TAPS[0][0]:
-        notes.append(f"Gaia DR3 was read from the {services['gaia']['via']}: the same tables as ESA's archive.")
     notes.append("Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's "
                  "radial velocity), without the yearly parallax shift.")
     if gaia:
         notes.append("Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th "
                      "percentiles of its own fit; they are known to understate the real uncertainty.")
+    plx = main_g.get("parallax") if main_g is not None else None
+    if plx is not None and 0 < plx < ZERO_POINT_NOTE_BELOW_MAS:
+        # Correcting the offset adds about 0.02 mas: distance x plx / (plx + 0.02).
+        closer = ZERO_POINT_MAS / (plx + ZERO_POINT_MAS) * 100.0
+        notes.append(f"Gaia DR3 parallaxes carry a small known offset (about -{ZERO_POINT_MAS:g} mas; Lindegren et "
+                     f"al. 2021) that is not corrected here. At this parallax ({plx:.3f} mas), correcting it would "
+                     f"bring the distance about {closer:.0f}% closer.")
 
     return {
         "query": {"ra": ra, "dec": dec, "radius_arcsec": radius_arcsec, "epoch": epoch,
@@ -958,6 +1140,7 @@ def identify(ra: float, dec: float, radius_arcsec: float = DEFAULT_RADIUS_ARCSEC
         "gaia": gaia,
         "simbad": simbad,
         "match": match,
+        "choice": choice,
         "derived": derived,
         "portrait": {"temperature": temperature, "radius": radius, "luminosity": luminosity},
         "neighbours": neighbours,

@@ -1,10 +1,16 @@
 /* The "What is it?" card (ObjectCard.tsx).
    The card's own chrome uses only the page's tokens: --bg, --surface, --line, --text,
-   --muted, and --ink for the one primary action. The picture (.oc-plate) is the exception:
-   space is black, so it is drawn on a small black field of its own, with its label in
-   white; every colour inside it is computed from a measured temperature (portrait.ts). */
+   --muted, and --ink with --on-ink for the one primary action. The picture (.oc-plate) is
+   the exception: space is black, so it is drawn on a small black field of its own, with its
+   label in white and a dashed edge that sets it apart from the page's real SPHEREx
+   pictures; every colour inside it is computed from a measured temperature (portrait.ts).
+
+   The card sizes itself by its own width (a container query), not the screen's, so it
+   reads the same in a sidebar on a wide screen as on a phone. */
 .oc {
   box-sizing: border-box;
+  container-type: inline-size;
+  width: 100%;
   max-width: 640px;
   padding: 20px;
   border: 1px solid var(--line);
@@ -15,19 +21,25 @@
   line-height: 1.47;
 }
 
-/* Long catalogue names ("WISEA J085510.74-071442.5", "gaiadr3.astrophysical_parameters.teff_gspphot")
+/* Long catalogue names ("WISEA J085510.74-071442.5", "astrophysical_parameters.teff_gspphot")
    may break anywhere; ordinary words and numbers wrap only between words. */
 .oc-title,
 .oc-aka,
 .oc code,
 .oc-col,
+.oc-flag,
 .oc-near,
-.oc-notes {
+.oc-notes,
+.oc-ids dd {
   overflow-wrap: anywhere;
 }
 
 .oc * {
   box-sizing: border-box;
+}
+
+.oc-loading {
+  min-height: 160px;
 }
 
 .oc-eyebrow {
@@ -65,6 +77,27 @@
   color: var(--text);
 }
 
+.oc-notice p {
+  margin: 0;
+}
+
+.oc-retry {
+  margin-top: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 980px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.oc-retry:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
 .oc-kind {
   margin: 14px 0 0;
   font-size: var(--size-read, 17px);
@@ -76,14 +109,20 @@
 }
 
 .oc-blur {
+  margin-top: 8px;
   padding-left: 12px;
   border-left: 3px solid var(--line);
+}
+
+.oc-blur .oc-line:first-child {
+  margin-top: 0;
 }
 
 /* ---------------------------------------------------------------- the picture */
 .oc-plate {
   margin: 16px 0 0;
   padding: 14px 14px 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
   border-radius: var(--radius-tile, 14px);
   background: #000000; /* space is black */
   color: #ffffff;
@@ -100,13 +139,13 @@
 .oc-plate svg {
   display: block;
   width: 100%;
-  max-width: 440px;
+  max-width: 400px; /* one picture unit to one pixel at most (portrait.ts type sizes) */
   height: auto;
   margin: 0 auto;
 }
 
-.oc-scale {
-  margin-top: 12px !important;
+.oc-plate .oc-scale {
+  margin-top: 12px;
 }
 
 .oc-plate figcaption {
@@ -154,6 +193,12 @@
   color: var(--muted);
 }
 
+.oc-key {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: var(--size-small, 12px);
+}
+
 .oc-h3 {
   margin: 20px 0 6px;
   font-size: 15px;
@@ -176,12 +221,13 @@
 }
 
 .oc-ids dt {
-  flex: 0 0 56px;
+  flex: 0 0 64px;
   font-weight: 600;
 }
 
 .oc-ids dd {
   margin: 0;
+  min-width: 0;
 }
 
 .oc code {
@@ -223,23 +269,43 @@
 }
 
 .oc-w-quantity {
-  width: 25%;
+  width: 40%;
 }
 
 .oc-w-value {
-  width: 23%;
+  width: 32%;
 }
 
 .oc-w-error {
-  width: 17%;
+  width: 28%;
 }
 
-.oc-w-source {
-  width: 35%;
+/* Each quantity is two lines: the quantity, value and error, then where it comes from. */
+.oc-values .oc-group th {
+  padding-top: 14px;
+  color: var(--muted);
+  font-size: var(--size-small, 12px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
+.oc-values .oc-row th,
+.oc-values .oc-row td {
+  padding-bottom: 1px;
+  border-bottom: 0;
+}
+
+.oc-values .oc-srcrow td {
+  padding-top: 0;
+}
+
+/* A number never breaks: a value with its unit, and each end of a range, stay whole. */
 .oc-num {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+}
+
+.oc-nw {
+  white-space: nowrap;
 }
 
 .oc-col {
@@ -247,7 +313,13 @@
   color: var(--muted);
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
-  overflow-wrap: normal;
+}
+
+.oc-flag {
+  display: block;
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 11.5px;
 }
 
 .oc-notes {
@@ -263,7 +335,7 @@
   border: 0;
   border-radius: 980px;
   background: var(--ink);
-  color: var(--bg);
+  color: var(--on-ink);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -280,11 +352,14 @@
   font-size: var(--size-small, 12px);
 }
 
+/* The card's own padding follows the screen (a container cannot query itself). */
 @media (max-width: 480px) {
   .oc {
     padding: 16px;
   }
+}
 
+@container (max-width: 480px) {
   .oc-title {
     font-size: 22px;
   }
@@ -294,9 +369,9 @@
   }
 }
 
-/* On a narrow screen each table row becomes a short block: the quantity, then its value
-   and error, then where it comes from. */
-@media (max-width: 560px) {
+/* In a narrow card each table row becomes a short block: the quantity, then its value and
+   error, then where it comes from. */
+@container (max-width: 560px) {
   .oc-table thead {
     display: none;
   }
@@ -323,7 +398,6 @@
 
   .oc-table td.oc-num {
     display: inline;
-    white-space: normal;
   }
 
   .oc-table td.oc-num + td.oc-num:not(:empty)::before {
@@ -331,16 +405,25 @@
     white-space: pre;
   }
 
-  .oc-table td:last-child {
-    margin-top: 2px;
-    color: var(--muted);
+  .oc-values .oc-group,
+  .oc-values .oc-row {
+    border-bottom: 0;
+    padding-bottom: 0;
   }
 
-  .oc-nb td,
-  .oc-nb td:last-child {
-    display: inline;
+  .oc-values .oc-group th {
+    padding-top: 6px;
+  }
+
+  .oc-values .oc-srcrow {
+    padding-top: 2px;
+  }
+
+  .oc-nb td {
+    display: inline-block;
+    width: auto;
     margin: 0 12px 0 0;
-    color: var(--text);
+    white-space: nowrap;
   }
 
   .oc-nb td[data-label]:not(:empty)::before {

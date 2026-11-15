@@ -16,21 +16,27 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend import identify  # noqa: E402
 
-# key: (ra, dec, what must come out). Positions are for 2026.0, the date the page uses.
+# key: (ra, dec, epoch, what must come out). Positions are for 2026.0, the date the page
+# uses, except where a picture's own date is given.
 PLACES = {
-    "barnard": (269.446267, 4.768222, "red dwarf, about 6 light-years, about 3,100-3,200 K, a fifth of the Sun"),
-    "epsindib": (331.096653, -56.800663, "the brown-dwarf pair, never Epsilon Indi A's numbers"),
-    "wise0855": (133.759765, -7.242182, "not in Gaia; SIMBAD's parallax, motion and spectral type only"),
-    "rwaur": (76.956587, 30.401291, "a young variable star, a close pair"),
-    "rdra": (248.167233, 66.755024, "a pulsating red giant"),
-    "faint": (269.448524, 4.762903, "an ordinary faint star in Barnard's Star's field"),
-    "candidate": (253.18038, -44.67697, "nothing listed; a star about 10 arcsec away as a neighbour"),
+    "barnard": (269.446267, 4.768222, 2026.0, "red dwarf, about 6 light-years, about 3,100 K, a fifth of the Sun"),
+    "epsindib": (331.096653, -56.800663, 2026.0, "the brown-dwarf pair, never Epsilon Indi A's numbers"),
+    "wise0855": (133.759765, -7.242182, 2026.0, "not in Gaia; SIMBAD's parallax, motion and spectral type only"),
+    "rwaur": (76.956587, 30.401291, 2026.0, "a young variable star, a close pair: the brighter star, RW Aur A"),
+    "rdra": (248.167233, 66.755024, 2026.0, "a pulsating red giant"),
+    "faint": (269.448524, 4.762903, 2026.0, "an ordinary faint star in Barnard's Star's field"),
+    "candidate": (253.18038, -44.67697, 2026.0, "nothing listed; a star about 10 arcsec away as a neighbour"),
+    # Barnard's Star where it is on a visit-3 picture (2026-09-04), 7 arcsec from its 2026.0 place.
+    "barnard_visit3": (269.446116, 4.770171, 2026.676, "Barnard's Star again, found at the picture's date"),
+    # A press 2.6 arcsec off R Dra, 1.5 arcsec from a faint 2-parameter Gaia source beside it.
+    "rdra_offset": (248.16885, 66.755363, 2026.0, "still R Dra, not the faint source beside it"),
 }
 
 
 def show(key: str, answer: dict) -> None:
-    ra, dec, expect = PLACES[key]
-    print(f"\n=== {key}  ({ra}, {dec})  expected: {expect}")
+    ra, dec, epoch, expect = PLACES[key]
+    print(f"\n=== {key}  ({ra}, {dec}) at {epoch}  expected: {expect}")
+    print(f"  choice: {answer['choice']}")
     print(f"  unreachable: {answer['unreachable']}  nothing_catalogued: {answer['nothing_catalogued']}  "
           f"via: {answer['services']['gaia']['via']} / {answer['services']['simbad']['via']}")
     g, s = answer["gaia"], answer["simbad"]
@@ -85,12 +91,15 @@ def main() -> None:
     identify._tap = noting_tap   # type: ignore[assignment]
     answers = {}
     for key in keys:
-        ra, dec, _ = PLACES[key]
-        answers[key] = identify.identify(ra, dec)
+        ra, dec, epoch, _ = PLACES[key]
+        answers[key] = identify.identify(ra, dec, epoch=epoch)
         show(key, answers[key])
     if save:
         data = ROOT / "tests" / "data" / "identify"
         (data / "cache").mkdir(parents=True, exist_ok=True)
+        if set(keys) == set(PLACES):        # a full save: drop answers no test place uses any more
+            for old in (data / "cache").glob("identify_*.json"):
+                old.unlink()
         for path in sorted(used):
             if path.exists():
                 shutil.copyfile(path, data / "cache" / path.name)

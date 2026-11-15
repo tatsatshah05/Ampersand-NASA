@@ -28,27 +28,33 @@
  "nearest_catalogued": null,
  "searched_arcsec": 15.0,
  "gaia": {
-  "source_id": "156430817820015232",
-  "name": "Gaia DR3 156430817820015232",
-  "separation_arcsec": 0.18,
-  "east_arcsec": -0.08,
-  "north_arcsec": -0.16,
+  "source_id": "156430822114424576",
+  "name": "Gaia DR3 156430822114424576",
+  "separation_arcsec": 1.65,
+  "east_arcsec": -1.54,
+  "north_arcsec": -0.59,
   "position": {
-   "ra": 76.9565601,
-   "dec": 30.4012479,
+   "ra": 76.9560897,
+   "dec": 30.4011285,
+   "epoch": 2026.0
+  },
+  "resolve_position": {
+   "ra": 76.9560897,
+   "dec": 30.4011285,
    "epoch": 2026.0
   },
   "catalogue_position": {
-   "ra": 76.9565443110343,
-   "dec": 30.401316149887936,
+   "ra": 76.95608119552952,
+   "dec": 30.401204589097233,
    "epoch": 2016.0
   },
+  "possibly_spurious": false,
   "values": [
    {
     "key": "parallax",
     "label": "Parallax",
-    "value": 5.454096456582266,
-    "error": 0.3324495553970337,
+    "value": 6.406249329219477,
+    "error": 0.044122789055109024,
     "lower": null,
     "upper": null,
     "unit": "mas",
@@ -57,13 +63,15 @@
     "error_column": "parallax_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmra",
     "label": "Proper motion, east (includes cos dec)",
-    "value": 4.90603392110511,
-    "error": 0.32915833592414856,
+    "value": 2.6406431770317083,
+    "error": 0.04894876480102539,
     "lower": null,
     "upper": null,
     "unit": "mas/yr",
@@ -72,13 +80,15 @@
     "error_column": "pmra_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmdec",
     "label": "Proper motion, north",
-    "value": -24.577534567492915,
-    "error": 0.2546490728855133,
+    "value": -27.397582540455325,
+    "error": 0.035927459597587585,
     "lower": null,
     "upper": null,
     "unit": "mas/yr",
@@ -87,13 +97,32 @@
     "error_column": "pmdec_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "radial_velocity",
+    "label": "Radial velocity",
+    "value": -20.937068939208984,
+    "error": 4.026833534240723,
+    "lower": null,
+    "upper": null,
+    "unit": "km/s",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.radial_velocity",
+    "error_column": "radial_velocity_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "phot_g_mean_mag",
     "label": "G magnitude (visible light)",
-    "value": 13.035076141357422,
-    "error": 0.062203159068828534,
+    "value": 12.18407154083252,
+    "error": 0.008099303144460493,
     "lower": null,
     "upper": null,
     "unit": "mag",
@@ -102,13 +131,15 @@
     "error_column": "from phot_g_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "bp_rp",
     "label": "BP-RP colour",
-    "value": 1.228703498840332,
-    "error": 0.255794319191582,
+    "value": 1.7740306854248047,
+    "error": 0.06418832000903493,
     "lower": null,
     "upper": null,
     "unit": "mag",
@@ -117,12 +148,14 @@
     "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "ruwe",
     "label": "RUWE (about 1 for a well-fitted single star)",
-    "value": 16.42213249206543,
+    "value": 1.5003727674484253,
     "error": null,
     "lower": null,
     "upper": null,
@@ -132,20 +165,44 @@
     "error_column": null,
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "ipd_frac_multi_peak",
+    "label": "Windows with more than one peak",
+    "value": 33,
+    "error": null,
+    "lower": null,
+    "upper": null,
+    "unit": "%",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.ipd_frac_multi_peak",
+    "error_column": null,
+    "range_columns": null,
+    "reference": null,
+    "note": "a high share is a sign of a close double that Gaia sometimes sees as two",
+    "flags": null,
+    "model": false
    }
   ]
  },
  "simbad": {
-  "oid": 14743763,
-  "main_id": "V* RW Aur B",
-  "display_name": "RW Aur B",
-  "separation_arcsec": 0.18,
-  "east_arcsec": -0.08,
-  "north_arcsec": -0.16,
+  "oid": 14743762,
+  "main_id": "V* RW Aur A",
+  "display_name": "RW Aur A",
+  "separation_arcsec": 1.65,
+  "east_arcsec": -1.54,
+  "north_arcsec": -0.59,
   "position": {
-   "ra": 76.9565601,
-   "dec": 30.4012479,
+   "ra": 76.9560897,
+   "dec": 30.4011285,
+   "epoch": 2026.0
+  },
+  "resolve_position": {
+   "ra": 76.9560897,
+   "dec": 30.4011285,
    "epoch": 2026.0
   },
   "type": {
@@ -155,20 +212,20 @@
    "candidate": false
   },
   "spectral_type": {
-   "text": "K2",
+   "text": "K6",
    "class": "K",
    "luminosity_class": null,
    "label": "K-type star",
-   "plain": "an orange star a little cooler than the Sun",
+   "plain": "a star a little cooler than the Sun",
    "pair": false,
    "parts": [
-    "K2"
+    "K6"
    ]
   },
   "spectral_type_reference": "2021ApJS..254...20L",
-  "references": 28,
+  "references": 45,
   "gaia_dr3_ids": [
-   "156430817820015232"
+   "156430822114424576"
   ],
   "parents": [
    {
@@ -194,6 +251,18 @@
      "candidate": false
     },
     "references": 828
+   },
+   {
+    "oid": 16572132,
+    "name": "[KC2019] Theia   54",
+    "display_name": "[KC2019] Theia 54",
+    "type": {
+     "code": "As*",
+     "label": "association of stars",
+     "plain": "a loose group of young stars",
+     "candidate": false
+    },
+    "references": 7
    }
   ],
   "children": [],
@@ -210,17 +279,21 @@
  "match": {
   "same": true,
   "how": "identifier",
-  "text": "SIMBAD lists Gaia DR3 156430817820015232 among the names of V* RW Aur B."
+  "text": "SIMBAD lists Gaia DR3 156430822114424576 among the names of RW Aur A."
+ },
+ "choice": {
+  "how": "light",
+  "text": "Of the 2 Gaia sources within the radius, it puts the most light at the place (its G-band flux, blurred to the width of one SPHEREx pixel)."
  },
  "derived": {
   "from": "Gaia DR3",
   "distance": {
    "status": "from_parallax",
-   "pc": 183.34842589612654,
-   "pc_error": 11.175838776806176,
-   "ly": 598.0025845034737,
-   "ly_error": 36.450710933894214,
-   "parallax_over_error": 16.40578658638486,
+   "pc": 156.09757732015055,
+   "pc_error": 1.0751158942091512,
+   "ly": 509.1222038909957,
+   "ly_error": 3.5065590568095417,
+   "parallax_over_error": 145.19139579363673,
    "catalogue": "Gaia DR3",
    "inputs": [
     "gaiadr3.gaia_source.parallax",
@@ -231,13 +304,13 @@
   },
   "distance_estimate": null,
   "motion": {
-   "mas_per_year": 25.06240958589862,
-   "mas_per_year_error": 0.2613966936471767,
-   "arcsec_per_year": 0.025062409585898622,
-   "arcsec_per_year_error": 0.0002613966936471767,
-   "pixels_per_year": 0.004075188550552621,
-   "pixels_per_year_error": 4.250352742230515e-05,
-   "years_per_pixel": 245.38741891203873,
+   "mas_per_year": 27.524544055251244,
+   "mas_per_year_error": 0.03611183121835048,
+   "arcsec_per_year": 0.027524544055251243,
+   "arcsec_per_year_error": 3.611183121835048e-05,
+   "pixels_per_year": 0.004475535618740039,
+   "pixels_per_year_error": 5.8718424745285324e-06,
+   "years_per_pixel": 223.43694368396555,
    "catalogue": "Gaia DR3",
    "inputs": [
     "gaiadr3.gaia_source.pmra",
@@ -247,8 +320,8 @@
    "reference": null
   },
   "speed": {
-   "km_s": 21.783188715620295,
-   "km_s_error": 1.4294329628008617,
+   "km_s": 20.367500765387508,
+   "km_s_error": 0.14829470172469444,
    "catalogue": "Gaia DR3",
    "inputs": [
     "gaiadr3.gaia_source.parallax",
@@ -266,44 +339,51 @@
  "neighbours": [
   {
    "catalogue": "Gaia DR3",
-   "name": "Gaia DR3 156430822114424576",
-   "source_id": "156430822114424576",
-   "simbad_name": "V* RW Aur A",
+   "name": "Gaia DR3 156430817820015232",
+   "source_id": "156430817820015232",
+   "display_name": "RW Aur B",
+   "simbad_name": "V* RW Aur B",
    "simbad_type": {
     "code": "Or*",
     "label": "Orion variable",
     "plain": "a young star whose brightness changes unevenly",
     "candidate": false
    },
-   "separation_arcsec": 1.65,
-   "east_arcsec": -1.54,
-   "north_arcsec": -0.59,
+   "separation_arcsec": 0.18,
+   "east_arcsec": -0.08,
+   "north_arcsec": -0.16,
    "from_object_arcsec": 1.52,
-   "g_mag": 12.18,
-   "bp_rp": 1.77,
-   "parallax": 6.406,
-   "parallax_error": 0.044,
+   "g_mag": 13.04,
+   "bp_rp": 1.23,
+   "parallax": 5.454,
+   "parallax_error": 0.332,
+   "astrometric_params_solved": 95,
+   "visibility_periods_used": 18,
+   "possibly_spurious": false,
    "same_pixel": true
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 156430856474162688",
    "source_id": "156430856474162688",
+   "display_name": "Gaia DR3 156430856474162688",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 6.66,
    "east_arcsec": -2.53,
    "north_arcsec": 6.16,
-   "from_object_arcsec": 6.77,
+   "from_object_arcsec": 6.81,
    "g_mag": 18.83,
    "bp_rp": 1.09,
    "parallax": -0.103,
    "parallax_error": 0.283,
+   "astrometric_params_solved": 95,
+   "visibility_periods_used": 18,
+   "possibly_spurious": false,
    "same_pixel": false
   }
  ],
  "notes": [
-  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
   "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
   "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty."
  ],

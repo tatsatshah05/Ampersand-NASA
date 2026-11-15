@@ -38,11 +38,17 @@
    "dec": -56.8006627,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 331.0966534,
+   "dec": -56.8006627,
+   "epoch": 2026.0
+  },
   "catalogue_position": {
    "ra": 331.07645259656397,
    "dec": -56.79381206688221,
    "epoch": 2016.0
   },
+  "possibly_spurious": false,
   "values": [
    {
     "key": "parallax",
@@ -57,7 +63,9 @@
     "error_column": "parallax_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmra",
@@ -72,7 +80,9 @@
     "error_column": "pmra_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmdec",
@@ -87,7 +97,9 @@
     "error_column": "pmdec_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "phot_g_mean_mag",
@@ -102,7 +114,9 @@
     "error_column": "from phot_g_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "bp_rp",
@@ -117,7 +131,9 @@
     "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "ruwe",
@@ -132,7 +148,9 @@
     "error_column": null,
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "teff_espucd",
@@ -147,7 +165,14 @@
     "error_column": "teff_espucd_uncertainty",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_espucd",
+     "value": "20",
+     "meaning": "the lowest of ESP-UCD's three quality classes",
+     "lowest_quality": true
+    },
+    "model": true
    }
   ]
  },
@@ -163,10 +188,15 @@
    "dec": -56.8006492,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 331.0966688,
+   "dec": -56.8006492,
+   "epoch": 2026.0
+  },
   "type": {
    "code": "BD*",
    "label": "brown dwarf",
-   "plain": "bigger than a planet, too small to shine like a star",
+   "plain": "heavier than a planet, too light to burn hydrogen like a star",
    "candidate": false
   },
   "spectral_type": {
@@ -201,7 +231,11 @@
  "match": {
   "same": true,
   "how": "identifier",
-  "text": "SIMBAD lists Gaia DR3 6412596012146801152 among the names of * eps Ind B."
+  "text": "SIMBAD lists Gaia DR3 6412596012146801152 among the names of eps Ind B."
+ },
+ "choice": {
+  "how": "named",
+  "text": "eps Ind B is listed in SIMBAD at the place asked, and SIMBAD names this Gaia source as the same object."
  },
  "derived": {
   "from": "Gaia DR3",
@@ -263,14 +297,20 @@
    "error_column": "teff_espucd_uncertainty",
    "range_columns": null,
    "reference": null,
-   "note": null
+   "note": null,
+   "flags": {
+    "column": "gaiadr3.astrophysical_parameters.flags_espucd",
+    "value": "20",
+    "meaning": "the lowest of ESP-UCD's three quality classes",
+    "lowest_quality": true
+   },
+   "model": true
   },
   "radius": null,
   "luminosity": null
  },
  "neighbours": [],
  "notes": [
-  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
   "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
   "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty."
  ],

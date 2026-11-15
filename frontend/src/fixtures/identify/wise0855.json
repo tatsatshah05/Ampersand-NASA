@@ -40,10 +40,15 @@
    "dec": -7.2421822,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 133.7597653,
+   "dec": -7.2421822,
+   "epoch": 2026.0
+  },
   "type": {
    "code": "BD*",
    "label": "brown dwarf",
-   "plain": "bigger than a planet, too small to shine like a star",
+   "plain": "heavier than a planet, too light to burn hydrogen like a star",
    "candidate": false
   },
   "spectral_type": {
@@ -85,7 +90,9 @@
     "error_column": "plx_err",
     "range_columns": null,
     "reference": "2021ApJS..253....7K",
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmra",
@@ -100,7 +107,9 @@
     "error_column": "pm_err_maj/min/angle",
     "range_columns": null,
     "reference": "2021ApJS..253....7K",
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmdec",
@@ -115,11 +124,17 @@
     "error_column": "pm_err_maj/min/angle",
     "range_columns": null,
     "reference": "2021ApJS..253....7K",
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    }
   ]
  },
  "match": null,
+ "choice": {
+  "how": "simbad",
+  "text": "Gaia lists nothing within the radius."
+ },
  "derived": {
   "from": "SIMBAD",
   "distance": {
@@ -176,6 +191,7 @@
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 5756956644387831296",
    "source_id": "5756956644387831296",
+   "display_name": "Gaia DR3 5756956644387831296",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 6.81,
@@ -186,11 +202,13 @@
    "bp_rp": 0.72,
    "parallax": 0.286,
    "parallax_error": 0.05,
+   "astrometric_params_solved": 31,
+   "visibility_periods_used": 18,
+   "possibly_spurious": false,
    "same_pixel": false
   }
  ],
  "notes": [
-  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
   "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift."
  ],
  "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"

@@ -28,14 +28,19 @@
  "nearest_catalogued": {
   "catalogue": "Gaia DR3",
   "name": "Gaia DR3 5964332607636528768",
+  "display_name": "Gaia DR3 5964332607636528768",
   "simbad_name": null,
   "separation_arcsec": 4.9,
-  "g_mag": 19.35
+  "g_mag": 19.35,
+  "bp_rp": 3.6,
+  "same_pixel": true,
+  "possibly_spurious": false
  },
  "searched_arcsec": 15.0,
  "gaia": null,
  "simbad": null,
  "match": null,
+ "choice": null,
  "derived": {
   "from": null,
   "distance": null,
@@ -53,6 +58,7 @@
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 5964332607636528768",
    "source_id": "5964332607636528768",
+   "display_name": "Gaia DR3 5964332607636528768",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 4.9,
@@ -63,12 +69,16 @@
    "bp_rp": 3.6,
    "parallax": -0.067,
    "parallax_error": 0.327,
+   "astrometric_params_solved": 95,
+   "visibility_periods_used": 18,
+   "possibly_spurious": false,
    "same_pixel": true
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 5964332573273012096",
    "source_id": "5964332573273012096",
+   "display_name": "Gaia DR3 5964332573273012096",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 8.13,
@@ -79,12 +89,16 @@
    "bp_rp": 1.81,
    "parallax": 0.488,
    "parallax_error": 0.147,
+   "astrometric_params_solved": 31,
+   "visibility_periods_used": 20,
+   "possibly_spurious": false,
    "same_pixel": false
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 5964332607629792768",
    "source_id": "5964332607629792768",
+   "display_name": "Gaia DR3 5964332607629792768",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 10.37,
@@ -95,12 +109,16 @@
    "bp_rp": 1.76,
    "parallax": 0.523,
    "parallax_error": 0.119,
+   "astrometric_params_solved": 31,
+   "visibility_periods_used": 20,
+   "possibly_spurious": false,
    "same_pixel": false
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 5964332577566705280",
    "source_id": "5964332577566705280",
+   "display_name": "Gaia DR3 5964332577566705280",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 12.65,
@@ -111,12 +129,16 @@
    "bp_rp": 1.87,
    "parallax": 0.488,
    "parallax_error": 0.176,
+   "astrometric_params_solved": 95,
+   "visibility_periods_used": 20,
+   "possibly_spurious": false,
    "same_pixel": false
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 5964332607632752384",
    "source_id": "5964332607632752384",
+   "display_name": "Gaia DR3 5964332607632752384",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 12.89,
@@ -127,11 +149,13 @@
    "bp_rp": 1.96,
    "parallax": 0.506,
    "parallax_error": 0.26,
+   "astrometric_params_solved": 31,
+   "visibility_periods_used": 18,
+   "possibly_spurious": false,
    "same_pixel": false
   }
  ],
  "notes": [
-  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
   "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift."
  ],
  "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"

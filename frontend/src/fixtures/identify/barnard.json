@@ -38,11 +38,17 @@
    "dec": 4.7682223,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 269.4462669,
+   "dec": 4.7682223,
+   "epoch": 2026.0
+  },
   "catalogue_position": {
    "ra": 269.44850252543836,
    "dec": 4.739420051112412,
    "epoch": 2016.0
   },
+  "possibly_spurious": false,
   "values": [
    {
     "key": "parallax",
@@ -57,7 +63,9 @@
     "error_column": "parallax_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmra",
@@ -72,7 +80,9 @@
     "error_column": "pmra_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmdec",
@@ -87,7 +97,9 @@
     "error_column": "pmdec_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "radial_velocity",
@@ -102,7 +114,9 @@
     "error_column": "radial_velocity_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "phot_g_mean_mag",
@@ -117,7 +131,9 @@
     "error_column": "from phot_g_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "bp_rp",
@@ -132,7 +148,9 @@
     "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "ruwe",
@@ -147,7 +165,9 @@
     "error_column": null,
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "teff_gspphot",
@@ -165,7 +185,9 @@
      "teff_gspphot_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": true
    },
    {
     "key": "teff_gspspec",
@@ -183,7 +205,14 @@
      "teff_gspspec_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_gspspec",
+     "value": "10000131000019999999999999999999999999999",
+     "meaning": null,
+     "lowest_quality": false
+    },
+    "model": true
    },
    {
     "key": "radius_flame",
@@ -201,7 +230,14 @@
      "radius_flame_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_flame",
+     "value": "20",
+     "meaning": null,
+     "lowest_quality": false
+    },
+    "model": true
    },
    {
     "key": "radius_gspphot",
@@ -219,7 +255,9 @@
      "radius_gspphot_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": true
    },
    {
     "key": "lum_flame",
@@ -237,7 +275,14 @@
      "lum_flame_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_flame",
+     "value": "20",
+     "meaning": null,
+     "lowest_quality": false
+    },
+    "model": true
    },
    {
     "key": "distance_gspphot",
@@ -255,7 +300,9 @@
      "distance_gspphot_upper"
     ],
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": true
    }
   ]
  },
@@ -271,6 +318,11 @@
    "dec": 4.7682044,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 269.4462679,
+   "dec": 4.7682044,
+   "epoch": 2026.0
+  },
   "type": {
    "code": "BY*",
    "label": "BY Draconis variable",
@@ -282,7 +334,7 @@
    "class": "M",
    "luminosity_class": "V",
    "label": "M dwarf",
-   "plain": "a small, cool, red star",
+   "plain": "a small, cool star (astronomers call these red dwarfs)",
    "pair": false,
    "parts": [
     "M4V"
@@ -388,7 +440,11 @@
  "match": {
   "same": true,
   "how": "identifier",
-  "text": "SIMBAD lists Gaia DR3 4472832130942575872 among the names of NAME Barnard's star."
+  "text": "SIMBAD lists Gaia DR3 4472832130942575872 among the names of Barnard's star."
+ },
+ "choice": {
+  "how": "named",
+  "text": "Barnard's star is listed in SIMBAD at the place asked, and SIMBAD names this Gaia source as the same object."
  },
  "derived": {
   "from": "Gaia DR3",
@@ -453,7 +509,9 @@
     "teff_gspphot_upper"
    ],
    "reference": null,
-   "note": null
+   "note": null,
+   "flags": null,
+   "model": true
   },
   "radius": {
    "key": "radius_flame",
@@ -471,7 +529,14 @@
     "radius_flame_upper"
    ],
    "reference": null,
-   "note": null
+   "note": null,
+   "flags": {
+    "column": "gaiadr3.astrophysical_parameters.flags_flame",
+    "value": "20",
+    "meaning": null,
+    "lowest_quality": false
+   },
+   "model": true
   },
   "luminosity": {
    "key": "lum_flame",
@@ -489,7 +554,14 @@
     "lum_flame_upper"
    ],
    "reference": null,
-   "note": null
+   "note": null,
+   "flags": {
+    "column": "gaiadr3.astrophysical_parameters.flags_flame",
+    "value": "20",
+    "meaning": null,
+    "lowest_quality": false
+   },
+   "model": true
   }
  },
  "neighbours": [
@@ -497,6 +569,7 @@
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 4472835979229621248",
    "source_id": "4472835979229621248",
+   "display_name": "Gaia DR3 4472835979229621248",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 3.31,
@@ -507,12 +580,16 @@
    "bp_rp": 2.08,
    "parallax": null,
    "parallax_error": null,
+   "astrometric_params_solved": 3,
+   "visibility_periods_used": 6,
+   "possibly_spurious": false,
    "same_pixel": true
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 4472835983521061120",
    "source_id": "4472835983521061120",
+   "display_name": "Gaia DR3 4472835983521061120",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 8.03,
@@ -523,12 +600,16 @@
    "bp_rp": 1.4,
    "parallax": -0.429,
    "parallax_error": 0.768,
+   "astrometric_params_solved": 95,
+   "visibility_periods_used": 16,
+   "possibly_spurious": false,
    "same_pixel": false
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 4472835979229627392",
    "source_id": "4472835979229627392",
+   "display_name": "Gaia DR3 4472835979229627392",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 9.5,
@@ -539,11 +620,13 @@
    "bp_rp": 1.0,
    "parallax": null,
    "parallax_error": null,
+   "astrometric_params_solved": 3,
+   "visibility_periods_used": 4,
+   "possibly_spurious": false,
    "same_pixel": false
   }
  ],
  "notes": [
-  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
   "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
   "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty."
  ],

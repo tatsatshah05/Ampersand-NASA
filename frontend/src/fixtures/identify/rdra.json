@@ -38,11 +38,17 @@
    "dec": 66.7550238,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 248.1672331,
+   "dec": 66.7550238,
+   "epoch": 2026.0
+  },
   "catalogue_position": {
    "ra": 248.1673783672889,
    "dec": 66.75500674547219,
    "epoch": 2016.0
   },
+  "possibly_spurious": false,
   "values": [
    {
     "key": "parallax",
@@ -57,7 +63,9 @@
     "error_column": "parallax_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmra",
@@ -72,7 +80,9 @@
     "error_column": "pmra_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "pmdec",
@@ -87,7 +97,9 @@
     "error_column": "pmdec_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "phot_g_mean_mag",
@@ -102,7 +114,9 @@
     "error_column": "from phot_g_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": "Gaia flags it as variable: this error comes from the spread of its single measurements, so it is mostly the star's own changes in brightness, not measurement error.",
+    "flags": null,
+    "model": false
    },
    {
     "key": "bp_rp",
@@ -117,7 +131,9 @@
     "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": "Gaia flags it as variable: this error comes from the spread of its single measurements, so it is mostly the star's own changes in brightness, not measurement error.",
+    "flags": null,
+    "model": false
    },
    {
     "key": "ruwe",
@@ -132,7 +148,9 @@
     "error_column": null,
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    },
    {
     "key": "phot_variable_flag",
@@ -147,7 +165,9 @@
     "error_column": null,
     "range_columns": null,
     "reference": null,
-    "note": null
+    "note": null,
+    "flags": null,
+    "model": false
    }
   ]
  },
@@ -163,6 +183,11 @@
    "dec": 66.7550238,
    "epoch": 2026.0
   },
+  "resolve_position": {
+   "ra": 248.1672331,
+   "dec": 66.7550238,
+   "epoch": 2026.0
+  },
   "type": {
    "code": "Mi*",
    "label": "Mira variable",
@@ -174,7 +199,7 @@
    "class": "M",
    "luminosity_class": null,
    "label": "M-type star",
-   "plain": "a cool, red star",
+   "plain": "a cool star, of the coolest ordinary kind",
    "pair": false,
    "parts": [
     "M4.5-6"
@@ -200,7 +225,11 @@
  "match": {
   "same": true,
   "how": "identifier",
-  "text": "SIMBAD lists Gaia DR3 1648328016354496384 among the names of V* R Dra."
+  "text": "SIMBAD lists Gaia DR3 1648328016354496384 among the names of R Dra."
+ },
+ "choice": {
+  "how": "named",
+  "text": "R Dra is listed in SIMBAD at the place asked, and SIMBAD names this Gaia source as the same object."
  },
  "derived": {
   "from": "Gaia DR3",
@@ -258,6 +287,7 @@
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 1648328016354500352",
    "source_id": "1648328016354500352",
+   "display_name": "Gaia DR3 1648328016354500352",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 4.13,
@@ -268,12 +298,16 @@
    "bp_rp": null,
    "parallax": null,
    "parallax_error": null,
+   "astrometric_params_solved": 3,
+   "visibility_periods_used": 4,
+   "possibly_spurious": true,
    "same_pixel": true
   },
   {
    "catalogue": "Gaia DR3",
    "name": "Gaia DR3 1648328016354504064",
    "source_id": "1648328016354504064",
+   "display_name": "Gaia DR3 1648328016354504064",
    "simbad_name": null,
    "simbad_type": null,
    "separation_arcsec": 4.26,
@@ -284,13 +318,16 @@
    "bp_rp": null,
    "parallax": null,
    "parallax_error": null,
+   "astrometric_params_solved": 3,
+   "visibility_periods_used": 3,
+   "possibly_spurious": true,
    "same_pixel": true
   }
  ],
  "notes": [
-  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
   "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
-  "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty."
+  "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty.",
+  "Gaia DR3 parallaxes carry a small known offset (about -0.02 mas; Lindegren et al. 2021) that is not corrected here. At this parallax (1.251 mas), correcting it would bring the distance about 2% closer."
  ],
  "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"
 }

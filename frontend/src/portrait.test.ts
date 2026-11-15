@@ -15,6 +15,8 @@ import {
   EARTH_RADIUS_KM,
   GLOW_MIN_K,
   JUPITER_RADIUS_KM,
+  LABEL_CHAR,
+  PICTURE_WIDTH,
   NEAREST_STAR_LY,
   SUN_RADIUS_KM,
   SUN_TEFF_K,
@@ -126,11 +128,14 @@ describe('blackbody colours', () => {
       expect(Math.min(...lin)).toBeGreaterThanOrEqual(0)
     }
   })
-  it('below 1,000 K it does not glow visibly, and has no colour word', () => {
-    expect(GLOW_MIN_K).toBe(1000)
-    expect(glowsVisibly(999)).toBe(false)
-    expect(glowsVisibly(1000)).toBe(true)
+  it('below the Draper point (about 800 K) it does not glow visibly, and has no colour word', () => {
+    expect(GLOW_MIN_K).toBe(800)
+    expect(glowsVisibly(799)).toBe(false)
+    expect(glowsVisibly(800)).toBe(true)
     expect(colourWord(285)).toBeNull()
+    // Between 800 and 1,000 K it glows, a dull red.
+    expect(colourWord(900)).toBe('red')
+    expect(blackbodyRgb255(900)).toEqual([255, 9, 0])
   })
   it('gamma-encodes with the sRGB curve', () => {
     expect(gammaEncode(0)).toBe(0)
@@ -184,7 +189,7 @@ describe('sizes to scale', () => {
     for (const r of [0.01, 0.09, 0.2022, 0.5, 1, 1.158, 3, 40, 300]) {
       const p = portraitLayout({ temperatureK: 4800, radiusRsun: r, label: 'An object name' })
       for (const b of p.bodies) {
-        const half = Math.max(b.r, (b.label.length * 7.1) / 2)
+        const half = Math.max(b.r, (b.label.length * LABEL_CHAR) / 2)
         expect(b.cx - half).toBeGreaterThanOrEqual(0)
         expect(b.cx + half).toBeLessThanOrEqual(p.width)
         expect(b.cy + b.r).toBeLessThan(p.labelY - 8)
@@ -193,9 +198,16 @@ describe('sizes to scale', () => {
         const a = p.bodies[i - 1]
         const b = p.bodies[i]
         expect(b.cx - a.cx).toBeGreaterThanOrEqual(a.r + b.r)
-        expect(b.cx - a.cx).toBeGreaterThanOrEqual((a.label.length + b.label.length) * 3.55)
+        expect(b.cx - a.cx).toBeGreaterThanOrEqual(((a.label.length + b.label.length) * LABEL_CHAR) / 2)
       }
     }
+  })
+  it('four bodies with a long label widen the picture rather than run off it', () => {
+    const p = portraitLayout({ temperatureK: 2600, radiusRsun: 0.12, label: 'A sixteen-letter' })
+    expect(p.width).toBeGreaterThan(PICTURE_WIDTH)
+    const last = p.bodies.at(-1)!
+    expect(last.cx + Math.max(last.r, (last.label.length * LABEL_CHAR) / 2)).toBeLessThanOrEqual(p.width)
+    expect(portraitLayout({ temperatureK: 3100, radiusRsun: 0.2022, label: "Barnard's Star" }).width).toBe(PICTURE_WIDTH)
   })
   it('a giant fills the disc and the Sun becomes a dot', () => {
     const p = portraitLayout({ temperatureK: 3000, radiusRsun: 200, label: 'Giant' })
