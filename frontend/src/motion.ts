@@ -54,3 +54,49 @@ export function overallShift(data: FramesReady): Shift | null {
   const path = measuredPath(data)
   return path.length >= 2 ? shiftBetween(path[0], path[path.length - 1]) : null
 }
+
+/** One visit's details: a frame, or the subtracted first visit of a difference view (which has no picture). */
+export type VisitFrame = Omit<Frame, 'image'>
+
+/**
+ * One row of the table of visits: everything the page says about one visit, worked out
+ * once for the whole view, so that nothing has to be rewritten when the visit on screen
+ * changes. Shifts are measured from the first visit with a measured position (`start`),
+ * the same place the motion markers start from, and the prediction from that visit's
+ * predicted place, so the two are compared from the same date.
+ */
+export interface VisitRow {
+  /** Where the visit is among `data.frames` (what the player shows); null for the subtracted visit of a difference view. */
+  index: number | null
+  frame: VisitFrame
+  /** The shifts are measured from this visit. */
+  start: boolean
+  /** Measured shift since the start; null for the start itself and for a visit with no position. */
+  shift: Shift | null
+  /** The shift the catalogue (or the motion given in the address) predicts since the start; null when nothing is predicted. */
+  predicted: { east: number; north: number } | null
+  /** How far the measured and the predicted shift differ, in arcseconds. */
+  differ: number | null
+  /** The measured shift is under SMALL_SHIFT_ARCSEC, so it may be measurement error. */
+  withinError: boolean
+}
+
+/** Every visit of the view in time order (the subtracted one of a difference view first), with its shifts. */
+export function visitRows(data: FramesReady): VisitRow[] {
+  const all: { frame: VisitFrame; index: number | null }[] = [
+    ...(data.reference_frame ? [{ frame: data.reference_frame, index: null }] : []),
+    ...data.frames.map((frame, index) => ({ frame, index })),
+  ]
+  const startAt = all.findIndex((v) => v.frame.centroid)
+  const from = startAt >= 0 ? all[startAt].frame : null
+  return all.map(({ frame, index }, k) => {
+    const start = k === startAt
+    const shift = !start && from?.centroid && frame.centroid ? shiftBetween(from.centroid, frame.centroid) : null
+    const predicted = !start && from?.predicted && frame.predicted ? skyOffsetArcsec(from.predicted, frame.predicted) : null
+    const differ = shift && predicted ? Math.hypot(shift.east - predicted.east, shift.north - predicted.north) : null
+    return { index, frame, start, shift, predicted, differ, withinError: shift !== null && shift.total < SMALL_SHIFT_ARCSEC }
+  })
+}
+
+/** The rows with a measured position. */
+export const measuredRows = (rows: VisitRow[]): VisitRow[] => rows.filter((r) => r.frame.centroid)

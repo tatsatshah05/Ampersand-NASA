@@ -1,14 +1,16 @@
 // Every word of Beginner's guide and of its small "i" popovers, in one place. Each popover
-// is a pure function of what is on screen (the /api/frames answer, the visit shown), so
-// every number in it is computed from that data or is a fact verified in CLAUDE.md.
+// is a pure function of the /api/frames answer, so every number in it is computed from that
+// data or is a fact verified in CLAUDE.md. None takes the visit on screen: an open popover
+// must not change while the visits play behind it, so each describes every visit, or the
+// whole run from the first visit with a position to the last.
 //
 // Rules for the words: reading age about 11, sentences of 20 words or fewer, everyday words,
 // a science word only with its meaning beside it. Never "sigma", "flux", "epoch", "detector"
 // or "centroid" here, and never "discovery" or "new planet" (guide.test.ts checks all of it).
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady } from './api'
 import { times } from './detection'
-import { SMALL_SHIFT_ARCSEC, shiftFromStart, startCentroid } from './motion'
-import { monthYear } from './wording'
+import { measuredRows, SMALL_SHIFT_ARCSEC, shiftBetween, visitRows } from './motion'
+import { listVisits, monthYear, monthYearLong } from './wording'
 
 // ---- the step guide ------------------------------------------------------------------------
 
@@ -89,7 +91,7 @@ const allFrames = (data: FramesReady): Pick<Frame, 'date_start' | 'date_end' | '
   data.reference_frame ? [data.reference_frame, ...data.frames] : data.frames
 
 /** The picture: what the app did to make it, then how to move around in it. */
-export function pictureInfo(data: FramesReady | null, frame: Frame | null): string[] {
+export function pictureInfo(data: FramesReady | null): string[] {
   const story = [
     'These are real photos from NASA’s SPHEREx space telescope.',
     'It sees infrared, a kind of light our eyes cannot see.',
@@ -106,7 +108,6 @@ export function pictureInfo(data: FramesReady | null, frame: Frame | null): stri
     story.push(
       `In all, ${plural(exposures, 'exposure', 'exposures')} went into ${plural(frames.length, 'visit picture', 'visit pictures')}, taken between ${dayMonthYear(first)} and ${dayMonthYear(last)}.`,
     )
-    if (frame && data.mode === 'normal') story.push(`The one on screen uses ${frame.n_exposures}.`)
   }
   return [
     story.join(' '),
@@ -138,17 +139,19 @@ export function playerInfo(data: FramesReady | null): string[] {
 
 const pixels = (arcsec: number) => (arcsec / NATIVE_PIXEL_ARCSEC).toFixed(2)
 
-/** The sentence about how far the marked object moved. */
-export function movementInfo(frame: Frame | null, data: FramesReady | null): string[] {
+/** The sentence about how far the marked object moved: the whole run, first visit with a spot to the last. */
+export function movementInfo(data: FramesReady | null): string[] {
   const how =
     'We find the middle of the bright spot in each visit. Then we measure how far it is from where it was in the first visit.'
   const unit = `An arcsecond is a tiny angle: 3600 of them make one degree. One SPHEREx pixel is ${NATIVE_PIXEL_ARCSEC} arcseconds wide.`
-  if (!frame || !data) return [how, unit]
-  if (!frame.centroid) return [how, 'In this visit no clear spot could be measured, so no movement is shown.']
-  if (frame.centroid === startCentroid(data)) return [how, 'This visit is the starting point, so it has nothing to be measured against.']
-  const shift = shiftFromStart(data, frame)
-  if (!shift) return [how, unit]
-  const here = `Here it moved ${shift.total.toFixed(1)} arcseconds, which is ${pixels(shift.total)} of a pixel.`
+  if (!data) return [how, unit]
+  const measured = measuredRows(visitRows(data))
+  if (data.mode === 'sum') return [how, `${unit} Here every visit is added into one picture, so nothing can move in it.`]
+  if (measured.length < 2) return [how, `${unit} Fewer than two visits have a clear spot here, so no movement can be measured.`]
+  const a = measured[0].frame
+  const b = measured[measured.length - 1].frame
+  const shift = shiftBetween(a.centroid!, b.centroid!) // measuredRows: both have a position
+  const here = `From ${monthYearLong(a.date_mean)} to ${monthYearLong(b.date_mean)} it moved ${shift.total.toFixed(1)} arcseconds, which is ${pixels(shift.total)} of a pixel.`
   const care =
     shift.total < SMALL_SHIFT_ARCSEC
       ? 'That is under a third of a pixel, so it may be a measuring error and not real movement.'
@@ -156,26 +159,36 @@ export function movementInfo(frame: Frame | null, data: FramesReady | null): str
   return [how, `${unit} ${here} ${care}`]
 }
 
-/** The sentence about how clearly the object is seen. */
-export function detectionInfo(frame: Frame | null): string[] {
+/** The line about how clearly the object is seen, in every visit at once. */
+export function detectionInfo(data: FramesReady | null): string[] {
   const how =
     'Empty sky is never perfectly smooth: it flickers a little. We call that the background scatter. We compare the object’s brightness with it.'
   const scale = 'At least 5 times the scatter counts as clear. From 3 to 5 is marginal, so take care. Under 3 counts as not seen.'
-  if (!frame) return [how, scale]
-  const sigma = frame.detection_sigma
-  switch (frame.detection) {
-    case 'clear':
-    case 'marginal':
-      return [how, sigma != null ? `Here it is ${times(sigma)} times the scatter. ${scale}` : scale]
-    case 'none':
-      return [how, sigma != null && sigma >= 1 ? `Here it is only ${times(sigma)} times the scatter. ${scale}` : `Here it is not above the scatter. ${scale}`]
-    case 'saturated':
-      return [how, 'Here the star is so bright that the sensor overflowed at its place. It is certainly there, but no number can be given.']
-    case 'unknown':
-      return [how, 'Here there were too few empty places nearby to compare with, so we cannot say how clearly it is seen.']
-    default:
-      return [how, scale]
+  if (!data) return [how, scale]
+  const visits = visitRows(data).map((r) => r.frame)
+  const epochs = (fs: typeof visits) => fs.map((f) => f.epoch ?? 0)
+  const lines: string[] = []
+  // The visits with a number, said together; the same number in every visit is said once.
+  const counted = visits.filter((f) => f.detection_sigma != null && (f.detection === 'clear' || f.detection === 'marginal' || f.detection === 'none'))
+  if (counted.length) {
+    const values = counted.map((f) => ((f.detection_sigma as number) < 1 ? 'under 1' : times(f.detection_sigma as number)))
+    if (data.mode === 'sum') lines.push(`In the sum of all visits it is ${values[0]} times the scatter.`)
+    else if (new Set(values).size === 1 && counted.length === visits.length) lines.push(`In every visit it is ${values[0]} times the scatter.`)
+    else if (counted.length <= 4) lines.push(`In ${listVisits(epochs(counted))} it is ${listNumbers(values)} times the scatter.`)
+    else {
+      const sigmas = counted.map((f) => f.detection_sigma as number)
+      const say = (s: number) => (s < 1 ? 'under 1' : times(s))
+      lines.push(`Across ${counted.length} visits it is ${say(Math.min(...sigmas))} to ${say(Math.max(...sigmas))} times the scatter.`)
+    }
   }
+  const saturated = visits.filter((f) => f.detection === 'saturated')
+  if (saturated.length) {
+    const where = data.mode === 'sum' ? 'In the sum of all visits' : saturated.length === visits.length ? 'In every visit' : `In ${listVisits(epochs(saturated))}`
+    lines.push(`${where} the star is so bright that the sensor overflowed at its place. It is certainly there, but no number can be given.`)
+  }
+  const unknown = visits.filter((f) => f.detection === 'unknown')
+  if (unknown.length) lines.push(`For ${data.mode === 'sum' ? 'the sum' : listVisits(epochs(unknown))} there were too few empty places nearby to compare with.`)
+  return [how, [...lines, scale].join(' ')]
 }
 
 /** The warning about very bright stars near the patch. */
@@ -198,19 +211,19 @@ export function levelInfo(): string[] {
   ]
 }
 
-/** All popover texts for what is on screen, by key. */
-export function infoFor(key: InfoKey, data: FramesReady | null, frame: Frame | null, bright?: { gmag: number }[] | null): string[] {
+/** All popover texts for the view on screen, by key. None depends on which visit is shown. */
+export function infoFor(key: InfoKey, data: FramesReady | null, bright?: { gmag: number }[] | null): string[] {
   switch (key) {
     case 'picture':
-      return pictureInfo(data, frame)
+      return pictureInfo(data)
     case 'visits':
       return visitsInfo(data)
     case 'player':
       return playerInfo(data)
     case 'movement':
-      return movementInfo(frame, data)
+      return movementInfo(data)
     case 'detection':
-      return detectionInfo(frame)
+      return detectionInfo(data)
     case 'bright':
       return brightStarInfo(bright)
     case 'level':

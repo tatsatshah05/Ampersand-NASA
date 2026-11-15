@@ -15,9 +15,9 @@ import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
 import { BrightnessPanel } from './components/BrightnessPanel'
 import { ContextView } from './components/ContextView'
 import { FieldStars } from './components/FieldStars'
-import { DetectionReadout } from './components/DetectionReadout'
 import { isMarginal } from './detection'
-import { FrameDetails } from './components/FrameDetails'
+import { VisitDetails } from './components/VisitDetails'
+import { VisitTable } from './components/VisitTable'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import { InfoButton } from './components/InfoButton'
 import { LevelSwitch, StepGuide } from './components/LevelSwitch'
@@ -44,8 +44,20 @@ import { targetMotion, type SpectrumRequest } from './spectrum'
 import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
 import { newSeed, trainingAddress } from './training'
 import { useFrames } from './useFrames'
-import { usePlayer } from './usePlayer'
-import { failuresSentence, frameLabel, modeSentence, motionSentence, saturationSentence, visitCaption } from './wording'
+import { usePlayer, useResting } from './usePlayer'
+import {
+  failuresSentence,
+  flagsNote,
+  frameLabel,
+  modeSentence,
+  motionSentence,
+  overallResult,
+  rowAnnouncement,
+  saturationSentence,
+  seenLine,
+  tableNotes,
+  visitCaption,
+} from './wording'
 import { startBox, type Point, type ZoomBox } from './zoom'
 import './App.css'
 
@@ -110,8 +122,15 @@ export function Viewer() {
   // Loading for longer than a moment (or with nothing to show meanwhile): the picture is
   // dimmed with a message over it, and the player waits.
   const busy = load.state === 'loading' && (load.slow || load.previous === null)
-  const player = usePlayer(data?.key ?? '', data?.frames.length ?? 0)
+  // The picture's box: while it is out of the window (or the tab is hidden) the player's timer rests.
+  const plate = useRef<HTMLDivElement>(null)
+  const resting = useResting(plate)
+  const player = usePlayer(data?.key ?? '', data?.frames.length ?? 0, resting)
   const frame = data?.frames[player.current] ?? null
+  // For screen readers: the row of the visit just stepped to or chosen, said once (D6). The
+  // frames key it was said for; cleared by Play and Blink, and by another star.
+  const [spokenFor, setSpokenFor] = useState<string | null>(null)
+  const dataKey = data?.key ?? null
 
   // Beginner's step guide: what the visitor has actually done. The player starts playing by
   // itself, so only a press of theirs counts as flipping through the visits.
@@ -122,26 +141,32 @@ export function Viewer() {
   const { togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
   const togglePlay = useCallback(() => {
     playerTogglePlay()
+    setSpokenFor(null)
     mark('flipped')
   }, [playerTogglePlay, mark])
   const toggleBlink = useCallback(() => {
     playerToggleBlink()
+    setSpokenFor(null)
     mark('flipped')
   }, [playerToggleBlink, mark])
   const step = useCallback(
     (by: number) => {
       playerStep(by)
+      setSpokenFor(dataKey)
       mark('flipped')
     },
-    [playerStep, mark],
+    [playerStep, mark, dataKey],
   )
   const showVisit = useCallback(
     (index: number) => {
       playerShow(index)
+      setSpokenFor(dataKey)
       mark('flipped')
     },
-    [playerShow, mark],
+    [playerShow, mark, dataKey],
   )
+  // Stepping and choosing pause the player, so this is never said while the visits play.
+  const voice = data && spokenFor === data.key && player.playback === 'paused' ? rowAnnouncement(data, player.current) : ''
 
   // ---- the page address -------------------------------------------------------------------
 

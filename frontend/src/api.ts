@@ -23,6 +23,13 @@ export interface Centroid extends SkyPixel {
   fwhm_arcsec: number
 }
 
+/** What the fit found near the predicted place when it is too far away to be the target. */
+export interface NearestSource extends SkyPixel {
+  offset_arcsec?: { east: number; north: number; total: number } | null
+  detection_sigma?: number | null
+  detection?: Detection | null
+}
+
 /** How strongly the target is detected in one frame. "unknown": too few empty places to measure the noise. */
 export type Detection = 'clear' | 'marginal' | 'none' | 'saturated' | 'unknown'
 
@@ -65,6 +72,10 @@ export interface Frame {
   rejected_readings: number
   /** Measured position of the source nearest the target; null when nothing could be measured. */
   centroid: Centroid | null
+  /** Why `centroid` is null, in the backend's own words; null when there is a centroid. */
+  centroid_reason?: string | null
+  /** When the target is not found: the source the fit found instead, if anything. */
+  nearest_source?: NearestSource | null
   /** Times the background scatter that the target is detected at its predicted position; null when not measured. */
   detection_sigma?: number | null
   detection?: Detection | null
