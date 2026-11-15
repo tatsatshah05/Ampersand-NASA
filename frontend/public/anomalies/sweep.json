@@ -1,0 +1,319 @@
+{
+ "schema": 1,
+ "about": "The sweep of the Milky Way's plane for infrared sources that appeared between SPHEREx's visits: its 14 survivors, copied from docs/sweep/summary.json and docs/sweep.md by scripts/export_anomalies.py. 'candidate' means a source we found in no catalogue or report we checked; nobody has confirmed it and nothing has been reported.",
+ "source": {
+  "summary": "docs/sweep/summary.json",
+  "summary_sha256": "843f9cfed917f1b066f9b6973a75d58defbc23801e43a2f3cecf90e32c58cd10",
+  "writeup": "docs/sweep.md",
+  "tiles": "<SPHEREX_CACHE_DIR>/sweep/sweep_work/tiles (catalogue_* fields of the known objects)",
+  "export_script": "scripts/export_anomalies.py",
+  "exported_utc": "2026-11-15T10:15:33+00:00"
+ },
+ "swept": "2026-11-14",
+ "ruled": "2026-11-15",
+ "area_sq_deg": 472.64,
+ "area_text": "472.6",
+ "tiles_done": 63,
+ "sources_compared": 1162894,
+ "visits": "August to September 2025, February to April 2026, August to September 2026",
+ "counts": {
+  "candidate": 3,
+  "known_eruption": 2,
+  "known_variable": 6,
+  "set_aside": 3,
+  "total": 14
+ },
+ "survivors": [
+  {
+   "kind": "candidate",
+   "tile": "l006.0_b+0.0",
+   "ra": 270.80408,
+   "dec": -23.46818,
+   "constellation": "Sagittarius",
+   "direction": "brightened",
+   "label": "A",
+   "sexagesimal": "18:03:12.98 -23:28:05.4",
+   "position_error_arcsec": 0.3,
+   "allowed_sentence": "Candidate A, an infrared source in Sagittarius, was too faint to detect in SPHEREx images from late August and early September 2025 and was more than 100 times brighter by late March 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.",
+   "last_non_detection": "2025-09-10 09:53 UT, below about 14 mJy at 4.4-5.0 micrometres",
+   "first_detection": "2026-03-20 04:30 UT (the first 2026 exposure)",
+   "rise": "more than 100 times within SPHEREx (at least about 170 on the fits, at least 60 without a model); at least about 500 times NEOWISE W2 (2014-2024), 1,000 times Spitzer GLIMPSE II [4.5] (2005-06) and 300 times VVV Ks (2010-2019)",
+   "visits_d6": [
+    {
+     "dates": "2025-08-24 to 2025-09-10",
+     "text": "not detected: -5.5, -4.3 and -2.4 +/- 2.8 mJy in three fits with the neighbour modelled; upper limit about 10-14 mJy (about 40 mJy with no model)",
+     "low_mjy": null,
+     "high_mjy": 14
+    },
+    {
+     "dates": "2026-03-20 to 2026-04-01",
+     "text": "2,419-2,926 mJy, partly saturated",
+     "low_mjy": 2419,
+     "high_mjy": 2926
+    },
+    {
+     "dates": "2026-08-25 to 2026-09-02",
+     "text": "670-803 mJy",
+     "low_mjy": 670,
+     "high_mjy": 803
+    },
+    {
+     "dates": "2026-09-22",
+     "text": "about 420-620 mJy",
+     "low_mjy": 420,
+     "high_mjy": 620
+    }
+   ],
+   "constellation_ruled": "Sagittarius"
+  },
+  {
+   "kind": "candidate",
+   "tile": "l342.0_b+0.0",
+   "ra": 253.18038,
+   "dec": -44.67697,
+   "constellation": "Scorpius",
+   "direction": "brightened",
+   "label": "B",
+   "sexagesimal": "16:52:43.29 -44:40:37.1",
+   "position_error_arcsec": 0.3,
+   "allowed_sentence": "Candidate B, an infrared source in Scorpius, was too faint to detect in SPHEREx images from August and September 2025, had appeared by late February 2026 and was at least 250 times brighter by August 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.",
+   "last_non_detection": "2025-09-15 22:09 UT, below 4 mJy at 4.4-5.0 micrometres",
+   "first_detection": "2026-02-26 14:18 UT, 49.7 +/- 7.3 mJy at 2.42 micrometres",
+   "rise": "at least 250 times from August 2025 to August 2026 (at least about 100 to March 2026); at least about 700 times NEOWISE W2 (2024-03-09), 1,400 times Spitzer [4.5] (2004 and 2012) and 400 times VVV Ks (inferred, not measured at the spot)",
+   "visits_d6": [
+    {
+     "dates": "2025-08-02 to 2025-09-15",
+     "text": "not detected: 0.28, -0.5 +/- 1.1 and -0.75 +/- 1.6 mJy in three fits; 3-sigma limit 2.5-4.0 mJy",
+     "low_mjy": null,
+     "high_mjy": 4.0
+    },
+    {
+     "dates": "2026-02-26 to 2026-03-16",
+     "text": "393-424 mJy, rising about 10 per cent a day",
+     "low_mjy": 393,
+     "high_mjy": 424
+    },
+    {
+     "dates": "2026-08-08 to 2026-08-25",
+     "text": "1,006-1,089 mJy",
+     "low_mjy": 1006,
+     "high_mjy": 1089
+    }
+   ],
+   "constellation_ruled": "Scorpius"
+  },
+  {
+   "kind": "candidate",
+   "tile": "l330.0_b+0.0",
+   "ra": 241.70906,
+   "dec": -52.20564,
+   "constellation": "Norma",
+   "direction": "brightened",
+   "label": "C",
+   "sexagesimal": "16:06:50.17 -52:12:20.3",
+   "position_error_arcsec": 0.5,
+   "allowed_sentence": "Candidate C, an infrared source in Norma, was too faint to detect in SPHEREx images from July and August 2025, was at least 30 times brighter in late February and early March 2026 and had faded again by August 2026; its light hints at a nova hidden behind the Milky Way's dust, but it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.",
+   "last_non_detection": "2025-08-19 22:57 UT, below about 3 mJy at 4-5 micrometres",
+   "first_detection": "2026-02-19 about 02:55 UT",
+   "rise": "at least about 30 times in its continuum within SPHEREx; at least about 20 times NEOWISE (2010-2024), 270 times GLIMPSE I [4.5], 560 times Deep GLIMPSE, 380 times APOGLIMPSE and 340 times VVV Ks",
+   "visits_d6": [
+    {
+     "dates": "2025-07-30 to 2025-08-19",
+     "text": "about 0: -0.5 mJy (D6) and -0.6 (D5) in a forced fit with 28 neighbours modelled; 1.1 mJy in a small circle",
+     "low_mjy": null,
+     "high_mjy": 3
+    },
+    {
+     "dates": "2026-02-19 to 2026-03-03",
+     "text": "continuum about 85-110 mJy at 4-5 micrometres (forced fit D6 109.6, D5 112.9)",
+     "low_mjy": 85,
+     "high_mjy": 110
+    },
+    {
+     "dates": "2026-04-09 to 2026-04-10",
+     "text": "about a third of that",
+     "low_mjy": null,
+     "high_mjy": null
+    },
+    {
+     "dates": "2026-07-28 to 2026-09-12",
+     "text": "continuum about 3-5 mJy, while emission lines are still detected",
+     "low_mjy": 3,
+     "high_mjy": 5
+    }
+   ],
+   "constellation_ruled": "Norma"
+  },
+  {
+   "kind": "known_eruption",
+   "tile": "l000.0_b-2.5",
+   "ra": 270.96968,
+   "dec": -31.45726,
+   "constellation": "Sagittarius",
+   "direction": "brightened",
+   "bright_mjy": 1611.6,
+   "known_as": "V7994 Sagittarii (nova, 2025)",
+   "bright_text": "1,289 mJy (proof tile), 1,612 mJy (sweep tile)",
+   "evidence": "AAVSO VSX type NA, 1.1 arcsec away; absent in August 2025",
+   "catalogue_reasons": [
+    "AAVSO VSX V7994 Sgr is NA, 6.6 V to <23 V (0.7 arcsec away)"
+   ],
+   "catalogue_name": "V7994 Sgr",
+   "catalogue": "AAVSO VSX",
+   "catalogue_text": "AAVSO VSX V7994 Sgr is NA, 6.6 V to <23 V (0.7 arcsec away)"
+  },
+  {
+   "kind": "known_eruption",
+   "tile": "l027.0_b+0.0",
+   "ra": 279.74438,
+   "dec": -3.86389,
+   "constellation": "Serpens",
+   "direction": "faded",
+   "bright_mjy": 11766.2,
+   "known_as": "V0691 Serpentis (nova)",
+   "bright_text": "11,766 mJy, saturated, in September 2025",
+   "evidence": "AAVSO VSX type NA, 2.7 arcsec away; faded to 173 mJy by spring 2026",
+   "catalogue_reasons": [
+    "AAVSO VSX V0691 Ser is NA, 11.9 V to <23 g (2.7 arcsec away)"
+   ],
+   "catalogue_name": "V0691 Ser",
+   "catalogue": "AAVSO VSX",
+   "catalogue_text": "AAVSO VSX V0691 Ser is NA, 11.9 V to <23 g (2.7 arcsec away)"
+  },
+  {
+   "kind": "known_variable",
+   "tile": "l333.0_b+0.0",
+   "ra": 244.5625,
+   "dec": -50.72343,
+   "constellation": "Norma",
+   "direction": "brightened",
+   "bright_mjy": 38.9,
+   "catalogue_reasons": [
+    "2MASS J16181502-5043231 (2MASS) Ks 11.95 mag = 11 mJy, already bright",
+    "CWISE J161814.96-504323.0 (CatWISE2020) W2 10.12 mag = 15 mJy, already bright",
+    "WISEA J161814.99-504322.9 (AllWISE) W2 10.68 mag = 9 mJy, already bright",
+    "GLIMPSE SSTGLMC G332.7232-00.2176 (GLIMPSE) [4.5] 9.94 mag = 19 mJy, already bright"
+   ],
+   "catalogue_name": "WISEA J161814.99-504322.9",
+   "catalogue": "AllWISE",
+   "catalogue_text": "WISEA J161814.99-504322.9 (AllWISE) W2 10.68 mag = 9 mJy, already bright"
+  },
+  {
+   "kind": "known_variable",
+   "tile": "l003.0_b+0.0",
+   "ra": 267.7888,
+   "dec": -26.61809,
+   "constellation": "Sagittarius",
+   "direction": "brightened",
+   "bright_mjy": 31.8,
+   "catalogue_reasons": [
+    "CWISE J175109.20-263709.1 (CatWISE2020) W2 9.96 mag = 18 mJy, already bright",
+    "WISEA J175109.30-263700.0 (AllWISE) W2 9.76 mag = 21 mJy, already bright",
+    "CWISE J175109.30-263659.8 (CatWISE2020) W2 9.81 mag = 21 mJy, already bright",
+    "2MASS J17510929-2636598 (2MASS) Ks 11.63 mag = 15 mJy, already bright"
+   ],
+   "catalogue_name": "WISEA J175109.30-263700.0",
+   "catalogue": "AllWISE",
+   "catalogue_text": "WISEA J175109.30-263700.0 (AllWISE) W2 9.76 mag = 21 mJy, already bright"
+  },
+  {
+   "kind": "known_variable",
+   "tile": "l015.0_b+0.0",
+   "ra": 274.29409,
+   "dec": -16.214,
+   "constellation": "Sagittarius",
+   "direction": "faded",
+   "bright_mjy": 70.0,
+   "catalogue_reasons": [
+    "CWISE J181710.67-161247.5 (CatWISE2020) W2 8.82 mag = 51 mJy, already bright",
+    "WISEA J181710.62-161247.3 (AllWISE) W2 8.46 mag = 71 mJy, already bright",
+    "GLIMPSE SSTGLMC G014.6493-00.0024 (GLIMPSE) [4.5] 9.66 mag = 25 mJy, already bright",
+    "WISEA J181710.84-161251.1 (AllWISE) W2 9.94 mag = 18 mJy, already bright",
+    "GLIMPSE SSTGLMC G014.6488-00.0008 (GLIMPSE) [4.5] 9.89 mag = 20 mJy, already bright",
+    "2MASS J18171028-1612460 (2MASS) Ks 11.66 mag = 14 mJy, already bright"
+   ],
+   "catalogue_name": "WISEA J181710.62-161247.3",
+   "catalogue": "AllWISE",
+   "catalogue_text": "WISEA J181710.62-161247.3 (AllWISE) W2 8.46 mag = 71 mJy, already bright"
+  },
+  {
+   "kind": "known_variable",
+   "tile": "l018.0_b+0.0",
+   "ra": 276.47076,
+   "dec": -12.06769,
+   "constellation": "Scutum",
+   "direction": "faded",
+   "bright_mjy": 102.6,
+   "catalogue_reasons": [
+    "CWISE J182553.18-120403.4 (CatWISE2020) W2 8.40 mag = 75 mJy, already bright",
+    "GLIMPSE SSTGLMC G019.3004+00.0859 (GLIMPSE) [4.5] 8.25 mag = 90 mJy, already bright",
+    "WISEA J182553.19-120403.6 (AllWISE) W2 8.31 mag = 81 mJy, already bright"
+   ],
+   "catalogue_name": "WISEA J182553.19-120403.6",
+   "catalogue": "AllWISE",
+   "catalogue_text": "WISEA J182553.19-120403.6 (AllWISE) W2 8.31 mag = 81 mJy, already bright"
+  },
+  {
+   "kind": "known_variable",
+   "tile": "l024.0_b+0.0",
+   "ra": 278.0644,
+   "dec": -8.02252,
+   "constellation": "Scutum",
+   "direction": "brightened",
+   "bright_mjy": 36.5,
+   "catalogue_reasons": [
+    "GLIMPSE SSTGLMC G023.6121+00.5753 (GLIMPSE) [4.5] 10.36 mag = 13 mJy, already bright",
+    "WISEA J183215.40-080116.4 (AllWISE) W2 9.79 mag = 21 mJy, already bright",
+    "CWISE J183215.39-080116.5 (CatWISE2020) W2 10.13 mag = 15 mJy, already bright"
+   ],
+   "catalogue_name": "WISEA J183215.40-080116.4",
+   "catalogue": "AllWISE",
+   "catalogue_text": "WISEA J183215.40-080116.4 (AllWISE) W2 9.79 mag = 21 mJy, already bright"
+  },
+  {
+   "kind": "known_variable",
+   "tile": "l024.0_b+0.0",
+   "ra": 278.36433,
+   "dec": -8.93742,
+   "constellation": "Scutum",
+   "direction": "brightened",
+   "bright_mjy": 3222.4,
+   "catalogue_reasons": [
+    "WISEA J183327.47-085614.1 (AllWISE) W2 4.11 mag = 3907 mJy, already bright"
+   ],
+   "catalogue_name": "WISEA J183327.47-085614.1",
+   "catalogue": "AllWISE",
+   "catalogue_text": "WISEA J183327.47-085614.1 (AllWISE) W2 4.11 mag = 3907 mJy, already bright"
+  },
+  {
+   "kind": "set_aside",
+   "tile": "l354.0_b+0.0",
+   "ra": 261.92881,
+   "dec": -35.29494,
+   "constellation": "Scorpius",
+   "direction": "brightened",
+   "bright_mjy": 38.9,
+   "why": "39 mJy against 1.4 in a 4-image comparison, but the all-exposure medians of D6 are 4, 15 and 2 mJy and D5 negative: 5 sigma at most, not confirmed. A methanol maser and sub-millimetre clump lie 8 arcseconds away, so it may be worth a look by someone who knows that region."
+  },
+  {
+   "kind": "set_aside",
+   "tile": "l003.0_b+0.0",
+   "ra": 267.49549,
+   "dec": -27.56803,
+   "constellation": "Sagittarius",
+   "direction": "faded",
+   "bright_mjy": 125.5,
+   "why": "its brightness in the tile images swung (136, 126, 23, 116, 125) but the median of all 3.8 to 5 micrometre exposures is 143, 135 and 157 mJy in D5 and 111, 96 and 118 in D6: steady. One tile image was measured on a crowded background."
+  },
+  {
+   "kind": "set_aside",
+   "tile": "l009.0_b+0.0",
+   "ra": 272.10809,
+   "dec": -22.28134,
+   "constellation": "Sagittarius",
+   "direction": "faded",
+   "bright_mjy": 862.8,
+   "why": "the catalogued planetary nebula PN M 1-40 lies 0.7 arcseconds away; NEOWISE saw it steady (21 visits, 1.05 times); all-exposure medians 96, 86, 178 mJy in D6. A bright nebula, not a transient."
+  }
+ ]
+}

@@ -18,7 +18,7 @@ export const NEIGHBOUR_PLAIN: Record<Find['key'], string> = {
 export const MAYBE_PLAIN: Record<Find['key'], string> = {
   A: 'What it is, nobody knows yet. Its light is a smooth, very red glow, like warm dust.',
   B: 'What it is, nobody knows yet. It lies among young stars, so it may be a young star flaring up.',
-  C: 'Its light hints at a nova: most of it came from glowing hydrogen gas. A nova is a blast on the surface of a small, burnt-out star.',
+  C: 'Its light hints at a nova: glowing hydrogen gas made it shine very brightly in a few colours. A nova is a blast on the surface of a small, burnt-out star.',
 }
 
 /** "visit 1, in August 2025" */

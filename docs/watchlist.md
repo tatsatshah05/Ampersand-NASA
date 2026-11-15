@@ -19,17 +19,24 @@ sources, and a way to use many volunteers' eyes on it. The watchlist is that lis
    the list holds only what real searches reported, and starts with the fields already searched
    (`scripts/watchlist_ingest.py`).
 2. **A second opinion** from another telescope's archive (NEOWISE) for brightness changes.
-3. **People look and vote** on a separate screen (`?watchlist=1`, the ninth item of the bar at the
-   top of every screen: "Vote" in Beginner and "Watchlist" in Expert on 15 November; it is being
-   renamed "Observe anomalies" / "Anomalies"): a picture strip for each candidate, what the machine
-   saw in plain words, what the catalogues say, the NEOWISE sentence, and three buttons.
+3. **People look and vote** on the Observe anomalies screen (`?watchlist=1`, the ninth item of the
+   bar at the top of every screen: "Observe anomalies" in Beginner and "Anomalies" in Expert). Under
+   the sweep's three candidates and "Choose a region", the patch searches' groups ("Found by
+   searching small patches") hold a card for each row: a picture strip, what the machine saw in
+   plain words, what the catalogues say, the NEOWISE sentence, and three buttons. A row within 5
+   arcseconds of one of the sweep's candidates, whatever its group, says first whose place it is,
+   with a link to that candidate's card (at B's patch the search set aside a "mover" 0.7 arcseconds
+   from B); a brightness change within 25 arcseconds of one gets a caution that its light reaches
+   that place's measurement.
 4. **Scientists download the list** (`/api/watchlist/export.csv` or `.json`) with all the evidence.
 
 Everything on the list is a **candidate**. Nothing is called a discovery or a new object.
 
 ## The three groups, and the order
 
-The groups are decided by the machine and never by votes.
+The groups are decided by the machine and never by votes. The screen names them in Expert as
+below; in Beginner they are "Not listed as changing", "Already known" and "Set aside as false
+alarms".
 
 | Group | Rule |
 |---|---|

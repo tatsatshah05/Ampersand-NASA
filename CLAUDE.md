@@ -306,6 +306,12 @@ Endpoints (adjust if something better emerges, and keep this list current):
   true, `notice` and `planted` (the truth), is cached under `cache/distant/simulation-*` and
   never goes to the watchlist. A link is a candidate, never a detection. Details, numbers and
   wording: `docs/distant.md`. `distant.VERSION` is part of its cache key.
+- `GET /api/watchlist/regions` BUILT (`backend/watchlist.py`, `regions`). Every patch a blind search covered:
+  `key` (`<ra>_<dec>_<fov>`, 6, 6 and 4 decimals), `ra`, `dec`, `fov`, `area_sq_deg`, `constellation` (astropy's
+  `get_constellation`, with the IAU's spelling where astropy's table differs: Ophiuchus, Chamaeleon), `last_searched`,
+  `count` and `counts` per group; plus `total`, `counts`, `patches_searched`, `first_searched`, `last_searched`. A row seen
+  from two patches counts in both. `GET /api/watchlist?region=<key>` keeps only that patch's rows (`counts` and `total`
+  are then the patch's; ranks stay the whole list's); an unknown key answers 404.
 - Errors, every endpoint (`backend/app.py`, `_answer`): 422 when FastAPI's own checks
   refuse a parameter; 400 with the reason when the request asks for something impossible
   (`spherex.BadRequest`: a mode that does not exist, an epoch not observed, track=target
@@ -1089,13 +1095,56 @@ The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the refe
   (`usePlayer.ts` `openingFor`: the pair's own blinking is not carried over). The tools screen opens its "For
   scientists" folds in Expert.
 
+
+Observe anomalies (2026-11-15; `components/WatchlistView.tsx`, `CandidateCards.tsx`, `RegionPicker.tsx`, `SweepGroups.tsx`, `anomalies.ts`)
+- The watchlist screen is "Observe anomalies" (bar: "Observe anomalies" in Beginner, "Anomalies" in Expert); its
+  address is still `?watchlist=1`, and `&region=<key>` (`anomalies.ts` `readRegion`, `withRegion`, written in place)
+  keeps the chosen region through Back and reload. From the top: what SPHEREx is and what an anomaly is (four sentences,
+  both levels), and a line "Jump to: the three candidates · Choose a region"; "Not reported anywhere we could find" with
+  one card per candidate (id `find-A` etc.): "In the constellation ...", the Viewer's own `/api/frames` pictures of the
+  last visit "none" and the brightest clear visit, cropped to the central 2 arcmin, with their dates aligned; the
+  pictures' note; the neighbour (Beginner: `findsInfo.ts` NEIGHBOUR_PLAIN; Expert: `finds.ts` `neighbour`); Expert only,
+  right under those, the facts (Position, Brightness, Rise, Last seen absent, First seen, Write-up); the allowed
+  sentence; "probably" (Beginner: MAYBE_PLAIN); `reportSearch`, the second search's `what_can_be_said`, word for word
+  (Expert adds `finds.ts` `checked` after it); `status` in `finds.ts`, today "Not confirmed. Not yet reported to
+  astronomers.", the one field to change the day a report is filed; no votes. Then "Choose a region" (everywhere, the
+  plane sweep, each searched patch), "Showing: <name>" first under the menu (in the live region) and a "Show
+  everywhere" button whenever the choice is not Everywhere; a new region opens on its first group with rows. Then the
+  chosen region's groups: the patch searches' ("Found by searching small patches", or "... this patch"; Beginner first
+  says "These have had only the computer's quick checks. Nobody has searched the reports for them yet.") and, for
+  everywhere or the plane, the sweep's. Never "never seen before".
+- Rows at or near a candidate (`watchlist.ts` `markNearFind`): EVERY row within 5 arcsec of one, whatever its group or
+  kind, opens with "Candidate B's place, 0.7 arcseconds away. Its card is at the top of this page." and "See its card"
+  (`search.ts` `atFindLine`), and is not tagged "Example": at B's patch the search set aside a "mover" 0.7 arcsec from
+  B (its centre shifted by a different amount in each colour, which the search reads as a blend with a star that changed
+  brightness). A changer within 25 arcsec gets the patch search's own caution,
+  in `nearFindLine`'s short sentences ("Candidate B is 10 arcseconds from here. Its light reaches this spot's
+  measurement. So this change is most likely Candidate B's light."), on this screen followed by "Its card is at the top
+  of this page." and the link: B's patch had the steady star 10 arcsec away in "needs eyes".
+- Beginner shows the watchlist cards' headline, candidate line and verdict, and folds the rest (detectors, times the
+  noise, mJy) into "More detail (for scientists)"; a set-aside card shows "Set aside." and one plain line ("The computer
+  decided this movement was a false alarm.", or "change"), its reasons in the fold. Beginner's first group is "Not
+  listed as changing" (every row in it has a catalogued object at its place, only not listed as variable). Beginner
+  names the sweep's known objects by what and where only ("A nova in Sagittarius", "A star in Norma"); Expert keeps the
+  catalogue names, positions and tiles, and calls the six "Catalogued stars that varied".
+- The sweep's 14 survivors reach the screen as `frontend/public/anomalies/sweep.json`, written by
+  `scripts/export_anomalies.py` from `docs/sweep/summary.json`, `docs/sweep.md` (dates, area, visits, the known-eruption
+  and set-aside tables) and the tile records in `<cache>/sweep/sweep_work/tiles/` (only the known objects' catalogue rows;
+  a candidate's tile record holds the withdrawn position). `--check` (offline) fails when it is out of date with the docs;
+  without the cache's tile records it compares the catalogue rows with the repository's copy, `tests/data/sweep_export/tiles`.
+- The plane region says "14 passed the sweep's automatic artefact checks. 3 of them were then set aside: the change did
+  not show in all the pictures." (the three have `confirmed_in_all_exposures` false in `docs/sweep/summary.json`).
+  `components/anomalies.test.tsx` reads the ruling's `must_not_say` and the withdrawn positions and checks that the
+  rendered screen, both levels, says none of them.
+
 ## The page as of 2026-11-15: addresses, rules and checks (read before changing the frontend)
 
 What a session needs that the code does not say in one place. Written from `Dev` at `500e7fd` and checked again at
 `0221046`. Since then `agent/finish-page` (`49de312`) has been merged: after the landing every star opens paused and in
 detector 5; Beginner's short candidate line with the allowed sentence behind an "i"; What is it? asks about a pressed
 star; a name's Gaia motion carried as `src=gaia`, so Expert reads "Gaia DR3 predicts" (the bullet just above this
-section).
+section). The Observe anomalies screen (`agent/anomalies`, finished on `agent/anomalies-final`) is the bar's ninth item
+(the paragraph "Observe anomalies" above).
 
 The page's address (`frontend/src/address.ts`, `readAddress`; every unusable value falls back and is named in a note):
 - `ra`, `dec` (both or neither), `fov` (above 0.02, at most 0.5), `det` (1 to 6; older links say `detector`), `mode`
@@ -1108,28 +1157,30 @@ The page's address (`frontend/src/address.ts`, `readAddress`; every unusable val
   `TOOL_KEYS`; absent while Watch is on screen). Written in place with `replaceState` (`writeTool`).
 - `train=<whole number>` with `level=easy|medium|hard`: the practice screen (simulation). With no position it uses
   Barnard's Star; the bar's Practise link carries the view's position and a random seed.
-- Screens of their own: `?watchlist=1` (`watchlist.ts`, `isWatchlistAddress`) and `?tools=1` (`tools.ts`,
-  `isToolsAddress`), each with the same bar.
+- Screens of their own: `?watchlist=1` (Observe anomalies; `watchlist.ts`, `isWatchlistAddress`; with
+  `&region=<key>` for the chosen region) and `?tools=1` (`tools.ts`, `isToolsAddress`), each with the same bar.
 - No position at all: the landing view, Candidate B held still (`LANDING`: `pmra=0&pmdec=0`, detector 6).
 
 Routes (`backend/app.py`, `backend/watchlist_api.py`) besides those under Endpoints: `GET /api/identify?ra=&dec=`
 (`radius` in arcsec, default `identify.DEFAULT_RADIUS_ARCSEC`; `epoch`, default 2026.0): what Gaia DR3 and SIMBAD know
 at a place, for What is it?; a catalogue that does not answer is named in `unreachable`. `GET /api/search` (blind
 search, in the background, `status` queued, running, done or failed). `GET /api/smallbodies?ra=&dec=&fov=&detector=`
-(JPL). `GET /api/training` (simulation). `GET /api/watchlist` (`group`, `kind`, `limit`, `offset`, header `X-Voter`),
-`/api/watchlist/export.csv`, `/api/watchlist/export.json`, `/api/watchlist/{id}`, `POST /api/watchlist/{id}/vote`,
+(JPL). `GET /api/training` (simulation). `GET /api/watchlist` (`group`, `kind`, `region`, `limit`, `offset`, header
+`X-Voter`), `GET /api/watchlist/regions`, `/api/watchlist/export.csv`, `/api/watchlist/export.json`, `/api/watchlist/{id}`, `POST /api/watchlist/{id}/vote`,
 `/api/watchlist/{id}/picture.png`. The frontend is served at `/`, with `/lab/` (the Three tools files, made by
 `scripts/export_lab.py`).
 
 The bar (`frontend/src/features.ts`, `components/FeatureBar.tsx`), ten items, Beginner / Expert: Watch / Viewer,
 Brightness / Light curve, Colours / Spectrum, Find changes / Blind search, Far-off planet / Planet X search, Asteroids /
-Small bodies, What is it? / Object card, Practise / Training, Vote / Watchlist, Three tools / Methods. On the branch
-`agent/anomalies` (commit `674b595`, not merged when this was written) the ninth is Observe anomalies / Anomalies, still
-at `?watchlist=1`: a first group "Not reported anywhere we could find" with one card per candidate (status from
-`finds.ts` `status`, link "Watch it appear"), then "Choose a region", then the chosen region's groups; with it come
+Small bodies, What is it? / Object card, Practise / Training, Observe anomalies / Anomalies, Three tools / Methods. The
+ninth is at `?watchlist=1`: a first group "Not reported anywhere we could find" with one card per candidate (status
+from `finds.ts` `status`, link "Watch it appear"), then "Choose a region", then the chosen region's groups; it reads
 `GET /api/watchlist/regions` and `frontend/public/anomalies/sweep.json`, made by `scripts/export_anomalies.py` (which has
-a `--check` mode). That commit adds its own paragraph on the screen to this file. The Beginner | Expert switch is fixed
-at the bottom right (`components/LevelDock.tsx`).
+a `--check` mode); the paragraph "Observe anomalies" above describes it. With "Observe anomalies" all ten items fit on
+one line at 1280 px and wider in both levels (polish.css's 10 px padding; measured 2026-11-15: at 1280 the last item
+ends 16 px short of the bar's end in Beginner, 36 in Expert; at 1263, a 1280 window with a 17 px scrollbar, Beginner's
+last pill overruns by under 1 px). The Beginner | Expert switch is fixed at the bottom right
+(`components/LevelDock.tsx`).
 
 Rules of the page:
 - **The words hold still while the visits play.** The side column has one sentence about the whole run and one table
@@ -1160,17 +1211,17 @@ person must still work through the checklist.
 The app's own sentences about them are in `frontend/src/finds.ts`, quoted in `docs/sweep.md` (`finds.test.ts`).
 
 Checks that guard the page (each takes `<playwright-core path> <base url> <out dir>`). Each copy in the repository is
-the latest one, written for the two branches above; how each behaves on `Dev` before they are merged is in
-`scripts/checks/README.md`:
+the latest one; both printed `ALL PASS` on the Observe anomalies build (`scripts/checks/README.md` says how each
+behaves):
 - `scripts/checks/stilltext_check.js`: the words hold still while the visits play (the rule above). It looks for the
-  measured-against-Gaia comparison on Barnard's Star reached by its button, which names Gaia only with
-  `agent/finish-page`.
+  measured-against-Gaia comparison on Barnard's Star reached by its button, which names Gaia ("Gaia DR3 predicts").
 - `scripts/checks/features_check.js`: the bar, its order and labels at both levels, the switch, Beginner's words. It
   keeps its own copy of the ten labels (`FEATURES`, line 27 for the ninth): change it together with `features.ts`. It
-  expects Observe anomalies / Anomalies, so on a build without that screen it fails and then stops with a
+  expects Observe anomalies / Anomalies, so on an older build without that screen it fails and then stops with a
   TimeoutError.
 - `layout_check.js` (the page fits the window; nothing moves when the visit or the star changes) is not in the
   repository. On 2026-11-15 it was in a temporary folder,
-  `/private/tmp/claude-501/-Users-tatsatshah-Desktop-NASA-Hackathon/f9f1be33-c465-4da8-a5bb-6363d5f480f1/scratchpad/layout_check.js`.
+  `/private/tmp/claude-501/-Users-tatsatshah-Desktop-NASA-Hackathon/f9f1be33-c465-4da8-a5bb-6363d5f480f1/scratchpad/layout_check.js`,
+  which was gone after the machine restarted that day.
 How to run them: `scripts/checks/README.md`. After deploying, the warm-up of every place the page opens or links to:
 `docs/deploy.md`, "After deploying: warm-up".

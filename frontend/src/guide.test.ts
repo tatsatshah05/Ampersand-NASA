@@ -86,7 +86,7 @@ describe('the steps', () => {
   it('explain the bar, not the two links it replaced, and keep saying no find is confirmed', () => {
     const text = stepsInfo().join(' ')
     expect(text).toContain('The bar at the top lists every tool')
-    expect(text).toContain('Practise, Vote and Three tools open pages of their own.')
+    expect(text).toContain('Practise, Observe anomalies and Three tools open pages of their own.')
     expect(text).toContain('None of those finds is confirmed.')
     // The first three buttons are our own candidates: said to be unconfirmed, never a find.
     expect(text).toContain('nobody has confirmed them yet')

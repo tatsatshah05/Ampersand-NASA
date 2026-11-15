@@ -1,0 +1,73 @@
+/* The sweep's groups on Observe anomalies (SweepGroups.tsx). Colours only through the page's tokens. */
+
+.sweep-groups {
+  margin-top: 48px;
+}
+
+.sweep-groups-title {
+  margin: 0 0 4px;
+  font-size: var(--size-result);
+  letter-spacing: -0.01em;
+}
+
+.sweep-group {
+  margin-top: 24px;
+}
+
+.sweep-group-title {
+  margin: 0 0 10px;
+  font-size: var(--size-read);
+}
+
+.sweep-count {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.sweep-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 12px;
+}
+
+.sweep-item {
+  min-width: 0;
+  padding: 14px 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-tile);
+  background: var(--bg);
+  overflow-wrap: anywhere;
+  font-size: var(--size-body);
+  line-height: 1.45;
+}
+
+.sweep-item.sweep-candidate {
+  border-color: var(--line-strong);
+}
+
+.sweep-item p {
+  margin: 0;
+}
+
+.sweep-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sweep-place {
+  color: var(--muted);
+}
+
+.sweep-item .sweep-line {
+  margin-top: 6px;
+}
+
+.sweep-item .sweep-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+}

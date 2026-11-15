@@ -1,0 +1,29 @@
+{
+ "name": "l024.0_b+0.0",
+ "survivors": [
+  {
+   "ra": 278.364332321123,
+   "dec": -8.937416227772246,
+   "classification": {
+    "kind": "known_variable",
+    "reasons": [
+     "WISEA J183327.47-085614.1 (AllWISE) W2 4.11 mag = 3907 mJy, already bright"
+    ],
+    "catalogues_failed": []
+   }
+  },
+  {
+   "ra": 278.0643979256366,
+   "dec": -8.022521022488158,
+   "classification": {
+    "kind": "known_variable",
+    "reasons": [
+     "GLIMPSE SSTGLMC G023.6121+00.5753 (GLIMPSE) [4.5] 10.36 mag = 13 mJy, already bright",
+     "WISEA J183215.40-080116.4 (AllWISE) W2 9.79 mag = 21 mJy, already bright",
+     "CWISE J183215.39-080116.5 (CatWISE2020) W2 10.13 mag = 15 mJy, already bright"
+    ],
+    "catalogues_failed": []
+   }
+  }
+ ]
+}

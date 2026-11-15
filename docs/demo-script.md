@@ -10,17 +10,15 @@ Replace `<SITE>` with the real address and run "Before recording" on it.
 
 Rebuilt on 2026-11-15 and checked again after an independent review. Every control name below was read off the
 running page (built from `Dev` at commit `0221046`) in a headless browser at 1440 x 900, in Beginner and in
-Expert, except shot 5. Shot 5's screen, Observe anomalies, is on the branch `agent/anomalies` (commit `674b595`)
-and not yet merged into `Dev`; its names were read off a build of that commit (see shot 5). Nobody has played the video in
-real time on the deployed site or tried a phone. Nothing is simulated, except the made-up object of the practice
+Expert; shot 5's screen, Observe anomalies, was read off the finished screen (branch `agent/anomalies-final`)
+the same way. Nobody has played the video in real time on the deployed site or tried a phone. Nothing is simulated, except the made-up object of the practice
 round in shot 4, which says so on screen. If something shows nothing, say so on camera: that is the result.
 
 How the page is laid out (the names are the page's own):
 
 - **The bar** across the top lists every feature. In Beginner: Watch, Brightness, Colours, Find changes, Far-off
   planet, Asteroids, What is it?, Practise, Observe anomalies, Three tools. In Expert: Viewer, Light curve,
-  Spectrum, Blind search, Planet X search, Small bodies, Object card, Training, Anomalies, Methods. (Until the
-  Observe anomalies screen is merged, its place reads Vote, in Expert Watchlist.)
+  Spectrum, Blind search, Planet X search, Small bodies, Object card, Training, Anomalies, Methods.
 - **The switch** "Beginner | Expert" is at the bottom right of every screen.
 - **The row of buttons** beside the search box ("Search the sky"): Candidate A, Candidate B, Candidate C,
   Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae, R Draconis, Serpens South, V462 Lupi, V572 Velorum.
@@ -34,8 +32,7 @@ Words: a **visit** is one pass of SPHEREx over a patch of sky; a **detector** is
 - [ ] The site is deployed and every step of `docs/deploy.md`, "After deploying: warm-up", is done:
       `python scripts/export_lab.py --check` passed in the checkout before the build, and
       `python scripts/warm_cache.py --check` passes on the server.
-- [ ] The bar's ninth item reads **Observe anomalies** in Beginner. If it reads **Vote**, the new screen is not
-      merged: record shot 5 on the Vote screen (see the note in shot 5) or cut it.
+- [ ] The bar's ninth item reads **Observe anomalies** in Beginner (Expert: **Anomalies**).
 - [ ] Open every address below once on the recording machine. A position the server has never been asked for
       can take up to a minute the first time; after that it is instant.
 - [ ] The practice round: open its address (shot 4) once, so the round is built before recording. The same
@@ -76,11 +73,10 @@ name service is down, these addresses do the same without it.
 - **Open:** `<SITE>/?ui=beginner`. The page opens on **Candidate B**, blinking by itself between two pictures
   marked "Before · Aug 2025" and "After · Mar 2026". The button **Blink before and after** is pressed. The side
   column reads "Candidate B", then "Not seen in August 2025. Clearly there by March 2026.", a table (Visit 1 Aug
-  2025 not seen; Visit 2 Mar 2026 seen clearly; Visit 3 Aug 2026 seen clearly, brighter), and the candidate's
-  sentence. Keep the sentence in the picture. (Once the branch `agent/finish-page`, commit `49de312`, is
-  merged, Beginner shows the short line "A candidate: we found it in no catalogue or report we checked, and
-  nobody has confirmed it yet." with the full sentence behind its "i": press the "i" to show it. Read from that
-  commit's message, not seen running.)
+  2025 not seen; Visit 2 Mar 2026 seen clearly; Visit 3 Aug 2026 seen clearly, brighter), then the short line
+  "A candidate: we found it in no catalogue or report we checked, and nobody has confirmed it yet." with the
+  candidate's full sentence behind its "i", and the link "See all three in Observe anomalies". Press the "i" to
+  show the sentence, and keep it in the picture.
 - **Say:** "For ten years NASA's NEOWISE telescope looked at the whole sky in infrared light, twice a year. It
   stopped in August 2024. NASA's SPHEREx telescope now photographs the whole infrared sky, again and again. Our
   tool searches those pictures for change, and shows anyone the before and the after. This is a source in
@@ -146,26 +142,29 @@ name service is down, these addresses do the same without it.
 
 ### 5. Observe anomalies (1:45 to 2:15)
 
-**Not yet in `Dev`.** This screen is on the branch `agent/anomalies` (commit `674b595`, 15 November); the
-branch `agent/anomalies-final` did not exist. The names below were read off that commit, built and run on a
-laptop server against the shared cache at 1440 x 900, in Beginner and in Expert. Check every name on the
-deployed page before recording: the branch may still change.
+The names below were read off the finished screen, built and run on a laptop server against the shared cache at
+1440 x 900, in Beginner and in Expert. The counts are those of 15 November and grow when more patches are searched.
 
 - **Show:** press **Observe anomalies** in the bar (`<SITE>/?watchlist=1&ui=beginner`). The screen opens with
-  three sentences on what an anomaly is, the last "A few are in no catalogue or report we could find, and those
-  are candidates, not discoveries." The first group is headed "Not reported anywhere we could find": one card
-  each for Candidates A, B and C, with two real SPHEREx pictures side by side ("Not seen" and "At its
-  brightest", each with its dates; for A, 24 Aug–4 Sep 2025 and 28 Mar–1 Apr 2026), the candidate's sentence,
-  what it probably is, "Has anyone reported it?" with the sentence about the search for earlier reports, and the
-  status line "Not confirmed. Not yet reported to astronomers." Press **Watch it appear** on Candidate A: its view
-  opens, blinking between "Before" and "After" (**Blink before and after** pressed). Go back, then show **Choose
-  a region**: "Everywhere · 156 found", "The Milky Way's plane (472.6 square degrees swept) · 14 found", and each
-  searched patch by its constellation (for example "Scorpius: Candidate B · 7 found"). Below it, "Found by
-  searching small patches" with the tabs **In no catalogue**, **Already known** and **Set aside as false alarms**
-  and the vote buttons **Looks real**, **Looks like an artefact** and **Not sure**; then "Found by the sweep of
-  the Milky Way's plane": Candidates (3), Known novae (2), Known stars that change (6), Set aside after a closer
-  look (3). (Expert names the tabs Needs eyes, Already known and Set aside as artefacts. The counts were those
-  of 15 November.)
+  "SPHEREx is a NASA space telescope that takes pictures of the whole sky about every six months.", then three
+  sentences on what an anomaly is, the last "A few are in no catalogue or report we could find, and those are
+  candidates, not discoveries.", and a line "Jump to: the three candidates · Choose a region". The first group is
+  headed "Not reported anywhere we could find": one card each for Candidates A, B and C ("In the constellation
+  Sagittarius", Scorpius, Norma), with two real SPHEREx pictures side by side ("Not seen" and "At its
+  brightest", each with its dates; for A, 24 Aug–4 Sep 2025 and 28 Mar–1 Apr 2026), the line saying which star
+  nearby (for C, the crowd around it) is not the candidate, the candidate's sentence, what it probably is, "Has anyone reported it?" with the
+  sentence about the search for earlier reports, and the status line "Not confirmed. Not yet reported to
+  astronomers." Press **Watch it appear** on Candidate A: its view opens, blinking between "Before" and "After"
+  (**Blink before and after** pressed). Go back, then show **Choose a region**: "Everywhere · 156 found", "The
+  Milky Way's plane (472.6 square degrees swept) · 14 found", and each searched patch by its constellation (for
+  example "Scorpius: Candidate B · 7 found"). Choose "The Milky Way's plane": the line under the menu reads
+  "Showing: The Milky Way's plane (472.6 square degrees swept)", a **Show everywhere** button appears beside the
+  menu, and below it "Found by the sweep of the Milky Way's plane": Candidates (3), Known novae (2), Known stars
+  that change (6), Set aside after a closer look (3). Press **Show everywhere**: under "Found by searching small
+  patches" are the tabs **Not listed as changing**, **Already known** and **Set aside as false alarms** and the
+  vote buttons **Looks real**, **Looks like an artefact** and **Not sure**. (Expert names the tabs Needs eyes,
+  Already known and Set aside as artefacts, and the sweep's groups Candidates, Known eruptions (novae),
+  Catalogued stars that varied, Set aside after a closer look.)
 - **Say:** "Our sweep compared 472.6 square degrees of the Milky Way's plane between SPHEREx's visits. It found
   two known novae by itself, and three sources we could not explain. Four independent reviewers attacked each
   one. We searched more than thirty catalogues and alert lists for earlier reports and found none, but some
@@ -175,9 +174,6 @@ deployed page before recording: the branch may still change.
 - **Do not say:** discovery, new, first, confirmed; that nobody else has seen them (some sources are not yet
   searched in full); "a nova" as fact; "nothing in SIMBAD, so nobody has reported it"; that a vote
   confirms anything; that anything has been sent or reported.
-- **If the screen still reads Vote:** the first group and Choose a region are not there. Open Candidate A from
-  the row of buttons instead of Watch it appear, and on the Vote screen show only the three groups ("In no
-  catalogue", "Already known", "Set aside as false alarms") and the vote buttons.
 - **Basis:** `docs/sweep.md`, `docs/sweep/searches-for-earlier-reports.md`, `docs/watchlist.md`.
 
 ### 6. Three tools: Eris appears (2:15 to 2:50)

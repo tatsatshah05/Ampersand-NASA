@@ -71,6 +71,7 @@ import { useFrames } from './useFrames'
 import { usePlayer, useResting } from './usePlayer'
 import { CANDIDATE_LINE, findAt, findTarget, isHeldFind } from './finds'
 import { PRESS_TO_ASK, type LookTarget } from './identify'
+import { ALL_THREE_LINK, allThreeLineOf } from './anomalies'
 import {
   beforeAfter,
   expertResult,
@@ -620,6 +621,17 @@ export function Viewer() {
   const seen = data && !expert ? seenLine(data) : null
   const underTable = data ? tableNotes(data, expert ? 'expert' : 'beginner') : []
   const verdict = data && expert ? expertVerdict(data) : null
+  // After the line that gives one of our candidates' allowed sentence (Expert: the sentence; Beginner: the short
+  // candidate line whose "i" quotes it): a short way to all three on the Observe anomalies screen.
+  const allThree = (line: string) =>
+    data && allThreeLineOf(line, data.ra, data.dec) ? (
+      <>
+        {' '}
+        <a className="all-three-link" href={withUi(WATCHLIST_ADDRESS, selection.ui)}>
+          {ALL_THREE_LINK[selection.ui]}
+        </a>
+      </>
+    ) : null
 
   return (
     <div className="app">
@@ -793,6 +805,7 @@ export function Viewer() {
                   {result.more.map((line) => (
                     <p key={line} className="result-more">
                       {line}
+                      {allThree(line)}
                     </p>
                   ))}
                 </>
@@ -811,6 +824,7 @@ export function Viewer() {
                 <p key={line} className="result-more result-after">
                   {line}
                   {line === CANDIDATE_LINE && infoButton('candidate')}
+                  {allThree(line)}
                 </p>
               ))}
               {underTable.map((line) => (

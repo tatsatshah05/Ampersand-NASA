@@ -9,7 +9,7 @@ import type { UiLevel } from './address'
 
 /** The tools that open as panels under the picture, each in a div.tool-slot with id "tool-<key>". */
 export type ToolKey = 'brightness' | 'spectrum' | 'search' | 'distant' | 'smallbodies' | 'context'
-/** The screens of their own: practice (?train=), the watchlist (?watchlist=1), the methods (?tools=1). */
+/** The screens of their own: practice (?train=), Observe anomalies (?watchlist=1, the old watchlist's address), the methods (?tools=1). */
 export type ScreenKey = 'practise' | 'vote' | 'tools'
 export type FeatureKey = 'watch' | ToolKey | ScreenKey
 
@@ -98,10 +98,10 @@ export const FEATURES: readonly Feature[] = [
   {
     key: 'vote',
     kind: 'screen',
-    label: { beginner: 'Vote', expert: 'Watchlist' },
+    label: { beginner: 'Observe anomalies', expert: 'Anomalies' },
     about: {
-      beginner: 'Look at what our computer search found and vote on whether it looks real.',
-      expert: 'Watchlist: what the blind searches found, for vetting by eye and voting, with the whole list as a CSV file.',
+      beginner: 'Everything our searches saw change in the pictures, sorted by the part of the sky it is in.',
+      expert: 'Anomalies: what the blind patch searches and the sweep of the Milky Way’s plane found, by region, for vetting by eye.',
     },
   },
   {

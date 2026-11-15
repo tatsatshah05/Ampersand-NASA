@@ -1,0 +1,29 @@
+{
+ "name": "l027.0_b+0.0",
+ "survivors": [
+  {
+   "ra": 279.74437860959716,
+   "dec": -3.8638944769442127,
+   "classification": {
+    "kind": "known_eruption",
+    "reasons": [
+     "AAVSO VSX V0691 Ser is NA, 11.9 V to <23 g (2.7 arcsec away)"
+    ],
+    "by": {
+     "catalogue": "AAVSO VSX",
+     "name": "V0691 Ser",
+     "ra": 279.74363,
+     "dec": -3.86375,
+     "pmra": null,
+     "pmdec": null,
+     "parallax": null,
+     "ref_epoch": 2000.0,
+     "type": "NA, 11.9 V to <23 g",
+     "variable": true,
+     "vsx_category": "Variable"
+    },
+    "catalogues_failed": []
+   }
+  }
+ ]
+}

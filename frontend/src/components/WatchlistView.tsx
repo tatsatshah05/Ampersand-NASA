@@ -1,15 +1,45 @@
-// The watchlist screen (address: ?watchlist=1): what the blind searches found, for people to look at.
-// Each card: the picture, what the machine saw, what the catalogues say, NEOWISE's second opinion,
-// and three vote buttons. Everything is a candidate; a vote is an opinion. The wording is
-// src/search.ts's (reused) and src/watchlist.ts's. The bar of features is at the top, as on
-// every screen, with Vote as the current one, and the level switch in its dock at the bottom right.
-import { useCallback, useEffect, useState } from 'react'
+// The Observe anomalies screen (address: ?watchlist=1, the address of the watchlist it grew out of, so
+// old links still work; `&region=` keeps the chosen region, so Back and reload keep it). From the top:
+// what an anomaly is, and a line of links down the page; the three candidates of the sweep of the
+// Milky Way's plane (CandidateCards), under "Not reported anywhere we could find"; "Choose a region"
+// (RegionPicker); then the anomalies of the chosen region: the blind patch searches' three groups and,
+// for everywhere or the plane, the sweep's own groups (SweepGroups).
+//
+// The patch searches' cards are the watchlist's: the picture, what the machine saw, what the catalogues
+// say, NEOWISE's second opinion, and three vote buttons. Everything is a candidate; a vote is an
+// opinion. Their wording is src/search.ts's (reused) and src/watchlist.ts's. The bar of features is at
+// the top, as on every screen, with Observe anomalies as the current one, and the level switch in its
+// dock at the bottom right.
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { chooseUiLevel, DEFAULT_SELECTION, readStoredLevel, storeLevel, TOOLS_ADDRESS, withTool, withUi, type UiLevel } from '../address'
+import {
+  EVERYWHERE,
+  fetchSweep,
+  FINDS_HEADING,
+  FINDS_ID,
+  JUMP_LINKS,
+  PATCHES_CHECKED,
+  patchesHeading,
+  patchRegionParam,
+  PLANE,
+  readRegion,
+  regionOptions,
+  SCREEN_TITLE,
+  showsPatches,
+  showsSweep,
+  WHAT_IS_AN_ANOMALY,
+  withRegion,
+  type SweepData,
+} from '../anomalies'
 import { newSeed, trainingAddress } from '../training'
+import { CandidateCards } from './CandidateCards'
 import { FeatureBar, type FeatureLinks } from './FeatureBar'
 import { LevelDock } from './LevelDock'
+import { RegionPicker } from './RegionPicker'
 import { ScienceFold } from './ScienceFold'
+import { SweepGroups } from './SweepGroups'
 import {
+  atFindLine,
   answeredSentence,
   candidateSentence,
   catalogueSentence,
@@ -29,9 +59,12 @@ import {
   asObject,
   asRejected,
   castVote,
+  emptyGroupSentence,
   EXPORT_CSV_URL,
   exampleSentence,
+  fetchRegions,
   fetchWatchlist,
+  firstGroupWithRows,
   GROUPS,
   INTRO,
   NEOWISE_NOTE,
@@ -42,6 +75,7 @@ import {
   PLAIN_INTRO,
   PLAIN_TABS,
   pictureUrl,
+  plainSetAside,
   TABS,
   tallySentence,
   viewerAddress,
@@ -49,6 +83,7 @@ import {
   WATCHLIST_ADDRESS,
   type Answer,
   type Group,
+  type PatchRegions,
   type WatchRow,
 } from '../watchlist'
 import './WatchlistView.css'
@@ -63,17 +98,54 @@ interface Tab {
 }
 const empty: Tab = { rows: [], total: 0, loading: true, error: null }
 
+/** The counts of the patch searches' groups in a region: everywhere's, a patch's, or null (the plane, or not loaded). */
+function regionCounts(key: string, regions: PatchRegions | null): Record<Group, number> | null {
+  if (!regions) return null
+  if (key === EVERYWHERE) return regions.counts
+  return regions.regions.find((r) => r.key === key)?.counts ?? null
+}
+
+/** Whether a region key names something on the screen: everywhere, the plane, or a searched patch. */
+const knownRegion = (key: string, regions: PatchRegions) => key === EVERYWHERE || key === PLANE || regions.regions.some((r) => r.key === key)
+
+/** Write the chosen region into the address in place, so that Back (from the Viewer) and reload keep it. */
+function writeRegion(key: string) {
+  try {
+    window.history.replaceState(null, '', withRegion(window.location.search, key))
+  } catch {
+    // Some places (a page opened as a local file) do not allow it; the screen still works.
+  }
+}
+
 export function WatchlistView() {
   const [voter] = useState(voterId)
   const [group, setGroup] = useState<Group>('eyes')
   const [tabs, setTabs] = useState<Record<Group, Tab>>({ eyes: empty, known: empty, artefact: empty })
   const [counts, setCounts] = useState<Record<Group, number> | null>(null)
   const [patches, setPatches] = useState<number | null>(null)
+  // The region chosen (anomalies.ts: EVERYWHERE, PLANE or a searched patch's key), the searched
+  // patches with their counts, and the sweep of the plane as exported.
+  // The region starts as the address says (Back and reload keep it), and is checked once the list of
+  // patches has arrived: a key that names no searched patch falls back to Everywhere.
+  const [region, setRegion] = useState<string>(() => readRegion(window.location.search))
+  const [regions, setRegions] = useState<PatchRegions | null>(null)
+  const [regionsProblem, setRegionsProblem] = useState<string | null>(null)
+  const [sweep, setSweep] = useState<SweepData | null>(null)
+  const [sweepProblem, setSweepProblem] = useState<string | null>(null)
+  const regionParam = patchRegionParam(region)
+  const regionNow = useRef(region)
+  useEffect(() => {
+    regionNow.current = region
+  }, [region])
+  // The requests of the region on screen; a new region aborts them, so that a "Show more" still on its
+  // way never lands in the next region's list.
+  const regionRequests = useRef<AbortController | null>(null)
 
   const run = useCallback(
     (g: Group, offset: number, signal?: AbortSignal) => {
-      fetchWatchlist(g, offset, PAGE, voter, signal)
+      fetchWatchlist(g, offset, PAGE, voter, signal, regionParam)
         .then((page) => {
+          if (signal?.aborted) return // an answer for a region no longer chosen
           setCounts(page.counts)
           setPatches(page.patches_searched)
           setTabs((t) => ({ ...t, [g]: { rows: offset ? [...t[g].rows, ...page.rows] : page.rows, total: page.total, loading: false, error: null } }))
@@ -83,19 +155,66 @@ export function WatchlistView() {
           setTabs((t) => ({ ...t, [g]: { ...t[g], loading: false, error: e instanceof Error ? e.message : String(e) } }))
         })
     },
-    [voter],
+    [voter, regionParam],
   )
   const load = (g: Group, offset: number) => {
     setTabs((t) => ({ ...t, [g]: { ...t[g], loading: true, error: null } }))
-    run(g, offset)
+    run(g, offset, regionRequests.current?.signal)
   }
 
   useEffect(() => {
-    document.title = 'Vote on what the search found'
+    document.title = SCREEN_TITLE
     const ctrl = new AbortController()
+    fetchRegions(ctrl.signal)
+      .then((r) => {
+        setRegions(r)
+        // The region the address named: kept if it is one of the list's, and opened on its first group with rows.
+        const key = regionNow.current
+        if (!knownRegion(key, r)) {
+          setRegion(EVERYWHERE)
+          writeRegion(EVERYWHERE)
+          return
+        }
+        const counts = regionCounts(key, r)
+        const first = firstGroupWithRows(counts)
+        if (first) setGroup((g) => (counts && counts[g] > 0 ? g : first))
+      })
+      .catch((e: unknown) => {
+        if (ctrl.signal.aborted) return
+        setRegionsProblem(e instanceof Error ? e.message : String(e))
+        // Without the list a patch cannot be shown: back to everything.
+        if (regionNow.current !== EVERYWHERE && regionNow.current !== PLANE) setRegion(EVERYWHERE)
+      })
+    fetchSweep(ctrl.signal)
+      .then(setSweep)
+      .catch((e: unknown) => {
+        if (!ctrl.signal.aborted) setSweepProblem(e instanceof Error ? e.message : String(e))
+      })
+    return () => ctrl.abort()
+  }, [])
+
+  // The patch searches' groups, again whenever the region changes (the plane has none of them). A single
+  // patch is asked for only once the list of patches has said it exists.
+  const patchesShown = showsPatches(region)
+  const canAsk = patchesShown && (region === EVERYWHERE || regions !== null)
+  useEffect(() => {
+    if (!canAsk) return
+    const ctrl = new AbortController()
+    regionRequests.current = ctrl
     for (const g of GROUPS) run(g, 0, ctrl.signal)
     return () => ctrl.abort()
-  }, [run])
+  }, [run, canAsk])
+  // A new region empties the groups at once, so no group of the last region is shown under the new one's
+  // name, and opens on the first of its groups that has rows.
+  const chooseRegion = (key: string) => {
+    if (key === region) return // the same region again: its lists are already there
+    setRegion(key)
+    setCounts(null)
+    setTabs({ eyes: empty, known: empty, artefact: empty })
+    const first = firstGroupWithRows(regionCounts(key, regions))
+    if (first) setGroup(first)
+    writeRegion(key)
+  }
 
   const replaceRow = (g: Group, row: WatchRow) =>
     setTabs((t) => ({ ...t, [g]: { ...t[g], rows: t[g].rows.map((r) => (r.id === row.id ? row : r)) } }))
@@ -127,7 +246,7 @@ export function WatchlistView() {
       <p className="intro">{INTRO}</p>
       <p className="intro">{ORDER_SENTENCE}</p>
       <p className="hint">
-        {patches !== null && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
+        {patches !== null && region === EVERYWHERE && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
         A search of a new patch takes minutes.
       </p>
       <p>
@@ -145,22 +264,74 @@ export function WatchlistView() {
       </header>
       <main className="watchlist">
         <header>
-          <h1>Vote on what the search found</h1>
-          {level === 'beginner' ? (
-            <>
-              {PLAIN_INTRO.map((line) => (
-                <p key={line} className="intro">
-                  {line}
-                </p>
-              ))}
-              {/* The machine's own words about the order, the votes and the list, for those who want them. */}
-              <ScienceFold>{about}</ScienceFold>
-            </>
-          ) : (
-            about
-          )}
+          <h1>{SCREEN_TITLE}</h1>
+          {WHAT_IS_AN_ANOMALY.map((line) => (
+            <p key={line} className="intro anomaly-intro">
+              {line}
+            </p>
+          ))}
+          <p className="anomaly-jump">
+            Jump to:{' '}
+            {JUMP_LINKS.map((l, i) => (
+              <span key={l.href}>
+                {i > 0 && ' · '}
+                <a href={l.href}>{l.label}</a>
+              </span>
+            ))}
+          </p>
         </header>
 
+        <section className="anomaly-finds" id={FINDS_ID} aria-labelledby="anomaly-finds-title">
+          <h2 id="anomaly-finds-title" className="anomaly-finds-title">
+            {FINDS_HEADING}
+          </h2>
+          <CandidateCards level={level} sweep={sweep} />
+        </section>
+
+        <RegionPicker
+          level={level}
+          value={region}
+          options={regionOptions(regions, sweep)}
+          patches={regions}
+          sweep={sweep}
+          problem={regionsProblem}
+          onChange={chooseRegion}
+        />
+
+        {patchesShown && (
+          <section className="anomaly-patches" aria-labelledby="anomaly-patches-title">
+            <h2 id="anomaly-patches-title" className="anomaly-patches-title">
+              {patchesHeading(region, level)}
+            </h2>
+            {level === 'beginner' ? (
+              <>
+                <p className="intro anomaly-checks">{PATCHES_CHECKED}</p>
+                {PLAIN_INTRO.map((line) => (
+                  <p key={line} className="intro">
+                    {line}
+                  </p>
+                ))}
+                {/* The machine's own words about the order, the votes and the list, for those who want them. */}
+                <ScienceFold>{about}</ScienceFold>
+              </>
+            ) : (
+              about
+            )}
+            {patchGroups()}
+          </section>
+        )}
+
+        {showsSweep(region) && <SweepGroups level={level} sweep={sweep} problem={sweepProblem} />}
+      </main>
+      <LevelDock level={level} onChange={changeLevel} />
+    </>
+  )
+
+  // The patch searches' three groups, as before: a plain function returning elements (not a component
+  // of its own, which would be made anew on every render and lose a note being typed).
+  function patchGroups() {
+    return (
+      <>
         <div className="tabs" role="tablist" aria-label="Groups">
           {GROUPS.map((g) => (
             <button
@@ -186,9 +357,7 @@ export function WatchlistView() {
           </p>
         )}
         {tab.loading && tab.rows.length === 0 && !tab.error && <p role="status">Loading the list…</p>}
-        {!tab.loading && !tab.error && tab.rows.length === 0 && (
-          <p className="hint">Nothing is in this group yet: the list holds only what real searches have reported.</p>
-        )}
+        {!tab.loading && !tab.error && tab.rows.length === 0 && <p className="hint">{emptyGroupSentence(region === EVERYWHERE)}</p>}
 
         <ol className="cards">
           {tab.rows.map((row) => (
@@ -202,10 +371,9 @@ export function WatchlistView() {
             </button>
           </p>
         )}
-      </main>
-      <LevelDock level={level} onChange={changeLevel} />
-    </>
-  )
+      </>
+    )
+  }
 }
 
 function Picture({ row }: { row: WatchRow }) {
@@ -229,71 +397,131 @@ function Picture({ row }: { row: WatchRow }) {
   )
 }
 
-function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; level: UiLevel; onChange: (r: WatchRow) => void }) {
+export function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; level: UiLevel; onChange: (r: WatchRow) => void }) {
   const o = asObject(row)
   const rejected = asRejected(row)
-  const example = exampleSentence(row.group)
+  // At one of the sweep's candidates (within 5 arcsec), whatever the group: that comes first, with the way
+  // to its card, and the card is not offered as an example of anything.
+  const atFind = row.near_find?.at ? row.near_find : null
+  const example = atFind ? null : exampleSentence(row.group)
+  const findLine = atFind && (
+    <p className="wl-find">
+      {atFindLine(atFind)} <a href={`#find-${atFind.key}`}>See its card</a>
+    </p>
+  )
+  const nearFind = row.near_find && !row.near_find.at ? row.near_find : null
   const detail = o && o.evidence.kind === 'changer' ? changeDetail(o.evidence) : null
   const candidate = o && row.group === 'eyes' ? candidateSentence(o) : null
   const single = o && row.group === 'eyes' ? oneDetectorSentence(o) : null
+  // The card's words are the watchlist's, unchanged. Beginner reads the headline, the candidate line and
+  // the verdict, and finds the machine's numbers (detectors, times the noise, mJy) in one closed fold.
+  const place = (
+    <p className="hint">
+      RA {row.ra.toFixed(5)}°, Dec {row.dec >= 0 ? '+' : '-'}
+      {Math.abs(row.dec).toFixed(5)}°
+      {row.best_detector ? `, best seen in detector ${row.best_detector}` : ''}. North is up and east is left; the ticks mark the
+      candidate.
+    </p>
+  )
+  const strength = o && (
+    <>
+      <p>{strengthSentence(o)}</p>
+      {detail && <p className="hint">{detail}</p>}
+      <p>
+        <strong>Catalogues.</strong> {catalogueSentence(o)}
+      </p>
+      <p className="hint">{answeredSentence(o.catalogue_status)}</p>
+    </>
+  )
+  const verdict = o && (
+    <p>
+      <strong>{o.verdict === 'clean' ? 'Verdict: clean.' : 'Verdict: caution.'}</strong> {verdictSentence(o, true)}
+      {nearFind && (
+        <>
+          {' '}
+          <a href={`#find-${nearFind.key}`}>See its card</a>
+        </>
+      )}
+    </p>
+  )
+  const flags = o && o.flags.length > 0 && (
+    <ul className="wl-flags">
+      {o.flags.map((f) => (
+        <li key={f}>{flagSentence(f)}</li>
+      ))}
+    </ul>
+  )
+  const reasons = rejected && (
+    <ul className="wl-flags">
+      {rejected.reasons.map((reason) => (
+        <li key={reason}>{reason}</li>
+      ))}
+    </ul>
+  )
+  const neowise = row.neowise && (
+    <p className="wl-neowise">
+      <strong>Second opinion, NEOWISE.</strong> {row.neowise.state === 'ok' ? neowiseSentence(row.neowise) : neowiseHeadline(row.neowise)}
+      {row.neowise.state === 'ok' && <span className="hint"> {NEOWISE_NOTE}</span>}
+    </p>
+  )
+  const kind = (
+    <p className="wl-kind">
+      <span className="rank">#{row.rank_in_group}</span> {kindLabel(row.kind)}
+      {row.verdict && <span className={`wl-badge ${row.verdict}`}>{row.verdict === 'clean' ? 'Clean' : 'Caution'}</span>}
+      {o && isCandidate(o) && <span className="wl-badge candidate-tag">Candidate</span>}
+      {example && <span className="wl-badge example">Example</span>}
+    </p>
+  )
   return (
     <li className={`wl-card ${row.group}`}>
-      <p className="wl-kind">
-        <span className="rank">#{row.rank_in_group}</span> {kindLabel(row.kind)}
-        {row.verdict && <span className={`wl-badge ${row.verdict}`}>{row.verdict === 'clean' ? 'Clean' : 'Caution'}</span>}
-        {o && isCandidate(o) && <span className="wl-badge candidate-tag">Candidate</span>}
-        {example && <span className="wl-badge example">Example</span>}
-      </p>
+      {kind}
       <Picture row={row} />
-      <p className="hint">
-        RA {row.ra.toFixed(5)}°, Dec {row.dec >= 0 ? '+' : '-'}
-        {Math.abs(row.dec).toFixed(5)}°
-        {row.best_detector ? `, best seen in detector ${row.best_detector}` : ''}. North is up and east is left; the ticks mark the
-        candidate.
-      </p>
-      {example && <p className="hint">{example}</p>}
-
-      {o && (
+      {findLine}
+      {level === 'expert' ? (
         <>
-          <p className="wl-headline">{headline(o)}</p>
-          <p>{strengthSentence(o)}</p>
-          {detail && <p className="hint">{detail}</p>}
-          <p>
-            <strong>Catalogues.</strong> {catalogueSentence(o)}
-          </p>
-          <p className="hint">{answeredSentence(o.catalogue_status)}</p>
-          {candidate && <p className="wl-candidate">{candidate}</p>}
-          {single && <p className="wl-candidate">{single}</p>}
-          <p>
-            <strong>{o.verdict === 'clean' ? 'Verdict: clean.' : 'Verdict: caution.'}</strong> {verdictSentence(o)}
-          </p>
-          {o.flags.length > 0 && (
-            <ul className="wl-flags">
-              {o.flags.map((f) => (
-                <li key={f}>{flagSentence(f)}</li>
-              ))}
-            </ul>
+          {place}
+          {example && <p className="hint">{example}</p>}
+          {o && (
+            <>
+              <p className="wl-headline">{headline(o)}</p>
+              {strength}
+              {candidate && <p className="wl-candidate">{candidate}</p>}
+              {single && <p className="wl-candidate">{single}</p>}
+              {verdict}
+              {flags}
+            </>
           )}
+          {rejected && (
+            <>
+              <p className="wl-headline">
+                <strong>Set aside.</strong> {rejectedHeadline(rejected)}
+              </p>
+              {reasons}
+            </>
+          )}
+          {neowise}
         </>
-      )}
-      {rejected && (
+      ) : (
         <>
-          <p className="wl-headline">
-            <strong>Set aside.</strong> {rejectedHeadline(rejected)}
-          </p>
-          <ul className="wl-flags">
-            {rejected.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
+          {example && <p className="hint">{example}</p>}
+          {o && <p className="wl-headline">{headline(o)}</p>}
+          {rejected && (
+            <p className="wl-headline">
+              <strong>Set aside.</strong> {plainSetAside(row.kind)}
+            </p>
+          )}
+          {candidate && <p className="wl-candidate">{candidate}</p>}
+          {verdict}
+          <ScienceFold>
+            {place}
+            {strength}
+            {single && <p className="wl-candidate">{single}</p>}
+            {flags}
+            {rejected && <p>{rejectedHeadline(rejected)}</p>}
+            {reasons}
+            {neowise}
+          </ScienceFold>
         </>
-      )}
-
-      {row.neowise && (
-        <p className="wl-neowise">
-          <strong>Second opinion, NEOWISE.</strong> {row.neowise.state === 'ok' ? neowiseSentence(row.neowise) : neowiseHeadline(row.neowise)}
-          {row.neowise.state === 'ok' && <span className="hint"> {NEOWISE_NOTE}</span>}
-        </p>
       )}
 
       <Voting row={row} voter={voter} onChange={onChange} />

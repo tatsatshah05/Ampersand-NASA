@@ -340,7 +340,8 @@ def _mine(con: sqlite3.Connection, voter: str | None) -> dict[str, str]:
             con.execute("SELECT candidate_id, answer FROM votes WHERE voter=?", (_hash(voter),))}
 
 
-def _all_rows(con: sqlite3.Connection, voter: str | None, group: str | None, kind: str | None) -> list[dict[str, Any]]:
+def _all_rows(con: sqlite3.Connection, voter: str | None, group: str | None, kind: str | None,
+              region: str | None = None) -> list[dict[str, Any]]:
     sql, args = "SELECT * FROM candidates WHERE 1=1", []  # type: tuple[str, list[Any]]
     if group:
         sql, args = sql + " AND grp=?", [*args, group]
@@ -352,23 +353,94 @@ def _all_rows(con: sqlite3.Connection, voter: str | None, group: str | None, kin
         ranked = sorted((r for r in rows if r["group"] == g), key=_order_key)
         for n, r in enumerate(ranked, 1):
             r["rank_in_group"] = n
+    if region is not None:
+        # The rank stays the one in the whole list, so a row has the same number in every region.
+        rows = [r for r in rows if any(region_key(p) == region for p in r["patches"])]
     return sorted(rows, key=lambda r: (GROUPS.index(r["group"]), r["rank_in_group"]))
 
 
 def list_rows(group: str | None = None, kind: str | None = None, limit: int = 20, offset: int = 0,
-              voter: str | None = None) -> dict[str, Any]:
+              voter: str | None = None, region: str | None = None) -> dict[str, Any]:
+    """One page of the list, in the machine's order. `region` (a key from `regions()`) keeps only the rows that
+    a search of that patch reported; `counts` and `total` are then that patch's."""
     if group is not None and group not in GROUPS:
         raise WatchlistError(400, f"group must be one of {', '.join(GROUPS)}")
     if kind is not None and kind not in ("mover", "changer"):
         raise WatchlistError(400, "kind must be mover or changer")
     with _db() as con:
-        rows = _all_rows(con, voter, group, kind)
-        counts = {g: con.execute("SELECT COUNT(*) FROM candidates WHERE grp=?" + (" AND kind=?" if kind else ""),
-                                 (g, kind) if kind else (g,)).fetchone()[0] for g in GROUPS}
-        patches = {(p["ra"], p["dec"], p["fov"]) for r in con.execute("SELECT patches FROM candidates")
-                   for p in json.loads(r["patches"])}
+        patches = _patches(con)
+        if region is not None and region not in patches:
+            raise WatchlistError(404, "No searched patch has this region key; GET /api/watchlist/regions lists them.")
+        rows = _all_rows(con, voter, group, kind, region)
+        if region is None:
+            counts = {g: con.execute("SELECT COUNT(*) FROM candidates WHERE grp=?" + (" AND kind=?" if kind else ""),
+                                     (g, kind) if kind else (g,)).fetchone()[0] for g in GROUPS}
+        else:
+            everyone = _all_rows(con, None, None, kind, region)
+            counts = {g: sum(r["group"] == g for r in everyone) for g in GROUPS}
     return {"counts": counts, "total": len(rows), "offset": offset, "limit": limit, "patches_searched": len(patches),
-            "rows": rows[offset:offset + limit], "about": ABOUT}
+            "region": region, "rows": rows[offset:offset + limit], "about": ABOUT}
+
+
+# --------------------------------------------------------------------------- regions
+
+# Three names in astropy's table of constellation boundaries (Roman 1987, as astropy ships it) are spelt
+# differently from the IAU's; the page shows the IAU's spelling.
+IAU_SPELLING = {"Chamaleon": "Chamaeleon", "Ophiucus": "Ophiuchus", "Bootes": "Boötes"}
+
+
+def region_key(patch: dict[str, Any]) -> str:
+    """The key of a searched patch: its centre and width, as the search was asked for them."""
+    return f"{float(patch['ra']):.6f}_{float(patch['dec']):.6f}_{float(patch['fov']):.4f}"
+
+
+def _patches(con: sqlite3.Connection) -> dict[str, dict[str, Any]]:
+    """Every searched patch that reported something, by key: centre, width and when it was last searched."""
+    out: dict[str, dict[str, Any]] = {}
+    for r in con.execute("SELECT patches FROM candidates"):
+        for p in json.loads(r["patches"]):
+            key = region_key(p)
+            seen = out.setdefault(key, {"ra": float(p["ra"]), "dec": float(p["dec"]), "fov": float(p["fov"]),
+                                        "last_searched": p.get("last_seen")})
+            if p.get("last_seen") and (seen["last_searched"] is None or p["last_seen"] > seen["last_searched"]):
+                seen["last_searched"] = p["last_seen"]
+    return out
+
+
+def constellations(points: list[tuple[float, float]]) -> list[str]:
+    """The constellation each (ra, dec) lies in (ICRS degrees), by astropy's boundaries, in the IAU's spelling."""
+    if not points:
+        return []
+    import astropy.units as u
+    from astropy.coordinates import SkyCoord, get_constellation
+
+    names = get_constellation(SkyCoord([p[0] for p in points] * u.deg, [p[1] for p in points] * u.deg))
+    return [IAU_SPELLING.get(str(n), str(n)) for n in names]
+
+
+def regions() -> dict[str, Any]:
+    """Every patch a blind search has covered, with the constellation it lies in and how many rows it reported.
+
+    A row seen from two patches counts in both, so the patches' counts can add up to more than `total`.
+    """
+    with _db() as con:
+        patches = _patches(con)
+        rows = _all_rows(con, None, None, None)
+    order = sorted(patches)
+    names = constellations([(patches[k]["ra"], patches[k]["dec"]) for k in order])
+    out = []
+    for key, constellation in zip(order, names, strict=True):
+        p = patches[key]
+        mine = [r for r in rows if any(region_key(q) == key for q in r["patches"])]
+        out.append({"key": key, "ra": p["ra"], "dec": p["dec"], "fov": p["fov"],
+                    "area_sq_deg": round(p["fov"] ** 2, 4), "constellation": constellation,
+                    "last_searched": p["last_searched"], "count": len(mine),
+                    "counts": {g: sum(r["group"] == g for r in mine) for g in GROUPS}})
+    out.sort(key=lambda r: (r["constellation"], r["ra"], r["dec"], r["fov"]))
+    dates = [r["last_searched"] for r in out if r["last_searched"]]
+    return {"regions": out, "total": len(rows), "counts": {g: sum(r["group"] == g for r in rows) for g in GROUPS},
+            "patches_searched": len(out), "first_searched": min(dates, default=None),
+            "last_searched": max(dates, default=None)}
 
 
 def get_row(cid: str, voter: str | None = None) -> dict[str, Any]:

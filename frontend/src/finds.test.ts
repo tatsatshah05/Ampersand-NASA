@@ -198,7 +198,9 @@ describe('the tools at a candidate (the server’s real answers at B)', () => {
     expect(star.near_find?.at).toBe(false)
     expect(star.verdict).toBe('caution')
     expect(isCandidate(star)).toBe(false)
-    expect(verdictSentence(star)).toMatch(/^Candidate B, 10 arcseconds from here, appeared between 2025 and 2026 .* most likely Candidate B's light, not a change of this source\.$/)
+    // In the Viewer's Find changes tool: short sentences, the distance computed, and no card to point to.
+    expect(verdictSentence(star)).toBe("Candidate B is 10 arcseconds from here. Its light reaches this spot's measurement. So this change is most likely Candidate B's light.")
+    expect(verdictSentence(star, true)).toBe(`${verdictSentence(star)} Its card is at the top of this page.`)
     // The others in the patch are left as they were.
     expect(marked.result!.objects.filter((o) => o.near_find)).toHaveLength(1)
   })

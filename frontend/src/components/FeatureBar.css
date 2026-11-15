@@ -22,7 +22,7 @@
 .feature-list {
   display: flex;
   align-items: stretch;
-  gap: 2px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -40,15 +40,17 @@
   align-self: center;
   width: 1px;
   height: 18px;
-  margin: 0 6px;
+  margin: 0 5px;
   background: var(--line-strong);
 }
 
+/* 7px each side (was 9px) and no gap between items: with the longer "Observe anomalies" all ten
+   still fit at 1280px wide at 14px type, with room left for a classic scrollbar. */
 .feature-item {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 0 9px;
+  padding: 0 7px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -99,8 +101,8 @@
 .feature-item[aria-current='page']::after {
   content: '';
   position: absolute;
-  left: 9px;
-  right: 9px;
+  left: 7px;
+  right: 7px;
   bottom: 0;
   height: 2px;
   background: var(--ink, var(--text));
