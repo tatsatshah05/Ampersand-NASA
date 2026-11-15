@@ -17,6 +17,7 @@ import { BeginnerGuide, LevelSwitch } from './components/LevelSwitch'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
 import { PlayerControls } from './components/PlayerControls'
 import { SearchBar, type SearchTarget } from './components/SearchBar'
+import { DistantMarkers, DistantPanel } from './components/DistantPanel'
 import { SearchMarkers, SearchPanel } from './components/SearchPanel'
 import { Selectors } from './components/Selectors'
 import { SmallBodiesPanel } from './components/SmallBodiesPanel'
@@ -29,6 +30,7 @@ import { LoadingCard, StatusCard } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
 import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
+import type { Candidate } from './distant'
 import type { SearchObject, SearchQuery } from './search'
 import { targetMotion, type SpectrumRequest } from './spectrum'
 import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
@@ -66,6 +68,10 @@ export function Viewer() {
   // Search mode: the patch being searched (null when the panel is closed), and what it found, to mark on the picture.
   const [search, setSearch] = useState<SearchQuery | null>(null)
   const [searchFound, setSearchFound] = useState<SearchObject[]>([])
+  // Distant-world search: the patch being searched (null when closed), and the candidates on screen.
+  const [distant, setDistant] = useState<{ ra: number; dec: number; fov: number } | null>(null)
+  const [distantFound, setDistantFound] = useState<{ candidates: Candidate[]; simulation: boolean }>({ candidates: [], simulation: false })
+  const onDistantCandidates = useCallback((candidates: Candidate[], simulation: boolean) => setDistantFound({ candidates, simulation }), [])
   // Known asteroids and comets (backend/smallbodies.py): open only when asked for, as the lookup is slow.
   const [showSmallBodies, setShowSmallBodies] = useState(false)
   // Issue #12: colour the pixels with no data and the saturated ones.
@@ -105,6 +111,7 @@ export function Viewer() {
     if (!sameTarget) {
       setSpectrum(null)
       setBrightness(null)
+      setDistant(null)
     }
     setSelection(next)
     setNotes([])
@@ -136,6 +143,7 @@ export function Viewer() {
       const read = readAddress(window.location.search, readStoredLevel())
       setSpectrum(null)
       setBrightness(null)
+      setDistant(null)
       setSelection(read.selection)
       setNotes(read.notes)
     }
@@ -155,6 +163,7 @@ export function Viewer() {
     setBrightness(null)
     setSearch(null)
     setSearchFound([])
+    setDistant(null)
     setShowSmallBodies(false)
     setShowContext(false)
     show({ ...selection, ui, mode: DEFAULT_SELECTION.mode, fov: DEFAULT_SELECTION.fov }, 'replace')
@@ -391,6 +400,15 @@ export function Viewer() {
                     />
                   )}
                   {expert && search && searchFound.length > 0 && <SearchMarkers objects={searchFound} grid={grid} scale={scale} />}
+                  {expert && distant && distantFound.candidates.length > 0 && !distantFound.simulation && (
+                    <DistantMarkers
+                      candidates={distantFound.candidates}
+                      grid={grid}
+                      scale={scale}
+                      epoch={frame.epoch}
+                      simulation={distantFound.simulation}
+                    />
+                  )}
                   {expert && aperture && <ApertureMark sizePx={grid.sizePx} at={aperture} radiusPx={SPECTRUM_APERTURE_ARCSEC / grid.pixelArcsec} />}
                 </>
               )}
@@ -468,6 +486,9 @@ export function Viewer() {
               </button>
               <button type="button" onClick={() => setSearch({ ra: load.data.ra, dec: load.data.dec, fov: selection.fov })}>
                 Search this patch for anything that moved or changed
+              </button>
+              <button type="button" onClick={() => setDistant({ ra: load.data.ra, dec: load.data.dec, fov: selection.fov })}>
+                Search for a distant world (Planet X)
               </button>
               <button type="button" onClick={() => setShowSmallBodies(true)}>
                 Asteroids and comets
@@ -547,6 +568,15 @@ export function Viewer() {
               query={search}
               onClose={() => setSearch(null)}
               onObjects={setSearchFound}
+              onLook={lookAt}
+            />
+          )}
+          {expert && distant && (
+            <DistantPanel
+              key={`${distant.ra},${distant.dec},${distant.fov}`}
+              query={distant}
+              onClose={() => setDistant(null)}
+              onCandidates={onDistantCandidates}
               onLook={lookAt}
             />
           )}

@@ -289,6 +289,23 @@ Endpoints (adjust if something better emerges, and keep this list current):
 - `GET /api/spectrum?ra=&dec=&epoch=` BUILT. The same per-exposure points sorted by
   wavelength, for one epoch (`epoch=1`, 2, ...) or all (omit it). `epochs` lists the
   epochs with their dates; a wrong epoch answers 400. Same optional parameters.
+- `GET /api/distant?ra=&dec=&fov=&detectors=` BUILT (`backend/distant.py`, `backend/distant_jobs.py`).
+  The distant-world ("Planet X") search: sources that come and go between visits, linked where
+  one body at one distance explains every place (the jump between visits is about twice the
+  parallax). Runs in the background on the same single worker as `/api/search` and answers the
+  same way (`status` "queued", "running", "done" with `result`, "failed" with `error`). Defaults:
+  fov 0.2 (0.05 to 0.5), detectors "56". `result` has `status` ("nothing_found", "candidates",
+  "cannot_search"), `answer` (one plain sentence), `candidates` (each with `distance_au`,
+  `distance_range_au`, `positions` per visit, `support` from the other detector, `cautions`,
+  `verdict`, and `follow`: ra, dec, pmra, pmdec, parallax for 2026.0, which `/api/frames` takes
+  as they are), `limit` (per distance: `faintest_mjy`, `share_of_picture`, `jump_arcsec`,
+  `smear_arcsec`, `detector`, `exposures`), `chance` (links with the Earth's motion reversed),
+  `per_detector` (one entry per detector and pass: `exposures` is "all" or "densest_days"),
+  `catalogue`, `failures`, `limits`, `method`. With `plant=easy|medium|hard` (and `seed`,
+  `plant_detector`) the practice round's object is added first: the answer has `simulation`
+  true, `notice` and `planted` (the truth), is cached under `cache/distant/simulation-*` and
+  never goes to the watchlist. A link is a candidate, never a detection. Details, numbers and
+  wording: `docs/distant.md`. `distant.VERSION` is part of its cache key.
 - Errors, every endpoint (`backend/app.py`, `_answer`): 422 when FastAPI's own checks
   refuse a parameter; 400 with the reason when the request asks for something impossible
   (`spherex.BadRequest`: a mode that does not exist, an epoch not observed, track=target
@@ -917,3 +934,23 @@ Second hunt and the watchlist (2026-11-14 evening; `docs/search.md`, `docs/watch
 - Strongest new candidate: W40 young star at RA 277.82381, Dec -2.14663, halved between September
   2025 and March 2026 in five detectors; NEOWISE factor 3.7 at 3.4 microns over 21 visits. A
   candidate, with the same limits as the Serpens South star.
+
+Distant-world search (2026-11-14, `scripts/check_distant.py`, `docs/distant.md`, `docs/distant/results.json`)
+- Between visits half a year apart the Earth moves 1.8 to 2.0 AU across the line of sight (seven
+  fields, real exposure dates), so a body at d AU jumps about 412,500 / d arcsec: 825 at 500 AU.
+- Within a visit a near body smears: rms 0.001 to 0.28 arcsec per arcsec of parallax over a
+  visit's exposures. The densest 3 days of a visit usually hold 50 to 90 per cent of its exposures
+  with a spread 5 to 60 times smaller, hence the second pass (`densest_days`). WISE 0855 field,
+  0.5 degrees, limit at 500 AU: 1.7 mJy whole visits, 0.23 mJy densest days (over 26 per cent of
+  the picture).
+- Matched-filter flux scale: WISE 0855 comes out at 0.39 to 0.47 mJy in detector 5 (0.43 from the
+  photometry). One visit reaches 0.18 to 0.21 mJy (5 times the noise) there, 0.5 to 4 mJy in
+  crowded or nebulous fields.
+- No link in any real field, none with the Earth's motion reversed, none besides the planted
+  object in 539 planted runs. Planted objects bright enough in three visits (5, 5 and 4 times
+  the noise): 177 of 205 found; the rest sat, in one visit, on a catalogued source
+  (CatWISE2020 within 5 arcsec, a quarter as bright), which sets a source aside, or on a star that
+  is there in every visit. The practice levels "medium" and
+  "hard" are usually below what the search accepts.
+- `address.ts` accepts a parallax up to 3,000,000 mas (it was 10,000) so that a view can follow
+  a body a few hundred AU away.

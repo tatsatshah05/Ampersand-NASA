@@ -14,7 +14,18 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import astrometry, jobs, photometry, pipeline, smallbodies, spherex, stars, training, watchlist_api
+from . import (
+    astrometry,
+    distant_jobs,
+    jobs,
+    photometry,
+    pipeline,
+    smallbodies,
+    spherex,
+    stars,
+    training,
+    watchlist_api,
+)
 
 log = logging.getLogger("backend.app")
 app = FastAPI(title="SPHEREx sky-change viewer")
@@ -137,6 +148,29 @@ def blind_search(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., g
     "running", "done" (with `result`) or "failed" (with `error`); ask again every few seconds."""
     return _answer(lambda: jobs.search_status(ra, dec, fov, jobs.parse_detectors(detectors)),
                    "starting the search", "The SPHEREx archive (IRSA)")
+
+
+@app.get("/api/distant")
+def distant_world_search(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+                         fov: float = Query(0.2, ge=0.05, le=0.5),
+                         detectors: str = Query("56", max_length=12, description="which detectors, e.g. 56"),
+                         plant: str | None = Query(None, description="SIMULATION: 'easy', 'medium' or 'hard' adds "
+                                                   "the practice round's made-up object before searching"),
+                         seed: int = Query(1, ge=0, le=2_000_000_000, description="which made-up object"),
+                         plant_detector: int = Query(5, ge=1, le=6, description="the detector it is planted in")):
+    """Search a field for an object far out in the solar system (the "Planet X" case): sources that
+    jump between visits the way the Earth's own motion says a distant body must. Answers with
+    candidates and their distance, or with how bright an object at each distance would have had to
+    be to be found. Runs in the background like /api/search: ask again until `status` is "done" or
+    "failed". With `plant` the answer is a SIMULATION and says so; it is kept apart from real answers."""
+    def work() -> Any:
+        chosen = jobs.parse_detectors(detectors)
+        planted = None
+        if plant is not None:
+            planted = {"level": plant, "seed": seed, "detector": plant_detector}
+            chosen = tuple(sorted({*chosen, plant_detector}))
+        return distant_jobs.status(ra, dec, fov, chosen, planted)
+    return _answer(work, "starting the distant-world search", "The SPHEREx archive (IRSA)")
 
 
 @app.get("/api/training")
