@@ -36,76 +36,22 @@ Limits to keep in mind when reading the result
 from __future__ import annotations
 
 import argparse
-import io
 import sys
 from pathlib import Path
 
 import numpy as np
-from astropy.table import Table
-from astropy.time import Time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import verify_plot as vp  # noqa: E402
 
-from backend import astrometry, photometry, spherex  # noqa: E402
+from backend import photometry  # noqa: E402
+from backend.neowise import date, neowise_rows, neowise_visits  # noqa: E402
 
-GATOR = "https://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query"
-ZERO_JY = {"w1": 309.540, "w2": 171.787}        # WISE Explanatory Supplement IV.4.h, Table 1
 BAND_UM = {"w1": (2.8, 3.8), "w2": (4.0, 5.0)}  # SPHEREx wavelengths compared with each NEOWISE band
 BAND_NAME = {"w1": "3.4 micrometres (NEOWISE W1)", "w2": "4.6 micrometres (NEOWISE W2)"}
-VISIT_GAP_DAYS = 30.0
 MIN_PER_VISIT = 3
-
-
-def neowise_rows(ra: float, dec: float) -> Table:
-    """Every NEOWISE single-exposure measurement within 8 arcsec. Cached like the other catalogue answers."""
-    cache = spherex.CACHE / "queries" / f"neowise_{ra:.5f}_{dec:.5f}.tbl"
-    if not cache.exists():
-        raw = spherex.http_get(GATOR, {
-            "catalog": "neowiser_p1bs_psd", "spatial": "cone", "objstr": f"{ra} {dec}", "radius": 8,
-            "radunits": "arcsec", "outfmt": 1,
-            "selcols": "ra,dec,mjd,w1mpro,w1sigmpro,w2mpro,w2sigmpro,w1sat,w2sat,qual_frame,cc_flags"},
-            tries=5, timeout=120)
-        cache.parent.mkdir(parents=True, exist_ok=True)
-        cache.write_bytes(raw)
-    return Table.read(io.BytesIO(cache.read_bytes()), format="ipac")
-
-
-def to_mjy(mag: float, band: str) -> float:
-    return ZERO_JY[band] * 10 ** (-0.4 * mag) * 1000.0
-
-
-def neowise_visits(table: Table, ra: float, dec: float, radius: float) -> tuple[list[dict], dict]:
-    def column(name: str) -> np.ndarray:
-        return np.array(np.ma.filled(np.ma.array(table[name], dtype=float), np.nan))
-
-    offsets = [astrometry.offset_arcsec(ra, dec, float(r), float(d)) for r, d in zip(table["ra"], table["dec"],
-                                                                                     strict=True)]
-    dist = np.array([np.hypot(e, n) for e, n in offsets])
-    mjd, quality = column("mjd"), column("qual_frame")
-    order = np.argsort(mjd)
-    visit = np.empty(len(mjd), int)
-    visit[order] = np.concatenate([[0], np.cumsum(np.diff(mjd[order]) > VISIT_GAP_DAYS)])
-    near = (dist < radius) & (quality > 0)
-    out = []
-    for v in np.unique(visit):
-        row: dict = {"mjd": float(np.mean(mjd[visit == v]))}
-        for band in ("w1", "w2"):
-            mag, err, sat = column(f"{band}mpro"), column(f"{band}sigmpro"), column(f"{band}sat")
-            use = (visit == v) & near & np.isfinite(mag) & np.isfinite(err)
-            if use.sum() < MIN_PER_VISIT:
-                row[band] = None
-                continue
-            row[band] = {"n": int(use.sum()), "mag": float(np.median(mag[use])),
-                         "scatter": float(np.std(mag[use])), "sat": float(np.median(sat[use])),
-                         "mjy": to_mjy(float(np.median(mag[use])), band)}
-        if row["w1"] or row["w2"]:
-            out.append(row)
-    counts = {"all": len(table), "near": int((dist < radius).sum()), "used_frames": int(near.sum()),
-              "further": int((dist >= radius).sum())}
-    return out, counts
 
 
 def spherex_visits(ra: float, dec: float) -> tuple[list[dict], dict]:
@@ -127,10 +73,6 @@ def spherex_visits(ra: float, dec: float) -> tuple[list[dict], dict]:
         out.append(row)
     return out, {"measured": curve.get("measured"), "status_counts": curve.get("status_counts"),
                  "stars_in_circle": curve.get("stars_in_circle"), "failures": len(curve.get("failures") or [])}
-
-
-def date(mjd: float) -> str:
-    return Time(mjd, format="mjd").iso[:10]
 
 
 def main() -> None:
