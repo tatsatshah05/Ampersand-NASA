@@ -67,7 +67,7 @@ from scipy.stats import chi2 as chi2_dist
 
 from . import astrometry, pipeline, search, spherex, training
 
-VERSION = 1
+VERSION = 3
 DISTANT_DIR = spherex.CACHE / "distant"
 ARCSEC_PER_RADIAN = 206264.806
 
@@ -721,6 +721,14 @@ def _support(candidate: dict, other: dict) -> dict:
     return {"detector": other["detector"], "visits": seen, "seen": strong >= 2}
 
 
+def _follow(body: dict) -> dict:
+    dt = astrometry.RESOLVE_EPOCH - body["ref_epoch"]
+    ra = body["ra"] + body["pmra"] * dt / 3.6e6 / math.cos(math.radians(body["dec"]))
+    return {"ra": round(ra % 360.0, 6), "dec": round(body["dec"] + body["pmdec"] * dt / 3.6e6, 6),
+            "pmra": round(body["pmra"], 1), "pmdec": round(body["pmdec"], 1),
+            "parallax": round(body["parallax"], 1), "pm_epoch": astrometry.RESOLVE_EPOCH}
+
+
 def _candidate(verdict: dict, field: dict, others: list[dict], truth: dict | None) -> dict:
     fit, body = verdict["fit"], verdict["body"]
     plx, plx_err = body["parallax"] / 1000.0, fit["parallax_err_arcsec"]
@@ -758,10 +766,9 @@ def _candidate(verdict: dict, field: dict, others: list[dict], truth: dict | Non
            "drift_arcsec_per_year": round(verdict["drift_arcsec_per_year"], 2),
            "circular_drift_arcsec_per_year": round(circular_drift(distance), 2),
            "chi2": round(fit["chi2"], 2), "dof": fit["dof"], "positions": positions, "support": support,
-           # What /api/frames takes to follow it: the page can show the object with its marker.
-           "follow": {"ra": round(body["ra"], 6), "dec": round(body["dec"], 6), "pmra": round(body["pmra"], 1),
-                      "pmdec": round(body["pmdec"], 1), "parallax": round(body["parallax"], 1),
-                      "pm_epoch": round(body["ref_epoch"], 4)},
+           # What /api/frames takes to follow it, so the page can show the object with its marker. The
+           # place is moved to 2026.0, the date the page assumes for a position with a motion.
+           "follow": _follow(body),
            "verdict": "caution" if cautions else "clean", "cautions": cautions}
     if truth is not None:
         nearest = min(_separation(p["ra"], p["dec"], t["ra"], t["dec"])
@@ -782,12 +789,15 @@ def _answer(candidates: list[dict], fields: list[dict], best_limit: list[dict], 
             return (f"SIMULATION. The search found the planted object and puts it {got[0]['distance_au']:,} times as "
                     f"far from the Sun as the Earth is. It was planted at {truth['distance_au']:,.0f}.")
         seen = sorted((p["times_noise"] for p in truth["positions"] if p.get("times_noise") is not None), reverse=True)
-        why = ""
-        if len(seen) >= 3 and (seen[1] < DETECT_SIGMA or seen[2] < MEMBER_SIGMA):
-            why = (f" It stands {', '.join(str(v) for v in seen)} times above the noise in the visits; the search "
-                   f"needs {DETECT_SIGMA:.0f} in two of them and {MEMBER_SIGMA:.0f} in a third.")
-        return ("SIMULATION. The search did not find the planted object." + (why or " That happens when it lies "
-                "in the glow of a star or on a catalogued source."))
+        why = " That happens when it lies in the glow of a star or on a catalogued source."
+        if len(seen) >= 3:
+            stands = f" It stands {', '.join(str(v) for v in seen)} times above the noise in the visits"
+            needs = f"the search needs {DETECT_SIGMA:.0f} in two of them and {MEMBER_SIGMA:.0f} in a third"
+            if seen[1] < DETECT_SIGMA or seen[2] < MEMBER_SIGMA:
+                why = f"{stands}; {needs}."
+            elif seen[1] < DETECT_SIGMA + 0.5 or seen[2] < MEMBER_SIGMA + 0.5:
+                why = f"{stands}; {needs}, so it is at the very edge of what can be found."
+        return "SIMULATION. The search did not find the planted object." + why
     if candidates:
         c = candidates[0]
         return (f"{len(candidates)} candidate(s). The strongest fits an object about {c['distance_au']:,} times as far "

@@ -1,0 +1,350 @@
+{
+ "status": "done",
+ "simulation": true,
+ "ra": 133.759765,
+ "dec": -7.242182,
+ "fov": 0.2,
+ "detectors": [
+  5,
+  6
+ ],
+ "seconds": 7.6,
+ "detector_now": null,
+ "detectors_done": 2,
+ "detectors_total": 2,
+ "result": {
+  "simulation": true,
+  "ra": 133.759765,
+  "dec": -7.242182,
+  "fov": 0.2,
+  "detectors": [
+   5,
+   6
+  ],
+  "status": "nothing_found",
+  "answer": "SIMULATION. The search did not find the planted object. It stands 5.3, 5.0, 4.9 times above the noise in the visits; the search needs 5 in two of them and 4 in a third, so it is at the very edge of what can be found.",
+  "candidates": [],
+  "limit": [
+   {
+    "distance_au": 1000,
+    "jump_arcsec": 410.3,
+    "share_of_picture": 0.24,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   },
+   {
+    "distance_au": 1500,
+    "jump_arcsec": 273.5,
+    "share_of_picture": 0.42,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   },
+   {
+    "distance_au": 2000,
+    "jump_arcsec": 205.2,
+    "share_of_picture": 0.52,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   },
+   {
+    "distance_au": 3000,
+    "jump_arcsec": 136.8,
+    "share_of_picture": 0.63,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   },
+   {
+    "distance_au": 5000,
+    "jump_arcsec": 82.1,
+    "share_of_picture": 0.71,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   },
+   {
+    "distance_au": 10000,
+    "jump_arcsec": 41.0,
+    "share_of_picture": 0.78,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   },
+   {
+    "distance_au": 20000,
+    "jump_arcsec": 20.5,
+    "share_of_picture": 0.81,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   },
+   {
+    "distance_au": 30000,
+    "jump_arcsec": 13.7,
+    "share_of_picture": 0.82,
+    "faintest_mjy": 0.185,
+    "smear_arcsec": 0.0,
+    "detector": 5
+   }
+  ],
+  "chance": {
+   "links_with_earth_reversed": 0,
+   "note": "Links found by the same search with the Earth's motion reversed. Nothing real can follow that, so this is how many links chance alone makes in this picture."
+  },
+  "per_detector": [
+   {
+    "detector": 5,
+    "can_search": true,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-05-06",
+      "date_start": "2025-05-06",
+      "date_end": "2025-05-06",
+      "n_exposures": 8,
+      "sources": 101,
+      "come_and_go": 1,
+      "faintest_mjy": 0.215,
+      "smear_per_arcsec_of_parallax": 0.0
+     },
+     {
+      "epoch": 2,
+      "date": "2025-11-18",
+      "date_start": "2025-11-07",
+      "date_end": "2025-12-13",
+      "n_exposures": 25,
+      "sources": 111,
+      "come_and_go": 1,
+      "faintest_mjy": 0.179,
+      "smear_per_arcsec_of_parallax": 0.0
+     },
+     {
+      "epoch": 3,
+      "date": "2026-05-04",
+      "date_start": "2026-05-01",
+      "date_end": "2026-05-14",
+      "n_exposures": 15,
+      "sources": 112,
+      "come_and_go": 1,
+      "faintest_mjy": 0.185,
+      "smear_per_arcsec_of_parallax": 0.0
+     }
+    ],
+    "come_and_go": 3,
+    "set_aside_catalogued": 0,
+    "set_aside_not_point_like": 0,
+    "linked_from": 3,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.84,
+    "limit": [
+     {
+      "distance_au": 1000,
+      "jump_arcsec": 410.3,
+      "share_of_picture": 0.24,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 1500,
+      "jump_arcsec": 273.5,
+      "share_of_picture": 0.42,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 2000,
+      "jump_arcsec": 205.2,
+      "share_of_picture": 0.52,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 3000,
+      "jump_arcsec": 136.8,
+      "share_of_picture": 0.63,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 5000,
+      "jump_arcsec": 82.1,
+      "share_of_picture": 0.71,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 10000,
+      "jump_arcsec": 41.0,
+      "share_of_picture": 0.78,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 20000,
+      "jump_arcsec": 20.5,
+      "share_of_picture": 0.81,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 30000,
+      "jump_arcsec": 13.7,
+      "share_of_picture": 0.82,
+      "faintest_mjy": 0.185,
+      "smear_arcsec": 0.0
+     }
+    ]
+   },
+   {
+    "detector": 6,
+    "can_search": true,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-05-05",
+      "date_start": "2025-05-05",
+      "date_end": "2025-05-05",
+      "n_exposures": 3,
+      "sources": 36,
+      "come_and_go": 1,
+      "faintest_mjy": 0.496,
+      "smear_per_arcsec_of_parallax": 0.0
+     },
+     {
+      "epoch": 2,
+      "date": "2025-11-17",
+      "date_start": "2025-11-10",
+      "date_end": "2025-12-13",
+      "n_exposures": 21,
+      "sources": 90,
+      "come_and_go": 3,
+      "faintest_mjy": 0.217,
+      "smear_per_arcsec_of_parallax": 0.0
+     },
+     {
+      "epoch": 3,
+      "date": "2026-04-26",
+      "date_start": "2026-04-21",
+      "date_end": "2026-05-11",
+      "n_exposures": 21,
+      "sources": 82,
+      "come_and_go": 4,
+      "faintest_mjy": 0.224,
+      "smear_per_arcsec_of_parallax": 0.0
+     }
+    ],
+    "come_and_go": 8,
+    "set_aside_catalogued": 5,
+    "set_aside_not_point_like": 0,
+    "linked_from": 3,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.9,
+    "limit": [
+     {
+      "distance_au": 1000,
+      "jump_arcsec": 410.4,
+      "share_of_picture": 0.26,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 1500,
+      "jump_arcsec": 273.6,
+      "share_of_picture": 0.45,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 2000,
+      "jump_arcsec": 205.2,
+      "share_of_picture": 0.56,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 3000,
+      "jump_arcsec": 136.8,
+      "share_of_picture": 0.67,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 5000,
+      "jump_arcsec": 82.1,
+      "share_of_picture": 0.76,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 10000,
+      "jump_arcsec": 41.0,
+      "share_of_picture": 0.83,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 20000,
+      "jump_arcsec": 20.5,
+      "share_of_picture": 0.86,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     },
+     {
+      "distance_au": 30000,
+      "jump_arcsec": 13.7,
+      "share_of_picture": 0.88,
+      "faintest_mjy": 0.397,
+      "smear_arcsec": 0.0
+     }
+    ]
+   }
+  ],
+  "catalogue": {
+   "name": "CatWISE2020",
+   "asked": true,
+   "answered": true,
+   "sources_in_field": 1436,
+   "error": null
+  },
+  "failures": [],
+  "limits": "This search needs an object to be seen as a point of light in at least three visits (5 times the noise in two of them and 4 times in a third), to stay inside the picture in all of them, and to be clear of bright stars and of catalogued infrared sources. It cannot find anything in a field with fewer than three visits, anything that changes brightness a lot from visit to visit, or an object so near that it smears within a visit (the table gives the limit at each distance). Catalogues built from ten years of WISE data reach fainter than one SPHEREx visit at these wavelengths, so finding nothing is the expected answer.",
+  "method": "Sources are found in the stacked image of each visit. Those missing from the same place in another visit are linked across visits wherever one object at one distance, drifting no faster than a bound orbit allows, explains every place. The size of the jump between visits gives the distance.",
+  "credit": "NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive (IRSA); ESA Gaia DR3; CatWISE2020 (NASA/IPAC IRSA)",
+  "notice": "Simulation: one made-up moving object has been added to these real SPHEREx images. It is not a real detection, and nothing here is a discovery.",
+  "planted": {
+   "distance_au": 1633.0437372512752,
+   "drift_arcsec_per_year": 19.638498339606006,
+   "swing_arcsec": 251.26231999937443,
+   "level": "easy",
+   "seed": 2,
+   "detector": 5,
+   "peak_over_noise": 12.0,
+   "flux_mjy": 0.289,
+   "positions": [
+    {
+     "epoch": 1,
+     "ra": 133.7409133056658,
+     "dec": -7.224690140238381,
+     "times_noise": 4.9
+    },
+    {
+     "epoch": 2,
+     "ra": 133.81057526178833,
+     "dec": -7.247294040475358,
+     "times_noise": 5.0
+    },
+    {
+     "epoch": 3,
+     "ra": 133.74625857379635,
+     "dec": -7.226335386109536,
+     "times_noise": 5.3
+    }
+   ]
+  }
+ }
+}
