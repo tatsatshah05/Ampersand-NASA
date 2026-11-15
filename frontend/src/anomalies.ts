@@ -10,6 +10,7 @@
 import { addressOf, DEFAULT_SELECTION, type Selection, type UiLevel } from './address'
 import { framesUrl, skyOffsetArcsec, type Frame } from './api'
 import { CANDIDATE_LINE, FIND_RADIUS_ARCSEC, findAt, FINDS, type Find } from './finds'
+import { progressSentence, type SearchStatus } from './search'
 import type { Group, PatchRegion, PatchRegions } from './watchlist'
 
 export const SCREEN_TITLE = 'Observe anomalies'
@@ -29,8 +30,8 @@ export const FINDS_HEADING = 'Not reported anywhere we could find'
 export const FINDS_ID = 'the-three-candidates'
 export const REGION_ID = 'choose-region'
 export const JUMP_LINKS: readonly { href: string; label: string }[] = [
+  { href: `#${REGION_ID}`, label: 'Pick a patch of sky' },
   { href: `#${FINDS_ID}`, label: 'the three candidates' },
-  { href: `#${REGION_ID}`, label: 'Choose a region' },
 ]
 
 /** Where the sweep is written up, for scientists. */
@@ -453,3 +454,90 @@ export function withRegion(search: string, key: string): string {
 
 /** The groups' counts add up to the region's: used by the screen's own check. */
 export const groupTotal = (counts: Record<Group, number> | null) => (counts ? counts.eyes + counts.known + counts.artefact : 0)
+
+// ---- picking a patch to watch ---------------------------------------------------------------------
+
+export const PICK_HEADING = 'Pick a patch of sky'
+
+/** One sentence under the heading: what typing a place does. */
+export const PICK_INTRO: Record<UiLevel, string> = {
+  beginner:
+    'Type a star’s name or a place in the sky. We search that small patch for anything that moved or changed, and look again each time SPHEREx sends new pictures of it.',
+  expert:
+    'Type a name or coordinates. The 0.1 degree patch around it gets the blind search on all six detectors, and is searched again whenever the archive lists exposures the last search did not have.',
+}
+
+export const FIELD_LABEL = 'A name or coordinates'
+export const FIELD_PLACEHOLDER = 'Barnard’s Star, or 269.4463 4.7682'
+export const WATCH_BUTTON = 'Watch this patch'
+export const CHOOSE_WATCHED = 'Or choose a patch that is already being watched:'
+
+/** The patch a visitor types is this wide, searched in every detector. */
+export const WATCH_FOV = 0.1
+export const WATCH_DETECTORS = '123456'
+
+export const FIRST_SEARCH_NOTE =
+  'A patch nobody has searched before takes a few minutes: its pictures are fetched from NASA’s archive and compared. You can leave this page; the search carries on.'
+export const NOTHING_FOUND = 'Nothing moved or changed in this patch in SPHEREx’s pictures so far.'
+/** A watched patch whose search found nothing: it is in the list of patches, with a count of 0. */
+export function patchIsQuiet(key: string, patches: PatchRegions | null): boolean {
+  return patches?.regions.find((r) => r.key === key)?.count === 0
+}
+export const AGAIN_LINE = 'NASA’s archive has new pictures of this patch. Searching it again…'
+export const KEEP_LOOKING =
+  'We keep looking: every time this patch is opened we ask NASA’s archive for new pictures of it, and search again when there are some. SPHEREx returns to a patch about every six months.'
+
+/** What a failed search shows when the server gave no reason of its own. */
+export const SEARCH_FAILED = 'The search did not finish.'
+/** While a typed name or coordinates is being turned into a place, and before the first word from the search. */
+export const FINDING_PLACE = 'Finding that place…'
+export const SEARCH_STARTING = 'Searching…'
+/** What was typed cannot be looked up: the same words the search box of the viewer uses. */
+export const TYPE_FIRST = 'Type a name or coordinates first.'
+export const nameTooLong = (most: number): string => `That name is too long to look up (${most} characters at most).`
+export const NAME_HAS_OTHER_CHARACTERS = 'Names are looked up in plain letters and digits, and this one has other characters.'
+export const LOOKUP_FAILED = 'The name lookup failed.'
+
+/** The key of a patch as /api/watchlist/regions writes it: ra and dec to 6 decimals, fov to 4. */
+export const patchKey = (ra: number, dec: number, fov: number) => `${ra.toFixed(6)}_${dec.toFixed(6)}_${fov.toFixed(4)}`
+
+/** GET /api/watch: what is known about the patch's searches. It never starts one. */
+export interface WatchInfo {
+  key: string
+  ra: number
+  dec: number
+  fov: number
+  searched: boolean
+  last_searched: string | null
+  pictures_until: string | null
+  exposures: number | null
+  new_pictures: boolean
+}
+
+export async function fetchWatch(ra: number, dec: number, fov: number, signal?: AbortSignal): Promise<WatchInfo> {
+  const r = await fetch(`/api/watch?${new URLSearchParams({ ra: String(ra), dec: String(dec), fov: String(fov) })}`, { signal })
+  if (!r.ok) throw new Error(`the server answered ${r.status}`)
+  return (await r.json()) as WatchInfo
+}
+
+/** "Last searched on 15 November 2026, with SPHEREx’s pictures up to 22 September 2026." Null for a patch nobody searched. */
+export function lastSearchedLine(info: Pick<WatchInfo, 'searched' | 'last_searched' | 'pictures_until'>): string | null {
+  if (!info.searched) return null
+  const when = info.last_searched ? longDate(info.last_searched) : null
+  const until = info.pictures_until ? longDate(info.pictures_until) : null
+  if (when && until) return `Last searched on ${when}, with SPHEREx’s pictures up to ${until}.`
+  if (when) return `Last searched on ${when}.`
+  if (until) return `The search used SPHEREx’s pictures up to ${until}.`
+  return null
+}
+
+/**
+ * Where a search stands, in words that hold still (the stage only). Beginner's say nothing about
+ * detectors; Expert's are the Find changes tool's.
+ */
+export function watchProgress(s: SearchStatus, level: UiLevel): string {
+  if (s.status === 'queued') return 'Waiting for another search to finish before this one starts.'
+  if (s.detectors_done >= s.detectors_total && s.detectors_total > 0) return 'Checking the catalogues.'
+  if (level === 'expert') return progressSentence(s)
+  return 'Searching the pictures one after another.'
+}

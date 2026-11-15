@@ -21,7 +21,7 @@ sources, and a way to use many volunteers' eyes on it. The watchlist is that lis
 2. **A second opinion** from another telescope's archive (NEOWISE) for brightness changes.
 3. **People look and vote** on the Observe anomalies screen (`?watchlist=1`, the ninth item of the
    bar at the top of every screen: "Observe anomalies" in Beginner and "Anomalies" in Expert). Under
-   the sweep's three candidates and "Choose a region", the patch searches' groups ("Found by
+   "Pick a patch of sky" and the sweep's three candidates, the patch searches' groups ("Found by
    searching small patches") hold a card for each row: a picture strip, what the machine saw in
    plain words, what the catalogues say, the NEOWISE sentence, and three buttons. A row within 5
    arcseconds of one of the sweep's candidates, whatever its group, says first whose place it is,

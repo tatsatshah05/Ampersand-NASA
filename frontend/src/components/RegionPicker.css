@@ -1,4 +1,4 @@
-/* "Choose a region" on Observe anomalies (RegionPicker.tsx): a heading, the page's own menu (index.css
+/* "Pick a patch of sky" on Observe anomalies (RegionPicker.tsx): a heading, a form to watch a typed patch, the page's own menu (index.css
    draws select), and a few lines on the chosen region. Colours only through the page's tokens. */
 
 .region-picker {
@@ -13,8 +13,67 @@
   letter-spacing: -0.01em;
 }
 
-.region-title label {
-  cursor: pointer;
+.region-intro {
+  max-width: 64ch;
+  margin: 0 0 16px;
+  font-size: var(--size-read);
+}
+
+/* The form: a label, then the field and the one primary button; stacked on a phone. */
+.watch-form label,
+.region-choose label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: var(--size-body);
+  color: var(--muted);
+}
+
+.watch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.watch-input {
+  flex: 1 1 260px;
+  min-width: 0;
+  max-width: 560px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.region-picker button.primary {
+  min-height: 44px;
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.region-picker button.primary:hover:not(:disabled) {
+  background: var(--ink-hover);
+}
+
+.watch-status {
+  max-width: 72ch;
+  margin: 12px 0 0;
+}
+
+.watch-status p {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.47;
+}
+
+.watch-status:empty {
+  display: none;
+}
+
+.region-choose {
+  margin: 24px 0 0;
 }
 
 .region-select {
@@ -54,6 +113,12 @@
 }
 
 @media (max-width: 599px) {
+  .watch-input,
+  .region-picker button.primary {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
   .region-row {
     flex-direction: column;
     align-items: flex-start;

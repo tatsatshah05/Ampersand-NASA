@@ -8,7 +8,7 @@ from fastapi import APIRouter, Header, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from . import watchlist, watchlist_pictures
+from . import watch, watchlist, watchlist_pictures
 
 log = logging.getLogger("backend.watchlist_api")
 router = APIRouter(prefix="/api/watchlist")
@@ -37,7 +37,7 @@ def list_watchlist(group: str | None = Query(None, description="eyes, known or a
                    x_voter: str | None = Header(None)) -> dict[str, Any]:
     """The candidates, in the machine's order, each with vote tallies and (for brightness changes) NEOWISE's reading."""
     try:
-        return watchlist.list_rows(group, kind, limit, offset, x_voter, region)
+        return watchlist.list_rows(group, kind, limit, offset, x_voter, region, watch.patches())
     except watchlist.WatchlistError as e:
         raise _refuse(e) from e
 
@@ -45,8 +45,9 @@ def list_watchlist(group: str | None = Query(None, description="eyes, known or a
 # The regions and export routes come before /{candidate_id}, which would otherwise take "regions" as an id.
 @router.get("/regions")
 def list_regions() -> dict[str, Any]:
-    """Every searched patch: centre, width, constellation, when it was last searched and how many rows it reported."""
-    return watchlist.regions()
+    """Every searched patch: centre, width, constellation, when it was last searched and how many rows it reported
+    (0 for a watched patch whose search found nothing)."""
+    return watchlist.regions(watch.patches())
 
 
 @router.get("/export.csv")

@@ -1,9 +1,11 @@
 // The Observe anomalies screen (address: ?watchlist=1, the address of the watchlist it grew out of, so
 // old links still work; `&region=` keeps the chosen region, so Back and reload keep it). From the top:
-// what an anomaly is, and a line of links down the page; the three candidates of the sweep of the
-// Milky Way's plane (CandidateCards), under "Not reported anywhere we could find"; "Choose a region"
-// (RegionPicker); then the anomalies of the chosen region: the blind patch searches' three groups and,
-// for everywhere or the plane, the sweep's own groups (SweepGroups).
+// what an anomaly is, and a line of links down the page; "Pick a patch of sky" (RegionPicker): type a
+// name or coordinates to have that patch searched and kept under watch, or choose a patch already
+// watched; then, for one patch, its anomalies (the blind patch searches' three groups) directly under
+// the picker and the three candidates of the sweep of the Milky Way's plane (CandidateCards, under "Not
+// reported anywhere we could find") after them; for everywhere or the plane, the candidates first and
+// then the groups and the sweep's own groups (SweepGroups).
 //
 // The patch searches' cards are the watchlist's: the picture, what the machine saw, what the catalogues
 // say, NEOWISE's second opinion, and three vote buttons. Everything is a candidate; a vote is an
@@ -17,7 +19,15 @@ import {
   fetchSweep,
   FINDS_HEADING,
   FINDS_ID,
+  fetchWatch,
+  FINDING_PLACE,
+  FIRST_SEARCH_NOTE,
   JUMP_LINKS,
+  KEEP_LOOKING,
+  lastSearchedLine,
+  NOTHING_FOUND,
+  patchIsQuiet,
+  SEARCH_STARTING,
   PATCHES_CHECKED,
   patchesHeading,
   patchRegionParam,
@@ -30,7 +40,9 @@ import {
   WHAT_IS_AN_ANOMALY,
   withRegion,
   type SweepData,
+  type WatchInfo,
 } from '../anomalies'
+import { findPatch, openWatched, searchThisPatch, type Patch } from '../watchPatch'
 import { newSeed, trainingAddress } from '../training'
 import { CandidateCards } from './CandidateCards'
 import { FeatureBar, type FeatureLinks } from './FeatureBar'
@@ -137,6 +149,31 @@ export function WatchlistView() {
   useEffect(() => {
     regionNow.current = region
   }, [region])
+  // The patch being watched (typed, or chosen in the menu), what /api/watch says of it and the lines
+  // about its search. Its requests share one controller, stopped when the patch changes or the screen goes.
+  const [watch, setWatch] = useState<WatchInfo | null>(null)
+  const [progress, setProgress] = useState<string | null>(null)
+  const [notes, setNotes] = useState<string[]>([])
+  const [watchError, setWatchError] = useState<string | null>(null)
+  const [rowsTick, setRowsTick] = useState(0)
+  const watchCtrl = useRef<AbortController | null>(null)
+  const skipOpen = useRef<string | null>(null)
+  const regionsNow = useRef<PatchRegions | null>(null)
+  const levelNow = useRef<UiLevel>('beginner')
+  useEffect(() => {
+    regionsNow.current = regions
+  }, [regions])
+  const beginWatch = () => {
+    watchCtrl.current?.abort()
+    const ctrl = new AbortController()
+    watchCtrl.current = ctrl
+    setWatch(null)
+    setProgress(null)
+    setNotes([])
+    setWatchError(null)
+    return ctrl
+  }
+  useEffect(() => () => watchCtrl.current?.abort(), [])
   // The requests of the region on screen; a new region aborts them, so that a "Show more" still on its
   // way never lands in the next region's list.
   const regionRequests = useRef<AbortController | null>(null)
@@ -203,17 +240,104 @@ export function WatchlistView() {
     regionRequests.current = ctrl
     for (const g of GROUPS) run(g, 0, ctrl.signal)
     return () => ctrl.abort()
-  }, [run, canAsk])
+  }, [run, canAsk, rowsTick])
   // A new region empties the groups at once, so no group of the last region is shown under the new one's
   // name, and opens on the first of its groups that has rows.
-  const chooseRegion = (key: string) => {
-    if (key === region) return // the same region again: its lists are already there
+  const selectRegion = (key: string, list: PatchRegions | null) => {
     setRegion(key)
     setCounts(null)
     setTabs({ eyes: empty, known: empty, artefact: empty })
-    const first = firstGroupWithRows(regionCounts(key, regions))
+    const first = firstGroupWithRows(regionCounts(key, list))
     if (first) setGroup(first)
     writeRegion(key)
+  }
+  // A choice in the menu: whatever was going on for the last patch stops, and a patch chosen is opened.
+  const chooseRegion = (key: string) => {
+    if (key === region) return // the same region again: its lists are already there
+    watchCtrl.current?.abort()
+    setWatch(null)
+    setProgress(null)
+    setNotes([])
+    setWatchError(null)
+    selectRegion(key, regions)
+  }
+
+  // A patch chosen in the menu, or named by the address: ask what is known of it (never starting a
+  // search), and search it again only if the archive now lists pictures the last search did not have.
+  const opened = regions?.regions.some((r) => r.key === region) ? region : null
+  useEffect(() => {
+    if (!opened) return
+    if (skipOpen.current === opened) {
+      skipOpen.current = null // a search just made this the chosen patch, and has shown its lines
+      return
+    }
+    const entry = regionsNow.current?.regions.find((r) => r.key === opened)
+    if (!entry) return
+    const patch: Patch = { ra: entry.ra, dec: entry.dec, fov: entry.fov, key: entry.key }
+    const ctrl = beginWatch()
+    openWatched(patch, levelNow.current, ctrl.signal, setProgress, (line) => setNotes([line]))
+      .then((out) => {
+        if (ctrl.signal.aborted) return
+        setProgress(null)
+        setWatch(out.watch)
+        if (out.error) setWatchError(out.error)
+        if (out.regions) {
+          setRegions(out.regions)
+          setRowsTick((t) => t + 1)
+        }
+      })
+      .catch((e: unknown) => {
+        if (!ctrl.signal.aborted) setWatchError(e instanceof Error ? e.message : String(e))
+      })
+    return () => ctrl.abort()
+  }, [opened])
+
+  // "Watch this patch": read the typed place, search that patch (a few minutes the first time), then
+  // choose it if it found anything, and say how things stand.
+  const watchTyped = async (typed: string) => {
+    const ctrl = beginWatch()
+    const { signal } = ctrl
+    setProgress(FINDING_PLACE)
+    try {
+      const place = await findPatch(typed, signal)
+      if (signal.aborted) return
+      if (!place.ok) {
+        setProgress(null)
+        setWatchError(place.text)
+        return
+      }
+      const patch = place.patch
+      const before = await fetchWatch(patch.ra, patch.dec, patch.fov, signal).catch(() => null)
+      if (signal.aborted) return
+      const searchedBefore = before ? before.searched : (regionsNow.current?.regions.some((r) => r.key === patch.key) ?? false)
+      if (!searchedBefore) setNotes([FIRST_SEARCH_NOTE])
+      setProgress(SEARCH_STARTING)
+      const out = await searchThisPatch(patch, levelNow.current, signal, setProgress)
+      if (signal.aborted) return
+      setProgress(null)
+      if (out.kind === 'failed') {
+        setWatchError(out.error)
+        return
+      }
+      setNotes([])
+      setWatch(out.watch)
+      if (out.regions) setRegions(out.regions)
+      setRowsTick((t) => t + 1)
+      if (out.chosen) {
+        if (out.key !== regionNow.current) {
+          skipOpen.current = out.key
+          selectRegion(out.key, out.regions)
+        }
+      } else {
+        // No rows for this patch: it stays the one watched, under the list of everything.
+        if (regionNow.current !== EVERYWHERE) selectRegion(EVERYWHERE, out.regions)
+        if (out.nothing) setNotes([out.nothing])
+      }
+    } catch (e) {
+      if (signal.aborted) return
+      setProgress(null)
+      setWatchError(e instanceof Error ? e.message : String(e))
+    }
   }
 
   const replaceRow = (g: Group, row: WatchRow) =>
@@ -221,6 +345,9 @@ export function WatchlistView() {
 
   // The level is the app's: kept in the address and on this device, and carried by every link.
   const [level, setLevel] = useState<UiLevel>(() => chooseUiLevel(window.location.search, readStoredLevel()))
+  useEffect(() => {
+    levelNow.current = level
+  }, [level])
   const changeLevel = (ui: UiLevel) => {
     storeLevel(ui)
     setLevel(ui)
@@ -256,6 +383,51 @@ export function WatchlistView() {
       </p>
     </>
   )
+  // What is said about the patch being watched, in this order: where its search stands, the notes, then
+  // the two lines of what /api/watch knows (left out when it did not answer or the patch was never searched).
+  const lastLine = watch ? lastSearchedLine(watch) : null
+  // A watched patch where nothing was found is chosen like any other, with no groups to show: it says so here.
+  const quiet = patchIsQuiet(region, regions)
+  const watchLines = [
+    ...new Set([
+      ...(progress ? [progress] : []),
+      ...notes,
+      ...(quiet && !progress ? [NOTHING_FOUND] : []),
+      ...(lastLine ? [lastLine] : []),
+      ...(watch?.searched ? [KEEP_LOOKING] : []),
+    ]),
+  ]
+  const singlePatch = patchRegionParam(region) !== null
+  const candidates = (
+    <section className="anomaly-finds" id={FINDS_ID} aria-labelledby="anomaly-finds-title">
+      <h2 id="anomaly-finds-title" className="anomaly-finds-title">
+        {FINDS_HEADING}
+      </h2>
+      <CandidateCards level={level} sweep={sweep} />
+    </section>
+  )
+  const patchResults = patchesShown && !quiet && (
+    <section className="anomaly-patches" aria-labelledby="anomaly-patches-title">
+      <h2 id="anomaly-patches-title" className="anomaly-patches-title">
+        {patchesHeading(region, level)}
+      </h2>
+      {level === 'beginner' ? (
+        <>
+          <p className="intro anomaly-checks">{PATCHES_CHECKED}</p>
+          {PLAIN_INTRO.map((line) => (
+            <p key={line} className="intro">
+              {line}
+            </p>
+          ))}
+          {/* The machine's own words about the order, the votes and the list, for those who want them. */}
+          <ScienceFold>{about}</ScienceFold>
+        </>
+      ) : (
+        about
+      )}
+      {patchGroups()}
+    </section>
+  )
   return (
     <>
       <header className="topbar screen-topbar">
@@ -281,13 +453,6 @@ export function WatchlistView() {
           </p>
         </header>
 
-        <section className="anomaly-finds" id={FINDS_ID} aria-labelledby="anomaly-finds-title">
-          <h2 id="anomaly-finds-title" className="anomaly-finds-title">
-            {FINDS_HEADING}
-          </h2>
-          <CandidateCards level={level} sweep={sweep} />
-        </section>
-
         <RegionPicker
           level={level}
           value={region}
@@ -296,30 +461,14 @@ export function WatchlistView() {
           sweep={sweep}
           problem={regionsProblem}
           onChange={chooseRegion}
+          onWatch={watchTyped}
+          lines={watchLines}
+          error={watchError}
         />
 
-        {patchesShown && (
-          <section className="anomaly-patches" aria-labelledby="anomaly-patches-title">
-            <h2 id="anomaly-patches-title" className="anomaly-patches-title">
-              {patchesHeading(region, level)}
-            </h2>
-            {level === 'beginner' ? (
-              <>
-                <p className="intro anomaly-checks">{PATCHES_CHECKED}</p>
-                {PLAIN_INTRO.map((line) => (
-                  <p key={line} className="intro">
-                    {line}
-                  </p>
-                ))}
-                {/* The machine's own words about the order, the votes and the list, for those who want them. */}
-                <ScienceFold>{about}</ScienceFold>
-              </>
-            ) : (
-              about
-            )}
-            {patchGroups()}
-          </section>
-        )}
+        {singlePatch && patchResults}
+        {candidates}
+        {!singlePatch && patchResults}
 
         {showsSweep(region) && <SweepGroups level={level} sweep={sweep} problem={sweepProblem} />}
       </main>

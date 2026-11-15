@@ -360,15 +360,17 @@ def _all_rows(con: sqlite3.Connection, voter: str | None, group: str | None, kin
 
 
 def list_rows(group: str | None = None, kind: str | None = None, limit: int = 20, offset: int = 0,
-              voter: str | None = None, region: str | None = None) -> dict[str, Any]:
+              voter: str | None = None, region: str | None = None,
+              watched: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     """One page of the list, in the machine's order. `region` (a key from `regions()`) keeps only the rows that
-    a search of that patch reported; `counts` and `total` are then that patch's."""
+    a search of that patch reported; `counts` and `total` are then that patch's. `watched` as for `regions()`:
+    a watched patch that reported nothing is a region with no rows, not an unknown one."""
     if group is not None and group not in GROUPS:
         raise WatchlistError(400, f"group must be one of {', '.join(GROUPS)}")
     if kind is not None and kind not in ("mover", "changer"):
         raise WatchlistError(400, "kind must be mover or changer")
     with _db() as con:
-        patches = _patches(con)
+        patches = _with_watched(_patches(con), watched)
         if region is not None and region not in patches:
             raise WatchlistError(404, "No searched patch has this region key; GET /api/watchlist/regions lists them.")
         rows = _all_rows(con, voter, group, kind, region)
@@ -407,6 +409,12 @@ def _patches(con: sqlite3.Connection) -> dict[str, dict[str, Any]]:
     return out
 
 
+def searched_patch(key: str) -> dict[str, Any] | None:
+    """The searched patch with this key (centre, width, `last_searched`), or None if no find came from it."""
+    with _db() as con:
+        return _patches(con).get(key)
+
+
 def constellations(points: list[tuple[float, float]]) -> list[str]:
     """The constellation each (ra, dec) lies in (ICRS degrees), by astropy's boundaries, in the IAU's spelling."""
     if not points:
@@ -418,13 +426,28 @@ def constellations(points: list[tuple[float, float]]) -> list[str]:
     return [IAU_SPELLING.get(str(n), str(n)) for n in names]
 
 
-def regions() -> dict[str, Any]:
+def _with_watched(patches: dict[str, dict[str, Any]],
+                  watched: dict[str, dict[str, Any]] | None) -> dict[str, dict[str, Any]]:
+    """The patches that reported something, and the watched ones that did not; the later search date of the two."""
+    out = dict(patches)
+    for key, w in (watched or {}).items():
+        if key not in out:
+            out[key] = dict(w)
+        elif w.get("last_searched") and (out[key]["last_searched"] or "") < w["last_searched"]:
+            out[key] = {**out[key], "last_searched": w["last_searched"]}
+    return out
+
+
+def regions(watched: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     """Every patch a blind search has covered, with the constellation it lies in and how many rows it reported.
 
     A row seen from two patches counts in both, so the patches' counts can add up to more than `total`.
+    `watched`: the watched patches by key (`watch.patches()`: ra, dec, fov, last_searched). One whose search
+    reported nothing is in no row, so it is listed from there, with a count of 0: somebody chose that patch
+    and must be able to come back to it.
     """
     with _db() as con:
-        patches = _patches(con)
+        patches = _with_watched(_patches(con), watched)
         rows = _all_rows(con, None, None, None)
     order = sorted(patches)
     names = constellations([(patches[k]["ra"], patches[k]["dec"]) for k in order])

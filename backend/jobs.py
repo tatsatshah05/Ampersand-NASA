@@ -5,6 +5,9 @@ open on most hosts, and too heavy to run several at once on a small server. So t
 request for a field starts the search and every request (the first included) is answered
 at once with where it stands. Per-detector results are cached on disk by `search`, so a
 field that has been searched before is "done" within a second or two, also after a restart.
+
+A searched patch is watched (backend/watch.py): when NASA's archive lists pictures its last
+search did not have, the next request searches it again from scratch (`searching_again`).
 """
 from __future__ import annotations
 
@@ -15,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from typing import Any
 
-from . import search, spherex, watchlist
+from . import search, spherex, watch, watchlist
 
 log = logging.getLogger("backend.jobs")
 
@@ -42,10 +45,13 @@ def _run(job: dict[str, Any], ra: float, dec: float, fov: float, detectors: tupl
         for det in detectors:
             job["detector_now"] = det
             # The same call `search.search_detectors` makes, so its answer is on disk for the line below.
-            search.search_field(ra, dec, fov, det, min_sigma=search.COMBINE_SIGMA, fetch=search.fetch_to_own_cache)
+            # Searching again because there are new pictures: the answer on disk is the old one and is replaced.
+            search.search_field(ra, dec, fov, det, min_sigma=search.COMBINE_SIGMA, fetch=search.fetch_to_own_cache,
+                                refresh=job["again"])
             job["detectors_done"] += 1
         job["detector_now"] = None
         job["result"] = search.search(ra, dec, fov, detectors, fetch=search.fetch_to_own_cache)
+        watch.record_safely(ra, dec, fov)        # before "done": whoever sees "done" finds the patch's note up to date
         job["state"] = "done"
         watchlist.ingest_safely(job["result"])   # add the finds to the shared watchlist; never fails the search
     except spherex.BadRequest as e:
@@ -68,9 +74,15 @@ def search_status(ra: float, dec: float, fov: float, detectors: tuple[int, ...])
         job = _jobs.get(key)
         if job and job["state"] == "failed" and time.time() - job["finished"] > FORGET_FAILURE_S:
             job = None
+        again = False
+        if job is None or job["state"] == "done":
+            # A finished search, in memory or on disk, is the answer only while the archive lists what it had.
+            again = watch.new_pictures(ra, dec, fov)
+            if again:
+                job = None
         if job is None:
             job = {"state": "queued", "asked": time.time(), "started": None, "finished": None, "detector_now": None,
-                   "detectors_done": 0, "result": None, "error": None}
+                   "detectors_done": 0, "result": None, "error": None, "again": again}
             _jobs[key] = job
             job["future"] = _executor.submit(_run, job, ra, dec, fov, detectors)
             finished = [k for k, j in _jobs.items() if j["state"] in ("done", "failed")]
@@ -86,6 +98,7 @@ def search_status(ra: float, dec: float, fov: float, detectors: tuple[int, ...])
         "seconds": round((job["finished"] or time.time()) - (job["started"] or job["asked"]), 1),
         "detector_now": job["detector_now"], "detectors_done": job["detectors_done"],
         "detectors_total": len(detectors), "searches_ahead": waiting if job["state"] == "queued" else 0,
+        "searching_again": job["again"],
     }
     if job["state"] == "done":
         out["result"] = job["result"]
