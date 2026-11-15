@@ -23,7 +23,20 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
-from verify_plot import BLUE, GREY, ORANGE, Chart, caption_block, save, stack_horizontal, stack_vertical  # noqa: E402
+from verify_plot import (
+    BLUE,
+    GREEN,
+    GREY,
+    ORANGE,
+    PURPLE,
+    RED,
+    TEAL,
+    Chart,
+    caption_block,
+    save,
+    stack_horizontal,
+    stack_vertical,
+)  # noqa: E402
 
 from backend import follow, pipeline, smallbodies  # noqa: E402
 
@@ -68,6 +81,37 @@ def spectrum_chart(
             label=f"{len(ok)} exposures",
         )
     ch.hline(0.0, color=GREY)
+    return ch
+
+
+def visits_chart(res: dict, title: str, large: bool = True) -> Chart:
+    """The spectrum drawn on a logarithmic scale with each visit (a few days of observing) in its own colour, so that
+    the same body at different times can be compared. Visits with fewer than 15 usable points are left out."""
+    key, ekey = ("flux_large_mjy", "err_large_mjy") if large else ("flux_mjy", "err_mjy")
+    radius = res["radii"]["large_arcsec" if large else "small_arcsec"]
+    ok = [p for p in res["points"] if p["status"] == "ok" and (p.get(key) or 0) > 0]
+    ch = Chart(
+        title=title,
+        xlabel="wavelength (micrometres)",
+        ylabel=f"brightness in {radius:g} arcsec circle (mJy)",
+        width=1150,
+        height=480,
+        xlim=(0.7, 5.1),
+        logy=True,
+    )
+    for k, b in follow.BANDS.items():
+        ch.span(*b["window"], color=BAND_COLOURS[k])
+    colours = [BLUE, ORANGE, RED, GREEN, PURPLE, TEAL]
+    shown = [g for g in follow.visits(ok) if len(g) >= 15]
+    for g, colour in zip(shown, colours, strict=False):
+        ch.scatter(
+            [p["wavelength_um"] for p in g],
+            [p[key] for p in g],
+            yerr=[p[ekey] for p in g],
+            color=colour,
+            label=f"{g[0]['time'][:10]} to {g[-1]['time'][:10]} (r {g[0]['r_au']:.1f} au)",
+            size=3,
+        )
     return ch
 
 
@@ -186,6 +230,45 @@ def strip(res: dict, outdir: Path, slug: str, n: int) -> Path | None:
     return path
 
 
+def sequence_strip(res: dict, outdir: Path, slug: str, prefix: str) -> Path | None:
+    """Consecutive exposures of one detector (the points whose time starts with `prefix`, for example
+    "2025-12-25T19:4") side by side, each centred on the body, all with one brightness stretch (the first one's)."""
+    prefix, _, det = prefix.partition("@")  # "2026-01-02T10:2@5": only detector 5
+    pts = sorted(
+        (
+            p
+            for p in res["points"]
+            if p["time"].startswith(prefix)
+            and p["status"] in ("ok", "star_in_the_way")
+            and (not det or p["detector"] == int(det))
+        ),
+        key=lambda p: p["mjd"],
+    )
+    if not pts:
+        return None
+    tmp = outdir / "_tmp"
+    tmp.mkdir(parents=True, exist_ok=True)
+    cols, lim = [], None
+    for i, p in enumerate(pts):
+        label = f"{p['time'][5:16]} D{p['detector']} {p['wavelength_um']:.3f} um {p['flux_mjy']:.1f} mJy"
+        try:
+            im, used = _panel(Path(p["file"]), p["ra"], p["dec"], tmp / f"s{i}.png", label, lim)
+        except Exception as e:  # noqa: BLE001
+            print(f"  no picture for {p['time']}: {e}")
+            continue
+        lim = lim or used
+        cols.append(im)
+    for f in tmp.glob("*.png"):
+        f.unlink()
+    tmp.rmdir()
+    if not cols:
+        return None
+    tag = prefix.replace(":", "").replace("-", "") + (f"_D{det}" if det else "")
+    path = outdir / f"{slug}_sequence_{tag}.png"
+    save(stack_horizontal(cols, pad=8), path)
+    return path
+
+
 FIELD_ARCSEC = 200.0
 
 
@@ -255,6 +338,9 @@ def main() -> None:
         "--moving", type=int, default=0, help="draw a strip of this many pictures of one fixed patch of sky"
     )
     ap.add_argument("--strip", type=int, default=0, help="draw a strip of this many single-exposure pictures")
+    ap.add_argument(
+        "--sequence", action="append", default=[], help="time prefix such as 2025-12-25T19:4: draw those exposures"
+    )
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -281,8 +367,13 @@ def main() -> None:
         spectrum_chart(res, f"{res['name']}: spectrum from SPHEREx exposures").render().save(
             out / f"{slug}_spectrum.png"
         )
+        visits_chart(res, f"{res['name']}: each visit in its own colour (36.9 arcsec circle)").render().save(
+            out / f"{slug}_visits.png"
+        )
         if a.strip:
             print("strip:", strip(res, out, slug, a.strip))
+        for prefix in a.sequence:
+            print("sequence strip:", sequence_strip(res, out, slug, prefix))
         if a.moving:
             m = moving_strip(res, out, slug, a.moving)
             if m:

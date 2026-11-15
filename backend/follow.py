@@ -92,6 +92,8 @@ COMMANDS = {
     "3i/atlas": "DES=3I;CAP",
     "3i": "DES=3I;CAP",
     "c/2025 n1": "DES=C/2025 N1;CAP",
+    "240p": "90001213;",  # 240P/NEAT, the 2024 apparition (Horizons record number: several share the designation)
+    "c/2025 k1": "90004925;",  # C/2025 K1 (ATLAS), the main body, not its fragments K1-B, -C, -D
 }
 
 # Gas bands: window in micrometres, and the neighbouring continuum windows either side.
@@ -129,9 +131,11 @@ class FollowError(RuntimeError):
 
 def horizons_command(name: str) -> str:
     name = name.strip()
+    if name.lower() in COMMANDS:
+        return COMMANDS[name.lower()]
     if re.fullmatch(r"\d+[PCDI]", name):  # "29P": a comet's number, no name after it
         return f"DES={name};CAP"
-    return COMMANDS.get(name.lower()) or smallbodies.horizons_command(name)
+    return smallbodies.horizons_command(name)
 
 
 def _table(command: str, time_params: dict[str, str]) -> list[dict]:
