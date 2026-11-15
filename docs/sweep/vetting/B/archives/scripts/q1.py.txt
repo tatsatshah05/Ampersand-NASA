@@ -1,0 +1,16 @@
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from irsa_cones import cone
+def show(rows, keys, n=40):
+    if rows is None: return
+    for r in rows[:n]:
+        print("  %6.2f\"  " % r["_sep"] + "  ".join(f"{k}={r.get(k,'')}" for k in keys))
+# 2MASS
+rows = cone("fp_psc", 30, "designation,ra,dec,j_m,j_msigcom,h_m,h_msigcom,k_m,k_msigcom,ph_qual,cc_flg,rd_flg,bl_flg,gal_contam,jdate")
+show(rows, ["designation","ra","dec","j_m","h_m","k_m","ph_qual","cc_flg","jdate"])
+# AllWISE
+rows = cone("allwise_p3as_psd", 30, "designation,ra,dec,w1mpro,w1sigmpro,w2mpro,w2sigmpro,w3mpro,w3sigmpro,w4mpro,w4sigmpro,cc_flags,ext_flg,var_flg,ph_qual,w1snr,w2snr,w3snr,w4snr,nb,na")
+show(rows, ["designation","ra","dec","w1mpro","w2mpro","w3mpro","w4mpro","ph_qual","cc_flags","var_flg","w3snr","w4snr"])
+# CatWISE
+rows = cone("catwise_2020", 30, "source_name,ra,dec,w1mpro,w1sigmpro,w2mpro,w2sigmpro,ab_flags,cc_flags,pmra,pmdec,meanobsmjd,w1snr,w2snr")
+show(rows, ["source_name","ra","dec","w1mpro","w2mpro","w1snr","w2snr","ab_flags","pmra","pmdec","meanobsmjd"])

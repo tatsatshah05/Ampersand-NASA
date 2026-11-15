@@ -1,0 +1,61 @@
+"""Two-source forced Gaussian fit (positions fixed: X = SPHEREx 2026 centroid, R = 2MASS red star) in every
+cached SPHEREx cutout of detectors 3-6, plus a one-source aperture flux with the project's own measure()."""
+import sys, os, glob, csv, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from astropy.stats import sigma_clipped_stats
+from scipy.optimize import least_squares
+warnings.filterwarnings("ignore")
+sys.path.insert(0, "<repository>/.claude/worktrees/agent-afd7766a5a5ec349f")
+from backend import photometry
+from pathlib import Path
+X = (253.18040, -44.67697); R = (253.183849, -44.675522); C = (253.18179, -44.67690)
+D = "<repository>/backend/cache/sweep/cutouts/b464db86a4"
+OUT = "docs/sweep/vetting/B/archives/data/twosrc.csv"
+SIG = {3: 0.42, 4: 0.6, 5: 0.58, 6: 0.6}   # px, median Gaussian sigma of the free fits (centroid.py)
+rows = []
+for f in sorted(glob.glob(D + "/*.fits")):
+    det = int(f[-6])
+    if det < 3: continue
+    with fits.open(f) as h:
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float); flg = h["FLAGS"].data
+        hd = h["IMAGE"].header; w = WCS(hd); wave = h["WAVE"].data
+    xX, yX = [float(v) for v in w.all_world2pix(*X, 0)]; xR, yR = [float(v) for v in w.all_world2pix(*R, 0)]
+    xC, yC = [float(v) for v in w.all_world2pix(*C, 0)]
+    ix, iy = int(round(xX)), int(round(yX))
+    if not (22 <= ix < img.shape[1]-22 and 22 <= iy < img.shape[0]-22): continue
+    bad = (flg & photometry.PHOTOMETRY_BAD) != 0
+    yy, xx = np.mgrid[0:img.shape[0], 0:img.shape[1]]
+    r = np.hypot(xx-xX, yy-yX)
+    ring = (r > 14) & (r < 20) & ~((flg & (photometry.PHOTOMETRY_BAD | photometry.OVERFLOW)) != 0) & np.isfinite(img)
+    sky = sigma_clipped_stats(img[ring])[1]
+    box = (np.abs(xx-ix) <= 3) & (np.abs(yy-iy) <= 3)
+    nbad = int((bad & box).sum()); nover = int((((flg & photometry.OVERFLOW) != 0) & box).sum())
+    sel = box & ~bad & np.isfinite(img)
+    if sel.sum() < 35: continue
+    z = img[sel] - sky; s = SIG[det]
+    def g(x0, y0): return np.exp(-((xx[sel]-x0)**2 + (yy[sel]-y0)**2)/(2*s*s))
+    A = np.vstack([g(xX, yX), g(xR, yR), g(xC, yC), np.ones(sel.sum())]).T
+    coef, *_ = np.linalg.lstsq(A, z, rcond=None)
+    resid = z - A @ coef; rms = np.std(resid)
+    cov = np.linalg.pinv(A.T @ A) * rms**2
+    to_mjy = float(proj_plane_pixel_area(w)) * (np.pi/180)**2 * 1e9
+    k = 2*np.pi*s*s*to_mjy
+    m = photometry.measure(Path(f), *X)
+    rows.append(dict(file=os.path.basename(f), det=det, mjd=hd["MJD-AVG"], wave=float(wave[iy, ix]),
+                     fX=coef[0]*k, eX=np.sqrt(cov[0, 0])*k, fR=coef[1]*k, eR=np.sqrt(cov[1, 1])*k, fC=coef[2]*k,
+                     ap_status=m["status"], ap_mjy=m["flux_mjy"], nbad=nbad, nover=nover))
+with open(OUT, "w", newline="") as fo:
+    wr = csv.DictWriter(fo, fieldnames=list(rows[0].keys())); wr.writeheader(); wr.writerows(rows)
+def ep(m): return "Aug2025" if m < 61000 else ("Mar2026" if m < 61200 else "Aug2026")
+from collections import defaultdict
+gg = defaultdict(list)
+for r in rows:
+    if r["nbad"] == 0: gg[(ep(r["mjd"]), r["det"])].append(r)
+print("epoch    det  n  wave_um   X_mJy(median, MAD)      R_mJy(median)   c_mJy  sum_fit  aperture_ok_median(n)")
+for k in sorted(gg, key=lambda k: (k[1], k[0][-4:], k[0])):
+    L = gg[k]; fx = np.array([r["fX"] for r in L]); fr = np.array([r["fR"] for r in L]); fc = np.array([r["fC"] for r in L])
+    ap = np.array([r["ap_mjy"] for r in L if r["ap_status"] == "ok" and r["ap_mjy"] is not None])
+    print(f"{k[0]} D{k[1]} {len(L):3d}  {np.median([r['wave'] for r in L]):.2f}   {np.median(fx):8.1f} ({1.4826*np.median(np.abs(fx-np.median(fx))):5.1f})   {np.median(fr):8.1f}   {np.median(fc):6.1f}  {np.median(fx+fr+fc):7.1f}   {np.median(ap) if len(ap) else float('nan'):7.1f} ({len(ap)})")

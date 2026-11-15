@@ -1,0 +1,50 @@
+"""Summaries of pass 1: photometry table per detector and visit, centroids, widths, zero points."""
+import json, os, sys
+import numpy as np
+from astropy.time import Time
+sys.path.insert(0, os.path.dirname(__file__))
+from common import W, RA0, DEC0, offset_en
+
+R = json.load(open(f"{W}/out/pass1.json"))
+R.sort(key=lambda r: r["mjd"])
+ep, cur = [], 0
+for i, r in enumerate(R):
+    if i and r["mjd"] - R[i - 1]["mjd"] > 30:
+        cur += 1
+    r["epoch"] = cur
+EPN = {}
+for r in R:
+    EPN.setdefault(r["epoch"], []).append(r["mjd"])
+print("epochs:", {e: (Time(min(v), format="mjd").iso[:10], Time(max(v), format="mjd").iso[:10], len(v)) for e, v in EPN.items()})
+
+def rob(a):
+    a = np.asarray([x for x in a if x is not None and np.isfinite(x)])
+    if a.size == 0:
+        return (None, None, 0)
+    return (float(np.median(a)), float(1.4826 * np.median(np.abs(a - np.median(a)))), int(a.size))
+
+print("\n=== aperture r=2.5 px at the nominal place (mJy): median, robust scatter, n_ok / n_total; statuses ===")
+for det in range(1, 7):
+    for e in sorted(EPN):
+        rr = [r for r in R if r["det"] == det and r["epoch"] == e]
+        ok = [r["ap25"]["flux"] for r in rr if r["ap25"]["status"] == "ok"]
+        ok15 = [r["ap15"]["flux"] for r in rr if r["ap15"]["status"] == "ok"]
+        st = {}
+        for r in rr:
+            st[r["ap25"]["status"]] = st.get(r["ap25"]["status"], 0) + 1
+        ov = sum(1 for r in rr if r["ap25"]["status"] == "ok" and r["ap25"]["n_overflow"] > 0)
+        med, sc, n = rob(ok)
+        m15 = rob(ok15)[0]
+        waves = [r["wave"] for r in rr if r["wave"]]
+        print(f"D{det} ep{e}: r2.5 {med and round(med,1)} +/- {sc and round(sc,1)} (n={n}/{len(rr)}), r1.5 {m15 and round(m15,1)}, "
+              f"statuses {st}, ok-with-OVERFLOW {ov}, wave {min(waves):.2f}-{max(waves):.2f}" if waves else f"D{det} ep{e}: none")
+
+print("\n=== zero points from field stars (arcsec), per detector ===")
+for det in range(1, 7):
+    z = [(r["zp_de"], r["zp_dn"], r["zp_scatter"], r["n_refs"]) for r in R if r["det"] == det and r["zp_de"] is not None]
+    if z:
+        z = np.array(z)
+        print(f"D{det}: n_exp {len(z)}, zp_de median {np.median(z[:,0]):+.2f} (scatter {1.4826*np.median(np.abs(z[:,0]-np.median(z[:,0]))):.2f}), "
+              f"zp_dn {np.median(z[:,1]):+.2f} ({1.4826*np.median(np.abs(z[:,1]-np.median(z[:,1]))):.2f}), per-star scatter median {np.median(z[:,2]):.2f}, refs/exposure {np.median(z[:,3]):.0f}")
+print("exposures without a zero point:", sum(1 for r in R if r["zp_de"] is None))
+json.dump(R, open(f"{W}/out/pass1_epochs.json", "w"))

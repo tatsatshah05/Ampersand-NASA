@@ -1,0 +1,31 @@
+"""Summarise a VizieR all-catalogue cone answer: every table with rows, its nearest row (_r, arcsec) and a few columns."""
+import sys, warnings
+warnings.filterwarnings("ignore")
+from astropy.io.votable import parse
+import numpy as np
+
+vt = parse(sys.argv[1], verify="ignore")
+rmax = float(sys.argv[2]) if len(sys.argv) > 2 else 99
+res = []
+for resource in vt.resources:
+    for tab in resource.tables:
+        try:
+            t = tab.to_table()
+        except Exception as e:
+            print("unreadable table", tab.ID, e)
+            continue
+        if len(t) == 0:
+            continue
+        r = np.array(t["_r"], dtype=float) if "_r" in t.colnames else np.full(len(t), np.nan)
+        # VizieR _r is in arcmin unless -out.form... check unit
+        unit = str(t["_r"].unit) if "_r" in t.colnames else "?"
+        if unit in ("arcmin", "'"):
+            r = r * 60
+        elif unit in ("deg",):
+            r = r * 3600
+        res.append((np.nanmin(r), tab.name, (resource.description or "")[:70], (tab.description or "")[:70], len(t), unit, t))
+res.sort(key=lambda x: x[0])
+print(f"tables with rows: {len(res)}")
+for rmin, name, rdesc, tdesc, n, unit, t in res:
+    if rmin <= rmax:
+        print(f"{rmin:6.2f}\"  {name:35s} n={n:3d}  {rdesc} | {tdesc}")

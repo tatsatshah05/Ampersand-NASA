@@ -13,6 +13,7 @@ Everything here uses real pieces saved in tests/data/sweep (nothing is invented)
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 import numpy as np
@@ -366,3 +367,178 @@ def test_the_wing_of_a_saturated_nova_is_not_a_candidate():
     assert [(round(s["ra"], 3), round(s["dec"], 3)) for s in out["survivors"]] == [(279.744, -3.864)]
     assert out["tally"]["killed_saturation_residue"] == 1
     assert out["killed"]["killed_saturation_residue"] == [1]
+
+
+# ------------------------------------------------------------------ the fixes after the vetting of 2026-11-15
+#
+# docs/sweep/vetting/ruling.json found that the sweep's first write-up of its three candidates was wrong: the
+# 2025 "detections" of A and B were neighbouring stars' light, A's and C's positions were 3 arcsec off, the
+# "counterparts" named for B and C are other stars, a W2 magnitude was converted wrongly, GLIMPSE II was never
+# asked, and C's bright readings fell on emission lines. The data below are real: 45 x 45 pixel crops (pixel
+# values unchanged, WCS shifted by the crop offset) of ten cached detector 6 cutouts of each candidate, and the
+# catalogues' answers at the ruled positions. FIRST holds the first run's positions only to start from them:
+# they are the withdrawn ones.
+
+CAND = DATA / "candidates"
+RULED = {"A": (270.80408, -23.46818), "B": (253.18038, -44.67697), "C": (241.70906, -52.20564)}
+FIRST = {"A": (270.80362, -23.46745), "B": (253.18044, -44.67687), "C": (241.70931, -52.20484)}
+C_TILE_IMAGES = [{"obs_id": "2026W09_2A_0389_1", "mjy": 178.07}, {"obs_id": "2026W10_1A_0205_2", "mjy": 299.60}]
+
+
+def _arcsec(a: tuple[float, float], b: tuple[float, float]) -> float:
+    return sweep.sep_deg(a[0], a[1], b[0], b[1]) * 3600.0
+
+
+@pytest.fixture(scope="module")
+def described() -> dict:
+    out = {}
+    for k in "ABC":
+        cuts = [sweep.Cutout.load(p) for p in sorted((CAND / k).glob("*.fits"))]
+        assert len(cuts) == 10
+        out[k] = sweep.describe(cuts, *FIRST[k], tile_images=C_TILE_IMAGES if k == "C" else None,
+                                position_detectors=(6,))
+    return out
+
+
+def test_the_position_is_the_bright_state_centroid(described):
+    """Within 0.5 arcsec of the ruling's positions, although the fit starts at the first run's blended ones."""
+    for k, d in described.items():
+        pos = (d["position"]["ra"], d["position"]["dec"])
+        assert _arcsec(pos, RULED[k]) < 0.5, k
+        assert d["position"]["n"] >= 3 and d["position"]["scatter_arcsec"] < 0.5
+    assert described["A"]["position"]["moved_arcsec"] > 2.5        # the first run was 3.0 arcsec off for A and C
+    assert described["C"]["position"]["moved_arcsec"] > 2.5
+    assert described["B"]["position"]["moved_arcsec"] < 1.0        # and 0.4 for B
+
+
+def test_the_2025_light_in_the_old_circle_was_a_neighbours_for_a_and_b(described):
+    for k in "AB":
+        f = described[k]["faint"]["0"]
+        assert f["neighbour_light"] is True, k                      # the circle's light is centred elsewhere
+        assert f["shift_px"] > 1.0 and f["concentration"] < 0.6 * f["bright_concentration"]
+        assert f["detected"] is False and abs(f["fit"]["median"]) < 3.0   # the source itself: nothing
+    # The old 15-arcsec circle still reads tens of mJy at A's true place in 2025: the star 20 arcsec away.
+    assert described["A"]["faint"]["0"]["circle_mjy"] > 30.0
+
+
+def test_the_corrected_brightness_agrees_with_the_reviewers(described):
+    a, b, c = (described[k]["epochs"] for k in "ABC")
+    assert 600 < a["2"]["detectors"]["6"]["fit"]["median"] < 850          # ruling: 670-803 mJy, Aug-Sep 2026
+    assert a["1"]["detectors"]["6"]["fit"]["median"] > 1000               # spring 2026, partly saturated
+    assert 950 < b["2"]["detectors"]["6"]["fit"]["median"] < 1100         # ruling: 1,006-1,089 mJy, Aug 2026
+    assert 250 < b["1"]["detectors"]["6"]["fit"]["median"] < 450          # rising about 10 per cent a day in March
+    assert 85 < c["1"]["detectors"]["6"]["fit"]["median"] < 140           # continuum about 85-110 mJy plus lines
+    assert described["A"]["rise_at_least"] > 100                          # "more than 100 times"
+    assert described["C"]["rise_at_least"] > 30                           # "at least 30 times in its continuum"
+    assert described["C"]["faint"]["0"]["limit_3sigma"] < 4.0             # ruling: below about 3 mJy
+
+
+def test_c_bright_tile_readings_fell_on_emission_lines(described):
+    lines = described["C"]["lines"]
+    assert lines["possible_emission_line"] is True
+    waves = sorted(round(r["um"], 2) for r in lines["readings"] if r.get("line"))
+    assert waves == [4.63, 4.74]                                         # ruling: 4.631 and 4.739 micrometres
+    for r in lines["readings"]:
+        assert r["ratio"] > sweep.LINE_FACTOR and 85 < r["continuum_mjy"] < 115
+
+
+def test_a_reading_at_the_continuum_is_not_called_a_line():
+    paths = sorted((CAND / "C").glob("2026W09_2A_04*.fits")) + sorted((CAND / "C").glob("2026W09_2A_0389_[234]*.fits"))
+    rows = []
+    for p in paths:
+        cu = sweep.Cutout.load(p)
+        x, y = cu.xy(*RULED["C"])
+        rows.append({"obs_id": cu.obs_id, "um": cu.wavelength(x, y), "mjy": sweep.forced_fit(cu, x, y)["flux"]})
+    assert len(rows) == 4
+    assert sweep.line_flag(rows[:1], rows[1:])["possible_emission_line"] is False
+
+
+def test_the_neighbour_is_modelled_not_measured():
+    """In A's 2025 images the fit finds the bright star 20 arcsec (3.3 pixels) away and gives it its light."""
+    cu = sweep.Cutout.load(sorted((CAND / "A").glob("2025*.fits"))[0])
+    f = sweep.forced_fit(cu, *cu.xy(*RULED["A"]))
+    assert f["status"] == "ok" and abs(f["flux"]) < 5.0
+    big = max(f["neighbours"], key=lambda n: n["mjy"])
+    assert 2.8 < math.hypot(big["dx_px"], big["dy_px"]) < 3.8 and big["mjy"] > 300.0
+
+
+@pytest.fixture(scope="module")
+def ruled_catalogues() -> dict:
+    return json.loads((CAND / "catalogues.json").read_text())
+
+
+def _rows_at(ruled_catalogues: dict, k: str) -> tuple[list, list]:
+    rows = ruled_catalogues[k]["rows"]
+    return rows, [_arcsec((r["ra"], r["dec"]), RULED[k]) for r in rows]
+
+
+def test_no_counterpart_is_named_further_out_than_spherex_positions_allow(ruled_catalogues):
+    for k in "ABC":
+        rows, offs = _rows_at(ruled_catalogues, k)
+        result = sweep.classify(500.0, rows, offs)
+        assert result["kind"] == "candidate", k
+        assert result["circle"]["at_place"] == [], k                    # nothing within 1.5 arcsec
+        assert result["reasons"][0].startswith("no row within 1.5 arcsec")
+    # B's first "counterpart" (CatWISE, 3.5 arcsec from the first position) is now listed as another star.
+    rows, offs = _rows_at(ruled_catalogues, "B")
+    assert any(o < 6.2 for o in offs)
+    assert any("not at the place" in s for s in sweep.classify(500.0, rows, offs)["reasons"])
+
+
+def test_the_brightest_star_whose_light_reaches_the_circle_is_named(ruled_catalogues):
+    rows, offs = _rows_at(ruled_catalogues, "A")
+    top = sweep.circle_census(rows, offs)["brightest_in_reach"][0]
+    assert "180312.4" in top["name"] and 19.0 < top["offset_arcsec"] < 21.0 and 400 < top["mjy"] < 470  # 437 mJy
+    rows, offs = _rows_at(ruled_catalogues, "B")
+    top = sweep.circle_census(rows, offs)["brightest_in_reach"][0]
+    assert "165244.1" in top["name"] and 9.5 < top["offset_arcsec"] < 10.6 and 35 < top["mjy"] < 45     # 40 mJy
+
+
+def test_w2_magnitudes_are_converted_by_code_not_by_hand():
+    assert sweep.w2_mjy(11.655) == pytest.approx(3.74, abs=0.01)     # the first write-up said 0.4 mJy
+    assert sweep.w2_mjy(11.6) == pytest.approx(3.9, abs=0.05)
+    assert "3.74 mJy" in sweep.brightness_text({"w2": 11.655})
+    band, mjy = sweep.infrared_mjy({"w2": 6.487})
+    assert band == "W2" and mjy == pytest.approx(436.7, abs=1.0)
+
+
+def test_glimpse_ii_is_asked(monkeypatch):
+    asked = []
+
+    def fake_gator(table, ra, dec, radius, cols):
+        asked.append(table)
+        return [{"designation": "G006.7117-00.6347", "ra": ra, "dec": dec, "mag4_5": 14.35, "mag3_6": 14.6}]
+
+    monkeypatch.setattr(sweep.search, "_gator", fake_gator)
+    names = [n for n, _ in sweep.SERVICES]
+    assert "GLIMPSE" in names and "GLIMPSE II" in names
+    rows = dict(sweep.SERVICES)["GLIMPSE II"](*RULED["A"], 30 / 3600, False)
+    assert asked == ["glimpse2_v2cat"] and rows[0]["catalogue"] == "GLIMPSE II"
+    assert sweep.irac2_mjy(rows[0]["irac2"]) == pytest.approx(0.33, abs=0.01)    # ruling: [4.5] 14.35 = 0.33 mJy
+
+
+def test_a_survivor_is_placed_where_it_is_bright(images):
+    """The nova's detections exist only in the bright images; its position comes from those."""
+    dets = [im.detect() for im in images]
+    merged = sweep.merge_detections(dets)
+    nova = min(merged, key=lambda s: _arcsec((s["ra"], s["dec"]), NOVA))
+    bright = [i for i, im in enumerate(images) if im.epoch == 1]
+    ra, dec, how = sweep.bright_position(nova, bright)
+    assert _arcsec((ra, dec), NOVA) < 1.5 and "bright images" in how
+    assert sweep.bright_position({"ra": 1.0, "dec": 2.0}, bright)[2] == "merged over all images"
+
+
+def test_the_summary_carries_only_the_ruled_numbers(tmp_path, monkeypatch):
+    """A tile record holding candidate A at its first position comes out with the ruling's position and numbers."""
+    vetted = sweep.vetted_candidates(Path(__file__).parent.parent / "docs" / "sweep" / "vetting" / "candidates.json")
+    tile = {"name": "l006.0_b+0.0", "status": "done", "area_sq_deg": 6.16, "tally": dict.fromkeys(sweep.STAGES, 0),
+            "survivors": [{"ra": FIRST["A"][0], "dec": FIRST["A"][1], "classification": {"kind": "candidate"},
+                           "pair": {"bright_mjy": 2575.6, "bright_epoch": 1, "faint_epoch": 0},
+                           "measurements": [], "direction": "brightened"}]}
+    (tmp_path / "l006.0_b+0.0.json").write_text(json.dumps(tile))
+    monkeypatch.setattr(sweep, "TILE_DIR", tmp_path)
+    s = sweep.summarise(vetted=vetted)
+    (a,) = s["survivors"]
+    assert a["label"] == "A" and (a["ra"], a["dec"]) == RULED["A"] and a["kind"] == "candidate"
+    assert "bright_mjy" not in a and "270.80362" not in json.dumps(s)
+    assert "nobody has confirmed it yet" in a["allowed_sentence"]

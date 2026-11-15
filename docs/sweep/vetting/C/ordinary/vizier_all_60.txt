@@ -1,0 +1,60 @@
+324 tables listed, 59 with rows
+VI/42                        n=   1 nearest=   0.0"  Identification of a Constellation From Position (Roman 1987)
+II/348                       n= 200 nearest=   1.9"  VISTA Variable in the Via Lactea Survey DR2 (Minniti+, 2017)
+II/337                       n= 200 nearest=   1.9"  VISTA Variables in the Via Lactea Survey DR1 (Saito+, 2012)
+II/387                       n= 200 nearest=   2.0"  VVV Infrared Astrometric Catalogue v2 release (VIRAC2) (Smith+, 2025)
+J/MNRAS/471/100              n=   1 nearest=   3.8"  Hi-GAL compact source catalog. -71.0<l<67.0 (Elia+, 2017)
+J/A+A/591/A149/higalpsw      n=   1 nearest=   4.5"  PSW (SPIRE 250um) band HIGAL Herschel catalog
+J/A+A/646/A74                n=   1 nearest=   4.6"  Distance of HiGAL sources (Mege+, 2021)
+J/A+A/646/A74/tablee1        n=   1 nearest=   4.6"  5_sigma catalogue
+J/A+A/591/A149/higalblu      n=   1 nearest=   4.7"  Blue (PACS 70um) band HIGAL Herschel catalog
+J/A+A/591/A149/higalred      n=   1 nearest=   5.2"  Red (PACS 160um) band HIGAL Herschel catalog
+II/293                       n= 200 nearest=   6.0"  GLIMPSE Source Catalog (I + II + 3D) (IPAC 2008)
+I/350/tyc2tdsc               n=   1 nearest=   7.6"  Tycho-2 merged with the TDSC catalog and TDSC supplement
+II/386                       n= 200 nearest=   7.8"  VPHAS+ DR3 survey (Drew+, 2025)
+I/347                        n= 132 nearest=   7.8"  Distances to 1.33 billion stars in Gaia DR2 (Bailer-Jones+, 2018)
+IV/39                        n= 190 nearest=   7.8"  TESS Input Catalog version 8.2 (TIC v8.2) (Paegert+, 2021)
+I/352                        n= 135 nearest=   7.8"  Distances to 1.47 billion stars in Gaia EDR3 (Bailer-Jones+, 2021)
+I/355                        n= 150 nearest=   7.8"  Gaia DR3 Part 1. Main source (Gaia Collaboration, 2022)
+I/297                        n= 119 nearest=   9.1"  NOMAD Catalog (Zacharias+ 2005)
+II/246                       n=  93 nearest=   9.1"  2MASS All-Sky Catalog of Point Sources (Cutri+ 2003)
+II/328                       n=  11 nearest=  11.1"  AllWISE Data Release (Cutri+ 2013)
+J/A+A/591/A149/higalpmw      n=   1 nearest=  11.5"  PMW (SPIRE 350um) band HIGAL Herschel catalog
+I/305                        n=  58 nearest=  11.7"  The Guide Star Catalog, Version 2.3.2 (GSC2.3) (STScI, 2006)
+I/243                        n=  45 nearest=  11.8"  The PMM USNO-A1.0 Catalogue (Monet 1997)
+I/319                        n=  41 nearest=  12.0"  XPM Catalog of positions and proper motions (Fedorov+ 2011)
+I/317                        n=  75 nearest=  12.0"  The PPMXL Catalog (Roeser+ 2010)
+I/355/paramsup               n=  65 nearest=  12.0"  Additional parameters from the Apsis processing chain, compared to the main table astrophy
+I/355/rvsmean                n=  24 nearest=  12.0"  RVS mean sampled spectrum table (2400147645 lines) (rvs_mean_spectrum)
+I/355/xpsample               n=  24 nearest=  12.0"  BP/RP externally calibrated sampled mean spectrum (11822651939 rows) (xp_sampled_mean_spec
+I/358/alertsms               n=   1 nearest=  12.0"  Some photometric science alerts mix transits from their primary source and other sources i
+I/358/varisum                n=   1 nearest=  12.0"  Information on where a source_id can be found in the different Variability tables and stat
+V/160                        n=  24 nearest=  12.0"  SHBoost 2024 (Khalatyan+, 2024)
+J/A+A/674/A25                n=   1 nearest=  12.0"  Gaia DR3. spurious signals (Holl+, 2023)
+J/ApJ/984/58                 n=  24 nearest=  12.0"  Stellar parameters from XP and RVS spectra (Huson+, 2025)
+J/A+A/692/A115               n=  24 nearest=  12.0"  Pristine survey DR1 (Martin+, 2024)
+I/252                        n=  46 nearest=  12.0"  The USNO-A2.0 Catalogue (Monet+ 1998)
+I/320                        n=  26 nearest=  12.0"  SPM 4.0 Catalog (Girard+, 2011)
+B/vsx                        n=   1 nearest=  12.1"  AAVSO International Variable Star Index VSX (Watson+, 2006-)
+B/denis                      n=  84 nearest=  12.1"  The DENIS database (DENIS Consortium, 2005)
+I/284                        n=  78 nearest=  12.1"  The USNO-B1.0 Catalog (Monet+ 2003)
+I/355/paramp                 n=  44 nearest=  15.0"  1D astrophysical parameters produced by the Apsis processing chain developed in Gaia DPAC 
+J/MNRAS/509/2566             n=   2 nearest=  15.4"  VIVACE, VIrac VAriable Classification Ensemble (Molnar+, 2022)
+II/374                       n=  23 nearest=  15.7"  RGB photometric calibration of 213 million Gaia stars (Carrasco+, 2023)
+J/AJ/158/93                  n=  16 nearest=  15.7"  Regression of stellar effective temperatures in GaiaDR2 (Bai+, 2019)
+J/AJ/159/84                  n=  16 nearest=  15.7"  Machine-learning regression of extinction in Gaia DR2 (Bai+, 2020)
+II/336                       n=   4 nearest=  18.0"  AAVSO Photometric All Sky Survey (APASS) DR9 (Henden+, 2016)
+I/340                        n=   4 nearest=  19.3"  UCAC5 Catalogue (Zacharias+ 2017)
+I/322A                       n=   4 nearest=  19.3"  UCAC4 Catalogue (Zacharias+, 2012)
+J/AJ/149/64/catalog          n=   1 nearest=  22.2"  MIPSGAL 24{mu}m point source catalog (2015-05-22 version)
+J/MNRAS/546/F1849            n=   1 nearest=  22.2"  SMGPS compact source catalogue (Mutale+, 2026)
+J/A+A/675/A68/clusters       n=   3 nearest=  25.1"  List of open clusters
+J/ApJ/639/227                n=   2 nearest=  26.0"  MSX IRDC candidate catalog (Simon+, 2006)
+VIII/106/hpesl               n=   3 nearest=  34.8"  Herschel/PACS slightly extended sources list
+J/A+A/594/A116/cubes_gal     n=   1 nearest=  50.1"  List of 20dx20d FITS data cubes, Galactic
+I/363                        n=   2 nearest=  50.2"  Cartesian catalog of 30 million Gaia sources (Zhang+, 2025)
+J/A+A/469/1221/plates        n=   1 nearest=  53.5"  List of all astrographic plates (tables 1, 2 and 3 of the paper)
+J/A+A/665/A78/agnev          n=   4 nearest=  53.9"  Events generated by simulated AGN (eRASS1_mock_events_AGN.fits)
+J/MNRAS/522/29               n=   1 nearest=  56.8"  15000 ellipsoidal binary candidates in TESS (Green+, 2023)
+I/355/xpsummary              n= 200 nearest=  57.1"  Auxiliary information about the mean BP/RP spectrum (219197643 sources) (xp_summary)
+J/ApJS/267/34/table1         n=   1 nearest=  59.1"  Derived astrophysical parameters for the 2085 clusters detected in this work

@@ -1,0 +1,147 @@
+"""Forced photometry at P in every NEOWISE-R W2 single exposure (2014-2024) that the source table
+shows covering the place (frames in which W or a neighbour was detected).
+
+Per frame: fixed-position Gaussian model (FWHM 6.4") for P and every AllWISE/CatWISE source within
+30" of P except W, + constant, fit to pixels within 14" of P (W lies 20" away; pixels within 9" of W
+are excluded).  Calibration: the two neighbours N1/N2 9.3" from P, whose W2 in that very frame is
+read from the NEOWISE source table (else their NEOWISE median).  Output: per-visit mean flux at P,
+its standard error, and the neighbours' recovered fluxes as a check."""
+import os, sys, io, gzip, json, time, warnings
+import numpy as np, requests
+from astropy.io import fits, ascii
+from astropy.wcs import WCS
+from astropy.time import Time
+from astropy.coordinates import SkyCoord
+from concurrent.futures import ThreadPoolExecutor
+warnings.filterwarnings("ignore")
+BASE = "docs/sweep/vetting/A/archives"
+DL = BASE + "/dl/neowise_l1b"
+T = BASE + "/tables/"
+UA = {"User-Agent": "generic-astro-client/1.0"}
+P = SkyCoord(270.80409, -23.46819, unit="deg")
+W = SkyCoord(270.8020277, -23.4629541, unit="deg")
+ZP2 = 171.787e3  # mJy, W2 zero mag
+
+t = ascii.read(open(T + "gator_P_neowiser_p1bs_psd_r25.tbl").read(), format="ipac")
+t["frame"] = [s.split("-")[0] for s in t["source_id"]]
+c = SkyCoord(np.array(t["ra"]), np.array(t["dec"]), unit="deg")
+N1 = SkyCoord(270.80476, -23.47071, unit="deg")
+N2 = SkyCoord(270.80690, -23.46857, unit="deg")
+t["dN1"] = c.separation(N1).arcsec
+t["dN2"] = c.separation(N2).arcsec
+frames = sorted(set(t["frame"]))
+mjd_of = {f: float(np.median(t["mjd"][t["frame"] == f])) for f in frames}
+print(len(frames), "frames")
+
+# model sources: AllWISE + CatWISE within 30" of P, merged within 2", excluding W
+srcs = []
+for name, rac, dec in (("gator_cand_allwise_p3as_psd_r30.tbl", "ra", "dec"), ("gator_cand_catwise_2020_r30.tbl", "ra", "dec"),
+                       ("gator_cand_catwise_2020_reject_r30.tbl", "ra", "dec")):
+    tt = ascii.read(open(T + name).read(), format="ipac")
+    for r in tt:
+        s = SkyCoord(r[rac], r[dec], unit="deg")
+        if s.separation(W).arcsec < 4 or s.separation(P).arcsec > 30:
+            continue
+        if all(s.separation(o).arcsec > 2.5 for o in srcs):
+            srcs.append(s)
+print(len(srcs), "neighbour model positions (W excluded)")
+
+
+def fetch(f):
+    scan, num = f[:6], f[6:]
+    path = f"{DL}/{f}-w2.fits.gz"
+    if os.path.exists(path) and os.path.getsize(path) > 1000:
+        return f, path, None
+    url = (f"https://irsa.ipac.caltech.edu/ibe/data/wise/neowiser/p1bm_frm/{scan[-2:]}/{scan}/{num}/"
+           f"{scan}{num}-w2-int-1b.fits?center={P.ra.deg:.5f},{P.dec.deg:.5f}&size=80arcsec")
+    for k in range(3):
+        try:
+            r = requests.get(url, headers=UA, timeout=120)
+            if r.status_code == 200 and len(r.content) > 1000:
+                open(path, "wb").write(r.content)
+                return f, path, None
+            err = f"HTTP {r.status_code}"
+        except Exception as e:
+            err = repr(e)
+        time.sleep(2 * (k + 1))
+    return f, None, err
+
+
+with ThreadPoolExecutor(6) as ex:
+    got = list(ex.map(fetch, frames))
+fails = [(f, e) for f, p, e in got if p is None]
+print("downloaded", sum(p is not None for _, p, _ in got), "failed", len(fails), fails[:3])
+
+sig = 6.4 / 2.3548
+res = []
+for f, path, err in got:
+    if path is None:
+        continue
+    with fits.open(path) as h:
+        d = h[0].data.astype(float)
+        hd = h[0].header
+    w = WCS(hd)
+    ps = np.sqrt(abs(np.linalg.det(w.pixel_scale_matrix))) * 3600
+    yy, xx = np.mgrid[0:d.shape[0], 0:d.shape[1]]
+    def pix(s):
+        x, y = w.all_world2pix(s.ra.deg, s.dec.deg, 0)
+        return float(x), float(y)
+    px, py = pix(P)
+    wx, wy = pix(W)
+    rP = np.hypot(xx - px, yy - py) * ps
+    rW = np.hypot(xx - wx, yy - wy) * ps
+    sel = (rP < 14) & (rW > 9) & np.isfinite(d)
+    if sel.sum() < 30 or not (5 < px < d.shape[1] - 5 and 5 < py < d.shape[0] - 5):
+        continue
+    X, Y, D = xx[sel], yy[sel], d[sel]
+    sg = sig / ps
+    cols = []
+    pos = [(px, py)] + [pix(s) for s in srcs]
+    for (x0, y0) in pos:
+        cols.append(np.exp(-0.5 * ((X - x0) ** 2 + (Y - y0) ** 2) / sg ** 2) / (2 * np.pi * sg ** 2))
+    cols.append(np.ones_like(X))
+    A = np.vstack(cols).T
+    coef, *_ = np.linalg.lstsq(A, D, rcond=None)
+    model = A @ coef
+    rms = np.std(D - model)
+    # amplitude uncertainty for P from the residual rms
+    cov = np.linalg.pinv(A.T @ A) * rms ** 2
+    ampP, eampP = coef[0], np.sqrt(cov[0, 0])
+    # calibrators N1, N2: indices of srcs nearest to them
+    iN1 = 1 + int(np.argmin([s.separation(N1).arcsec for s in srcs]))
+    iN2 = 1 + int(np.argmin([s.separation(N2).arcsec for s in srcs]))
+    rows = t[t["frame"] == f]
+    def catflux(dcol, default_mag):
+        m = rows[rows[dcol] < 2.5]
+        if len(m) and not np.ma.is_masked(m["w2mpro"][0]):
+            return ZP2 * 10 ** (-0.4 * float(m["w2mpro"][0])), True
+        return ZP2 * 10 ** (-0.4 * default_mag), False
+    f1, own1 = catflux("dN1", 11.54)
+    f2, own2 = catflux("dN2", 11.63)
+    k = np.array([f1 / coef[iN1] if coef[iN1] > 0 else np.nan, f2 / coef[iN2] if coef[iN2] > 0 else np.nan])
+    kk = np.nanmedian(k)
+    zpk = ZP2 * 10 ** (-0.4 * float(hd["MAGZP"])) * 1.25   # mJy per DN of Gaussian-model amplitude; x1.25 for flux outside a Gaussian core
+    res.append({"P_mJy_zp": float(ampP * zpk), "P_err_mJy_zp": float(eampP * zpk),
+                "N1_mJy_zp": float(coef[iN1] * zpk), "N2_mJy_zp": float(coef[iN2] * zpk), "N1_cat_mJy": float(f1), "N2_cat_mJy": float(f2),"frame": f, "mjd": mjd_of[f], "date": Time(mjd_of[f], format="mjd").isot[:10],
+                "P_mJy": float(ampP * kk), "P_err_mJy": float(eampP * kk), "cal_N1": float(k[0]), "cal_N2": float(k[1]),
+                "N1_own_frame_mag": own1, "N2_own_frame_mag": own2, "magzp": hd.get("MAGZP")})
+
+json.dump(res, open(T + "neowise_forced_P.json", "w"), indent=1)
+res.sort(key=lambda r: r["mjd"])
+mj = np.array([r["mjd"] for r in res])
+starts = [0] + list(np.where(np.diff(mj) > 20)[0] + 1)
+ends = starts[1:] + [len(res)]
+print("visit (MAGZP calibration x1.25)  n   mean P (mJy)  std.err   3sigma upper (mJy)   W2 mag limit   neighbours fitted/catalogue")
+vis = []
+for s, e in zip(starts, ends):
+    v = res[s:e]
+    p = np.array([r["P_mJy_zp"] for r in v])
+    ok = np.isfinite(p)
+    p = p[ok]
+    mean = np.mean(p)
+    se = np.std(p, ddof=1) / np.sqrt(len(p)) if len(p) > 1 else np.nan
+    ul = max(mean, 0) + 3 * se
+    cr = np.array([r["N1_mJy_zp"] / r["N1_cat_mJy"] for r in v] + [r["N2_mJy_zp"] / r["N2_cat_mJy"] for r in v])
+    vis.append({"start": v[0]["date"], "end": v[-1]["date"], "n": int(len(p)), "mean_mJy": float(mean), "se_mJy": float(se), "ul3_mJy": float(ul)})
+    print(f"{v[0]['date']}..{v[-1]['date']} {len(p):3d}   {mean:8.3f}   {se:7.3f}   {ul:8.3f}   W2 > {-2.5*np.log10(ul/ZP2):5.2f}   {np.nanmedian(cr):.2f}")
+json.dump(vis, open(T + "neowise_forced_P_visits.json", "w"), indent=1)

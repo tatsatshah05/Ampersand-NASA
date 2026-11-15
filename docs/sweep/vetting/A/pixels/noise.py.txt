@@ -1,0 +1,104 @@
+"""Noise of the faint-state measurement: the same crowded-field fit as fit2.py (AllWISE sources within the
+box modelled, one shared Gaussian shape) placed at random positions 25-70 arcsec from A' that are at least
+6 arcsec from every 2MASS and AllWISE source, in every exposure of the faint visits. Gives the scatter
+(and bias) of a fixed-position flux on blank catalogued sky, in the same exposures A' was measured in."""
+import json, math, warnings, logging, sys
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from scipy.optimize import least_squares
+warnings.simplefilter("ignore"); logging.getLogger("astropy").setLevel(logging.ERROR)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from measure import CUT, LIST, PHOT_BAD, SKY_BAD, mask, clipped_median
+D = Path(__file__).resolve().parent
+A = (270.804063, -23.468200)
+FACT = {1: 1.139, 2: 1.166, 3: 1.222, 4: 1.206, 5: 1.207, 6: 1.194}
+def readcat(fn):
+    out = []
+    for line in open(fn):
+        if line.startswith("#") or not line.strip(): continue
+        p = line.split("\t")
+        try: out.append((float(p[0]), float(p[1])))
+        except ValueError: pass
+    return out
+AW = readcat(D / "downloads/allwise_150.tsv"); TM = readcat(D / "downloads/2mass_150.tsv")
+cosd = math.cos(math.radians(A[1]))
+rng = np.random.default_rng(7)
+POS = []
+while len(POS) < 30:
+    r = rng.uniform(25, 70); t = rng.uniform(0, 2 * math.pi)
+    ra = A[0] + r * math.sin(t) / 3600 / cosd; de = A[1] + r * math.cos(t) / 3600
+    if min(math.hypot((ra - a) * cosd, de - b) * 3600 for a, b in AW + TM) < 6: continue
+    POS.append((ra, de))
+
+def one(args):
+    e, ep = args
+    with fits.open(CUT / f"{e['obs_id']}_D{e['detector']}.fits") as h:
+        hd = h["IMAGE"].header; img = h["IMAGE"].data.astype(float); flg = h["FLAGS"].data.astype(np.int64)
+        var = h["VARIANCE"].data.astype(float); zod = h["ZODI"].data.astype(float)
+    w = WCS(hd); ny, nx = img.shape
+    d0 = img - zod; d0[img < -10 * np.sqrt(var)] = np.nan
+    to_mjy = float(proj_plane_pixel_area(w)) * (math.pi / 180) ** 2 * 1e9
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    good0 = np.isfinite(d0) & ((flg & PHOT_BAD) == 0)
+    awpix = np.array(w.all_world2pix(np.array(AW), 0))
+    res = []
+    for ip, (ra, de) in enumerate(POS):
+        px, py = (float(v) for v in w.all_world2pix(ra, de, 0))
+        if not (21 <= px < nx - 21 and 21 <= py < ny - 21): continue
+        r = np.hypot(xx - px, yy - py)
+        ring = (r >= 14) & (r < 20) & np.isfinite(d0)
+        ok = ring & ((flg & SKY_BAD) == 0)
+        if ok.sum() < 100: ok = ring & ((flg & (SKY_BAD & ~mask("SOURCE", "OUTLIER"))) == 0)
+        sky, ssig, _ = clipped_median(d0[ok]); d = d0 - sky
+        box = (np.abs(xx - px) <= 5) & (np.abs(yy - py) <= 5) & good0
+        X, Y, Dv = xx[box], yy[box], d[box]; Vv = np.clip(var[box], 1e-12, None) + ssig ** 2
+        comps = [(px, py)] + [(x, y) for x, y in awpix if abs(x - px) <= 7 and abs(y - py) <= 7 and math.hypot(x - px, y - py) > 0.3]
+        K = len(comps)
+        def model(p):
+            ct, st = math.cos(p[2]), math.sin(p[2]); m = np.full(X.shape, p[3])
+            for k, (cx, cy) in enumerate(comps):
+                u = (X - cx) * ct + (Y - cy) * st; v = -(X - cx) * st + (Y - cy) * ct
+                m = m + p[4 + k] * np.exp(-0.5 * (u ** 2 / p[0] ** 2 + v ** 2 / p[1] ** 2))
+            return m
+        try:
+            q = least_squares(lambda p: (model(p) - Dv) / np.sqrt(Vv), [0.75, 0.75, 0, 0] + [1.0] * K,
+                              bounds=([0.35, 0.35, -math.pi, -np.inf, -np.inf] + [0] * (K - 1), [2.5, 2.5, math.pi, np.inf] + [np.inf] * K)).x
+            res.append((ip, q[4] * 2 * math.pi * q[0] * q[1] * to_mjy * FACT[e["detector"]]))
+        except Exception:
+            pass
+    return e["detector"], ep, res
+
+if __name__ == "__main__":
+    L = json.load(open(LIST)); L.sort(key=lambda e: e["mjd"])
+    ep, cur = [], 0
+    for i, e in enumerate(L):
+        if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+        ep.append(cur + 1)
+    todo = [(e, k) for e, k in zip(L, ep) if (k == 1) or (k == 3 and e["detector"] in (1, 2, 3))]
+    from multiprocessing import Pool
+    with Pool(6) as pool:
+        out = pool.map(one, todo)
+    from collections import defaultdict
+    g = defaultdict(list); per_exp = defaultdict(list)
+    for det, k, res in out:
+        g[(det, k)].extend([f for _, f in res])
+        for ip, f in res: per_exp[(det, k, ip)].append(f)
+    print(f"{len(POS)} blank positions")
+    for key in sorted(g):
+        v = np.array(g[key])
+        m = np.median(v); s = 1.4826 * np.median(np.abs(v - m))
+        # error of a per-position median over the visit's exposures: scatter between positions of their medians
+        print(f"D{key[0]} visit {key[1]}: {v.size} fits; single-exposure median {m:+.1f} mJy, MAD-sigma {s:.1f}, 5-95% {np.percentile(v,5):+.1f}..{np.percentile(v,95):+.1f}")
+    json.dump({f"{k[0]}_{k[1]}": g[k] for k in g}, open(D / "noise.json", "w"))
+    # per position, median over the visit (what A' is quoted as)
+    print("per-position medians over the visit (the statistic quoted for A'):")
+    for det in (1, 2, 3, 4, 5, 6):
+        for k in (1, 3):
+            meds = np.array([np.median(v) for (d, kk, ip), v in per_exp.items() if d == det and kk == k and len(v) >= 3])
+            if meds.size < 5: continue
+            m = np.median(meds); s = 1.4826 * np.median(np.abs(meds - m))
+            print(f"  D{det} visit {k}: {meds.size} positions; median of medians {m:+.1f}, MAD-sigma {s:.1f}, 90th pct {np.percentile(meds,90):+.1f}, max {meds.max():+.1f}")
+    print("done")

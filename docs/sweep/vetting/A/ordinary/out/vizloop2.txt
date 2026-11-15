@@ -1,0 +1,17 @@
+=== J/AJ/136/2413 (Robitaille+2008 GLIMPSE intrinsically red sources (YSO/AGB)): within 60": 0 rows | control within 15': 18 rows 
+=== J/MNRAS/487/2522 (Marton+2019 Gaia+WISE YSO candidates): within 60": 0 rows | control within 15': 0 rows 
+=== J/MNRAS/458/3479 (Marton+2016 AllWISE YSO candidates): within 60": 2 rows | control within 15': 166 rows 
+_r	Name	RAJ2000	DEJ2000	GLON	GLAT	W1mag	W2mag	W3mag	W4mag	extflag	phQual	2MASSKey	Jmag	Hmag	Ksmag	SName	SType	SDist	tau
+arcsec	 	deg	deg	deg	deg	mag	mag	mag	mag	 	 	 	mag	mag	mag	 	 	arcsec	
+    19.887	J180312.46-232746.7 	270.8019175	-23.4629914	  6.7157602	 -0.6308348	 6.662	 6.487	 5.200	 3.606	1	AAAA	     19527	11.473	 8.793	 7.404	?                                	?  	      	 0.0006980
+    42.982	J180315.97-232753.1 	270.8165827	-23.4647577	  6.7208456	 -0.6434139	 6.286	 6.198	 5.673	 4.828	1	AAAA	     19494	 9.188	 7.461	 6.670	?                                	?  	      	 0.0006592
+=== J/A+A/582/A68 (maser database (Engels & Bunzel 2015)): within 60": 0 rows | control within 15': 1 rows 
+=== J/A+AS/122/79 (Sevenster+1997 OH/IR 1612 MHz survey): within 60": 0 rows | control within 15': 1 rows 
+=== J/A+A/566/A120 (Schultheis+2014 VVV extinction map): within 60": 0 rows | control within 15': 38 rows 
+=== II/365 (CatWISE2020): within 60": 0 rows | control within 15': 0 rows 
+=== J/MNRAS/464/3561 (Contreras Pena+2017 VVV high-amplitude YSO): within 60": 0 rows | control within 15': 0 rows ERR #INFO	Error=Table or Catalog not found: J/MNRAS/464/3561	
+=== J/ApJS/247/54 (MIPSGAL 24um (Gutermuth+Heyer 2015)): within 60": 0 rows | control within 15': 2 rows 
+=== J/ApJS/208/11 (MIPSGAL 24um point sources (alt)): within 60": 0 rows | control within 15': 0 rows 
+=== J/MNRAS/472/2990 (VVV-WIT or VVV variables (try)): within 60": 0 rows | control within 15': 0 rows 
+=== B/gcvs (GCVS): within 60": 0 rows | control within 15': 4 rows 
+=== J/A+A/646/A74 (Gaia/WISE red giants? (try)): within 60": 0 rows | control within 15': 164 rows 

@@ -1,0 +1,171 @@
+"""Pictures to look at.
+stamps.png: 3 x 3 arcmin, north up, east left, 2"/px, median of all exposures of a visit (flagged pixels left out),
+rows D6, D4, D2 (and D3 for April), columns the visits; ONE linear grey scale per detector for all visits.
+wide.png: D6, 22 x 22 arcmin around V345 Nor per visit (big cutouts), same scale, marks at the candidate (C) and at the
+place a fixed-offset ghost of V345 Nor would fall in Jul-Aug / Jul-Sep (G).
+strip_D6.png: every D6 exposure of Feb-Mar 2026, native pixels (not resampled), 15 x 15 px around the candidate."""
+import glob
+import json
+import os
+import sys
+import warnings
+
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from PIL import Image, ImageDraw
+from reproject import reproject_interp
+
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from measure import CUT, PHOT_BAD
+
+POS = json.load(open(os.path.join(HERE, "position.json")))
+R = json.load(open(os.path.join(HERE, "measurements.json")))
+NAMES = {0: "Jul-Aug 2025", 1: "Feb-Mar 2026", 2: "Apr 2026", 3: "Jul-Sep 2026"}
+
+
+def grid(ra, dec, size_deg, pix_arcsec):
+    n = int(round(size_deg * 3600 / pix_arcsec))
+    w = WCS(naxis=2)
+    w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+    w.wcs.crval = [ra, dec]
+    w.wcs.crpix = [(n + 1) / 2, (n + 1) / 2]
+    w.wcs.cdelt = [-pix_arcsec / 3600, pix_arcsec / 3600]
+    return w, n
+
+
+def resampled(path, gw, n):
+    with fits.open(path) as h:
+        hd = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float)
+        fl = h["FLAGS"].data.astype(np.int64)
+        zod = h["ZODI"].data.astype(float)
+        var = h["VARIANCE"].data.astype(float)
+    d = img - zod
+    with np.errstate(invalid="ignore"):
+        d[(fl & PHOT_BAD) != 0] = np.nan
+        d[img < -10 * np.sqrt(var)] = np.nan
+    d -= np.nanmedian(d)
+    out, _ = reproject_interp((d, WCS(hd)), gw, shape_out=(n, n), order="bilinear")
+    return out
+
+
+def to_png(a, lo, hi, scale=3):
+    v = np.clip((a - lo) / (hi - lo), 0, 1)
+    v = np.where(np.isfinite(v), v, 0)
+    rgb = np.dstack([v * 255] * 3).astype(np.uint8)
+    rgb[~np.isfinite(a)] = (40, 70, 170)
+    im = Image.fromarray(rgb[::-1])         # north up
+    return im.resize((im.width * scale, im.height * scale), Image.NEAREST)
+
+
+def mark(dr, cx, cy, gap=10, ln=10, col=(255, 60, 60)):
+    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        dr.line([cx + dx * gap, cy + dy * gap, cx + dx * (gap + ln), cy + dy * (gap + ln)], fill=col, width=2)
+
+
+def stamps():
+    gw, n = grid(POS["ra"], POS["dec"], 0.05, 2.0)
+    rows = [6, 4, 2, 3]
+    tiles = {}
+    for d in rows:
+        for ep in (0, 1, 2, 3):
+            exps = [r for r in R if r["det"] == d and r.get("ep") == ep and r.get("status") != "edge" and "x" in r]
+            if not exps:
+                continue
+            stack = np.array([resampled(os.path.join(CUT, f"{r['obs_id']}_D{d}.fits"), gw, n) for r in exps])
+            tiles[(d, ep)] = (np.nanmedian(stack, axis=0), len(exps))
+    sc = 3
+    tw = n * sc
+    W = 120 + 4 * (tw + 10)
+    H = 40 + len(rows) * (tw + 30)
+    canvas = Image.new("RGB", (W, H), (255, 255, 255))
+    dr = ImageDraw.Draw(canvas)
+    dr.text((10, 8), "Candidate C: median of each visit, 3' x 3', N up E left, one linear grey scale per row; red ticks: "
+                     "candidate (own centroid). Blue: no clean data", fill=(0, 0, 0))
+    for i, d in enumerate(rows):
+        vals = np.concatenate([tiles[(d, ep)][0][np.isfinite(tiles[(d, ep)][0])] for ep in (0, 1, 2, 3) if (d, ep) in tiles])
+        lo, hi = np.percentile(vals, 1), np.percentile(vals, 99.7)
+        y = 40 + i * (tw + 30)
+        dr.text((10, y + tw // 2), f"D{d}\n{lo:.2f}..{hi:.2f}\nMJy/sr", fill=(0, 0, 0))
+        for j, ep in enumerate((0, 1, 2, 3)):
+            x = 120 + j * (tw + 10)
+            if (d, ep) not in tiles:
+                dr.text((x + 10, y + tw // 2), "no exposures", fill=(120, 120, 120))
+                continue
+            a, k = tiles[(d, ep)]
+            canvas.paste(to_png(a, lo, hi, sc), (x, y))
+            mark(dr, x + tw / 2, y + tw / 2)
+            dr.text((x, y + tw + 2), f"{NAMES[ep]}  ({k} exp.)", fill=(0, 0, 0))
+    canvas.save(os.path.join(HERE, "stamps.png"))
+
+
+def wide():
+    star = (241.715125, -52.076250)
+    gp = json.load(open(os.path.join(HERE, "ghost_places.json")))
+    gw, n = grid(star[0], star[1], 0.37, 6.0)
+    files = sorted(glob.glob(os.path.join(HERE, "downloads", "big", "*", "*_D6.fits")))
+    by = {}
+    Rk = {(r["obs_id"], r["det"]): r for r in R}
+    for p in files:
+        oid = os.path.basename(p)[:-8]
+        ep = Rk[(oid, 6)]["ep"]
+        by.setdefault(ep, []).append(resampled(p, gw, n))
+    med = {ep: np.nanmedian(np.array(v), axis=0) for ep, v in by.items()}
+    vals = np.concatenate([m[np.isfinite(m)] for m in med.values()])
+    lo, hi = np.percentile(vals, 5), np.percentile(vals, 99.0)
+    sc = 2
+    tw = n * sc
+    canvas = Image.new("RGB", (40 + 4 * (tw + 10), tw + 70), (255, 255, 255))
+    dr = ImageDraw.Draw(canvas)
+    dr.text((10, 6), f"D6 median per visit, 22' x 22' around V345 Nor (607 Jy at 4.6 um, centre), N up E left, one scale "
+                     f"{lo:.2f}..{hi:.2f} MJy/sr. C = candidate; G = where a fixed-offset ghost of V345 Nor would fall when the "
+                     f"spacecraft is turned as in Jul-Aug / Jul-Sep", fill=(0, 0, 0))
+    for j, ep in enumerate((0, 1, 2, 3)):
+        if ep not in med:
+            continue
+        x = 20 + j * (tw + 10)
+        canvas.paste(to_png(med[ep], lo, hi, sc), (x, 30))
+        for label, (ra, de) in (("C", (POS["ra"], POS["dec"])), ("G", tuple(gp["0"]))):
+            px, py = gw.all_world2pix(ra, de, 0)
+            cx, cy = x + (float(px) + 0.5) * sc, 30 + (n - float(py) - 0.5) * sc
+            mark(dr, cx, cy, gap=7, ln=7, col=(255, 60, 60) if label == "C" else (0, 200, 255))
+            dr.text((cx + 12, cy - 18), label, fill=(255, 60, 60) if label == "C" else (0, 160, 220))
+        dr.text((x, 30 + tw + 4), f"{NAMES[ep]} ({len(by[ep])} exp.)", fill=(0, 0, 0))
+    canvas.save(os.path.join(HERE, "wide.png"))
+
+
+def strip():
+    exps = sorted([r for r in R if r["det"] == 6 and r.get("ep") in (1, 2) and r.get("sky") is not None], key=lambda r: r["mjd"])
+    sc = 8
+    half = 7
+    tiles = []
+    for r in exps:
+        with fits.open(os.path.join(CUT, f"{r['obs_id']}_D6.fits")) as h:
+            d = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        xi, yi = int(round(r["x"])), int(round(r["y"]))
+        tiles.append((r, d[yi - half:yi + half + 1, xi - half:xi + half + 1] - r["sky"]))
+    hi = np.nanpercentile(np.concatenate([t.ravel() for _, t in tiles]), 99.5)
+    tw = (2 * half + 1) * sc
+    per_row = 10
+    rows = (len(tiles) + per_row - 1) // per_row
+    canvas = Image.new("RGB", (per_row * (tw + 6) + 10, rows * (tw + 34) + 30), (255, 255, 255))
+    dr = ImageDraw.Draw(canvas)
+    dr.text((6, 6), f"Every D6 exposure of Feb-Apr 2026, native detector pixels (not rotated), 15 x 15 px, one scale -1..{hi:.1f} MJy/sr",
+            fill=(0, 0, 0))
+    for k, (r, t) in enumerate(tiles):
+        x = 6 + (k % per_row) * (tw + 6)
+        y = 26 + (k // per_row) * (tw + 34)
+        canvas.paste(to_png(t, -1.0, hi, sc), (x, y))
+        dr.text((x, y + tw + 1), f"{r['date'][5:16]}", fill=(0, 0, 0))
+        dr.text((x, y + tw + 12), f"{r['wave_um']:.2f}um {r['flux']:.0f}mJy" if r.get("flux") is not None else "", fill=(0, 0, 0))
+    canvas.save(os.path.join(HERE, "strip_D6.png"))
+
+
+if __name__ == "__main__":
+    which = sys.argv[1:] or ["stamps", "wide", "strip"]
+    for w_ in which:
+        globals()[w_]()
+        print("made", w_)

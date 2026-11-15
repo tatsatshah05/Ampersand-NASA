@@ -1,0 +1,49 @@
+"""Cone-search a list of VizieR catalogues (CfA mirror) at A: rows within 60" (listed with
+offsets) and, as a control that the catalogue answers here, the row count within 15'.
+Usage: vizloop.py OUTDIR"""
+import sys, time, urllib.parse, urllib.request
+from pathlib import Path
+OUT = Path(sys.argv[1]); OUT.mkdir(parents=True, exist_ok=True)
+RA, DEC = 270.80410, -23.46814
+CATS = [
+    ("J/AJ/136/2413", "Robitaille+2008 GLIMPSE intrinsically red sources (YSO/AGB)"),
+    ("J/MNRAS/487/2522", "Marton+2019 Gaia+WISE YSO candidates"),
+    ("J/MNRAS/458/3479", "Marton+2016 AllWISE YSO candidates"),
+    ("J/A+A/582/A68", "maser database (Engels & Bunzel 2015)"),
+    ("J/A+AS/122/79", "Sevenster+1997 OH/IR 1612 MHz survey"),
+    ("J/A+A/566/A120", "Schultheis+2014 VVV extinction map"),
+    ("II/365", "CatWISE2020"),
+    ("J/MNRAS/464/3561", "Contreras Pena+2017 VVV high-amplitude YSO"),
+    ("J/ApJS/247/54", "MIPSGAL 24um (Gutermuth+Heyer 2015)"),
+    ("J/ApJS/208/11", "MIPSGAL 24um point sources (alt)"),
+    ("J/MNRAS/472/2990", "VVV-WIT or VVV variables (try)"),
+    ("B/gcvs", "GCVS"),
+    ("J/A+A/646/A74", "Gaia/WISE red giants? (try)"),
+]
+
+
+def get(params):
+    url = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?" + urllib.parse.urlencode(params)
+    for k in range(4):
+        try:
+            return url, urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "generic-python-client/1.0"}), timeout=180).read().decode("utf-8", "replace")
+        except Exception as e:
+            err = e; time.sleep(5 * (k + 1))
+    return url, f"#ERROR {err}"
+
+
+for cat, label in CATS:
+    url, txt = get([("-source", cat), ("-c", f"{RA} {DEC}"), ("-c.rs", "60"), ("-out.max", "200"), ("-out.add", "_r"), ("-sort", "_r"), ("-out", "*")])
+    (OUT / (cat.replace("/", "_") + "_60as.tsv")).write_text("# " + url + "\n" + txt)
+    data = [l for l in txt.splitlines() if l and not l.startswith("#")]
+    errs = [l for l in txt.splitlines() if l.startswith("#INFO") and ("rror" in l or "not found" in l.lower())] + [l for l in txt.splitlines() if l.startswith("#ERROR")]
+    nrows = max(0, len(data) - 3)
+    url2, txt2 = get([("-source", cat), ("-c", f"{RA} {DEC}"), ("-c.rm", "15"), ("-out.max", "9999"), ("-out", "_r")])
+    data2 = [l for l in txt2.splitlines() if l and not l.startswith("#")]
+    n2 = max(0, len(data2) - 3)
+    print(f"=== {cat} ({label}): within 60\": {nrows} rows | control within 15': {n2} rows {'ERR ' + ' '.join(errs)[:200] if errs else ''}")
+    if nrows:
+        print("\n".join(data[:2]))
+        for l in data[3:3 + 12]:
+            print("   ", l[:400])
+    time.sleep(1)

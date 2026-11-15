@@ -1,0 +1,52 @@
+"""For every exposure: position angle of the detector +y axis on the sky at the source, the source's and the
+brightest nearby stars' detector (x, y) (from the cutout's own sky WCS, extrapolated over the full 2040 px
+detector, and the 'A' offset), and whether each bright star is on the detector."""
+import json, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS, FITSFixedWarning
+warnings.simplefilter("ignore")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from readcat import tsv
+RA0, DEC0 = 241.70931, -52.20484
+CUT = "<repository>/backend/cache/sweep/cutouts/4ae14c5ec1"
+R = json.load(open("measurements.json"))
+bright = []
+for r in tsv("allwise_bright_0.5deg"):
+    bright.append({"name": "AllWISE " + r["AllWISE"], "ra": float(r["RAJ2000"]), "dec": float(r["DEJ2000"]),
+                   "w2": float(r["W2mag"]), "mjy_w2": 171787.0 * 10 ** (-0.4 * float(r["W2mag"]))})
+bright.sort(key=lambda b: b["w2"])
+bright = [b for b in bright if b["w2"] < 3.5]
+print("bright stars used (W2<3.5):", len(bright))
+for b in bright:
+    e = (b["ra"] - RA0) * np.cos(np.radians(DEC0)) * 60; n = (b["dec"] - DEC0) * 60
+    print(f"  {b['name']} W2={b['w2']:.2f} ({b['mjy_w2']/1000:.0f} Jy) offset E {e:+.2f}' N {n:+.2f}' r {np.hypot(e,n):.2f}'")
+out = []
+for r in R:
+    p = os.path.join(CUT, f"{r['obs_id']}_D{r['det']}.fits")
+    hd = fits.getheader(p, "IMAGE")
+    w = WCS(hd)
+    offx = float(hd["CRVAL1A"]) + 1.0 - float(hd["CRPIX1A"]); offy = float(hd["CRVAL2A"]) + 1.0 - float(hd["CRPIX2A"])
+    x, y = w.all_world2pix(RA0, DEC0, 0)
+    # PA of detector +y: sky position of (x, y+10) relative to (x, y)
+    ra1, de1 = w.all_pix2world(x, y + 10, 0)
+    pa = np.degrees(np.arctan2((ra1 - RA0) * np.cos(np.radians(DEC0)), de1 - DEC0)) % 360
+    row = {"obs_id": r["obs_id"], "det": r["det"], "ep": r["ep"], "mjd": r["mjd"], "pa_y": float(pa),
+           "src_det": [float(x) + offx, float(y) + offy], "stars": []}
+    for b in bright:
+        bx, by = w.all_world2pix(b["ra"], b["dec"], 0)
+        dx, dy = float(bx) + offx, float(by) + offy
+        row["stars"].append({"name": b["name"], "w2": b["w2"], "det": [dx, dy], "on": bool(0 <= dx < 2040 and 0 <= dy < 2040),
+                             "vec": [dx - row["src_det"][0], dy - row["src_det"][1]]})
+    out.append(row)
+json.dump(out, open("geometry.json", "w"), indent=0)
+import collections
+for e in range(4):
+    for d in range(1, 7):
+        rr = [o for o in out if o["ep"] == e and o["det"] == d]
+        if not rr: continue
+        pas = np.array([o["pa_y"] for o in rr])
+        s0 = [o["stars"][0] for o in rr]
+        on = sum(s["on"] for s in s0)
+        vx = np.array([s["vec"][0] for s in s0]); vy = np.array([s["vec"][1] for s in s0])
+        print(f"ep{e} D{d}: n={len(rr)} PA(y) {pas.min():6.1f}..{pas.max():6.1f}  brightest star on detector {on}/{len(rr)}  star-src vector x {vx.min():+6.1f}..{vx.max():+6.1f} y {vy.min():+6.1f}..{vy.max():+6.1f}")

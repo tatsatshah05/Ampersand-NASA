@@ -1,0 +1,329 @@
+"""Pass 1 and 2: measure candidate B in every cached SPHEREx exposure with independent code.
+
+Per exposure: aperture photometry (r = 2.5 and 1.5 px, sky ring 14-20 px), flags under the aperture,
+a PSF fit (pixel-integrated round Gaussian, target position and width free, catalogued neighbours at fixed
+places with the width of the field stars of the same exposure), the astrometric zero point and star width
+from isolated 2MASS field stars in the same cutout, the detector position, empty-aperture noise.
+
+Usage: python measure.py pass1    -> out/pass1.json
+       python measure.py pass2    -> out/pass2.json (forced fits at the adopted position and at catalogue places)
+"""
+from __future__ import annotations
+
+import json
+import os
+import sys
+from concurrent.futures import ProcessPoolExecutor
+
+import numpy as np
+from astropy.time import Time
+from scipy.optimize import least_squares
+
+sys.path.insert(0, os.path.dirname(__file__))
+from common import (CUT, PHOT_BAD, RA0, DEC0, SIA, W, Cut, aperture, catwise_deep, flag_names, gaia_at, gaia_deep,
+                    m, offset_en, pix_gauss, saturated, sep_arcsec, twomass_deep)
+
+OUT = f"{W}/out"
+os.makedirs(OUT, exist_ok=True)
+TM = twomass_deep()
+CW = catwise_deep()
+GA = gaia_deep()
+TM_RA = np.array([s["ra"] for s in TM]); TM_DE = np.array([s["dec"] for s in TM])
+TM_K = np.array([s["K"] if s["K"] is not None else 99 for s in TM])
+CW_RA = np.array([s["ra"] for s in CW]); CW_DE = np.array([s["dec"] for s in CW])
+CW_W2 = np.array([s["W2"] if s["W2"] is not None else 99 for s in CW])
+GA_RA = np.array([g["ra"] for g in GA]); GA_DE = np.array([g["dec"] for g in GA])
+
+
+def neighbours(det, ra, dec, rmax=32.0, exclude=6.0):
+    """Catalogued stars near (ra, dec) to fit at fixed places: CatWISE (W2 < 13.5) for D4-D6, 2MASS (Ks < 14) for D1-D3."""
+    if det >= 4:
+        s = sep_arcsec(ra, dec, CW_RA, CW_DE)
+        idx = np.where((s < rmax) & (s > exclude) & (CW_W2 < 13.5))[0]
+        return [(CW_RA[i], CW_DE[i], CW[i]["name"], CW_W2[i]) for i in idx]
+    s = sep_arcsec(ra, dec, TM_RA, TM_DE)
+    idx = np.where((s < rmax) & (s > exclude) & (TM_K < 14.0))[0]
+    return [(TM_RA[i], TM_DE[i], TM[i]["name"], TM_K[i]) for i in idx]
+
+
+def reference_stars():
+    """Isolated 2MASS stars with 6.5 <= Ks <= 11.5, more than 40 arcsec from the target."""
+    refs = []
+    for i in np.where((TM_K >= 6.5) & (TM_K <= 11.5))[0]:
+        if sep_arcsec(RA0, DEC0, TM_RA[i], TM_DE[i]) < 40:
+            continue
+        s2 = sep_arcsec(TM_RA[i], TM_DE[i], TM_RA, TM_DE)
+        if np.any((s2 > 0.5) & (s2 < 15) & (TM_K < TM_K[i] + 2.5)):
+            continue
+        sc = sep_arcsec(TM_RA[i], TM_DE[i], CW_RA, CW_DE)
+        match = np.where(sc < 2.0)[0]
+        w2 = CW_W2[match[np.argmin(sc[match])]] if match.size else TM_K[i]
+        if np.any((sc >= 2.0) & (sc < 15) & (CW_W2 < w2 + 2.5)):
+            continue
+        sg = sep_arcsec(TM_RA[i], TM_DE[i], GA_RA, GA_DE)
+        gm = np.where(sg < 1.0)[0]
+        g = GA[gm[np.argmin(sg[gm])]] if gm.size else None
+        refs.append({"ra": TM_RA[i], "dec": TM_DE[i], "K": TM_K[i], "W2": float(w2), "gaia": g})
+    return refs
+
+
+REFS = reference_stars()
+
+
+def fit_single(c: Cut, x0, y0, half=3, sigma0=0.65):
+    xi, yi = int(round(x0)), int(round(y0))
+    if not (half + 1 <= xi < c.nx - half - 1 and half + 1 <= yi < c.ny - half - 1):
+        return None
+    ys, xs = slice(yi - half, yi + half + 1), slice(xi - half, xi + half + 1)
+    yy, xx = np.mgrid[ys, xs]
+    d, v, f = c.data[ys, xs], c.var[ys, xs], c.flags[ys, xs]
+    if saturated(f, d).any():
+        return {"status": "saturated"}
+    good = np.isfinite(d) & np.isfinite(v) & ((f & PHOT_BAD) == 0)
+    if good.sum() < (2 * half + 1) ** 2 - 3:
+        return {"status": "flagged"}
+    b0 = np.nanmedian(np.concatenate([d[0], d[-1], d[:, 0], d[:, -1]]))
+    F0 = max(np.nansum(d[good] - b0), 1e-3)
+    err = np.sqrt(v + (0.03 * np.abs(d - b0)) ** 2)
+    X, Y, D, E = xx[good], yy[good], d[good], err[good]
+
+    def res(p):
+        return (p[3] * pix_gauss(X, Y, p[0], p[1], p[2]) + p[4] - D) / E
+    p0 = [x0, y0, sigma0, F0, b0]
+    try:
+        r = least_squares(res, p0, bounds=([x0 - 1.5, y0 - 1.5, 0.25, 0, -np.inf], [x0 + 1.5, y0 + 1.5, 3.0, np.inf, np.inf]))
+    except Exception:
+        return {"status": "fit_failed"}
+    J = r.jac
+    dof = max(len(D) - 5, 1)
+    chi2 = float(np.sum(r.fun ** 2))
+    try:
+        cov = np.linalg.inv(J.T @ J) * max(chi2 / dof, 1.0)
+        perr = np.sqrt(np.diag(cov))
+    except np.linalg.LinAlgError:
+        perr = np.full(5, np.nan)
+    return {"status": "ok", "x": r.x[0], "y": r.x[1], "sigma": r.x[2], "F": r.x[3], "b": r.x[4], "ex": perr[0],
+            "ey": perr[1], "eF": perr[3], "chi2r": chi2 / dof}
+
+
+def fit_multi(c: Cut, x0, y0, neigh, sigma_n, half=5, free_pos=True, free_sigma=True, sigma_t=None, allow_neg=False):
+    """Target (free or fixed place) + neighbours at fixed places (width sigma_n) + constant, on an 11x11 box."""
+    xi, yi = int(round(x0)), int(round(y0))
+    if not (half + 1 <= xi < c.nx - half - 1 and half + 1 <= yi < c.ny - half - 1):
+        return {"status": "edge"}
+    ys, xs = slice(yi - half, yi + half + 1), slice(xi - half, xi + half + 1)
+    yy, xx = np.mgrid[ys, xs]
+    d, v, f = c.data[ys, xs], c.var[ys, xs], c.flags[ys, xs]
+    sat = saturated(f, d)
+    good = np.isfinite(d) & np.isfinite(v) & ((f & PHOT_BAD) == 0) & ~sat
+    core = (np.abs(xx - x0) <= 1.5) & (np.abs(yy - y0) <= 1.5)
+    n_core_lost = int((core & ~good).sum())
+    if good.sum() < 40:
+        return {"status": "too_few_pixels"}
+    nxy = []
+    for ra, dec, name, mag in neigh:
+        nx_, ny_ = c.sky2pix(ra, dec)
+        nx_, ny_ = float(nx_[0]), float(ny_[0])
+        if xi - half - 1.5 <= nx_ <= xi + half + 1.5 and yi - half - 1.5 <= ny_ <= yi + half + 1.5:
+            nxy.append((nx_, ny_, name, mag))
+    b0 = np.nanmedian(np.concatenate([d[0], d[-1], d[:, 0], d[:, -1]]))
+    err = np.sqrt(v + (0.03 * np.abs(d - b0)) ** 2)
+    X, Y, D, E = xx[good], yy[good], d[good], err[good]
+    G_n = [pix_gauss(X, Y, a, b, sigma_n) for a, b, _, _ in nxy]
+    k = len(nxy)
+    st = sigma_t if sigma_t is not None else sigma_n
+
+    def unpack(p):
+        i = 0
+        if free_pos:
+            xc, yc = p[0], p[1]; i = 2
+        else:
+            xc, yc = x0, y0
+        if free_sigma:
+            s = p[i]; i += 1
+        else:
+            s = st
+        return xc, yc, s, p[i], p[i + 1], p[i + 2:]
+
+    def model(p):
+        xc, yc, s, Ft, b, Fn = unpack(p)
+        mod = Ft * pix_gauss(X, Y, xc, yc, s) + b
+        for g, Fk in zip(G_n, Fn):
+            mod = mod + Fk * g
+        return mod
+
+    def res(p):
+        return (model(p) - D) / E
+    F0 = max(np.nansum(d[good & core] - b0), 1e-3)
+    p0, lo, hi = [], [], []
+    if free_pos:
+        p0 += [x0, y0]; lo += [x0 - 2, y0 - 2]; hi += [x0 + 2, y0 + 2]
+    if free_sigma:
+        p0 += [st]; lo += [0.25]; hi += [3.0]
+    p0 += [F0, b0] + [F0 * 0.05] * k
+    lo += [-np.inf if allow_neg else 0.0, -np.inf] + [0.0] * k
+    hi += [np.inf, np.inf] + [np.inf] * k
+    p0 = np.clip(p0, np.array(lo) + 1e-9, np.array(hi) - 1e-9)
+    try:
+        r = least_squares(res, p0, bounds=(lo, hi))
+    except Exception as e:
+        return {"status": f"fit_failed {e}"}
+    dof = max(len(D) - len(p0), 1)
+    chi2 = float(np.sum(r.fun ** 2))
+    try:
+        cov = np.linalg.inv(r.jac.T @ r.jac) * max(chi2 / dof, 1.0)
+        perr = np.sqrt(np.diag(cov))
+    except np.linalg.LinAlgError:
+        perr = np.full(len(p0), np.nan)
+    xc, yc, s, Ft, b, Fn = unpack(r.x)
+    i = 0
+    ex = ey = es = None
+    if free_pos:
+        ex, ey = perr[0], perr[1]; i = 2
+    if free_sigma:
+        es = perr[i]; i += 1
+    eFt = perr[i]
+    resid = D - model(r.x)
+    return {"status": "ok", "x": float(xc), "y": float(yc), "sigma": float(s), "F": float(Ft), "eF": float(eFt),
+            "ex": None if ex is None else float(ex), "ey": None if ey is None else float(ey),
+            "esigma": None if es is None else float(es), "b": float(b), "chi2r": chi2 / dof, "n_pix": int(len(D)),
+            "n_core_lost": n_core_lost, "n_sat_box": int(sat.sum()),
+            "neigh": [{"name": n[2], "mag": float(n[3]), "F": float(F)} for n, F in zip(nxy, Fn)],
+            "resid_rms_rel": float(np.sqrt(np.mean(resid ** 2)) / max(Ft * pix_gauss(np.array([0.]), np.array([0.]), 0, 0, s)[0], 1e-9))}
+
+
+def empty_apertures(c: Cut, x0, y0, rng, n=60):
+    out = []
+    tries = 0
+    cand_ra, cand_de = np.concatenate([TM_RA, CW_RA]), np.concatenate([TM_DE, CW_DE])
+    while len(out) < n and tries < 2000:
+        tries += 1
+        x = rng.uniform(22, c.nx - 22); y = rng.uniform(22, c.ny - 22)
+        if np.hypot(x - x0, y - y0) < 4:
+            continue
+        ra, de = c.pix2sky(x, y)
+        dmin = float(np.min(sep_arcsec(ra[0], de[0], cand_ra, cand_de)))
+        a = aperture(c, x, y)
+        if a["status"] == "ok":
+            out.append((a["flux"], dmin))
+    return out
+
+
+def load_shifts():
+    """Coherent WCS errors measured by wcscheck.py: used only when >= 5 stars and >= 60 per cent of them agree."""
+    try:
+        wc = json.load(open(f"{OUT}/wcscheck.json"))
+    except FileNotFoundError:
+        return {}
+    return {o["file"]: (o["dx"], o["dy"]) for o in wc if o.get("dx") is not None and o["n"] >= 5 and o["agree"] >= 0.6 * o["n"]}
+
+
+SHIFTS = load_shifts()
+
+
+def measure_one(fn, adopted=None, mode="pass1"):
+    c = Cut(os.path.join(CUT, fn))
+    if mode == "pass3":
+        c.shift = SHIFTS.get(fn, (0.0, 0.0))
+    t_yr = Time(c.mjd, format="mjd").jyear
+    x0, y0 = c.sky2pix(RA0, DEC0)
+    x0, y0 = float(x0[0]), float(y0[0])
+    res = {"wcs_shift_px": list(c.shift), "file": fn, "obs": c.obs, "det": c.det, "mjd": c.mjd, "nx": c.nx, "ny": c.ny, "x_nom": x0, "y_nom": y0,
+           "psf_fwhm_hdr": c.psf_fwhm_hdr, "pa_deg": c.position_angle()}
+    dx, dy = c.det_xy(x0, y0)
+    res["det_x"], res["det_y"] = float(dx[0]), float(dy[0])
+    inside = 0 <= round(x0) < c.nx and 0 <= round(y0) < c.ny
+    res["wave"] = float(c.wave[int(round(y0)), int(round(x0))]) if inside else None
+    res["bandwidth"] = float(c.band[int(round(y0)), int(round(x0))]) if inside else None
+    res["pixscale"] = float(np.sqrt(c.pixel_area_arcsec2(x0, y0))) if inside else None
+    # --- reference stars: astrometric zero point and star width ---
+    refs = []
+    for s in REFS:
+        rra, rde = (gaia_at(s["gaia"], t_yr) if s["gaia"] else (s["ra"], s["dec"]))
+        rx, ry = c.sky2pix(rra, rde)
+        rx, ry = float(rx[0]), float(ry[0])
+        if not (6 <= rx < c.nx - 6 and 6 <= ry < c.ny - 6):
+            continue
+        fr = fit_single(c, rx, ry, sigma0=c.psf_fwhm_hdr / 6.15 / 2.3548 if np.isfinite(c.psf_fwhm_hdr) else 0.65)
+        if not fr or fr.get("status") != "ok" or fr["F"] <= 0 or fr["eF"] <= 0 or fr["F"] / fr["eF"] < 5:
+            continue
+        if not (np.isfinite(fr["ex"]) and np.isfinite(fr["ey"]) and fr["ex"] < 0.25 and fr["ey"] < 0.25):
+            continue
+        mra, mde = c.pix2sky(fr["x"], fr["y"])
+        de, dn = offset_en(mra[0], mde[0], rra, rde)
+        ap = aperture(c, rx, ry) if (21 <= rx < c.nx - 21 and 21 <= ry < c.ny - 21) else {"status": "edge", "flux": None}
+        refs.append({"de": float(de), "dn": float(dn), "sigma": fr["sigma"], "F_fit_mjy": None, "K": s["K"], "W2": s["W2"],
+                     "gaia": s["gaia"] is not None, "ap_flux": ap.get("flux"), "ap_status": ap["status"],
+                     "ex": fr["ex"], "ey": fr["ey"], "chi2r": fr["chi2r"], "fitF": fr["F"]})
+    res["refs"] = refs
+    if len(refs) >= 5:
+        de = np.array([r["de"] for r in refs]); dn = np.array([r["dn"] for r in refs])
+        res["zp_de"], res["zp_dn"] = float(np.median(de)), float(np.median(dn))
+        res["zp_scatter"] = float(1.4826 * np.median(np.hypot(de - np.median(de), dn - np.median(dn))))
+        res["sigma_ref"] = float(np.median([r["sigma"] for r in refs]))
+    else:
+        res["zp_de"] = res["zp_dn"] = res["zp_scatter"] = None
+        res["sigma_ref"] = c.psf_fwhm_hdr / 6.15 / 2.3548 * 1.0
+    res["n_refs"] = len(refs)
+    # --- aperture photometry at the nominal place ---
+    sky = c.sky_level(x0, y0) if (21 <= x0 < c.nx - 21 and 21 <= y0 < c.ny - 21) else (None, None, 0, "edge")
+    res["ap25"] = aperture(c, x0, y0, 2.5, sky=sky if sky[0] is not None else None)
+    res["ap15"] = aperture(c, x0, y0, 1.5, sky=sky if sky[0] is not None else None)
+    if res["ap25"]["status"] == "edge":
+        return res
+    # --- PSF fits ---
+    neigh = neighbours(c.det, RA0, DEC0)
+    fa = fit_multi(c, x0, y0, neigh, res["sigma_ref"], free_pos=True, free_sigma=True)
+    if fa.get("status") == "ok":
+        mra, mde = c.pix2sky(fa["x"], fa["y"])
+        fa["ra"], fa["dec"] = float(mra[0]), float(mde[0])
+        fa["fwhm_arcsec"] = fa["sigma"] * 2.3548 * res["pixscale"]
+        fa["F_mjy"] = fa["F"] * res["ap25"]["to_mjy"]
+        fa["eF_mjy"] = fa["eF"] * res["ap25"]["to_mjy"]
+        for nb in fa["neigh"]:
+            nb["F_mjy"] = nb["F"] * res["ap25"]["to_mjy"]
+        fdx, fdy = c.det_xy(fa["x"], fa["y"])
+        fa["det_x"], fa["det_y"] = float(fdx[0]), float(fdy[0])
+    res["fit_free"] = fa
+    # single-Gaussian fit with no neighbours (simplest centroid)
+    fs = fit_single(c, x0, y0, half=2, sigma0=res["sigma_ref"])
+    if fs and fs.get("status") == "ok":
+        mra, mde = c.pix2sky(fs["x"], fs["y"])
+        fs["ra"], fs["dec"] = float(mra[0]), float(mde[0])
+        fs["fwhm_arcsec"] = fs["sigma"] * 2.3548 * res["pixscale"]
+    res["fit_single"] = fs
+    # --- forced fits (pass 2) ---
+    if adopted is not None:
+        forced = {}
+        for label, (ra, dec) in adopted.items():
+            px, py = c.sky2pix(ra, dec)
+            px, py = float(px[0]), float(py[0])
+            nb = [n for n in neigh if sep_arcsec(ra, dec, n[0], n[1]) > 2.0]
+            ff = fit_multi(c, px, py, nb, res["sigma_ref"], free_pos=False, free_sigma=False, sigma_t=res["sigma_ref"],
+                           allow_neg=True)
+            if ff.get("status") == "ok":
+                ff["F_mjy"] = ff["F"] * res["ap25"]["to_mjy"]
+                ff["eF_mjy"] = ff["eF"] * res["ap25"]["to_mjy"]
+                for q in ff["neigh"]:
+                    q["F_mjy"] = q["F"] * res["ap25"]["to_mjy"]
+            forced[label] = ff
+        res["forced"] = forced
+        # empty-aperture noise (aperture r = 2.5 px with the same sky ring) and forced fits at random places
+        rng = np.random.default_rng(abs(hash(fn)) % (2 ** 32))
+        res["empty"] = empty_apertures(c, x0, y0, rng, n=40)
+    return res
+
+
+def run(mode):
+    files = sorted(f for f in os.listdir(CUT) if f.endswith(".fits"))
+    adopted = None
+    if mode in ("pass2", "pass3"):
+        adopted = json.load(open(f"{OUT}/adopted_positions.json"))
+    with ProcessPoolExecutor(int(os.environ.get("NPROC", "4"))) as ex:
+        out = list(ex.map(measure_one, files, [adopted] * len(files), [mode] * len(files), chunksize=4))
+    json.dump(out, open(f"{OUT}/{mode}.json", "w"), default=float)
+    print(mode, len(out), "exposures; refs available:", len(REFS))
+
+
+if __name__ == "__main__":
+    run(sys.argv[1])

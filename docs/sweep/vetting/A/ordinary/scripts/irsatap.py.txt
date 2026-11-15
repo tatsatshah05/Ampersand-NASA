@@ -1,0 +1,15 @@
+"""IRSA TAP sync query over plain HTTP. Usage: irsatap.py OUTFILE "ADQL" """
+import sys, urllib.parse, urllib.request, time
+out, q = sys.argv[1], sys.argv[2]
+url = "https://irsa.ipac.caltech.edu/TAP/sync?" + urllib.parse.urlencode({"QUERY": q, "FORMAT": "csv"})
+for k in range(6):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "generic-python-client/1.0"})
+        data = urllib.request.urlopen(req, timeout=180).read().decode("utf-8", "replace")
+        break
+    except Exception as e:
+        print("retry", k, e, file=sys.stderr); time.sleep(3 + 3 * k)
+else:
+    raise SystemExit("failed")
+open(out, "w").write("# " + q + "\n" + data)
+print(data[:6000])

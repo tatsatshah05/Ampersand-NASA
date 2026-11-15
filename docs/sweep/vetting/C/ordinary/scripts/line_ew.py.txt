@@ -1,0 +1,27 @@
+"""Rough line strengths of C (1.5-px photometry, quiescent ~0 there): peak channel excess over a local continuum,
+and EW_peak = excess/continuum x channel bandwidth. A line that falls between channels is under-measured, so these
+are lower limits of the order of magnitude, not measurements of line flux."""
+import json, sys
+import numpy as np
+recs = [json.loads(l) for l in open(sys.argv[1])]
+recs = [r for r in recs if r.get("status") == "measured" and r.get("f1.5") is not None and r["badshare1.5"] <= 0.2]
+LINES = {"Pa-beta": 1.2822, "Pa-alpha": 1.8756, "Br-gamma": 2.1661, "Br-beta": 2.6259, "Pf-gamma": 3.7406,
+         "Br-alpha": 4.0523, "4.30 feature": 4.298, "Pf-beta+Hu-eps": 4.660, "4.73-4.77 feature": 4.755, "[Mg IV]": 4.4867}
+ALL = list(LINES.values()) + [1.083, 1.8174, 1.9451, 3.297, 3.039, 4.376, 4.5295]
+for lab, lo, hi in (("Feb-Mar 2026", 61080, 61110), ("Jul-Sep 2026", 61240, 61300)):
+    print(f"== {lab}")
+    ep = [r for r in recs if lo < r["mjd"] < hi]
+    for name, lam in LINES.items():
+        on = [r for r in ep if abs(r["um"] - lam) < 0.8 * r["bw_um"]]
+        if not on:
+            continue
+        pk = max(on, key=lambda r: r["f1.5"])
+        cont = [r for r in ep if r["det"] == pk["det"] and all(abs(r["um"] - L) > 0.8 * r["bw_um"] for L in ALL)
+                and not (4.72 < r["um"] < 4.79) and 0.08 < abs(r["um"] - lam) < 0.35]
+        if len(cont) < 2:
+            print(f"  {name}: peak {pk['f1.5']:.1f} at {pk['um']:.3f}; too few continuum channels"); continue
+        c = float(np.median([r["f1.5"] for r in cont]))
+        exc = pk["f1.5"] - c
+        ew = exc / max(c, 0.5) * pk["bw_um"] * 1e4
+        print(f"  {name:18s} peak {pk['f1.5']:6.1f} mJy at {pk['um']:.3f} um (bw {pk['bw_um']:.3f}) | continuum {c:5.1f} (n={len(cont)}) "
+              f"| excess {exc:6.1f} = {exc/max(c,0.5):5.1f} x continuum | EW_peak ~ {ew:6.0f} Angstrom")

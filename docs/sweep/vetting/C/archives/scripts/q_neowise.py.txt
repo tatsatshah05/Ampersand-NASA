@@ -1,0 +1,30 @@
+"""WISE/NEOWISE single-exposure detections within 30" of candidate C (2010 to 2024), by date."""
+import sys, warnings
+warnings.filterwarnings("ignore")
+sys.path.insert(0, __file__.rsplit("/", 1)[0])
+from qlib import *
+import numpy as np
+
+tabs = {
+    "neowiser_p1bs_psd": ["ra", "dec", "mjd", "w1mpro", "w1sigmpro", "w2mpro", "w2sigmpro", "w1snr", "w2snr", "qual_frame", "cc_flags", "ph_qual", "nb", "na", "sso_flg", "moon_masked", "saa_sep", "qi_fact"],
+    "allsky_4band_p1bs_psd": ["ra", "dec", "mjd", "w1mpro", "w1sigmpro", "w2mpro", "w2sigmpro", "w3mpro", "w3sigmpro", "w4mpro", "w4sigmpro", "w1snr", "w2snr", "w3snr", "w4snr", "qual_frame", "cc_flags", "ph_qual", "nb", "na", "sso_flg", "moon_masked", "saa_sep", "qi_fact"],
+    "allsky_3band_p1bs_psd": ["ra", "dec", "mjd", "w1mpro", "w1sigmpro", "w2mpro", "w2sigmpro", "w3mpro", "w3sigmpro", "w1snr", "w2snr", "qual_frame", "cc_flags", "ph_qual", "nb", "na", "sso_flg", "moon_masked", "saa_sep", "qi_fact"],
+    "allsky_2band_p1bs_psd": ["ra", "dec", "mjd", "w1mpro", "w1sigmpro", "w2mpro", "w2sigmpro", "w1snr", "w2snr", "qual_frame", "cc_flags", "ph_qual", "nb", "na", "sso_flg", "moon_masked", "saa_sep", "qi_fact"],
+}
+only = set(sys.argv[1:])
+for tab, cols in tabs.items():
+    if only and tab not in only:
+        continue
+    try:
+        t = irsa_cone(tab, 30, cols=cols)
+    except Exception as e:
+        print(f"### {tab}: ERROR {e}")
+        continue
+    print(f"### {tab} r=30\": {len(t)} detections")
+    if len(t) == 0:
+        continue
+    t.write(DATA / f"{tab}_30.csv", format="csv", overwrite=True)
+    near = t[t["sep_arcsec"] < 10]
+    print(f"  within 10\": {len(near)}")
+    near.sort("mjd")
+    near.pprint(max_lines=400, max_width=260)

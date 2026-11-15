@@ -1,0 +1,15 @@
+"""VizieR cone query over plain HTTP (asu-tsv). Usage: viz.py CAT RA DEC RADIUS_ARCSEC OUTFILE [columns] [extra constraints]"""
+import sys, urllib.parse, urllib.request
+cat, ra, dec, rad, out = sys.argv[1:6]
+cols = sys.argv[6] if len(sys.argv) > 6 else "**"
+extra = sys.argv[7:] if len(sys.argv) > 7 else []
+params = [("-source", cat), ("-c", f"{ra} {dec}"), ("-c.rs", rad), ("-out.max", "5000"),
+          ("-out.add", "_r"), ("-sort", "_r"), ("-out", cols)]
+for e in extra:
+    k, v = e.split("=", 1); params.append((k, v))
+url = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?" + urllib.parse.urlencode(params)
+req = urllib.request.Request(url, headers={"User-Agent": "generic-python-client/1.0"})
+data = urllib.request.urlopen(req, timeout=120).read().decode("utf-8", "replace")
+open(out, "w").write("# " + url + "\n" + data)
+lines = [l for l in data.splitlines() if l and not l.startswith("#")]
+print("\n".join(lines[:80]))

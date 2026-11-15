@@ -417,7 +417,9 @@ def merge_detections(per_image: list[list[dict[str, Any]]], merge_arcsec: float 
     """One list of sources from the detections of every image: positions closer than `merge_arcsec` are one.
 
     Greedy, in order of the image list, detections of the same image never merge with each other
-    unless they are closer than the radius. A source's position is the mean of its detections.
+    unless they are closer than the radius. A source's position is the mean of its detections;
+    `members` keeps each detection's image index and position, so that a survivor can be placed where
+    it is bright (`bright_position`) rather than at a mean that includes a neighbour seen in the faint images.
     """
     flat = [(i, d) for i, dets in enumerate(per_image) for d in dets]
     if not flat:
@@ -446,8 +448,23 @@ def merge_detections(per_image: list[list[dict[str, Any]]], merge_arcsec: float 
         members = [flat[k] for k in np.nonzero(group == g)[0]]
         sources.append({"ra": float(np.mean([d["ra"] for _, d in members])),
                         "dec": float(np.mean([d["dec"] for _, d in members])),
-                        "n_detections": len(members), "saturated_detected": any(d["saturated"] for _, d in members)})
+                        "n_detections": len(members), "saturated_detected": any(d["saturated"] for _, d in members),
+                        "members": [[i, d["ra"], d["dec"]] for i, d in members]})
     return sources
+
+
+def bright_position(source: dict[str, Any], bright_images: list[int]) -> tuple[float, float, str]:
+    """Where a source is in the images in which it is bright: the mean of its own detections there.
+
+    The first sweep reported the mean over every image, so a neighbour detected in the faint
+    images pulled A's and C's positions 3 arcsec off (ruling, method fault 2). Unsaturated detections
+    are preferred; with none, the merged position is returned and said to be so.
+    """
+    mine = [(ra, dec) for i, ra, dec in source.get("members", []) if i in bright_images]
+    if not mine:
+        return float(source["ra"]), float(source["dec"]), "merged over all images"
+    return (float(np.mean([m[0] for m in mine])), float(np.mean([m[1] for m in mine])),
+            f"mean of {len(mine)} detections in the bright images")
 
 
 def is_valid(m: dict[str, Any] | None) -> bool:
@@ -584,7 +601,11 @@ def irac2_mjy(mag: float | None) -> float | None:
 
 
 def brightness_text(row: dict[str, Any]) -> str:
-    """The infrared and optical brightness a catalogue row lists, in words ("W2 13.54 = 0.04 mJy, Ks 13.77")."""
+    """The infrared and optical brightness a catalogue row lists, in words ("W2 13.54 mag = 0.66 mJy, Ks 13.77").
+
+    Always converted by `w2_mjy`, `irac2_mjy`, never by hand: the first write-up of candidate A gave W2 11.6 as
+    0.4 mJy, and it is 3.9 (docs/sweep/vetting/ruling.json, method fault 4).
+    """
     parts = []
     if row.get("w2") is not None:
         parts.append(f"W2 {row['w2']:.2f} mag = {w2_mjy(row['w2']):.2f} mJy")
@@ -597,8 +618,57 @@ def brightness_text(row: dict[str, Any]) -> str:
     return ", ".join(parts) or "no brightness listed"
 
 
-def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float], near_arcsec: float = 6.2,
-             far_arcsec: float = 12.0) -> dict[str, Any]:
+# How close a catalogued star must be to be "at the place" of a SPHEREx source. Bright-state SPHEREx centroids
+# agree with catalogued control stars to 0.1-0.3 arcsec (the vetting, 7-12 control stars per field), so five
+# times 0.3 arcsec. The first write-up used 6.2 arcsec and called stars 3.5-4.7 arcsec from B and 4.1 arcsec
+# from C "counterparts"; they are other stars (ruling, method fault 3).
+AT_PLACE_ARCSEC = 1.5
+# An already bright catalogued star this close still makes a survivor a "known variable": calling a known
+# star a candidate is the worse mistake, so this stays wide.
+KNOWN_BRIGHT_ARCSEC = 6.2
+# Catalogued stars whose light can fall in the measuring circle: its radius (2.5 pixels, 15.4 arcsec) plus one
+# image width (SPHEREx's PSF is about 8 arcsec across). The 437 mJy star 17 arcsec from the first position of A
+# and the 40 mJy star 10 arcsec from B were inside it and were never named (method fault 3).
+CIRCLE_REACH_ARCSEC = APERTURE_PX * 6.15 + 8.0
+
+
+def infrared_mjy(row: dict[str, Any]) -> tuple[str, float] | None:
+    """A catalogue row's 4.6 micrometre brightness (WISE W2 or Spitzer [4.5]) in mJy, or its Ks if that is all."""
+    if row.get("w2") is not None:
+        return "W2", float(w2_mjy(row["w2"]) or 0.0)
+    if row.get("irac2") is not None:
+        return "[4.5]", float(irac2_mjy(row["irac2"]) or 0.0)
+    if row.get("k") is not None:
+        return "Ks", float(k_mjy(row["k"]) or 0.0)
+    return None
+
+
+def circle_census(rows: list[dict[str, Any]], offsets: list[float], reach_arcsec: float = CIRCLE_REACH_ARCSEC,
+                  at_place_arcsec: float = AT_PLACE_ARCSEC, n: int = 3) -> dict[str, Any]:
+    """What lies in and around the measuring circle: the nearest rows, and the brightest whose light reaches it.
+
+    "brightest" is by the 4.6 micrometre brightness (W2 or [4.5]) when a row has one, else by Ks; a faint-state
+    reading near one of these is most likely its light, which is what the first write-up missed.
+    """
+    pairs = sorted(zip(offsets, rows, strict=True), key=lambda p: p[0])
+
+    def entry(off: float, row: dict[str, Any]) -> dict[str, Any]:
+        ir = infrared_mjy(row)
+        return {"name": row.get("name"), "catalogue": row.get("catalogue"), "offset_arcsec": round(off, 2),
+                "band": ir[0] if ir else None, "mjy": round(ir[1], 3) if ir else None, "text": brightness_text(row)}
+
+    inside = [(o, r) for o, r in pairs if o <= reach_arcsec]
+    ranked = sorted((p for p in inside if infrared_mjy(p[1]) is not None),
+                    key=lambda p: (infrared_mjy(p[1])[0] == "Ks", -infrared_mjy(p[1])[1]))  # type: ignore[index]
+    return {"reach_arcsec": round(reach_arcsec, 1), "at_place_arcsec": at_place_arcsec,
+            "at_place": [entry(o, r) for o, r in pairs if o <= at_place_arcsec],
+            "nearest": [entry(o, r) for o, r in pairs[:n]],
+            "brightest_in_reach": [entry(o, r) for o, r in ranked[:n]]}
+
+
+def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float],
+             near_arcsec: float = AT_PLACE_ARCSEC, far_arcsec: float = 12.0,
+             bright_arcsec: float = KNOWN_BRIGHT_ARCSEC) -> dict[str, Any]:
     """Sort a survivor by what the catalogues say at its position.
 
     `rows` are catalogue rows as `backend/search.py` returns them and `offsets` each row's
@@ -607,18 +677,18 @@ def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float]
 
     - "known_eruption": a row within `far_arcsec` that is a nova or another eruptive type in
       SIMBAD or the AAVSO VSX (the type decides, see KNOWN_ERUPTION_TYPES and VSX_ERUPTIVE);
-    - "known_variable": a catalogued star at the place that was already bright (4.6 micrometres
-      at least 1/5 of the bright brightness in WISE, or any variable type in SIMBAD, VSX or
-      Gaia) and that is not an eruption;
-    - "candidate": no catalogue row within `near_arcsec`, or only rows far fainter than the
-      brightness SPHEREx saw (the rule is on W2 and Ks; a row with no infrared brightness and no
-      variable type cannot rule the source out, so the source is a candidate "with an optical
-      counterpart that is far fainter at its brightest").
+    - "known_variable": a catalogued star within `bright_arcsec` that was already bright (4.6
+      micrometres at least 1/5 of the bright brightness in WISE or GLIMPSE, Ks likewise, or any
+      variable type in SIMBAD, VSX or Gaia) and that is not an eruption;
+    - "candidate": otherwise. Only rows within `near_arcsec` (AT_PLACE_ARCSEC) are named as being at
+      the place; rows further out are other stars and are listed as such, never as counterparts.
 
-    "candidate" is never more than that. The reasons are returned.
+    "candidate" is never more than that. The reasons are returned, with `circle`: the brightest
+    catalogued stars whose light reaches the measuring circle (`circle_census`).
     """
     reasons: list[str] = []
     pairs = sorted(zip(offsets, rows, strict=True), key=lambda p: p[0])
+    census = circle_census(rows, offsets, at_place_arcsec=near_arcsec)
     for off, row in pairs:
         if off > far_arcsec:
             continue
@@ -626,34 +696,42 @@ def classify(bright_mjy: float, rows: list[dict[str, Any]], offsets: list[float]
         cat = row.get("catalogue")
         if cat == "SIMBAD" and kind.strip() in KNOWN_ERUPTION_TYPES:
             return {"kind": "known_eruption", "reasons": [f"SIMBAD {row['name']} is type {row.get('type')} "
-                                                          f"({off:.1f} arcsec away)"], "by": row}
+                                                          f"({off:.1f} arcsec away)"], "by": row, "circle": census}
         if cat == "AAVSO VSX" and VSX_ERUPTIVE.match((row.get("type") or "").split(",")[0].strip()):
             return {"kind": "known_eruption", "reasons": [f"AAVSO VSX {row['name']} is {row.get('type')} "
-                                                          f"({off:.1f} arcsec away)"], "by": row}
+                                                          f"({off:.1f} arcsec away)"], "by": row, "circle": census}
     pre = []
     for off, row in pairs:
-        if off > near_arcsec:
+        if off > bright_arcsec:
             continue
         cat = row.get("catalogue")
         w2 = row.get("w2") if cat in ("AllWISE", "CatWISE2020") else None
         flux = w2_mjy(w2)
         if flux is not None and flux >= bright_mjy / 5.0:
             pre.append(f"{row['name']} ({cat}) W2 {w2:.2f} mag = {flux:.0f} mJy, already bright")
-        elif cat == "GLIMPSE" and (gf := irac2_mjy(row.get("irac2"))) is not None and gf >= bright_mjy / 5.0:
-            pre.append(f"{row['name']} (GLIMPSE) [4.5] {row['irac2']:.2f} mag = {gf:.0f} mJy, already bright")
+        elif str(cat).startswith("GLIMPSE") and (gf := irac2_mjy(row.get("irac2"))) is not None \
+                and gf >= bright_mjy / 5.0:
+            pre.append(f"{row['name']} ({cat}) [4.5] {row['irac2']:.2f} mag = {gf:.0f} mJy, already bright")
         elif row.get("variable"):
             pre.append(f"{row['name']} ({cat}) is listed as variable ({row.get('type')})")
         elif cat == "2MASS" and (kf := k_mjy(row.get("k"))) is not None and kf >= bright_mjy / 5.0:
             pre.append(f"{row['name']} (2MASS) Ks {row['k']:.2f} mag = {kf:.0f} mJy, already bright")
     if pre:
-        return {"kind": "known_variable", "reasons": pre}
+        return {"kind": "known_variable", "reasons": pre, "circle": census}
     within = [(o, r) for o, r in pairs if o <= near_arcsec]
     if not within:
         reasons.append(f"no row within {near_arcsec:g} arcsec in any catalogue asked")
     else:
         for off, row in within:
             reasons.append(f"{row['name']} ({row.get('catalogue')}) at {off:.1f} arcsec: {brightness_text(row)}")
-    return {"kind": "candidate", "reasons": reasons}
+    others = [(o, r) for o, r in pairs if near_arcsec < o <= bright_arcsec]
+    if others:
+        reasons.append("nearby but not at the place (other stars): " + "; ".join(
+            f"{r['name']} at {o:.1f} arcsec, {brightness_text(r)}" for o, r in others[:3]))
+    for b in census["brightest_in_reach"][:1]:
+        reasons.append(f"brightest catalogued star whose light reaches the measuring circle: {b['name']} at "
+                       f"{b['offset_arcsec']:.1f} arcsec, {b['text']}")
+    return {"kind": "candidate", "reasons": reasons, "circle": census}
 
 
 # --- evaluating a tile --------------------------------------------------------------------------------------------
@@ -747,7 +825,9 @@ def evaluate(sources: list[dict[str, Any]], meas: list[list[dict[str, Any]]], me
         tally["survivors_single_image" if single else "survivors"] += 1
         gaps = sorted({round(abs(meta[i]["mjd"] - meta[j]["mjd"]), 2) for i in bright_images for j in bright_images
                        if i < j})
-        survivors.append({"index": s, "ra": sources[s]["ra"], "dec": sources[s]["dec"], "l": sources[s].get("l"),
+        b_ra, b_dec, b_how = bright_position(sources[s], bright_images)
+        survivors.append({"index": s, "ra": b_ra, "dec": b_dec, "position_from": b_how,
+                          "measured_at": [sources[s]["ra"], sources[s]["dec"]], "l": sources[s].get("l"),
                           "b": sources[s].get("b"), "pair": pair,
                           "direction": "brightened" if pair["bright_epoch"] > pair["faint_epoch"] else "faded",
                           "bright_images": bright_images, "single_image_only": single,
@@ -825,7 +905,7 @@ def ghost_risk(s: int, bright_images: list[int], strength: np.ndarray, px: np.nd
 
 # --- catalogues ---------------------------------------------------------------------------------------------------
 
-CATALOGUE_RADIUS_ARCSEC = 20.0
+CATALOGUE_RADIUS_ARCSEC = 30.0          # beyond CIRCLE_REACH_ARCSEC: the stars whose light is in the circle
 SERVICE_PAUSE_S = 0.5
 
 
@@ -842,23 +922,57 @@ def _twomass(ra: float, dec: float, radius: float, fast_only: bool) -> list[dict
     return rows
 
 
-def _glimpse(ra: float, dec: float, radius: float, fast_only: bool) -> list[dict[str, Any]]:
-    """Spitzer GLIMPSE (3.6 to 8 micrometres, |b| < 1 or so, 2003 to 2008), through IRSA's Gator."""
-    table = search._gator("glimpse_s07", ra, dec, radius, "designation,ra,dec,mag4_5,mag3_6")
+def _glimpse_table(table_name: str, label: str, ra: float, dec: float, radius: float) -> list[dict[str, Any]]:
+    table = search._gator(table_name, ra, dec, radius, "designation,ra,dec,mag4_5,mag3_6")
     rows = []
     for d in table:
         sra, sdec = search._num(d["ra"]), search._num(d["dec"])
         if sra is None or sdec is None:
             continue
         m45 = search._num(d["mag4_5"])
-        rows.append({"catalogue": "GLIMPSE", "name": f"GLIMPSE {search._text(d['designation'])}", "ra": sra,
+        rows.append({"catalogue": label, "name": f"GLIMPSE {search._text(d['designation'])}", "ra": sra,
                      "dec": sdec, "irac2": m45, "type": None, "variable": False})
     return rows
 
 
-SERVICES = (("Gaia DR3", search._gaia), ("SIMBAD", search._simbad), ("AAVSO VSX", search._vsx),
+def _glimpse(ra: float, dec: float, radius: float, fast_only: bool) -> list[dict[str, Any]]:
+    """Spitzer GLIMPSE I (3.6 to 8 micrometres, longitudes 10 to 65 degrees either side, 2004 to 2005), IRSA's Gator."""
+    return _glimpse_table("glimpse_s07", "GLIMPSE", ra, dec, radius)
+
+
+def _glimpse2(ra: float, dec: float, radius: float, fast_only: bool) -> list[dict[str, Any]]:
+    """Spitzer GLIMPSE II, the inner Galaxy (longitudes within 10 degrees of the centre, 2005 to 2006).
+
+    The first sweep asked GLIMPSE I only and wrote "GLIMPSE does not cover this longitude" for
+    candidate A at l 6.7; GLIMPSE II does, with 55 rows within 30 arcsec (ruling, method fault 4).
+    """
+    return _glimpse_table("glimpse2_v2cat", "GLIMPSE II", ra, dec, radius)
+
+
+def _gaia(ra: float, dec: float, radius: float, fast_only: bool) -> list[dict[str, Any]]:
+    """Gaia DR3 from ESA's archive; when that does not answer, the same table at IRSA (without variability classes).
+
+    ESA's service did not answer on 2026-11-15; the vetting's reviewers used IRSA's copy.
+    """
+    try:
+        return search._gaia(ra, dec, radius, fast_only)
+    except spherex.ArchiveError:
+        table = search._gator("gaia_dr3_source", ra, dec, radius, "source_id,ra,dec,phot_g_mean_mag,phot_variable_flag")
+    rows = []
+    for d in table:
+        sra, sdec = search._num(d["ra"]), search._num(d["dec"])
+        if sra is None or sdec is None:
+            continue
+        flag = search._text(d["phot_variable_flag"])
+        rows.append({"catalogue": "Gaia DR3", "name": f"Gaia DR3 {search._text(d['source_id'])}", "ra": sra,
+                     "dec": sdec, "gmag": search._num(d["phot_g_mean_mag"]), "via": "IRSA",
+                     "variable": flag == "VARIABLE", "type": "variable (flag)" if flag == "VARIABLE" else None})
+    return rows
+
+
+SERVICES = (("Gaia DR3", _gaia), ("SIMBAD", search._simbad), ("AAVSO VSX", search._vsx),
             ("CatWISE2020", search._catwise), ("AllWISE", search._allwise), ("2MASS", _twomass),
-            ("GLIMPSE", _glimpse))
+            ("GLIMPSE", _glimpse), ("GLIMPSE II", _glimpse2))
 
 
 def ask_catalogues(ra: float, dec: float, radius_arcsec: float = CATALOGUE_RADIUS_ARCSEC,
@@ -1222,8 +1336,539 @@ def lightcurve_picture(points: list[dict[str, Any]], path: Path, title: str = ""
     img.save(path)
 
 
-def summarise(include_proof: bool = False) -> dict[str, Any]:
-    """Totals over every finished tile: area, the tally at each stage, the survivors by kind."""
+# --- describing a survivor correctly (the fixes after the vetting of 2026-11-15) ---------------------------------
+#
+# The sweep found three real changes, but its description of each was wrong (docs/sweep/vetting/ruling.json,
+# "method_faults"): the faint-state light in its measuring circle was a neighbour's (fault 1), its positions
+# were blends of the source and its neighbours (2), and two bright readings of C fell on emission lines (5).
+# `describe` measures a survivor again from its cached cutouts so that these cannot happen silently:
+#
+# - the position is the bright-state centroid of a fit in which the neighbours are fitted too;
+# - every exposure is measured by a forced fit at that position with the neighbours modelled, and the old
+#   measuring circle is kept beside it with two tests of whether its light is centred on the source
+#   (`aperture_check`: the centroid of the light inside the circle and the 1.5 / 2.5 pixel concentration);
+# - a bright tile image whose reading stands well above the same visit's other wavelengths is flagged as
+#   possibly an emission line (`line_flag`).
+
+NATIVE_ARCSEC = 6.15
+PSF_FALLBACK_ARCSEC = 8.5        # if a cutout's header has no PSF_FWHM
+FIT_RADIUS_PX = 4.5              # pixels used in a fit around the source
+NEIGHBOUR_SEARCH_PX = 7.0        # peaks this close are fitted with the source
+NEIGHBOUR_MIN_SEP_PX = 1.2       # a peak nearer than this (7.4 arcsec) is the source itself
+NEIGHBOUR_SIGMA = 5.0            # a neighbour must stand this far above the pixel noise
+SMALL_APERTURE_PX = 1.5
+CENTROID_SHIFT_PX = 0.5          # light centred further than this (3 arcsec) from the source is not the source's
+CONCENTRATION_SHARE = 0.6        # or less concentrated than this share of the source's own bright-state value
+POSITION_CLIP_ARCSEC = 3.0       # a bright-state centroid this far from the median: the exposure's coordinates are off
+BRIGHT_FIT_SNR = 10.0            # bright-state fits used for the position
+BLANK_RING_PX = 5.0              # the blank-sky test: the same fit at empty places this far out
+BLANK_PLACES = 12
+LINE_FACTOR = 1.5                # a tile reading this many times the same visit's other wavelengths: a possible line
+LINE_WIDTH_UM = 0.04             # "other wavelengths" are further than this from the reading's own (about a channel)
+
+
+@dataclass
+class Cutout:
+    """One cached SPHEREx cutout in mJy per pixel, with its masks, wavelength map and PSF width."""
+    path: Path
+    obs_id: str
+    detector: int
+    mjd: float
+    wcs: WCS
+    data: np.ndarray              # mJy per pixel, zodi removed; empty pixels NaN
+    var: np.ndarray               # mJy^2 per pixel
+    bad: np.ndarray               # never used: photometry flags, empty, or saturated
+    sat: np.ndarray               # saturated (the photometry rule)
+    overflow: np.ndarray          # OVERFLOW: a valid but partial reading
+    wave: np.ndarray              # micrometres
+    sigma_px: float               # Gaussian sigma of the header's PSF_FWHM, in pixels
+
+    @classmethod
+    def load(cls, path: Path) -> Cutout:
+        obs_id, det = path.stem.rsplit("_D", 1)
+        with fits.open(path) as h:
+            header = h["IMAGE"].header
+            image = h["IMAGE"].data.astype(np.float64)
+            flags = h["FLAGS"].data.astype(np.int64)
+            variance = h["VARIANCE"].data.astype(np.float64)
+            zodi = h["ZODI"].data.astype(np.float64)
+            wave = h["WAVE"].data.astype(np.float64)
+        wcs = WCS(header)
+        to_mjy = float(proj_plane_pixel_area(wcs)) * (np.pi / 180.0) ** 2 * 1e9
+        data = image - zodi
+        data[pipeline.impossible_pixels(image, variance)] = np.nan
+        sat = photometry.saturated_pixels(flags, data)
+        bad = ((flags & photometry.PHOTOMETRY_BAD) != 0) | ~np.isfinite(data) | ~np.isfinite(variance) | sat
+        fwhm = float(header.get("PSF_FWHM", PSF_FALLBACK_ARCSEC) or PSF_FALLBACK_ARCSEC)
+        return cls(path=path, obs_id=obs_id, detector=int(det), mjd=float(header["MJD-AVG"]), wcs=wcs,
+                   data=data * to_mjy, var=variance * to_mjy ** 2, bad=bad, sat=sat,
+                   overflow=(flags & photometry.OVERFLOW) != 0, wave=wave,
+                   sigma_px=fwhm / 2.3548 / NATIVE_ARCSEC)
+
+    def xy(self, ra: float, dec: float) -> tuple[float, float]:
+        x, y = self.wcs.all_world2pix(ra, dec, 0, quiet=True)
+        return float(x), float(y)
+
+    def radec(self, x: float, y: float) -> tuple[float, float]:
+        ra, dec = self.wcs.all_pix2world(x, y, 0)
+        return float(ra), float(dec)
+
+    def wavelength(self, x: float, y: float) -> float | None:
+        ny, nx = self.data.shape
+        xi, yi = int(round(x)), int(round(y))
+        if not (0 <= xi < nx and 0 <= yi < ny):
+            return None
+        w = float(self.wave[yi, xi])
+        return w if np.isfinite(w) else None
+
+
+def psf_model(xx: np.ndarray, yy: np.ndarray, x0: float, y0: float, sigma: float) -> np.ndarray:
+    """A pixel-integrated circular Gaussian of unit total flux centred at (x0, y0)."""
+    from scipy.special import erf
+
+    s = sigma * math.sqrt(2.0)
+    gx = 0.5 * (erf((xx + 0.5 - x0) / s) - erf((xx - 0.5 - x0) / s))
+    gy = 0.5 * (erf((yy + 0.5 - y0) / s) - erf((yy - 0.5 - y0) / s))
+    return gx * gy
+
+
+def neighbour_peaks(c: Cutout, x0: float, y0: float, search_px: float = NEIGHBOUR_SEARCH_PX,
+                    min_sep_px: float = NEIGHBOUR_MIN_SEP_PX,
+                    nsigma: float = NEIGHBOUR_SIGMA) -> list[tuple[float, float]]:
+    """Other sources near (x0, y0) in one cutout, as pixel positions.
+
+    Local maxima (3 x 3) standing `nsigma` times the pixel noise above the clipped median of the box,
+    between `min_sep_px` and `search_px` from (x0, y0), placed by the light-weighted centroid of their
+    3 x 3 pixels; a clump of saturated pixels counts as one source at its centre. Found in each
+    exposure separately, so a neighbour is placed by the image itself and not by a catalogue.
+    """
+    ny, nx = c.data.shape
+    h = int(math.ceil(search_px)) + 2
+    xi, yi = int(round(x0)), int(round(y0))
+    y_lo, y_hi, x_lo, x_hi = max(yi - h, 1), min(yi + h + 1, ny - 1), max(xi - h, 1), min(xi + h + 1, nx - 1)
+    box = np.where(c.bad, np.nan, c.data)[y_lo:y_hi, x_lo:x_hi]
+    level, _ = clipped(box.ravel())
+    if not np.isfinite(level):
+        return []
+    d = np.where(np.isfinite(box), box - level, -np.inf)
+    noise = np.sqrt(np.where(np.isfinite(c.var[y_lo:y_hi, x_lo:x_hi]), c.var[y_lo:y_hi, x_lo:x_hi], np.inf))
+    peaks = (d == maximum_filter(d, size=3, mode="nearest")) & (d > nsigma * noise)
+    out = []
+    for py_, px_ in zip(*np.nonzero(peaks), strict=True):
+        if not (1 <= py_ < d.shape[0] - 1 and 1 <= px_ < d.shape[1] - 1):
+            continue
+        patch = np.clip(np.nan_to_num(d[py_ - 1:py_ + 2, px_ - 1:px_ + 2], neginf=0.0), 0, None)
+        w = patch.sum()
+        oy, ox = np.mgrid[-1:2, -1:2]
+        cx = x_lo + px_ + (float((patch * ox).sum() / w) if w > 0 else 0.0)
+        cy = y_lo + py_ + (float((patch * oy).sum() / w) if w > 0 else 0.0)
+        r = math.hypot(cx - x0, cy - y0)
+        if min_sep_px <= r <= search_px:
+            out.append((cx, cy))
+    lab, n = label(c.sat[y_lo:y_hi, x_lo:x_hi])
+    for k in range(1, n + 1):
+        ys, xs = np.nonzero(lab == k)
+        cx, cy = x_lo + float(xs.mean()), y_lo + float(ys.mean())
+        if min_sep_px <= math.hypot(cx - x0, cy - y0) <= search_px + 2 \
+                and all(math.hypot(cx - a, cy - b) > 1.5 for a, b in out):
+            out.append((cx, cy))
+    return out
+
+
+def _fit_pixels(c: Cutout, x: float, y: float, radius: float) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                                         np.ndarray] | None:
+    ny, nx = c.data.shape
+    h = int(math.ceil(radius)) + 1
+    xi, yi = int(round(x)), int(round(y))
+    if not (h <= xi < nx - h and h <= yi < ny - h):
+        return None
+    yy, xx = np.mgrid[yi - h:yi + h + 1, xi - h:xi + h + 1]
+    use = (np.hypot(xx - x, yy - y) <= radius) & ~c.bad[yy, xx]
+    return xx[use].astype(np.float64), yy[use].astype(np.float64), c.data[yy, xx][use], c.var[yy, xx][use]
+
+
+def _solve(c: Cutout, xx: np.ndarray, yy: np.ndarray, d: np.ndarray, v: np.ndarray, x: float, y: float,
+           neighbours: list[tuple[float, float]], sigma: float) -> tuple[np.ndarray, np.ndarray, float]:
+    """Weighted linear least squares: source, neighbours, sky plane. Returns amplitudes, covariance, chi^2/dof."""
+    cols = [psf_model(xx, yy, x, y, sigma)] + [psf_model(xx, yy, a, b, sigma) for a, b in neighbours]
+    cols += [np.ones_like(xx), xx - x, yy - y]
+    a = np.stack(cols, axis=1)
+    w = 1.0 / np.sqrt(np.clip(v, 1e-12, None))
+    aw, dw = a * w[:, None], d * w
+    beta, *_ = np.linalg.lstsq(aw, dw, rcond=None)
+    dof = max(len(d) - a.shape[1], 1)
+    chi2 = float(np.sum((dw - aw @ beta) ** 2)) / dof
+    try:
+        cov = np.linalg.inv(aw.T @ aw) * max(chi2, 1.0)
+    except np.linalg.LinAlgError:
+        cov = np.full((a.shape[1], a.shape[1]), np.nan)
+    return beta, cov, chi2
+
+
+def forced_fit(c: Cutout, x: float, y: float, radius: float = FIT_RADIUS_PX) -> dict[str, Any]:
+    """Brightness of a point source fixed at pixel (x, y), with its neighbours fitted at the same time.
+
+    The source and every neighbour (`neighbour_peaks`) are pixel-integrated Gaussians of the
+    exposure's own PSF width (header PSF_FWHM), with a sloping sky plane, fitted by weighted linear
+    least squares to the usable pixels within `radius`. `flux` is the source's total in mJy. Status:
+    "ok"; "saturated" (a saturated pixel within 1.5 pixels: those are left out, so the value rests on
+    the wings and is uncertain); "flagged" (under 60 per cent of the pixels within 1.5 pixels usable);
+    "edge". `overflow` counts OVERFLOW pixels within 1.5 pixels (a valid but partial reading).
+    """
+    out: dict[str, Any] = {"status": "edge", "flux": None, "err": None, "x": x, "y": y}
+    got = _fit_pixels(c, x, y, radius)
+    if got is None:
+        return out
+    xx, yy, d, v = got
+    ny, nx = c.data.shape
+    gy, gx = np.mgrid[0:ny, 0:nx]
+    core = np.hypot(gx - x, gy - y) <= 1.5
+    out["overflow"] = int((c.overflow & core).sum())
+    if c.sat[core].any():
+        out["status"] = "saturated"
+    elif (~c.bad[core]).sum() < 0.6 * core.sum():
+        out["status"] = "flagged"
+        return out
+    else:
+        out["status"] = "ok"
+    nb = neighbour_peaks(c, x, y)
+    nb = [p for p in nb if math.hypot(p[0] - x, p[1] - y) <= radius + 2.0]
+    beta, cov, chi2 = _solve(c, xx, yy, d, v, x, y, nb, c.sigma_px)
+    out.update(flux=float(beta[0]), err=float(math.hypot(math.sqrt(max(cov[0, 0], 0.0)), SYSTEMATIC * abs(beta[0]))),
+               chi2=round(chi2, 2), n_pixels=int(len(d)),
+               neighbours=[{"dx_px": round(a - x, 2), "dy_px": round(b - y, 2), "mjy": round(float(f), 2)}
+                           for (a, b), f in zip(nb, beta[1:1 + len(nb)], strict=True)])
+    return out
+
+
+def centroid_fit(c: Cutout, x0: float, y0: float, radius: float = FIT_RADIUS_PX) -> dict[str, Any] | None:
+    """Position and brightness of the source near (x0, y0), its neighbours fitted too; None if not usable.
+
+    Like `forced_fit`, but the source's place is free (within 2 pixels of the start). Used only where the
+    source is bright and unsaturated, to place it.
+    """
+    from scipy.optimize import least_squares
+
+    got = _fit_pixels(c, x0, y0, radius + 2.0)
+    if got is None:
+        return None
+    ny, nx = c.data.shape
+    gy, gx = np.mgrid[0:ny, 0:nx]
+    if (c.sat & (np.hypot(gx - x0, gy - y0) <= 2.5)).any():
+        return None
+    nb = neighbour_peaks(c, x0, y0)
+    xx_all, yy_all, d_all, v_all = got
+
+    def resid(p: np.ndarray) -> np.ndarray:
+        near = np.hypot(xx_all - p[0], yy_all - p[1]) <= radius
+        xx, yy, d, v = xx_all[near], yy_all[near], d_all[near], v_all[near]
+        others = [q for q in nb if math.hypot(q[0] - p[0], q[1] - p[1]) >= NEIGHBOUR_MIN_SEP_PX]
+        beta, _, _ = _solve(c, xx, yy, d, v, float(p[0]), float(p[1]), others, c.sigma_px)
+        cols = [psf_model(xx, yy, p[0], p[1], c.sigma_px)] + [psf_model(xx, yy, a, b, c.sigma_px) for a, b in others]
+        cols += [np.ones_like(xx), xx - p[0], yy - p[1]]
+        r = (d - np.stack(cols, axis=1) @ beta) / np.sqrt(np.clip(v, 1e-12, None))
+        full = np.zeros(len(d_all))
+        full[near] = r
+        return full
+
+    fit = least_squares(resid, np.array([x0, y0]), bounds=([x0 - 2, y0 - 2], [x0 + 2, y0 + 2]), diff_step=1e-3)
+    x, y = float(fit.x[0]), float(fit.x[1])
+    f = forced_fit(c, x, y, radius)
+    if f["status"] != "ok" or f["flux"] is None or not f["err"]:
+        return None
+    ra, dec = c.radec(x, y)
+    return {"x": x, "y": y, "ra": ra, "dec": dec, "flux": f["flux"], "err": f["err"],
+            "snr": f["flux"] / f["err"]}
+
+
+def aperture_check(c: Cutout, x: float, y: float) -> dict[str, Any]:
+    """The sweep's measuring circle at (x, y) and whether its light is centred there.
+
+    Sums in circles of 2.5 and 1.5 pixels minus the clipped median of the 14 to 20 pixel ring; their
+    ratio (`concentration`); and `shift_px`, the distance from (x, y) of the centroid of the positive
+    light inside the 2.5 pixel circle. A point source at (x, y) gives a small shift and its own
+    concentration; a neighbour's wing gives a large shift and a low concentration (A and B in 2025).
+    """
+    ny, nx = c.data.shape
+    h = int(SKY_PX[1]) + 1
+    xi, yi = int(round(x)), int(round(y))
+    out: dict[str, Any] = {"flux": None, "flux_small": None, "concentration": None, "shift_px": None}
+    if not (h <= xi < nx - h and h <= yi < ny - h):
+        return out
+    win = np.where(c.bad, np.nan, c.data)[yi - h:yi + h + 1, xi - h:xi + h + 1]
+    gy, gx = np.mgrid[-h:h + 1, -h:h + 1]
+    r = np.hypot(gx + xi - x, gy + yi - y)
+    sky, sig = clipped(win[(r >= SKY_PX[0]) & (r < SKY_PX[1])])
+    if not np.isfinite(sky):
+        return out
+    core = win[h - _AP_HALF:h + _AP_HALF + 1, h - _AP_HALF:h + _AP_HALF + 1] - sky
+    w_big = aperture_weights(x - xi, y - yi)
+    w_small = aperture_weights(x - xi, y - yi, SMALL_APERTURE_PX)
+    valid = np.isfinite(core)
+    # As the sweep's own circle (`Img.measure_xy`): up to MAX_FLAGGED_SHARE of it may be flagged, the rest scaled up.
+    if float(w_big[~valid].sum()) > MAX_FLAGGED_SHARE * float(w_big.sum()) or not (w_small[valid] > 0).any():
+        return out
+    big = float(np.nansum(w_big * core)) * float(w_big.sum()) / float(w_big[valid].sum())
+    small = float(np.nansum(w_small * core)) * float(w_small.sum()) / float(w_small[valid].sum())
+    o = np.arange(-_AP_HALF, _AP_HALF + 1)
+    pos = np.clip(np.nan_to_num(core), 0, None) * w_big
+    tot = float(pos.sum())
+    if tot > 0:
+        cx = float((pos * o[None, :]).sum() / tot) + xi - x
+        cy = float((pos * o[:, None]).sum() / tot) + yi - y
+        out["shift_px"] = math.hypot(cx, cy)
+    out.update(flux=big, flux_small=small, concentration=small / big if big > 0 else None,
+               err=float(sig * math.sqrt(float(w_big.sum()))) if np.isfinite(sig) else None)
+    return out
+
+
+def blank_test(cutouts: list[Cutout], ra: float, dec: float, ring_px: float = BLANK_RING_PX,
+               places: int = BLANK_PLACES) -> dict[str, Any]:
+    """How large a false signal the forced fit gives at empty places near the source, in the same exposures.
+
+    The fit is repeated at `places` points on a circle of `ring_px` pixels around (ra, dec); each place
+    gives the median over the exposures. `scatter_mjy` is the robust scatter of those medians (1.4826 x
+    the median absolute deviation) and `largest_mjy` the largest. This, not the formal error, sets the
+    faint-state limit: in a crowded field the neighbours' residuals dominate (the vetting found up to 14 mJy
+    at 30 blank places near A).
+    """
+    meds = []
+    for k in range(places):
+        ang = 2.0 * math.pi * k / places
+        vals = []
+        for c in cutouts:
+            x, y = c.xy(ra, dec)
+            f = forced_fit(c, x + ring_px * math.cos(ang), y + ring_px * math.sin(ang))
+            if f["status"] == "ok" and f["flux"] is not None:
+                vals.append(f["flux"])
+        if len(vals) >= 3:
+            meds.append(float(np.median(vals)))
+    if len(meds) < 5:
+        return {"places": len(meds), "scatter_mjy": None, "largest_mjy": None}
+    m = np.array(meds)
+    return {"places": len(meds), "scatter_mjy": round(float(1.4826 * np.median(np.abs(m - np.median(m)))), 2),
+            "largest_mjy": round(float(np.max(np.abs(m))), 2), "median_mjy": round(float(np.median(m)), 2)}
+
+
+def group_by_time(mjds: list[float], gap: float = EPOCH_GAP_DAYS) -> list[int]:
+    """Epoch number (0, 1, ...) of each time: a gap longer than `gap` days starts a new one."""
+    order = sorted(range(len(mjds)), key=lambda k: mjds[k])
+    out = [0] * len(mjds)
+    n, last = -1, None
+    for k in order:
+        if last is None or mjds[k] - last > gap:
+            n += 1
+        out[k] = n
+        last = mjds[k]
+    return out
+
+
+def _stats(values: list[float]) -> dict[str, Any]:
+    v = np.array(values, dtype=float)
+    if v.size == 0:
+        return {"n": 0}
+    med = float(np.median(v))
+    sem = float(1.2533 * 1.4826 * np.median(np.abs(v - med)) / math.sqrt(v.size)) if v.size >= 3 else None
+    return {"n": int(v.size), "median": round(med, 2), "min": round(float(v.min()), 2),
+            "max": round(float(v.max()), 2), "sem": round(sem, 2) if sem is not None else None}
+
+
+def line_flag(readings: list[dict[str, Any]], others: list[dict[str, Any]], factor: float = LINE_FACTOR,
+              width_um: float = LINE_WIDTH_UM) -> dict[str, Any]:
+    """Do the bright readings rest on one narrow wavelength that is much brighter than the rest of the visit?
+
+    Every SPHEREx exposure sees one narrow wavelength at a given place. `readings` are the bright
+    tile images ({"obs_id", "um", "mjy"}), `others` the same visit's other clean exposures of the same
+    detector ({"um", "mjy"}, measured the same way). A reading `factor` or more times the median of the
+    exposures further than `width_um` from its wavelength is flagged: "possibly an emission line", and
+    the change should then be judged on the continuum (C's 178 and 300 mJy fell on lines at 4.739 and
+    4.631 micrometres while its continuum was 85 to 110 mJy; ruling, method fault 5).
+    """
+    out: dict[str, Any] = {"possible_emission_line": False, "readings": []}
+    for r in readings:
+        if r.get("um") is None or r.get("mjy") is None:
+            out["readings"].append({"note": "no wavelength or no value", **r, "continuum_mjy": None, "ratio": None})
+            continue
+        cont = [o["mjy"] for o in others if o.get("um") is not None and abs(o["um"] - r["um"]) > width_um]
+        if len(cont) < 3:
+            out["readings"].append({**r, "continuum_mjy": None, "ratio": None, "note": "too few other wavelengths"})
+            continue
+        c = float(np.median(cont))
+        ratio = r["mjy"] / c if c > 0 else None
+        flagged = ratio is not None and ratio >= factor
+        out["readings"].append({**r, "continuum_mjy": round(c, 2), "n_continuum": len(cont),
+                                "ratio": round(ratio, 2) if ratio is not None else None, "line": flagged})
+        out["possible_emission_line"] |= flagged
+    return out
+
+
+def describe(cutouts: list[Cutout], ra: float, dec: float, tile_images: list[dict[str, Any]] | None = None,
+             position_detectors: tuple[int, ...] = (3, 4, 5, 6), change_detector: int = 6) -> dict[str, Any]:
+    """Measure a survivor again from its cutouts, without the faults the vetting found.
+
+    1. The bright epochs: those whose median sweep-circle reading in `change_detector` at (ra, dec) is at least a
+       quarter of the brightest epoch's and at least DETECT_MJY.
+    2. The position: the mean of the bright-state `centroid_fit` positions (S/N at least BRIGHT_FIT_SNR, no
+       saturated pixel near the core) in `position_detectors`, after dropping any further than
+       POSITION_CLIP_ARCSEC from their median (an exposure whose sky coordinates are off).
+    3. At that position, every exposure: `forced_fit` (neighbours modelled) and `aperture_check` (the old circle).
+    4. Per epoch and detector, the forced-fit fluxes of clean exposures; per faint epoch whether the old circle's
+       light was a neighbour's (`neighbour_light`: a reading above 3 times its error whose light is centred more
+       than CENTROID_SHIFT_PX away or less concentrated than CONCENTRATION_SHARE of the bright state).
+    5. `line_flag` for the tile's bright images (`tile_images`: {"obs_id", "mjy"} of `change_detector`).
+    """
+    if not cutouts:
+        return {"error": "no cutouts"}
+    epochs = group_by_time([c.mjd for c in cutouts])
+    ep_of = {id(c): e for c, e in zip(cutouts, epochs, strict=True)}
+    # 1. bright epochs, from the old circle at the old position (what the sweep saw)
+    old: dict[int, list[float]] = {}
+    for c in cutouts:
+        if c.detector == change_detector:
+            a = aperture_check(c, *c.xy(ra, dec))
+            if a["flux"] is not None:
+                old.setdefault(ep_of[id(c)], []).append(a["flux"])
+    med_old = {e: float(np.median(v)) for e, v in old.items()}
+    if not med_old:
+        return {"error": f"no usable detector {change_detector} exposure"}
+    top = max(med_old.values())
+    bright = sorted(e for e, m in med_old.items() if m >= max(DETECT_MJY, 0.25 * top))
+    # 2. the bright-state position
+    fits_ = []
+    for c in cutouts:
+        if ep_of[id(c)] in bright and c.detector in position_detectors:
+            f = centroid_fit(c, *c.xy(ra, dec))
+            if f is not None and f["snr"] >= BRIGHT_FIT_SNR:
+                fits_.append({**f, "obs_id": c.obs_id, "detector": c.detector})
+    if not fits_:
+        return {"error": "no clean bright-state exposure to place the source"}
+    m_ra, m_dec = float(np.median([f["ra"] for f in fits_])), float(np.median([f["dec"] for f in fits_]))
+    cosd = math.cos(math.radians(m_dec))
+    for f in fits_:
+        f["off_arcsec"] = math.hypot((f["ra"] - m_ra) * cosd, f["dec"] - m_dec) * 3600.0
+    kept = [f for f in fits_ if f["off_arcsec"] <= POSITION_CLIP_ARCSEC]
+    dropped = [{"obs_id": f["obs_id"], "detector": f["detector"], "off_arcsec": round(f["off_arcsec"], 1)}
+               for f in fits_ if f["off_arcsec"] > POSITION_CLIP_ARCSEC]
+    p_ra, p_dec = float(np.mean([f["ra"] for f in kept])), float(np.mean([f["dec"] for f in kept]))
+    cosd = math.cos(math.radians(p_dec))
+    scatter = float(np.std([math.hypot((f["ra"] - p_ra) * cosd, f["dec"] - p_dec) * 3600.0 for f in kept]))
+    position = {"ra": round(p_ra, 6), "dec": round(p_dec, 6), "n": len(kept),
+                "scatter_arcsec": round(scatter, 2), "error_arcsec": round(scatter / math.sqrt(len(kept)), 2),
+                "moved_arcsec": round(math.hypot((p_ra - ra) * cosd, p_dec - dec) * 3600.0, 2),
+                "dropped": dropped, "detectors": sorted({f["detector"] for f in kept})}
+    # 3. every exposure at the new position
+    rows = []
+    for c in cutouts:
+        x, y = c.xy(p_ra, p_dec)
+        f = forced_fit(c, x, y)
+        a = aperture_check(c, x, y)
+        rows.append({"obs_id": c.obs_id, "detector": c.detector, "epoch": ep_of[id(c)], "mjd": round(c.mjd, 4),
+                     "um": c.wavelength(x, y), "status": f["status"], "fit_mjy": f["flux"], "fit_err": f["err"],
+                     "overflow": f.get("overflow", 0), "circle_mjy": a["flux"], "circle_err": a.get("err"),
+                     "shift_px": a["shift_px"], "concentration": a["concentration"]})
+    # 4. per epoch and detector
+    table: dict[str, Any] = {}
+    for e in sorted(set(epochs)):
+        mj = [r["mjd"] for r in rows if r["epoch"] == e]
+        entry: dict[str, Any] = {"dates": [Time(min(mj), format="mjd").iso[:10], Time(max(mj), format="mjd").iso[:10]],
+                                 "bright": e in bright, "detectors": {}}
+        for d in range(1, 7):
+            mine = [r for r in rows if r["epoch"] == e and r["detector"] == d]
+            if not mine:
+                continue
+            ok = [r["fit_mjy"] for r in mine if r["status"] == "ok" and r["fit_mjy"] is not None]
+            entry["detectors"][str(d)] = {"fit": _stats(ok), "n_exposures": len(mine),
+                                          "n_saturated": sum(r["status"] == "saturated" for r in mine),
+                                          "n_overflow": sum(r["status"] == "ok" and r["overflow"] > 0 for r in mine)}
+        table[str(e)] = entry
+    conc_bright = [r["concentration"] for r in rows if r["epoch"] in bright and r["detector"] == change_detector
+                   and r["status"] == "ok" and r["concentration"] is not None]
+    c_ref = float(np.median(conc_bright)) if conc_bright else None
+    faint: dict[str, Any] = {}
+    for e in sorted(set(epochs) - set(bright)):
+        mine = [r for r in rows if r["epoch"] == e and r["detector"] == change_detector and r["status"] == "ok"
+                and r["circle_mjy"] is not None]
+        if not mine:
+            continue
+        circ = float(np.median([r["circle_mjy"] for r in mine]))
+        err = float(np.median([r["circle_err"] for r in mine if r["circle_err"] is not None] or [np.nan]))
+        shifts = [r["shift_px"] for r in mine if r["shift_px"] is not None]
+        concs = [r["concentration"] for r in mine if r["concentration"] is not None]
+        shift = float(np.median(shifts)) if shifts else None
+        conc = float(np.median(concs)) if concs else None
+        significant = bool(np.isfinite(err) and circ > 3.0 * err)
+        off_centre = (shift is not None and shift > CENTROID_SHIFT_PX) or \
+                     (conc is not None and c_ref is not None and conc < CONCENTRATION_SHARE * c_ref)
+        fit = _stats([r["fit_mjy"] for r in mine if r["fit_mjy"] is not None])
+        blank = blank_test([c for c in cutouts if ep_of[id(c)] == e and c.detector == change_detector], p_ra, p_dec)
+        limit, detected = None, None
+        if fit["n"] >= 3 and blank["scatter_mjy"] is not None:
+            noise = max(blank["scatter_mjy"], fit.get("sem") or 0.0)
+            limit = round(max(fit["median"], 0.0) + 3.0 * noise, 2)
+            detected = bool(fit["median"] > 3.0 * noise)
+        faint[str(e)] = {"circle_mjy": round(circ, 2), "circle_err": round(err, 2) if np.isfinite(err) else None,
+                         "shift_px": round(shift, 2) if shift is not None else None,
+                         "concentration": round(conc, 3) if conc is not None else None,
+                         "bright_concentration": round(c_ref, 3) if c_ref is not None else None,
+                         "neighbour_light": bool(significant and off_centre), "fit": fit, "blank": blank,
+                         "limit_3sigma": limit, "detected": detected}
+    result: dict[str, Any] = {"position": position, "bright_epochs": bright, "epochs": table, "faint": faint,
+                              "exposures": rows}
+    # rise factor in the change detector: brightest bright-epoch median over the faintest faint-epoch limit
+    bright_meds = [table[str(e)]["detectors"].get(str(change_detector), {}).get("fit", {}).get("median")
+                   for e in bright]
+    bright_meds = [m for m in bright_meds if m is not None]
+    limits = [f["limit_3sigma"] for f in faint.values() if f["limit_3sigma"] is not None]
+    if bright_meds and limits:
+        result["rise_at_least"] = round(max(bright_meds) / max(min(limits), 1.0), 0)
+    # 5. emission lines under the tile's bright images
+    if tile_images:
+        by_obs = {r["obs_id"]: r for r in rows if r["detector"] == change_detector}
+        readings, used_epochs = [], set()
+        for t in tile_images:
+            r = by_obs.get(t["obs_id"])
+            if r is None or r["status"] != "ok":
+                readings.append({"obs_id": t["obs_id"], "um": r["um"] if r else None, "mjy": None,
+                                 "tile_mjy": t.get("mjy"), "note": "not a clean exposure here"})
+                continue
+            readings.append({"obs_id": t["obs_id"], "um": r["um"], "mjy": r["fit_mjy"], "tile_mjy": t.get("mjy")})
+            used_epochs.add(r["epoch"])
+        others = [{"um": r["um"], "mjy": r["fit_mjy"]} for r in rows
+                  if r["detector"] == change_detector and r["epoch"] in used_epochs and r["status"] == "ok"
+                  and r["fit_mjy"] is not None and r["obs_id"] not in {t["obs_id"] for t in tile_images}]
+        result["lines"] = line_flag(readings, others)
+    return result
+
+
+VETTING_DIR = Path(__file__).resolve().parent.parent / "docs" / "sweep" / "vetting"
+VETTED_MATCH_ARCSEC = 5.0
+
+
+def vetted_candidates(path: Path | None = None) -> list[dict[str, Any]]:
+    """The ruled candidates (docs/sweep/vetting/candidates.json), or [] if the file is not there."""
+    p = path or VETTING_DIR / "candidates.json"
+    return json.loads(p.read_text())["candidates"] if p.exists() else []
+
+
+def _vetted_for(sv: dict[str, Any], vetted: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for v in vetted:
+        ra0, dec0 = v["first_run_position_withdrawn"]
+        if sep_deg(sv["ra"], sv["dec"], ra0, dec0) * 3600.0 <= VETTED_MATCH_ARCSEC:
+            return v
+    return None
+
+
+def summarise(include_proof: bool = False, vetted: list[dict[str, Any]] | None = None,
+              rerun: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Totals over every finished tile: area, the tally at each stage, the survivors by kind.
+
+    A survivor that the vetting ruled on (`vetted`, from `vetted_candidates`) is listed with the
+    ruling's position and numbers only: the first run's position and brightness for it were wrong
+    and are left out. `rerun` (docs/sweep/vetting/rerun.json) adds what the fixed follow-up found.
+    An unexplained survivor that the all-exposure check did not confirm is "set_aside".
+    """
+    vetted = vetted_candidates() if vetted is None else vetted
+    checks = (rerun or {}).get("candidates", {})
     tiles = []
     for p in sorted(TILE_DIR.glob("*.json")):
         if p.stem.startswith("proof") and not include_proof:
@@ -1238,11 +1883,28 @@ def summarise(include_proof: bool = False) -> dict[str, Any]:
             total[k] += v
         for sv in t.get("survivors", []):
             k = sv["classification"]["kind"] + ("_single_image" if sv.get("single_image_only") else "")
-            kinds[k] = kinds.get(k, 0) + 1
             conf = exposure_confirmation(sv) if sv["classification"]["kind"].startswith("candidate") else None
+            ruled = _vetted_for(sv, vetted) if k.startswith("candidate") else None
+            if ruled is not None:
+                entry = {"tile": t["name"], "label": ruled["label"], "kind": "candidate",
+                         **{f: ruled[f] for f in ("ra", "dec", "sexagesimal", "position_error_arcsec", "l", "b",
+                                                  "constellation", "allowed_sentence", "last_non_detection",
+                                                  "first_detection", "visits_d6", "rise", "at_the_place",
+                                                  "spectrum", "probably")},
+                         "direction": "brightened", "source": "docs/sweep/vetting/ruling.json (2026-11-15)"}
+                if ruled["label"] in checks:
+                    entry["fixed_follow_up"] = checks[ruled["label"]]["summary"]
+                survivors.append(entry)
+                kinds["candidate"] = kinds.get("candidate", 0) + 1
+                continue
+            if k.startswith("candidate") and not (conf and conf["confirmed"]):
+                k = "set_aside"
+            kinds[k] = kinds.get(k, 0) + 1
             survivors.append({"tile": t["name"], "ra": round(sv["ra"], 5), "dec": round(sv["dec"], 5), "kind": k,
                               "confirmed_in_all_exposures": conf and conf["confirmed"],
                               "bright_mjy": round(sv["pair"]["bright_mjy"], 1), "direction": sv.get("direction")})
     return {"tiles_done": len(done), "tiles_skipped": len(tiles) - len(done),
             "area_sq_deg": round(sum(t["area_sq_deg"] for t in done), 2), "tally": total,
-            "survivors_by_kind": kinds, "survivors": survivors}
+            "survivors_by_kind": kinds, "survivors": survivors,
+            "note": ("'candidate' means a source we found in no catalogue or report we checked; nobody has confirmed "
+                     "it and nothing has been reported. 'set_aside': looked at and not kept (docs/sweep.md).")}

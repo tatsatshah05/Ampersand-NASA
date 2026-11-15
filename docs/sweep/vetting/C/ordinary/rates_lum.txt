@@ -1,0 +1,24 @@
+decline per detector (continuum, 2.5 px minus Jul-Aug 2025 median):
+  D3:   40.7 mJy (n=14, MJD 61100) ->   0.8 mJy (n=23, MJD 61257); factor  40.7 = 4.0 mag in 5.2 months = 0.78 mag/month  (late value floored at 1 mJy: a lower limit on the fade)
+  D4:   64.4 mJy (n=11, MJD 61094) ->  -1.6 mJy (n=3, MJD 61270); factor  64.4 = 4.5 mag in 5.8 months = 0.78 mag/month  (late value floored at 1 mJy: a lower limit on the fade)
+  D5:  105.0 mJy (n=13, MJD 61096) ->   3.7 mJy (n=13, MJD 61264); factor  28.4 = 3.6 mag in 5.5 months = 0.66 mag/month
+  D6:  104.8 mJy (n=9, MJD 61100) ->   3.4 mJy (n=14, MJD 61255); factor  31.0 = 3.7 mag in 5.1 months = 0.73 mag/month
+  D3 2.233 MJD 61099.63: r2.5 58.7  r1.5 36.0  minus quiescent(2.5) 46.0
+  D3 2.285 MJD 61099.63: r2.5 57.8  r1.5 34.5  minus quiescent(2.5) 45.1
+  D3 2.337 MJD 61099.63: r2.5 59.0  r1.5 41.6  minus quiescent(2.5) 46.4
+  D3 2.390 MJD 61099.63: r2.5 63.1  r1.5 46.3  minus quiescent(2.5) 50.4
+  D3 2.285 MJD 61139.89: r2.5 34.1  r1.5 14.6  minus quiescent(2.5) 21.4
+
+flare (Feb-Mar 2026) luminosity, continuum channels only, lines excluded:
+  A_K=0: F(1.1-5.0um) = 7.68e-14 W/m2 -> 3 kpc:      22 Lsun; 8 kpc:     154 Lsun; 12 kpc:     346 Lsun
+  A_K=1: F(1.1-5.0um) = 1.76e-13 W/m2 -> 3 kpc:      49 Lsun; 8 kpc:     351 Lsun; 12 kpc:     790 Lsun
+  A_K=2: F(1.1-5.0um) = 4.93e-13 W/m2 -> 3 kpc:     139 Lsun; 8 kpc:     986 Lsun; 12 kpc:    2218 Lsun
+  blackbody 1150 K (A_K=0), all wavelengths: F = 1.12e-13 W/m2 -> 2.74 kpc:      26 Lsun; 3 kpc:      32 Lsun; 8 kpc:     225 Lsun; 12 kpc:     506 Lsun
+  blackbody 1450 K (A_K=1), all wavelengths: F = 2.24e-13 W/m2 -> 2.74 kpc:      53 Lsun; 3 kpc:      63 Lsun; 8 kpc:     448 Lsun; 12 kpc:    1009 Lsun
+  blackbody 2070 K (A_K=2), all wavelengths: F = 6.26e-13 W/m2 -> 2.74 kpc:     147 Lsun; 3 kpc:     176 Lsun; 8 kpc:    1253 Lsun; 12 kpc:    2819 Lsun
+
+flare continuum 1.95-2.45 um: 45.5 mJy -> Ks ~ 10.41 (2MASS zero point 666.7 Jy)
+  A_K=0: M_K at 2.74 / 3 / 8 / 12 kpc = -1.8 / -2.0 / -4.1 / -5.0
+  A_K=1: M_K at 2.74 / 3 / 8 / 12 kpc = -2.8 / -3.0 / -5.1 / -6.0
+  A_K=2: M_K at 2.74 / 3 / 8 / 12 kpc = -3.8 / -4.0 / -6.1 / -7.0
+flare continuum 4.4-5.0 um: 105.0 mJy -> [4.5] ~ 8.08 (IRAC zero point 179.7 Jy)

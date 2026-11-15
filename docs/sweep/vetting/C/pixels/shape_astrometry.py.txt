@@ -1,0 +1,80 @@
+"""(1) Shape: Gaussian FWHM (fits not at the 0.3 px lower bound) and concentration F(r<1.25px)/F(r<2.5px) of the candidate
+vs comparison stars of 40-400 mJy in the same Feb-Mar 2026 exposures. (2) Astrometric zero point: comparison stars' fitted
+positions minus AllWISE, and the candidate's distance to every catalogued source within 30 arcsec after that correction."""
+import json, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+from measure import CUT, coverage, sky_level, PHOT_BAD
+from readcat import tsv, gaia
+FS = json.load(open("fieldstars.json")); R = {(r["obs_id"], r["det"]): r for r in json.load(open("measurements.json"))}
+POS = json.load(open("position.json"))
+stars = {s["name"]: s for s in FS["stars"]}
+
+def conc(data, fl, x, y, sky):
+    ny, nx = data.shape
+    out = []
+    for rad in (1.25, 2.5):
+        cw = coverage(nx, ny, x, y, 0, rad); u = cw > 0
+        if (((fl[u] & PHOT_BAD) != 0) | ~np.isfinite(data[u])).any(): return None
+        out.append(float(np.sum(cw[u] * (data[u] - sky))))
+    return out[0] / out[1] if out[1] > 0 else None
+
+print("(1) SHAPE in Feb-Mar 2026 exposures")
+for d in (2, 3, 4, 5, 6):
+    cand_c, star_c, cand_f, star_f = [], [], [], []
+    for ex in FS["exposures"]:
+        if ex["det"] != d or R[(ex["obs_id"], d)].get("ep") != 1: continue
+        r = R[(ex["obs_id"], d)]
+        with fits.open(os.path.join(CUT, f"{ex['obs_id']}_D{d}.fits")) as h:
+            hd = h["IMAGE"].header; data = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float); fl = h["FLAGS"].data.astype(np.int64)
+        w = WCS(hd)
+        if r.get("flux") and r["flux"] > (5 if d == 2 else 40) and r.get("gfit"):
+            c = conc(data, fl, r["x"], r["y"], r["sky"])
+            if c: cand_c.append(c)
+            if r["gfit"]["sigma_px"] > 0.31 and r["n_bad_ap"] == 0: cand_f.append(r["g_fwhm_arcsec"])
+        for s in ex["stars"]:
+            if not (s["ok"] and s["flux"] and (5 if d == 2 else 40) < s["flux"] < 400): continue
+            st = stars[s["name"]]
+            x, y = (float(t) for t in w.all_world2pix(st["ra"], st["dec"], 0))
+            sky, _, _ = sky_level(data, fl, x, y, 14, 20)
+            c = conc(data, fl, x, y, sky) if sky is not None else None
+            if c: star_c.append(c)
+            if s.get("fwhm") and s["fwhm"] > 4.4: star_f.append(s["fwhm"])
+    def q(v): return f"median {np.median(v):.3f} 16-84% {np.percentile(v,16):.3f}-{np.percentile(v,84):.3f} n={len(v)}" if len(v) else "none"
+    print(f"  D{d} concentration: candidate {q(cand_c)} | stars {q(star_c)}")
+    print(f"  D{d} FWHM arcsec (fits off the bound): candidate {q(cand_f)} | stars {q(star_f)}")
+
+print("\n(2) ASTROMETRY")
+zp = {}
+for d in (4, 5, 6):
+    oe, on = [], []
+    for ex in FS["exposures"]:
+        if ex["det"] != d or R[(ex["obs_id"], d)].get("ep") != 1: continue
+        for s in ex["stars"]:
+            if s["ok"] and s.get("off_e") is not None and s["flux"] and 40 < s["flux"] < 400:
+                oe.append(s["off_e"]); on.append(s["off_n"])
+    zp[d] = (np.median(oe), np.median(on), len(oe))
+    print(f"  D{d}: comparison stars (40-400 mJy) fitted minus AllWISE: median E {zp[d][0]:+.2f}\" N {zp[d][1]:+.2f}\" (n={len(oe)}), "
+          f"robust sd E {1.4826*np.median(np.abs(np.array(oe)-zp[d][0])):.2f} N {1.4826*np.median(np.abs(np.array(on)-zp[d][1])):.2f}")
+ze = np.mean([zp[d][0] for d in zp]); zn = np.mean([zp[d][1] for d in zp])
+ra_c = POS["ra"] - ze / 3600 / np.cos(np.radians(POS["dec"])); de_c = POS["dec"] - zn / 3600
+print(f"  candidate, mean SPHEREx centroid RA {POS['ra']:.6f} Dec {POS['dec']:.6f}; on the AllWISE frame RA {ra_c:.6f} Dec {de_c:.6f}")
+json.dump({"ra_allwise_frame": ra_c, "dec_allwise_frame": de_c, "zp_e": ze, "zp_n": zn}, open("position_corrected.json", "w"))
+def sep(ra, de):
+    e = (ra - ra_c) * np.cos(np.radians(de_c)) * 3600; n = (de - de_c) * 3600
+    return np.hypot(e, n), e, n
+rows = []
+for r in tsv("2mass_30as"): rows.append(("2MASS " + r["2MASS"], float(r["RAJ2000"]), float(r["DEJ2000"]), f"J {r['Jmag']} H {r['Hmag']} Ks {r['Kmag']}"))
+for r in tsv("allwise_30as"): rows.append(("AllWISE " + r["AllWISE"], float(r["RAJ2000"]), float(r["DEJ2000"]), f"W1 {r['W1mag']} W2 {r['W2mag']}"))
+for r in tsv("catwise_30as"): rows.append(("CatWISE " + r["Name"], float(r["RA_ICRS"]), float(r["DE_ICRS"]), f"W1 {r['W1mproPM']} W2 {r['W2mproPM']}"))
+for r in tsv("glimpse_30as"): rows.append(("GLIMPSE " + r["GLIMPSE"], float(r["RAJ2000"]), float(r["DEJ2000"]), f"[3.6] {r['3.6mag']} [4.5] {r['4.5mag']} [5.8] {r['5.8mag']} [8.0] {r['8.0mag']}"))
+for r in gaia(): rows.append(("Gaia DR3 " + r["source_id"], float(r["ra"]), float(r["dec"]), f"G {float(r['phot_g_mean_mag']):.2f} var {r['phot_variable_flag']}"))
+rows.append(("SIMBAD HIGALBM G330.4120-00.0823 (smm)", 241.709, -52.206654, "Herschel clump; SIMBAD position to 3 decimals in RA"))
+rows = sorted([(sep(ra, de), n, ra, de, info) for n, ra, de, info in rows])
+print("  everything within 12 arcsec of the corrected position:")
+for (s, e, n), name, ra, de, info in rows:
+    if s < 12: print(f"    {s:5.1f}\"  E {e:+5.1f} N {n:+5.1f}  {name}  {info}")

@@ -1,0 +1,34 @@
+== downloads/mukai_novae/answer.html: 200 rows with positions
+  target: within 60 arcsec: 0; within 1 deg: 0
+        6056.8 arcsec  V5588 Sgr Nova Sagittarii 2011 #2 PNV J18102135-2305306 18 10 21.35 -23 05 30.6 2011-03-27 11.7 CBET 2679 ; IAUC 9203 Swift, astrosurf , SMARTS , E-Nova
+        6817.8 arcsec  PGIR21git Gaia21ejq (Nova in Sagittarius) 18 00 44.88 -21 39 40.5 2021-09-19 G=17.26 ATel 14950 (The first Gattini detection was at 2021-09-19 02:45:27 UT.)
+        7855.8 arcsec  Gaia21esm (Nova in Sagittarius) 17 54 14.14 -24 12 23.5 2021-09-20 G=13.77 ATel 15001
+  V7994 Sgr: within 60 arcsec: 1; within 1 deg: 1
+           0.0 arcsec  V7994 Sgr Nova Sagittarii 2025 No. 4 TCP J18035290-3127298 18 03 52.76 -31 27 26.6 2025-09-21 6.6 CBET 5612 LAT Transient , ARAS
+        5555.3 arcsec  V1309 Sco 17 57 32.93 -30 43 10.1 2008-09-02 9.5 CBET 1496 ; IAUC 8972 Luminous Red Nova : Swift, SMARTS
+        6292.2 arcsec  V7993 Sgr Nova Sagittarii 2025 No. 3 TCP J18022164-3310319 18 02 21.64 -33 10 31.9 2025-03-24 10.3 CBET 5531 , ATel 17108
+  V462 Lup: within 60 arcsec: 1; within 1 deg: 1
+           0.1 arcsec  V462 Lup Nova Lupi 2025 ASASSN-25cm AT 2025nlr 15 08 03.27 -40 08 35.2 2025-06-12 5.4 CBET 5570 , ATel 17228 LAT Transient , Swift , ARAS ; position taken from ATel 17237
+       21859.3 arcsec  V407 Lup Nova Lupi 2016 PNV J15290182-4449409 ASASSN-16kt 15 29 01.82 -44 49 40.89 2016-09-24 5.6 ATel 9538 (see Erratum ), CBET 4322 , IAUC 9284 Probable LAT transient ; Swift , ARAS , SMARTS
+       33787.3 arcsec  V408 Lup Nova Lupi 2018 PNV J15384000-4744500 15 38 43.84 -47 44 41.1 2018-06-03 9.0 CBET 4520 ; ATel 11681 , 11684 Swift , ARAS , SMARTS
+  V0691 Ser: within 60 arcsec: 1; within 1 deg: 1
+           2.8 arcsec  V691 Ser Nova Serpentis 2025 TCP J18385851-0351482 18 38 58.47 -03 51 49.4 2025-07-17 11.9 CBET 5587 , ATel 17292 ARAS
+        7783.4 arcsec  V1723 Aql 18 47 38.38 -03 47 14.1 2010-09-11 12.4 IAUC 9167 , 9168 Swift, E-Nova
+        9267.1 arcsec  AT 2026stb Nova in Scutum 18 31 15.62 -05 34 31.9 2026-07-08 16.0 ATel 17886
+== downloads/mukai_unconfirmed/answer.html: 47 rows with positions
+  target: within 60 arcsec: 0; within 1 deg: 0
+        6509.0 arcsec  V5862 Sgr OGLE-2014-NOVA-01 17 55 20.27 -23 23 54.5 2014-02-15 Ic~15.2 ATel 6002 Eruption between 2013-10-18 and 2014-02-16
+        6806.2 arcsec  V5926 Sgr OGLE-2013-NOVA-04 18 01 22.20 -25 18 39.0 2013-03-31 Ic=13.2 Mroz et al. 2014 Peaked 2013-04-11
+        7131.5 arcsec  V5861 Sgr OGLE-2010-NOVA-01 17 54 34.76 -23 32 21.5 2010-06-26 Ic~13 ATel 6406 Eruption between 2010-06-17.3 and 2010-06-26.3
+  V7994 Sgr: within 60 arcsec: 0; within 1 deg: 2
+        1988.1 arcsec  V5980 Sgr OGLE-2010-NOVA-03 18 05 25.36 -31 54 05.1 2010-03-05 Ic=12 Mroz et al. 2014 Eruption date uncertain
+        3295.2 arcsec  V5914 Sgr OGLE-2006-NOVA-01 18 00 49.71 -30 48 56.8 2006-02-10 Ic=16.4 Mroz et al. 2014 Eruption between 2005 October and 2006 February; P=0.821241 d according to AAVSO Responsible NASA Official : Rya
+        7758.9 arcsec  V1704 Sco OGLE-2008-NOVA-01 17 56 10.38 -30 04 37.7 2008-02-10 Ic=12: Mroz et al. 2014 Eruption between 2007 November and 2008 February
+  V462 Lup: within 60 arcsec: 0; within 1 deg: 0
+       55661.8 arcsec  Gaia22doh AT 2022sie 15 40 57.66 -54 35 34.2 2022-08-26 G=16.9 Gaia alert
+       56364.0 arcsec  VVV-NOV-011 15 55 58.86 -53 32 19.7 2010-04-19 Ks=12.1 ATel 8602 Eruption before 2010-04-19
+       57104.6 arcsec  VVV-NOV-012 16 25 27.57 -47 53 09.7 2010-08-15 Ks=8.4 ATel 8602 Eruption between 2010-03-02 and 2010-08-15
+  V0691 Ser: within 60 arcsec: 0; within 1 deg: 0
+       21124.4 arcsec  ASASSN-17li 18 38 22.00 -09 43 47.4 2017-08-24 g=16.2 Kawash et al. 2021
+       39978.1 arcsec  ASASSN-19pw 18 31 05.75 -14 47 52.6 2019-06-22 g=15.6 Kawash et al. 2021
+       53502.7 arcsec  TCP J19145161+0800063 AT 2025sqe 19 14 51.63 +08 00 06.4 2025-07-29 CV=19.02 CBAT Transient Object Followup Reports , ATel 17379

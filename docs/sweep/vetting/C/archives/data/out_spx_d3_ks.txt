@@ -1,0 +1,9 @@
+calibration stars: 48
+2MASS Ks calibrators: 68
+Jul-Aug 2025: D3 2.0-2.4 um, n=13, median 13.1 mJy (16-84%: 8.8-17.6); ncal median 16
+Feb-Apr 2026: D3 2.0-2.4 um, n=4, median 54.4 mJy (16-84%: 40.6-62.0); ncal median 35
+Jul-Sep 2026: D3 2.0-2.4 um, n=5, median 17.4 mJy (16-84%: 13.4-21.9); ncal median 11
+   2026-02-28 13:27 2.04 um 60.3 mJy ncal 36
+   2026-02-28 15:02 2.23 um 48.4 mJy ncal 35
+   2026-02-28 15:06 2.34 um 63.5 mJy ncal 12
+   2026-04-09 21:18 2.28 um 33.3 mJy ncal 36

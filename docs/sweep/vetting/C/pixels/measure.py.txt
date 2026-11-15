@@ -1,0 +1,239 @@
+"""Independent per-exposure measurement of candidate C (RA 241.70931, Dec -52.20484) on the
+cached SPHEREx cutouts. Own code: astropy + numpy + scipy only (no backend photometry/sweep).
+
+Per exposure: aperture sum (r = 2.5 native px) of IMAGE - ZODI minus a clipped-median sky
+from a ring 14-20 px (the sweep's choice) and, for comparison, from a ring 5-9 px; flags in the
+aperture; a circular-Gaussian fit (amplitude, x, y, sigma, constant) on a 9 x 9 px box for the
+centroid and FWHM; the detector (x, y) from the cutout's 'A' WCS; the wavelength; the local
+noise from a grid of apertures over the cutout (robust scatter).
+Writes measurements.json.
+"""
+import glob
+import json
+import os
+import sys
+import warnings
+
+import numpy as np
+from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
+from astropy.wcs import WCS, FITSFixedWarning
+from astropy.wcs.utils import proj_plane_pixel_area
+from scipy.optimize import least_squares
+
+warnings.simplefilter("ignore", FITSFixedWarning)
+warnings.simplefilter("ignore", RuntimeWarning)
+
+RA0, DEC0 = 241.70931, -52.20484
+CUT = "<repository>/backend/cache/sweep/cutouts/4ae14c5ec1"
+LIST = "<repository>/backend/cache/sweep/queries/sia_467099e13fb36aac.json"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "measurements.json")
+
+# Explanatory Supplement Table 16 bit numbers (copied from backend/pipeline.py, read only)
+BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7,
+       "MISSING_DATA": 9, "HOT": 10, "COLD": 11, "FULLSAMPLE": 12, "PHANMISS": 14,
+       "NONLINEAR": 15, "PERSIST": 17, "OUTLIER": 19, "CROSSTALK": 20, "SOURCE": 21,
+       "GHOST": 22, "GHOST_FPA": 23, "GHOST_EXT": 24, "STREAK": 25, "BLOOM": 26,
+       "SNOWBALL": 27, "HALO": 28, "SATELLITE_HALO": 29}
+NAME = {v: k for k, v in BIT.items()}
+
+
+def mask(*names):
+    return sum(1 << BIT[n] for n in names)
+
+
+PHOT_BAD = mask("SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR", "PERSIST", "BLOOM",
+                "SNOWBALL", "HALO", "SATELLITE_HALO")
+SKY_BAD = PHOT_BAD | mask("OVERFLOW", "OUTLIER", "TRANSIENT")   # SOURCE is on ~100% of pixels here
+R_AP = 2.5
+SUB = 5
+
+
+def names(bits):
+    return [NAME.get(b, f"bit{b}") for b in range(31) if bits >> b & 1]
+
+
+def coverage(nx, ny, x, y, r_in, r_out):
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    off = (np.arange(SUB) + 0.5) / SUB - 0.5
+    tot = np.zeros((ny, nx))
+    for dy in off:
+        for dx in off:
+            r = np.hypot(xx + dx - x, yy + dy - y)
+            tot += (r >= r_in) & (r < r_out)
+    return tot / SUB ** 2
+
+
+def sky_level(data, flags, x, y, r_in, r_out):
+    ny, nx = data.shape
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    r = np.hypot(xx - x, yy - y)
+    ring = (r >= r_in) & (r < r_out) & np.isfinite(data)
+    good = ring & ((flags & SKY_BAD) == 0)
+    if good.sum() < 30:
+        return None, None, int(good.sum())
+    _, med, sd = sigma_clipped_stats(data[good], sigma=3.0, maxiters=5)
+    return float(med), float(sd), int(good.sum())
+
+
+def ap_sum(data, flags, x, y, sky, to_mjy):
+    ny, nx = data.shape
+    w = coverage(nx, ny, x, y, 0.0, R_AP)
+    used = w > 0
+    f = flags[used]
+    bits = int(np.bitwise_or.reduce(f)) if f.size else 0
+    d = data[used]
+    bad = ((f & PHOT_BAD) != 0) | ~np.isfinite(d)
+    val = float(np.sum(w[used][~bad] * (d[~bad] - sky))) * to_mjy if sky is not None else None
+    return val, bits, int(bad.sum()), int(used.sum())
+
+
+def gfit(data, flags, x, y, half=4):
+    ny, nx = data.shape
+    xi, yi = int(round(x)), int(round(y))
+    x0, x1, y0, y1 = max(xi - half, 0), min(xi + half + 1, nx), max(yi - half, 0), min(yi + half + 1, ny)
+    sub = data[y0:y1, x0:x1]
+    fl = flags[y0:y1, x0:x1]
+    yy, xx = np.mgrid[y0:y1, x0:x1]
+    ok = np.isfinite(sub) & ((fl & PHOT_BAD) == 0)
+    if ok.sum() < 20:
+        return None
+    zx, zy, zv = xx[ok].astype(float), yy[ok].astype(float), sub[ok]
+    # start at the brightest valid pixel within 1.5 px of the requested place
+    near = np.hypot(zx - x, zy - y) <= 1.5
+    if near.any():
+        k = np.argmax(np.where(near, zv, -np.inf))
+        sx, sy = zx[k], zy[k]
+    else:
+        sx, sy = x, y
+    b0 = float(np.median(zv))
+    a0 = max(float(np.max(zv[near])) - b0 if near.any() else 1.0, 1e-3)
+
+    def model(p):
+        a, cx, cy, s, b = p
+        return a * np.exp(-((zx - cx) ** 2 + (zy - cy) ** 2) / (2 * s * s)) + b
+
+    try:
+        r = least_squares(lambda p: model(p) - zv, [a0, sx, sy, 0.65, b0],
+                          bounds=([0, x0 - 1, y0 - 1, 0.3, -np.inf], [np.inf, x1, y1, 4.0, np.inf]))
+    except Exception:
+        return None
+    a, cx, cy, s, b = r.x
+    res = r.fun
+    dof = max(len(zv) - 5, 1)
+    s2 = float(np.sum(res ** 2) / dof)
+    try:
+        J = r.jac
+        cov = np.linalg.inv(J.T @ J) * s2
+        ex, ey = float(np.sqrt(cov[1, 1])), float(np.sqrt(cov[2, 2]))
+    except Exception:
+        ex = ey = None
+    return {"amp": float(a), "x": float(cx), "y": float(cy), "sigma_px": float(s), "bkg": float(b),
+            "ex_px": ex, "ey_px": ey, "rms_resid": float(np.sqrt(s2)), "n_pix": int(len(zv))}
+
+
+def grid_noise(data, flags, to_mjy, x, y, step=6, avoid=5.0):
+    """Robust scatter of aperture sums (sky from 14-20 px ring) at a grid of places in the cutout."""
+    ny, nx = data.shape
+    vals = []
+    for gy in np.arange(21, ny - 21, step):
+        for gx in np.arange(21, nx - 21, step):
+            if np.hypot(gx - x, gy - y) < avoid:
+                continue
+            sky, _, n = sky_level(data, flags, gx, gy, 14.0, 20.0)
+            if sky is None:
+                continue
+            v, bits, nbad, _ = ap_sum(data, flags, gx, gy, sky, to_mjy)
+            if nbad == 0 and v is not None:
+                vals.append(v)
+    vals = np.array(vals)
+    if len(vals) < 8:
+        return None, None, len(vals)
+    med = float(np.median(vals))
+    mad = float(1.4826 * np.median(np.abs(vals - med)))
+    return med, mad, len(vals)
+
+
+def main():
+    exps = json.load(open(LIST))
+    rows = []
+    for n, e in enumerate(exps):
+        path = os.path.join(CUT, f"{e['obs_id']}_D{e['detector']}.fits")
+        row = {"obs_id": e["obs_id"], "det": e["detector"], "collection": e["collection"]}
+        if not os.path.exists(path):
+            row["status"] = "missing_file"
+            rows.append(row)
+            continue
+        with fits.open(path) as h:
+            hd = h["IMAGE"].header
+            img = h["IMAGE"].data.astype(float)
+            fl = h["FLAGS"].data.astype(np.int64)
+            var = h["VARIANCE"].data.astype(float)
+            zod = h["ZODI"].data.astype(float)
+            wave = h["WAVE"].data
+            band = h["BANDWIDTH"].data
+        w = WCS(hd)
+        ny, nx = img.shape
+        x, y = (float(v) for v in w.all_world2pix(RA0, DEC0, 0))
+        # 'A' system: 0-based active detector pixel = CRVAL + CDELT * (1-based cutout pixel - CRPIX), linear
+        dx_ = float(hd["CRVAL1A"]) + float(hd["CDELT1A"]) * (x + 1.0 - float(hd["CRPIX1A"]))
+        dy_ = float(hd["CRVAL2A"]) + float(hd["CDELT2A"]) * (y + 1.0 - float(hd["CRPIX2A"]))
+        row.update(mjd=float(hd["MJD-AVG"]), date=hd["DATE-AVG"][:19], x=x, y=y, det_x=dx_, det_y=dy_,
+                   nx=nx, ny=ny, psf_fwhm_hdr=float(hd.get("PSF_FWHM", np.nan)),
+                   pa_hint=float(np.degrees(np.arctan2(hd["PC1_2"], hd["PC2_2"]))))
+        if not (20.5 <= x < nx - 20.5 and 20.5 <= y < ny - 20.5):
+            row["status"] = "edge"
+            rows.append(row)
+            continue
+        xi, yi = int(round(x)), int(round(y))
+        row["wave_um"] = float(wave[yi, xi])
+        row["band_um"] = float(band[yi, xi])
+        data = img - zod
+        with np.errstate(invalid="ignore"):
+            imposs = img < -10.0 * np.sqrt(var)
+        data[imposs] = np.nan
+        to_mjy = float(proj_plane_pixel_area(w)) * (np.pi / 180.0) ** 2 * 1e9
+        row["pix_arcsec2"] = float(proj_plane_pixel_area(w)) * 3600.0 ** 2
+        sky, skysd, nsky = sky_level(data, fl, x, y, 14.0, 20.0)
+        sky2, skysd2, nsky2 = sky_level(data, fl, x, y, 5.0, 9.0)
+        v, bits, nbad, nused = ap_sum(data, fl, x, y, sky, to_mjy)
+        v2, _, _, _ = ap_sum(data, fl, x, y, sky2, to_mjy)
+        # statistical error from VARIANCE in the aperture plus sky error
+        cov_w = coverage(nx, ny, x, y, 0.0, R_AP)
+        u = cov_w > 0
+        var_ap = float(np.nansum(cov_w[u] ** 2 * var[u])) * to_mjy ** 2
+        sky_err = (skysd / np.sqrt(max(nsky, 1)) * cov_w.sum() * to_mjy) if skysd else None
+        err = float(np.sqrt(var_ap + (sky_err or 0) ** 2))
+        sat_core = bool((((fl[u] & mask("OVERFLOW")) != 0) & ((fl[u] & mask("SUR_ERROR")) != 0)).any()
+                        or ((fl[u] & mask("BLOOM", "NONLINEAR")) != 0).any())
+        status = "ok" if nbad == 0 else ("saturated" if sat_core else "flagged")
+        # which pixels are bad in the aperture, and how far from centre
+        yy, xx = np.mgrid[0:ny, 0:nx]
+        rr = np.hypot(xx - x, yy - y)
+        badpix = u & (((fl & PHOT_BAD) != 0) | ~np.isfinite(data))
+        bad_detail = [{"r_px": round(float(rr[j, i]), 2), "flags": names(int(fl[j, i]) & ~mask("SOURCE")),
+                       "finite": bool(np.isfinite(data[j, i]))} for j, i in zip(*np.nonzero(badpix))]
+        peak = float(np.nanmax(np.where(rr <= 1.5, data, np.nan))) - (sky or 0)
+        g = gfit(data, fl, x, y)
+        gn = grid_noise(data, fl, to_mjy, x, y)
+        row.update(status=status, flux=v, flux_sky_inner=v2, err=err, sky=sky, sky_sd=skysd, n_sky=nsky,
+                   sky_inner=sky2, flags=names(bits & ~mask("SOURCE")), n_bad_ap=nbad, n_ap=nused,
+                   bad_detail=bad_detail, peak_mjysr=peak, gfit=g, to_mjy=to_mjy,
+                   grid_med=gn[0], grid_mad=gn[1], grid_n=gn[2], n_impossible=int(imposs.sum()))
+        if g is not None:
+            gra, gdec = (float(t) for t in w.all_pix2world(g["x"], g["y"], 0))
+            row["g_ra"], row["g_dec"] = gra, gdec
+            row["g_off_e"] = (gra - RA0) * np.cos(np.radians(DEC0)) * 3600.0
+            row["g_off_n"] = (gdec - DEC0) * 3600.0
+            row["g_fwhm_arcsec"] = 2.3548 * g["sigma_px"] * np.sqrt(row["pix_arcsec2"])
+            # Gaussian flux (amp * 2 pi s^2) in mJy, for a profile-independent check
+            row["g_flux"] = g["amp"] * 2 * np.pi * g["sigma_px"] ** 2 * to_mjy
+        rows.append(row)
+        if n % 50 == 0:
+            print(n, len(exps), file=sys.stderr)
+    json.dump(rows, open(OUT, "w"), indent=0)
+    print("wrote", OUT, len(rows))
+
+
+if __name__ == "__main__":
+    main()

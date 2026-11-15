@@ -1,0 +1,81 @@
+"""IRSA Gator cone searches (TAP was timing out). Usage: python -I q_gator.py <scriptsdir> [ra dec tag]"""
+import sys, os, io, time
+sys.path.insert(0, sys.argv[1])
+from qlib import *
+from astropy.io import ascii
+
+ra0 = float(sys.argv[2]) if len(sys.argv) > 2 else RA0
+dec0 = float(sys.argv[3]) if len(sys.argv) > 3 else DEC0
+tag = sys.argv[4] if len(sys.argv) > 4 else "cand"
+only = sys.argv[5].split(",") if len(sys.argv) > 5 else None
+
+GATOR = "https://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query"
+jobs = [
+    ("allwise_p3as_psd", 30, "designation,ra,dec,w1mpro,w1sigmpro,w1snr,w2mpro,w2sigmpro,w2snr,w3mpro,w3sigmpro,w3snr,w4mpro,w4sigmpro,w4snr,cc_flags,ext_flg,var_flg,ph_qual,nb,na,w1sat,w2sat,w3sat,w4sat,w1mjdmean,w2mjdmean"),
+    ("allwise_p3as_psr", 30, "designation,ra,dec,w1mpro,w2mpro,w3mpro,w4mpro,w1snr,w2snr,w3snr,w4snr,cc_flags,ph_qual"),
+    ("catwise_2020", 30, "source_name,ra,dec,w1mpro,w1sigmpro,w1snr,w2mpro,w2sigmpro,w2snr,pmra,pmdec,meanobsmjd,ab_flags,cc_flags"),
+    ("catwise_2020_reject", 30, "source_name,ra,dec,w1mpro,w2mpro,w1snr,w2snr,ab_flags,cc_flags"),
+    ("unwise_2019", 30, ""),
+    ("fp_psc", 30, "designation,ra,dec,j_m,j_cmsig,h_m,h_cmsig,k_m,k_cmsig,ph_qual,rd_flg,bl_flg,cc_flg,gal_contam,mp_flg,jdate"),
+    ("glimpse2_v2cat", 30, ""),
+    ("glimpse2_v2arc", 30, ""),
+    ("glimpse2ep1c08", 30, ""),
+    ("glimpse2ep1a08", 30, ""),
+    ("glimpse2ep2a09", 30, ""),
+    ("glimpse2ep2mra09", 30, ""),
+    ("glimpse3d_v1cat_tbl", 30, ""),
+    ("glimpse3d_v2arc", 30, ""),
+    ("glimpse_s07", 30, ""),
+    ("glimpse_s07_ar", 30, ""),
+    ("mipsgalc", 30, ""),
+    ("mipsgala", 30, ""),
+    ("higal70", 60, ""),
+    ("higal160", 60, ""),
+    ("higal250", 60, ""),
+    ("higal350", 60, ""),
+    ("higal500", 60, ""),
+    ("higal360clump", 60, ""),
+    ("akari_irc", 60, ""),
+    ("akari_fis", 120, ""),
+    ("msxc6", 60, ""),
+    ("redmsx", 120, ""),
+    ("iraspsc", 180, ""),
+    ("irasfsc", 180, ""),
+    ("gaia_dr3_source", 30, "source_id,ra,dec,parallax,parallax_error,pmra,pmdec,phot_g_mean_mag,phot_bp_mean_mag,phot_rp_mean_mag,ruwe,phot_variable_flag,phot_g_n_obs"),
+]
+for table, rad, cols in jobs:
+    if only and table not in only:
+        continue
+    p = {"catalog": table, "spatial": "cone", "objstr": f"{ra0} {dec0}", "radius": str(rad),
+         "radunits": "arcsec", "outfmt": "1"}
+    if cols:
+        p["selcols"] = cols
+    name = f"gator_{tag}_{table}_r{rad}"
+    t0 = time.time()
+    try:
+        r = requests.get(GATOR, params=p, headers=UA, timeout=300)
+        txt = r.text
+        st = f"HTTP {r.status_code}"
+    except Exception as e:
+        txt, st = "", f"network error {e!r}"
+    with open(os.path.join(TAB, name + ".tbl"), "w") as f:
+        f.write(txt)
+    nrows = None
+    try:
+        t = ascii.read(txt, format="ipac")
+        nrows = len(t)
+    except Exception as e:
+        t = None
+    log(f"{name} {st} rows={nrows} {time.time()-t0:.0f}s")
+    print(f"=== {table} r={rad}\" {st} rows={nrows} ({time.time()-t0:.0f}s)")
+    if t is None:
+        print("   raw:", txt[:400].replace("\n", " | "))
+        continue
+    if nrows:
+        t.sort("dist")
+        cs = t.colnames
+        if len(cs) > 26:
+            pick = [c for c in cs if any(k in c.lower() for k in ("desig", "name", "_m", "mag", "flux", "fnu", "f_", "dist", "angle", "snr", "q", "flag", "mjd", "date"))]
+            pick = [c for c in ["ra", "dec"] if c in cs] + pick
+            cs = pick[:34]
+        t[cs].pprint(max_lines=60, max_width=-1)

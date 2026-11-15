@@ -1,0 +1,21 @@
+"""Cone search of ALL VizieR catalogues around a position; prints each catalogue with rows and the nearest row's separation."""
+import sys, datetime, warnings
+warnings.filterwarnings('ignore')
+from astroquery.vizier import Vizier
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+server, ra, dec, rad, label = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), sys.argv[5]
+from astroquery.vizier import conf as vconf; vconf.server = server
+v = Vizier(columns=['**', '_RAJ2000', '_DEJ2000', '_r'], row_limit=50, timeout=300, vizier_server=server)
+c = SkyCoord(ra, dec, unit='deg')
+print(f'== {label}: all VizieR catalogues within {rad}" of {ra} {dec}, server {server}, {datetime.datetime.now(datetime.timezone.utc):%Y-%m-%dT%H:%MZ}')
+res = v.query_region(c, radius=rad*u.arcsec)
+print('catalogues with rows:', len(res))
+for k in res.keys():
+    t = res[k]
+    r = t['_r'] if '_r' in t.colnames else None
+    rmin = float(min(r)) if r is not None and len(r) else float('nan')
+    # _r is in arcmin by default for VizieR? print unit
+    unit = t['_r'].unit if r is not None else ''
+    desc = (t.meta.get('description') or '')[:70]
+    print(f'{k:35s} n={len(t):3d} rmin={rmin:.4f} {unit} | {desc}')

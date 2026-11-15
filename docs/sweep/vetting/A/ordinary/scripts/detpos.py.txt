@@ -1,0 +1,31 @@
+"""Where A falls on the detector in each exposure (alternate WCS 'A' = detector pixels),
+the image orientation (angle of detector +y from north, from the PC matrix), and the
+header's 'L2 N_GHOST_FPA' value. Read-only on the cache."""
+import json, math, sys
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+RA, DEC = 270.80410, -23.46814
+CACHE = Path("<repository>/backend/cache/sweep")
+CUT = CACHE / "cutouts" / "250d2b7784"
+pts = json.load(open(CACHE / "photometry" / "2c3c31c3c37a6a21.json"))["points"]
+rows = []
+for p in sorted(pts, key=lambda p: p["mjd"]):
+    if p["status"] == "off_image" or p["detector"] not in (5, 6):
+        continue
+    f = CUT / f"{p['obs_id']}_D{p['detector']}.fits"
+    with fits.open(f) as h:
+        hd = h["IMAGE"].header
+    w = WCS(hd)
+    x, y = [float(v) for v in w.all_world2pix(RA, DEC, 0)]
+    dx = x + 1 - hd["CRPIX1A"]; dy = y + 1 - hd["CRPIX2A"]
+    ang = math.degrees(math.atan2(hd["PC1_2"], hd["PC2_2"]))
+    rows.append((p["epoch"], p["date"][:10], p["detector"], round(dx), round(dy), round(ang, 1), hd.get("L2 N_GHOST_FPA", hd.get("N_GHOST_FPA"))))
+for r in rows:
+    print(*r)
+xs = {}
+for ep in (1, 2, 3):
+    a = np.array([[r[3], r[4]] for r in rows if r[0] == ep])
+    print("epoch", ep, "n", len(a), "detector x range", a[:, 0].min(), a[:, 0].max(), "y range", a[:, 1].min(), a[:, 1].max(),
+          "angles", sorted({r[5] for r in rows if r[0] == ep}))

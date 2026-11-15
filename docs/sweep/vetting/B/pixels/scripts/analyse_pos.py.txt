@@ -1,0 +1,60 @@
+"""Centroid of the bright source per exposure (free PSF fit with neighbours), corrected by the field-star zero point."""
+import json, os, sys
+import numpy as np
+sys.path.insert(0, os.path.dirname(__file__))
+from common import W, RA0, DEC0, offset_en, sep_arcsec
+
+R = json.load(open(f"{W}/out/pass1_epochs.json"))
+rows = []
+for r in R:
+    f = r.get("fit_free") or {}
+    if f.get("status") != "ok":
+        continue
+    de, dn = offset_en(f["ra"], f["dec"], RA0, DEC0)
+    zc = r["zp_de"] is not None
+    cde = de - (r["zp_de"] if zc else 0.0)
+    cdn = dn - (r["zp_dn"] if zc else 0.0)
+    rows.append(dict(obs=r["obs"], det=r["det"], ep=r["epoch"], mjd=r["mjd"], F=f["F_mjy"], eF=f["eF_mjy"], de=de, dn=dn,
+                     cde=cde, cdn=cdn, zc=zc, ex=f["ex"] * r["pixscale"], ey=f["ey"] * r["pixscale"], fwhm=f["fwhm_arcsec"],
+                     fwhm_ref=r["sigma_ref"] * 2.3548 * r["pixscale"], chi2r=f["chi2r"], core_lost=f["n_core_lost"],
+                     ap=r["ap25"]["status"], detx=r["det_x"], dety=r["det_y"], pa=r["pa_deg"], nsat=f["n_sat_box"]))
+json.dump(rows, open(f"{W}/out/centroids.json", "w"))
+
+
+def wmean(v, e):
+    v, e = np.asarray(v), np.asarray(e)
+    w = 1 / np.maximum(e, 0.05) ** 2
+    return float(np.sum(w * v) / np.sum(w)), float(np.sqrt(1 / np.sum(w)))
+
+
+print("Bright exposures (fitted flux > 100 mJy), position relative to the sweep's place, arcsec east/north, zero-point corrected")
+sel_all = []
+for det in range(1, 7):
+    for ep in range(3):
+        s = [x for x in rows if x["det"] == det and x["ep"] == ep and x["F"] > 100 and x["zc"]]
+        if not s:
+            continue
+        cde = np.array([x["cde"] for x in s]); cdn = np.array([x["cdn"] for x in s])
+        print(f"D{det} ep{ep}: n={len(s)} east {np.median(cde):+.2f} (sd {np.std(cde):.2f}) north {np.median(cdn):+.2f} (sd {np.std(cdn):.2f}); "
+              f"FWHM {np.median([x['fwhm'] for x in s]):.2f} vs field stars {np.median([x['fwhm_ref'] for x in s]):.2f}; "
+              f"flux {np.median([x['F'] for x in s]):.0f}; core pixels lost (median) {np.median([x['core_lost'] for x in s])}")
+        sel_all += s
+cde = np.array([x["cde"] for x in sel_all]); cdn = np.array([x["cdn"] for x in sel_all])
+print(f"\nALL bright (n={len(sel_all)}): east {np.mean(cde):+.3f} +/- {np.std(cde)/np.sqrt(len(cde)):.3f} (sd {np.std(cde):.2f}); "
+      f"north {np.mean(cdn):+.3f} +/- {np.std(cdn)/np.sqrt(len(cdn)):.3f} (sd {np.std(cdn):.2f})")
+ra_b = RA0 + np.mean(cde) / 3600 / np.cos(np.radians(DEC0)); de_b = DEC0 + np.mean(cdn) / 3600
+print(f"adopted bright-state position: RA {ra_b:.6f}  Dec {de_b:.6f}")
+# D5/D6 only
+s56 = [x for x in sel_all if x["det"] >= 5]
+c5e = np.array([x["cde"] for x in s56]); c5n = np.array([x["cdn"] for x in s56])
+print(f"D5+D6 only (n={len(s56)}): east {np.mean(c5e):+.3f} +/- {np.std(c5e)/np.sqrt(len(c5e)):.3f}, north {np.mean(c5n):+.3f} +/- {np.std(c5n)/np.sqrt(len(c5n)):.3f}")
+for ep in (1, 2):
+    s = [x for x in sel_all if x["ep"] == ep]
+    a = np.array([x["cde"] for x in s]); b = np.array([x["cdn"] for x in s])
+    print(f"  visit ep{ep}: n={len(s)} east {np.mean(a):+.3f} +/- {np.std(a)/np.sqrt(len(a)):.3f}, north {np.mean(b):+.3f} +/- {np.std(b)/np.sqrt(len(b)):.3f}")
+    # drift within the visit: slope of position vs time
+    t = np.array([x["mjd"] for x in s])
+    if len(s) > 4 and np.ptp(t) > 1:
+        pe = np.polyfit(t - t.mean(), a, 1); pn = np.polyfit(t - t.mean(), b, 1)
+        print(f"     drift within visit: east {pe[0]*np.ptp(t):+.2f} arcsec over {np.ptp(t):.1f} d, north {pn[0]*np.ptp(t):+.2f}")
+json.dump({"bright": [ra_b, de_b]}, open(f"{W}/out/adopted_bright.json", "w"))

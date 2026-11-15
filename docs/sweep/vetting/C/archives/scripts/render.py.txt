@@ -1,0 +1,106 @@
+"""Render pre-2025 archival cutouts around candidate C as PNG panels (PIL only, no matplotlib) and
+measure the brightest point source the image allows at the 2026 position.
+
+Usage: render.py OUT.png TITLE file1.fits[:label[:hdu]] file2.fits[:label] ...
+Markers: green circle r=3" = 2026 SPHEREx centroid (this check); white cross = sweep position;
+yellow square = GLIMPSE [4.5]13.80 source (sweep's 'counterpart'); magenta x = NEOWISE 2022 single-frame detection;
+cyan dot = Hi-GAL clump peak. Field +-HALF arcsec, north up, east left."""
+import sys, math, warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
+from PIL import Image, ImageDraw, ImageFont
+
+C26 = (241.709120, -52.205661)
+SWEEP = (241.70931, -52.20484)
+MARK = {"glimpse": (241.711093, -52.204495), "neowise22": (241.7092471, -52.206233), "clump": (241.709, -52.206654)}
+HALF = float(__import__("os").environ.get("HALF", "45"))
+NPIX = 300
+
+
+def panel(path, label, hdu=0):
+    with fits.open(path) as h:
+        if hdu == "auto":
+            hdu = next(i for i, x in enumerate(h) if x.data is not None and getattr(x.data, "ndim", 0) >= 2)
+        data = np.array(h[hdu].data, float)
+        hdr = h[hdu].header
+    while data.ndim > 2:
+        data = data[0]
+    hdr = hdr.copy()
+    if str(hdr.get('CTYPE1', '')).startswith('RA') and 'RADESYS' not in hdr and 'EQUINOX' not in hdr:
+        hdr['RADESYS'] = 'ICRS'
+    w = WCS(hdr).celestial
+    # resample onto a north-up grid: output pixel -> sky -> input pixel (nearest)
+    s = 2 * HALF / NPIX
+    yy, xx = np.mgrid[0:NPIX, 0:NPIX]
+    dra = -(xx - NPIX / 2 + 0.5) * s / 3600 / math.cos(math.radians(C26[1]))
+    ddec = (NPIX / 2 - 0.5 - yy) * s / 3600
+    from astropy.coordinates import SkyCoord
+    import astropy.units as u
+    from astropy.wcs.utils import skycoord_to_pixel
+    px, py = skycoord_to_pixel(SkyCoord((C26[0] + dra) * u.deg, (C26[1] + ddec) * u.deg), w, origin=0, mode='all')
+    pxi, pyi = np.round(px).astype(int), np.round(py).astype(int)
+    ok = (pxi >= 0) & (pyi >= 0) & (pxi < data.shape[1]) & (pyi < data.shape[0])
+    out = np.full((NPIX, NPIX), np.nan)
+    out[ok] = data[pyi[ok], pxi[ok]]
+    v = out[np.isfinite(out)]
+    if v.size == 0:
+        return None, {}
+    lo, hi = np.percentile(v, float(__import__('os').environ.get('PLO','1'))), np.percentile(v, float(__import__('os').environ.get('PHI','99.7')))
+    z = np.clip((out - lo) / (hi - lo + 1e-12), 0, 1)
+    z = np.arcsinh(10 * z) / np.arcsinh(10)
+    z[~np.isfinite(z)] = 0
+    img = Image.fromarray((z * 255).astype(np.uint8)).convert("RGB")
+    d = ImageDraw.Draw(img)
+    def topix(ra, dec):
+        return (NPIX / 2 - 0.5 - (ra - C26[0]) * math.cos(math.radians(C26[1])) * 3600 / s,
+                NPIX / 2 - 0.5 - (dec - C26[1]) * 3600 / s)
+    x, y = topix(*C26); r = 3 / s
+    d.ellipse([x - r, y - r, x + r, y + r], outline=(0, 255, 0), width=2)
+    x, y = topix(*SWEEP); d.line([x - 6, y, x + 6, y], fill=(255, 255, 255)); d.line([x, y - 6, x, y + 6], fill=(255, 255, 255))
+    x, y = topix(*MARK["glimpse"]); d.rectangle([x - 4, y - 4, x + 4, y + 4], outline=(255, 220, 0))
+    x, y = topix(*MARK["neowise22"]); d.line([x - 4, y - 4, x + 4, y + 4], fill=(255, 0, 255)); d.line([x - 4, y + 4, x + 4, y - 4], fill=(255, 0, 255))
+    x, y = topix(*MARK["clump"]); d.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(0, 220, 255))
+    # 10" scale bar
+    d.line([10, NPIX - 12, 10 + 10 / s, NPIX - 12], fill=(255, 255, 255), width=2)
+    d.text((10, NPIX - 26), '10"', fill=(255, 255, 255))
+    d.text((4, 4), label, fill=(255, 255, 0))
+    # numbers: native-pixel value at the 2026 position vs ring
+    cx, cy = skycoord_to_pixel(SkyCoord(C26[0] * u.deg, C26[1] * u.deg), w, origin=0, mode='all')
+    pscale = proj_plane_pixel_scales(w).mean() * 3600
+    gy, gx = np.mgrid[0:data.shape[0], 0:data.shape[1]]
+    rr = np.hypot(gx - float(cx), gy - float(cy)) * pscale
+    core = data[(rr <= max(pscale * 0.75, 1.0))]
+    ring = data[(rr > 25) & (rr < 40) & np.isfinite(data)]
+    info = dict(pscale=pscale, peak_at_pos=float(np.nanmax(core)) if core.size else float("nan"),
+                ring_median=float(np.nanmedian(ring)) if ring.size else float("nan"),
+                ring_sigma=float(1.4826 * np.nanmedian(np.abs(ring - np.nanmedian(ring)))) if ring.size else float("nan"))
+    return img, info
+
+
+def main():
+    outp, title = sys.argv[1], sys.argv[2]
+    tiles, infos = [], []
+    for arg in sys.argv[3:]:
+        parts = arg.split("::")
+        path, label = parts[0], (parts[1] if len(parts) > 1 else arg.rsplit("/", 1)[-1])
+        hdu = parts[2] if len(parts) > 2 else 0
+        hdu = "auto" if hdu == "auto" else int(hdu)
+        im, info = panel(path, label, hdu)
+        if im is not None:
+            tiles.append(im); infos.append((label, info))
+    W = NPIX * len(tiles)
+    canvas = Image.new("RGB", (W, NPIX + 40), (20, 20, 20))
+    for i, t in enumerate(tiles):
+        canvas.paste(t, (i * NPIX, 40))
+    ImageDraw.Draw(canvas).text((6, 6), title, fill=(255, 255, 255))
+    ImageDraw.Draw(canvas).text((6, 22), 'green circle r=3": 2026 SPHEREx position (this check); + sweep position; yellow box: GLIMPSE [4.5]13.8; magenta x: NEOWISE 2022 1-frame; cyan: Hi-GAL clump. N up, E left', fill=(200, 200, 200))
+    canvas.save(outp)
+    for label, info in infos:
+        print(label, {k: round(v, 4) for k, v in info.items()})
+
+
+if __name__ == "__main__":
+    main()

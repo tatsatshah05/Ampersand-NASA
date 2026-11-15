@@ -1,0 +1,33 @@
+"""Nearest Gaia Science Alerts to the target and to the controls, from the downloaded alerts.csv."""
+import sys, csv
+import numpy as np
+
+path = sys.argv[1]
+rows = []
+with open(path, newline="") as f:
+    r = csv.reader(f, skipinitialspace=True)
+    hdr = next(r)
+    for x in r:
+        if len(x) < 4:
+            continue
+        try:
+            rows.append((x[0], x[1], float(x[2]), float(x[3]), x[4], x[7], x[9]))
+        except ValueError:
+            pass
+print("alerts read:", len(rows), "header:", hdr)
+dates = sorted(x[1] for x in rows)
+print("earliest alert date:", dates[0], " latest alert date:", dates[-1])
+ra = np.array([x[2] for x in rows]); de = np.array([x[3] for x in rows])
+
+def sep(ra0, de0):
+    r0, d0, r1, d1 = map(np.radians, (ra0, de0, ra, de))
+    c = np.sin(d0) * np.sin(d1) + np.cos(d0) * np.cos(d1) * np.cos(r1 - r0)
+    return np.degrees(np.arccos(np.clip(c, -1, 1))) * 3600
+
+for name, (r0, d0) in {"target": (270.80362, -23.46745), "V7994 Sgr": (270.96983, -31.45739),
+                       "V462 Lup": (227.01362, -40.14308), "V1716 Sco (2023 nova control)": (260.68708, -41.62111)}.items():
+    s = sep(r0, d0)
+    o = np.argsort(s)[:3]
+    print(f"\n{name}: alerts within 60 arcsec: {(s < 60).sum()}, within 1 deg: {(s < 3600).sum()}")
+    for i in o:
+        print(f"   {s[i]:10.1f} arcsec  {rows[i]}")

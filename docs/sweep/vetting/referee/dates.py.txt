@@ -1,0 +1,25 @@
+import json, csv
+from astropy.time import Time
+def span(label, mjds):
+    mjds=sorted(mjds)
+    t0=Time(mjds[0],format='mjd').iso[:16]; t1=Time(mjds[-1],format='mjd').iso[:16]
+    print(f"  {label}: n={len(mjds)}  first {t0} (MJD {mjds[0]:.3f})  last {t1} (MJD {mjds[-1]:.3f})")
+# A
+print("A (pixels lens measurements.json, epochs = visits)")
+d=json.load(open('A/pixels/measurements.json'))
+for ep in sorted(set(r['epoch'] for r in d)):
+    span(f"visit {ep}", [r['mjd'] for r in d if r['epoch']==ep])
+# B
+print("B (pixels lens per_exposure.csv)")
+rows=list(csv.DictReader(open('B/pixels/out/per_exposure.csv')))
+for ep in sorted(set(r['ep'] for r in rows)):
+    span(f"visit {ep}", [float(r['mjd']) for r in rows if r['ep']==ep])
+# C
+print("C (pixels lens measurements.json)")
+d=json.load(open('C/pixels/measurements.json'))
+keys=list(d[0].keys()); 
+ek='epoch' if 'epoch' in keys else ('ep' if 'ep' in keys else None)
+print("  keys:", keys[:25])
+if ek:
+    for ep in sorted(set(r[ek] for r in d)):
+        span(f"visit {ep}", [r['mjd'] for r in d if r[ek]==ep])

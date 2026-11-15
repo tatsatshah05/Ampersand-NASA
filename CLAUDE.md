@@ -942,12 +942,36 @@ Sweep of the Milky Way's plane for newly appeared infrared sources (2026-11-14; 
   sources, 113 naive two-visit changes, 98 killed by the second image, 2 survivors: the nova and a catalogued variable).
 - All 63 planned tiles, 472.6 square degrees, 1,162,894 sources compared down to 30 mJy at 4.4 to 5.0 micrometres: 6,023 naive
   changes, 109 confirmed in every image, 14 survivors after the artefact checks: 6 catalogued variables, 2 known novae (V7994 Sgr,
-  V0691 Ser), 6 unexplained, of which 3 are candidates (A RA 270.80362 Dec -23.46745, B RA 253.18044 Dec -44.67687, C RA 241.70931
-  Dec -52.20484) and 3 were set aside after looking. A, B, C are in no catalogue asked (B and C only with a counterpart 1,000 times
-  fainter), NEOWISE saw nothing there in 2014 to 2024, and no report was found: candidates, not confirmed, not for the word "discovery".
+  V0691 Ser), 6 unexplained, of which 3 remain candidates (A, B, C below) and 3 were set aside after looking.
 - A saturated image gives a lower limit and is never evidence that a source is absent (a bug found and fixed on 2026-11-14: it had
   produced three false candidates). The wing of the saturated nova V0691 Ser, 4 pixels from its core, once passed as a candidate; fixed (own core only within 2 pixels),
   tested on the real cutouts.
+
+The three sweep candidates as ruled (2026-11-15; four independent reviewers each and a referee; evidence and ruling in
+`docs/sweep/vetting/` (`ruling.json` is the authority), plain account in `docs/sweep.md`, unsent report texts in
+`docs/sweep/report-draft.md`). "Candidate" = a real source we found in no catalogue or report we checked; nobody has
+confirmed it; never "discovery", never "new" without that qualifier, no classification as fact. Nothing has been reported.
+- A, Sagittarius, RA 270.80408 Dec -23.46818 (18:03:12.98 -23:28:05.4): absent to 2025-09-10 (D6 fits -5.5 to -2.4 mJy,
+  limit about 10-14), 2,419-2,926 mJy at 4.4-5.0 um on 2026-03-20 to 04-01 (partly saturated), 670-803 on 2026-08-25 to
+  09-02; more than 100 times (at least 170 on fits, 60 without a model). Probably a dusty eruption of unknown kind (best guess
+  an obscured nova). Steady neighbour 2MASS 18031245-2327467 (W2 6.49 = 437 mJy) 20 arcsec away.
+- B, Scorpius, RA 253.18038 Dec -44.67697 (16:52:43.29 -44:40:37.1): absent to 2025-09-15 (3-sigma 2.5-4.0 mJy), first
+  seen 2026-02-26 (49.7 mJy at 2.42 um), 393-424 mJy in March (rising about 10% a day), 1,006-1,089 on 2026-08-08 to 25;
+  at least 250 times. Most likely a young star's outburst in its birth cloud. Neighbour 2MASS 16524412-4440318 (40 mJy), 10 arcsec.
+- C, Norma, RA 241.70906 Dec -52.20564 (16:06:50.17 -52:12:20.3): absent to 2025-08-19 (below about 3 mJy), continuum about
+  85-110 mJy in 2026-02-19 to 03-03, about 3-5 mJy in Jul-Sep 2026 while lines persist; at least 30 times in the continuum.
+  Strong hydrogen lines (Br-alpha 438-519 against 93-103 mJy), a later 4.49 um line (possibly [Mg IV], tentative); probably
+  a nova hidden behind dust.
+- The sweep's first write-up of the three is withdrawn: its 2025 values for A and B were those neighbours' light, A's and C's
+  positions were 3.0 arcsec off (B 0.4), its B and C "counterparts" are other stars, C's two bright tile readings fell on
+  emission lines (4.631, 4.739 um), W2 11.655 is 3.74 mJy (not 0.4), and GLIMPSE II covers A. Not checked: ATel full text,
+  NASA ADS, SIMBAD at CDS (down all day), CBETs; a person must do these first (`docs/sweep/report-draft.md` part one).
+- Fixed in `backend/sweep.py` (tests on real crops in `tests/data/sweep/candidates/`): forced fits with neighbours modelled,
+  a centroid/concentration test of the old circle, bright-state positions, catalogue "at the place" within 1.5 arcsec plus the
+  brightest star whose light reaches the circle, GLIMPSE II, Gaia DR3 from IRSA when ESA's TAP is down (it was on 2026-11-15),
+  an emission-line flag. Rerun of the three follow-ups only (`docs/sweep/vetting/rerun.json`): positions 0.16, 0.21, 0.18 arcsec
+  from the ruling; 2025 absent for all three; no catalogued star within 1.5 arcsec; C's lines flagged; rise at least 170 (A),
+  167 (B, its blank-sky limit is 6 mJy, above the reviewers' 2.5-4.0), 49 (C).
 
 Distant-world search (2026-11-14, `scripts/check_distant.py`, `docs/distant.md`, `docs/distant/results.json`)
 - Between visits half a year apart the Earth moves 1.8 to 2.0 AU across the line of sight (seven

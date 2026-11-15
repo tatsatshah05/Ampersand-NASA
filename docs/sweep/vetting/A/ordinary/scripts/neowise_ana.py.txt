@@ -1,0 +1,43 @@
+"""Analyse NEOWISE single-exposure detections within 25" of A (Gator table): visits, the bright
+neighbour as a control, the faint 9" neighbours' detection rate (single-exposure limit), and
+every detection within 6" of A with date, magnitude, flags."""
+import sys, math, collections
+import numpy as np
+from astropy.time import Time
+f = sys.argv[1]
+RA, DEC = 270.80410, -23.46814
+cols = None; rows = []
+for l in open(f):
+    if l.startswith("\\"): continue
+    if l.startswith("|"):
+        if cols is None: cols = [c.strip() for c in l.strip().strip("|").split("|")]
+        continue
+    v = l.split()
+    rows.append(dict(zip(cols, v)))
+def num(x):
+    try: return float(x)
+    except: return float("nan")
+for r in rows:
+    dE = (num(r["ra"]) - RA) * math.cos(math.radians(DEC)) * 3600; dN = (num(r["dec"]) - DEC) * 3600
+    r["dA"] = math.hypot(dE, dN); r["dE"] = dE; r["dN"] = dN
+mjd = np.array(sorted(num(r["mjd"]) for r in rows))
+# visits: gaps > 30 d
+vis = []; start = mjd[0]; prev = mjd[0]
+for m in mjd[1:]:
+    if m - prev > 30: vis.append((start, prev)); start = m
+    prev = m
+vis.append((start, prev))
+print("rows", len(rows), "visits", len(vis))
+nb = [r for r in rows if abs(r["dA"] - 20.0) < 2.5 and num(r["w2mpro"]) < 8]
+nexp = collections.Counter()
+for r in rows:
+    nexp[round(num(r["mjd"]), 3)] += 1
+print("distinct exposure times with any detection:", len(nexp))
+print("bright neighbour (W2<8, ~20\" away) detections:", len(nb), " W2 median", np.median([num(r['w2mpro']) for r in nb]))
+for a, b in vis:
+    inv = [r for r in rows if a - 0.01 <= num(r["mjd"]) <= b + 0.01]
+    nbv = [r for r in inv if r in nb]
+    faint = [r for r in inv if 8.5 < r["dA"] < 10.5]
+    nearA = [r for r in inv if r["dA"] < 6.0]
+    print(f"{Time(a, format='mjd').iso[:10]}..{Time(b, format='mjd').iso[:10]}: neighbour dets {len(nbv):2d} | 9-10\" faint-neighbour dets {len(faint):2d} | within 6\" of A: {len(nearA)}"
+          + "".join(f"  [{r['dA']:.1f}\" W1 {r['w1mpro']} W2 {r['w2mpro']}+-{r['w2sigmpro']} snr {r['w2snr']} cc {r['cc_flags']} q {r['qual_frame']}]" for r in nearA))

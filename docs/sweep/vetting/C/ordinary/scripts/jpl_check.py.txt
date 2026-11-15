@@ -1,0 +1,93 @@
+"""JPL small-body identification at C for the middle of every visit and for the brightest exposures,
+with a control: Horizons gives (2) Pallas's geocentric position at a date, and sb_ident asked at that
+position with the same field size must list Pallas."""
+import json
+import sys
+import time
+
+import requests
+from astropy.time import Time
+
+OUT = sys.argv[1]
+S = requests.Session()
+S.headers["User-Agent"] = "generic-client/1.0"
+SB = "https://ssd-api.jpl.nasa.gov/sb_ident.api"
+HZ = "https://ssd.jpl.nasa.gov/api/horizons.api"
+RA, DEC = 241.709051, -52.205612
+
+
+def hms(deg):
+    t = (deg % 360) / 15
+    h = int(t); m = int((t - h) * 60)
+    return f"{h:02d}-{m:02d}-{(t - h - m / 60) * 3600:05.2f}"
+
+
+def dms(deg):
+    s = "M" if deg < 0 else ""
+    a = abs(deg); d = int(a); m = int((a - d) * 60)
+    return f"{s}{d:02d}-{m:02d}-{(a - d - m / 60) * 3600:05.2f}"
+
+
+def sb_ident(iso, ra, dec, half=0.05):
+    import math
+    p = {"mpc-code": "500", "obs-time": iso.replace("T", "_")[:19], "fov-ra-center": hms(ra), "fov-dec-center": dms(dec),
+         "fov-ra-hwidth": f"{half / math.cos(math.radians(dec)):.4f}", "fov-dec-hwidth": f"{half:.4f}",
+         "two-pass": "true", "suppress-first-pass": "true"}
+    for k in range(4):
+        try:
+            r = S.get(SB, params=p, timeout=180)
+            if r.status_code == 200:
+                return p, r.json()
+            err = f"HTTP {r.status_code}: {r.text[:200]}"
+        except Exception as e:  # noqa: BLE001
+            err = f"{type(e).__name__}: {e}"
+        time.sleep(10 * (k + 1))
+    return p, {"error": err}
+
+
+results = []
+import functools
+print = functools.partial(print, flush=True)
+# control first
+print("asking Horizons for Pallas")
+hz = S.get(HZ, params={"format": "json", "COMMAND": "'2;'", "OBJ_DATA": "NO", "MAKE_EPHEM": "YES",
+                        "EPHEM_TYPE": "OBSERVER", "CENTER": "'500'", "TLIST": "'2461102.50694'",
+                        "QUANTITIES": "'1,9'", "ANG_FORMAT": "DEG"}, timeout=120).json()
+txt = hz.get("result", "")
+line = txt.split("$$SOE")[1].split("$$EOE")[0].strip().splitlines()[0]
+print("Horizons Pallas line:", line)
+parts = line.split()
+nums = [x for x in parts if x.replace(".", "", 1).replace("-", "", 1).replace("+", "", 1).isdigit()]
+ra_p, dec_p = float(nums[-4]), float(nums[-3]) if False else (None, None)
+# robust parse: find the two numbers after the time stamp
+vals = []
+for x in parts[2:]:
+    try:
+        vals.append(float(x))
+    except ValueError:
+        pass
+ra_p, dec_p = vals[0], vals[1]
+print("Pallas geocentric RA, Dec on JD 2461102.50694 (2026-03-03 00:10 UTC):", ra_p, dec_p)
+p, rep = sb_ident("2026-03-03T00:10:00", ra_p, dec_p)
+names = [row[0] for row in rep.get("data_second_pass", [])] if isinstance(rep, dict) else []
+print("CONTROL sb_ident at Pallas's position:", rep.get("n_second_pass"), names[:10], rep.get("warning"), rep.get("error"))
+results.append({"what": "control (2) Pallas", "params": p, "reply": rep})
+
+asks = [("visit 1 middle (2025-07-30..08-19)", "2025-08-09T22:30:00"),
+        ("visit 2 middle (2026-02-19..03-03)", "2026-02-25T09:37:00"),
+        ("visit 2b (2026-04-09..10)", "2026-04-10T01:22:00"),
+        ("visit 3 middle (2026-07-28..09-12)", "2026-08-20T20:28:00"),
+        ("first bright exposure D4 2026-02-19 02:57", "2026-02-19T02:57:00"),
+        ("brightest exposure D5 Br-alpha 2026-02-27 01:36", "2026-02-27T01:36:00"),
+        ("bright D6 2026-03-03 00:11", "2026-03-03T00:11:00"),
+        ("[Mg IV] exposure D6 2026-08-08 02:11", "2026-08-08T02:11:00")]
+from concurrent.futures import ThreadPoolExecutor
+def one(a):
+    lab, iso = a
+    p, rep = sb_ident(iso, RA, DEC)
+    rows = rep.get("data_second_pass", []) if isinstance(rep, dict) else []
+    print(f"{lab}: n={rep.get('n_second_pass')} warning={rep.get('warning')} error={rep.get('error')} rows={rows[:5]}")
+    return {"what": lab, "params": p, "reply": rep}
+with ThreadPoolExecutor(2) as ex:
+    results += list(ex.map(one, asks))
+json.dump(results, open(OUT, "w"), indent=1)

@@ -1,0 +1,13 @@
+"""Fetch a URL with a generic User-Agent, save body, append a log line (UTC time, status, bytes, url)."""
+import sys, datetime, requests, json, os
+url, out = sys.argv[1], sys.argv[2]
+log = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fetch_log.tsv')
+t = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+try:
+    r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (generic research client)'}, timeout=120)
+    open(out, 'wb').write(r.content)
+    line = f"{t}\t{r.status_code}\t{len(r.content)}\t{r.headers.get('content-type','')}\t{url}\t{out}"
+except Exception as e:
+    line = f"{t}\tERR\t0\t{type(e).__name__}: {e}\t{url}\t{out}"
+open(log, 'a').write(line + '\n')
+print(line)

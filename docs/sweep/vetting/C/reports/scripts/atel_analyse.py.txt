@@ -1,0 +1,44 @@
+"""Analyse the ATel title/opening scan: keywords, J-name designations decoded to positions, separations from target and controls."""
+import re, sys
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+T = SkyCoord(241.70931, -52.20484, unit='deg')
+C = {'V462 Lup': SkyCoord(227.01362, -40.14308, unit='deg'), 'V7994 Sgr': SkyCoord(270.96983, -31.45739, unit='deg')}
+rows = [l.rstrip('\n').split('\t') for l in open(sys.argv[1]) if l.strip()]
+ok = [r for r in rows if len(r) >= 3 and r[1] not in ('ERR', 'NOITEM')]
+bad = [r for r in rows if len(r) < 3 or r[1] in ('ERR', 'NOITEM')]
+print('telegrams read:', len(ok), '| failed/empty:', len(bad), [r[0] for r in bad][:20])
+print('number range', ok[0][0], ok[-1][0], '| dates', min(r[1] for r in ok), max(r[1] for r in ok))
+KW = ['Norma', 'Nor ', 'Nor)', 'Normae', 'SPHEREx', 'infrared transient', 'infrared outburst', 'near-infrared', 'mid-infrared', 'NEOWISE', 'WINTER', 'PGIR', 'Gattini', 'PRIME', 'VVV', 'young stellar', 'YSO', 'FU Ori', 'FUor', 'EXor', 'protostar', 'G330', 'Lupus', 'Ara ']
+hits = {}
+for r in ok:
+    txt = ' '.join(r[2:])
+    for k in KW:
+        if k in txt: hits.setdefault(k, []).append(r)
+for k in KW:
+    if k in hits:
+        print(f'\n-- keyword "{k}": {len(hits[k])}')
+        for r in hits[k][:25]: print('   ', r[0], r[1], r[2][:150])
+print('\n-- J-name designations decoded (within 5 deg of target, or matching controls):')
+pat = re.compile(r'J(\d{2})(\d{2})(\d{2}(?:\.?\d+)?)([+-])(\d{2})(\d{2})(\d{2}(?:\.?\d+)?)')
+n = 0
+for r in ok:
+    txt = ' '.join(r[2:])
+    for m in pat.finditer(txt):
+        g = m.groups()
+        def fix(s):  # TCP-style 8 digits without dot: hhmmssss -> ss.ss
+            return s if '.' in s else (s[:2] + '.' + s[2:] if len(s) > 2 else s)
+        try:
+            c = SkyCoord(f'{g[0]}h{g[1]}m{fix(g[2])}s {g[3]}{g[4]}d{g[5]}m{fix(g[6])}s')
+        except Exception:
+            continue
+        n += 1
+        st = c.separation(T).deg
+        sc = {k: c.separation(v).arcsec for k, v in C.items()}
+        if st < 5 or min(sc.values()) < 60:
+            print(f'    ATel {r[0]} {r[1]} {m.group(0)} sep_target {st:.2f} deg; ' + '; '.join(f'{k} {v:.0f}"' for k, v in sc.items()) + f' | {r[2][:110]}')
+print('designations decoded:', n)
+print('\n-- control by name:')
+for k in ['V7994 Sgr', 'V462 Lup', 'TCP J18035290-3127298', 'ASASSN-25cm', 'AT 2025nlr']:
+    hh = [r for r in ok if k in ' '.join(r[2:])]
+    print(f'   "{k}": {len(hh)} telegrams', [h[0] for h in hh][:10])

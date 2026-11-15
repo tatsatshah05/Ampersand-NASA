@@ -1,0 +1,94 @@
+"""Catalogue rows around candidate C, fetched fresh: Gaia DR3 (ESA TAP), 2MASS PSC, AllWISE,
+CatWISE2020, GLIMPSE I (VizieR, CfA mirror then Strasbourg), within 30 arcsec; and bright stars
+within 0.5 deg (2MASS Ks < 6, AllWISE W2 < 5). Raw answers saved in downloads/."""
+import json
+import os
+import sys
+import time
+import urllib.parse
+import urllib.request
+
+RA0, DEC0 = 241.70931, -52.20484
+HERE = os.path.dirname(os.path.abspath(__file__))
+DL = os.path.join(HERE, "downloads")
+os.makedirs(DL, exist_ok=True)
+UA = "Mozilla/5.0 (compatible; catalogue-reader/1.0)"
+VIZ = ["https://vizier.cfa.harvard.edu/viz-bin/asu-tsv", "https://vizier.cds.unistra.fr/viz-bin/asu-tsv"]
+
+
+def get(url, params, tries=4, timeout=60):
+    q = url + "?" + urllib.parse.urlencode(params)
+    err = None
+    for k in range(tries):
+        try:
+            req = urllib.request.Request(q, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read().decode("utf-8", "replace"), q
+        except Exception as e:
+            err = f"{type(e).__name__}: {e}"
+            time.sleep(2 + 2 * k)
+    raise RuntimeError(f"{err} for {q}")
+
+
+def vizier(name, source, radius_arcsec=None, radius_deg=None, out="**", extra=None):
+    params = {"-source": source, "-c": f"{RA0} {DEC0}", "-out.max": "5000", "-out": out, "-out.add": "_r",
+              "-sort": "_r", "-oc.form": "d"}
+    if radius_arcsec:
+        params["-c.rs"] = str(radius_arcsec)
+    if radius_deg:
+        params["-c.rd"] = str(radius_deg)
+    if extra:
+        params.update(extra)
+    last = None
+    for base in VIZ:
+        try:
+            txt, q = get(base, params)
+            with open(os.path.join(DL, f"{name}.tsv"), "w") as f:
+                f.write(f"# query: {q}\n" + txt)
+            return txt, q
+        except Exception as e:
+            last = str(e)
+    raise RuntimeError(last)
+
+
+def gaia(radius_arcsec=30):
+    adql = (f"SELECT source_id, ra, dec, ra_error, dec_error, pmra, pmdec, parallax, phot_g_mean_mag, bp_rp, ruwe, "
+            f"phot_variable_flag, DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', {RA0}, {DEC0}))*3600 AS r "
+            f"FROM gaiadr3.gaia_source WHERE 1=CONTAINS(POINT('ICRS', ra, dec), "
+            f"CIRCLE('ICRS', {RA0}, {DEC0}, {radius_arcsec/3600.0})) ORDER BY r")
+    txt, q = get("https://gea.esac.esa.int/tap-server/tap/sync",
+                 {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv", "QUERY": adql})
+    with open(os.path.join(DL, "gaia_30as.csv"), "w") as f:
+        f.write(txt)
+    return txt, q
+
+
+if __name__ == "__main__":
+    log = {}
+    jobs = [
+        ("gaia_30as", lambda: gaia(30)),
+        ("2mass_30as", lambda: vizier("2mass_30as", "II/246/out", radius_arcsec=30)),
+        ("allwise_30as", lambda: vizier("allwise_30as", "II/328/allwise", radius_arcsec=30)),
+        ("catwise_30as", lambda: vizier("catwise_30as", "II/365/catwise", radius_arcsec=30)),
+        ("glimpse_30as", lambda: vizier("glimpse_30as", "II/293/glimpse", radius_arcsec=30)),
+        ("2mass_bright_0.5deg", lambda: vizier("2mass_bright_0.5deg", "II/246/out", radius_deg=0.5,
+                                               out="RAJ2000,DEJ2000,2MASS,Jmag,Hmag,Kmag,Qflg",
+                                               extra={"Kmag": "<6"})),
+        ("allwise_bright_0.5deg", lambda: vizier("allwise_bright_0.5deg", "II/328/allwise", radius_deg=0.5,
+                                                 out="RAJ2000,DEJ2000,AllWISE,W1mag,W2mag,W3mag,ccf,qph",
+                                                 extra={"W2mag": "<5"})),
+    ]
+    only = sys.argv[1:]
+    for name, fn in jobs:
+        if only and name not in only:
+            continue
+        try:
+            txt, q = fn()
+            n = len([l for l in txt.splitlines() if l and not l.startswith("#")])
+            log[name] = {"ok": True, "query": q, "lines": n}
+            print(name, "OK lines", n)
+        except Exception as e:
+            log[name] = {"ok": False, "error": str(e)}
+            print(name, "FAILED", e)
+        time.sleep(1)
+    json.dump(log, open(os.path.join(DL, "query_log.json"), "a"), indent=1)

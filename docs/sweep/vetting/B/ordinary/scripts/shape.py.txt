@@ -1,0 +1,22 @@
+import sys, os, json, math, glob, numpy as np
+sys.path.insert(0, os.path.join(os.getcwd(), 'scripts'))
+import fitlib as L
+from astropy.io import fits
+from astropy.wcs import WCS
+A = {p['file']: p for p in json.load(open('out/astro_points.json'))['points']}
+ad = json.load(open('out/astro2.json'))['adopted']
+def ep(m): return 0 if m < 61000 else (1 if m < 61200 else 2)
+rat = []
+for path in sorted(glob.glob(os.path.join(L.CUT, '*_D[56].fits'))):
+    fn = os.path.basename(path); a = A[fn]
+    if ep(a['mjd']) != 2 or a['n_ref'] < 3: continue
+    with fits.open(path) as h:
+        img = (h['IMAGE'].data - h['ZODI'].data).astype(float); flg = h['FLAGS'].data; wcs = WCS(h['IMAGE'].header)
+    ok = ((flg & L.BAD) == 0) & np.isfinite(img)
+    x, y = map(float, wcs.world_to_pixel_values(ad['ra'], ad['dec']))
+    fr = L.fit_single(img, ok, x, y, half=3)
+    if fr: rat.append((a['det'], fr['sigma'], a['sigma_px']))
+r = np.array(rat)
+for d in (5, 6):
+    q = r[r[:, 0] == d]
+    print(f"D{d}: n={len(q)} target sigma median {np.median(q[:,1]):.3f} px, reference stars median {np.median(q[:,2]):.3f} px, ratio {np.median(q[:,1]/q[:,2]):.3f}")

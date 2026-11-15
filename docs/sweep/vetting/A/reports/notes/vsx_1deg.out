@@ -1,0 +1,24 @@
+target HTTP 200 objects within 1 deg: 5691
+   types: [('L', 2756), ('E', 961), ('RS', 369), ('YSO', 276), ('VAR', 213), ('TTS/ROT', 174), ('DSCT|GDOR|SXPHE', 146), ('?', 112), ('M', 106), ('SR|M', 97), ('EC', 73), ('ELL', 72), ('ROT', 36), ('SR', 34), ('RRAB', 32), ('TTS/ROT:', 31), ('IN', 29), ('EA', 13), ('RRC', 13), ('SRS', 11), ('WTTS/ROT', 10), ('RR', 9), ('CTTS/ROT', 9), ('S', 9), ('VAR:', 7)]
+     48.7 arcmin Gaia20edp 270.01417 -23.10292 YSO|L: >16.2 r <21.1 r None Gaia
+     37.0 arcmin AT 2025qzs 270.28963 -23.86622 UG 15.9 r 20.7 r None Ziyang Mai, Jiaze Fu (Sumdo.Obs)
+     41.6 arcmin VVV-DCEP-0001 270.35204 -22.91239 DCEP 12.60 Ks 12.84 Ks None None
+     41.7 arcmin VVV-DCEP-0002 270.35454 -22.90786 DCEP 12.54 Ks 12.80 Ks None None
+     22.8 arcmin Gaia21bhq 270.39227 -23.51536 AGN|YSO 17.8 G 18.7 G None Gaia
+     35.6 arcmin Gaia22dtl 270.39672 -23.93004 YSO 18.4 G 21.1 G None Gaia
+     20.9 arcmin Gaia21axm 270.49491 -23.67177 YSO 18.9 G <20.4 G None Gaia
+     51.4 arcmin Gaia20ero 270.72771 -24.32139 YSO 18.5 G 19.9 G None Gaia
+     51.0 arcmin Gaia22epd 271.10083 -24.27362 YSO 17.0 G 19.4 G None Gaia
+     54.5 arcmin Gaia23bbh 271.13474 -24.32447 YSO 15.33 G 15.74 G None Gaia
+     57.0 arcmin Gaia23cmc 271.41080 -24.23810 YSO 18.6 G 19.7 G None Gaia
+v7994sgr HTTP 200 objects within 1 deg: 30384
+   types: [('E', 13647), ('L', 3615), ('EC', 2397), ('ELL', 1959), ('SR', 1810), ('VAR', 1397), ('SR|M', 1242), ('SRS', 1018), ('SRS:', 935), ('RRAB', 490), ('ROT', 451), ('RRC', 320), ('M', 314), ('S', 199), ('DSCT|GDOR|SXPHE', 184), ('RS', 164), ('L:', 32), ('UG', 24), ('YSO', 23), ('MISC', 17), ('RR', 16), ('CV', 14), ('SR:', 13), ('ELL+SR', 13), ('CWA', 8)]
+     54.9 arcmin V5914 Sgr 270.20713 -30.81633 N 16.4: Ic <21 Ic 2457000.1209 I. Soszynski et al. (OGLE)
+     26.8 arcmin Gaia21eis 270.45885 -31.36072 YSO 16.6 G 18.3 G None Gaia
+     25.0 arcmin Gaia20edi 270.50467 -31.33050 UG 18.6 G <22 G None Gaia
+      0.0 arcmin V7994 Sgr 270.96983 -31.45739 NA 6.6 V <23 V 2460944.6 John Seach
+     58.1 arcmin Gaia23bmq 271.06865 -32.42201 GCAS 15.20 G 15.73 G None Gaia
+     33.1 arcmin V5980 Sgr 271.35567 -31.90142 NA >12.0 Ic 18.8 Ic None OGLE-IV
+     24.7 arcmin V1572 Sgr 271.40000 -31.64528 N 11.0 p <16.0 p 2435155 G. Haro
+     34.6 arcmin V1012 Sgr 271.55875 -31.74114 NA 8.0 p 17.7 V 2420356 I. E. Woods
+     49.4 arcmin VVVDR4 515588539822 271.70658 -31.99133 RRAB 14.482 J ? None D. Majaess, I. Dékány, G. Hajdu, D. Minniti, D. Turner, W. Gieren

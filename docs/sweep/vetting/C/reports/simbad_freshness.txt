@@ -1,0 +1,67 @@
+-- 200 SELECT TOP 40 i.id, b.main_id, b.otype FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id LIKE 'NOVA % 2024%' OR i.id LIKE 'NOVA % 2025%' OR i.id LIKE 'NOVA % 2026%'
+id,main_id,otype
+"NOVA Sco 2024","NOVA Sco 2024","No*"
+"NOVA LMC 2024","OGLE 2016-NOVA-1","No*"
+"NOVA Cen 2025","NOVA Cen 2025","No*"
+
+-- 200 SELECT TOP 20 i.id, b.main_id FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id LIKE 'AT 2025%'
+id,main_id
+"AT 2025aapf","AT 2025aapf"
+"AT 2025aarm","AT 2025aarm"
+"AT 2025abao","AT 2025abao"
+"AT 2025abcr","AT 2025abcr"
+"AT 2025abqg","AT 2025abqg"
+"AT 2025adgp","SN 2025adgp"
+"AT 2025adhf","SN 2025adhf"
+"AT 2025adhs","SN 2025adhs"
+"AT 2025adht","AT 2025adht"
+"AT 2025adim","SN 2025adim"
+"AT 2025adin","AT 2025adin"
+"AT 2025adiw","SN 2025adiw"
+"AT 2025adiz","SN 2025adiz"
+"AT 2025adjf","SN 2025adjf"
+"AT 2025adkm","AT 2025adkm"
+"AT 2025admd","AT 2025admd"
+"AT 2025adra","AT 2025adra"
+"AT 2025afvr","AT 2025afvr"
+"AT 2025ahbd","AT 2025ahbd"
+"AT 2025ailp","AT 2025ailp"
+
+-- 200 SELECT TOP 20 i.id, b.main_id FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id LIKE 'AT 2026%'
+id,main_id
+"AT 2026amv","AT 2026amv"
+"AT 2026chm","AT 2026chm"
+"AT 2026dbl","AT 2026dbl"
+"AT 2026dmt","AT 2026dmt"
+
+-- 200 SELECT TOP 20 bibcode FROM ref WHERE bibcode LIKE '2026%' 
+bibcode
+"2026A&A...705A...1F"
+"2026A&A...705A...2D"
+"2026A&A...705A...3G"
+"2026A&A...705A...4B"
+"2026A&A...705A...5N"
+"2026A&A...705A...6G"
+"2026A&A...705A...7S"
+"2026A&A...705A...8M"
+"2026A&A...705A...9K"
+"2026A&A...705A..10B"
+"2026A&A...705A..11V"
+"2026A&A...705A..12P"
+"2026A&A...705A..13M"
+"2026A&A...705A..14Y"
+"2026A&A...705A..15M"
+"2026A&A...705A..16D"
+"2026A&A...705A..17L"
+"2026A&A...705A..18B"
+"2026A&A...705A..19F"
+"2026A&A...705A..20A"
+
+-- 200 SELECT TOP 5 bibcode FROM ref WHERE bibcode LIKE '2026A&A%' ORDER BY bibcode DESC
+bibcode
+"2026A&A...713L..23R"
+"2026A&A...713L..22M"
+"2026A&A...713L..21L"
+"2026A&A...713L..20Z"
+"2026A&A...713L..19B"
+

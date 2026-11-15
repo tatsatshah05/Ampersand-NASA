@@ -1,0 +1,19 @@
+det ep  n  A_med  A_err_med  A_wmean+-err  N_med   (only exposures with A's core >= 80% unmasked)
+D1 1 16     -0.6     0.6      -0.4+-  0.1 (scatter-based sem    0.1)  N     0.1
+D1 2 17     -0.1     1.0      -0.0+-  0.2 (scatter-based sem    0.6)  N     0.0
+D1 3 18     -0.5     0.6      -0.4+-  0.1 (scatter-based sem    0.1)  N    -0.0
+D2 1 15     -2.2     1.8      -1.7+-  0.4 (scatter-based sem    0.2)  N    71.1
+D2 2 18     23.6     4.6      13.1+-  0.8 (scatter-based sem    3.9)  N    69.8
+D2 3 15     -0.3     2.1      -0.4+-  0.5 (scatter-based sem    0.7)  N    69.6
+D3 1 15     -3.6     4.0      -3.6+-  0.9 (scatter-based sem    0.2)  N   763.6
+D3 2 13    163.9    15.4     129.2+-  3.9 (scatter-based sem   42.6)  N   504.1
+D3 3  8     17.2     6.5      17.3+-  2.2 (scatter-based sem   13.0)  N   393.4
+D4 1 14     -4.6     4.2      -4.3+-  1.1 (scatter-based sem    0.2)  N  2945.1
+D4 2  1    506.9    28.9     506.9+- 28.9 (scatter-based sem    0.0)  N   592.0
+D4 3  5    202.7    17.4     182.9+-  7.6 (scatter-based sem   25.9)  N  1360.6
+D5 1 16     -3.0     3.6      -3.1+-  0.9 (scatter-based sem    0.1)  N   540.1
+D5 2 14   1865.4    81.5    1052.7+- 15.1 (scatter-based sem  147.8)  N   490.6
+D5 3 17    562.8    23.7     578.0+-  5.7 (scatter-based sem   11.3)  N   504.2
+D6 1 18     -2.4     2.8      -2.3+-  0.6 (scatter-based sem    0.1)  N   409.6
+D6 2  7   2419.3    98.0    2026.3+- 31.5 (scatter-based sem  198.9)  N   381.5
+D6 3 19    685.4    22.7     644.1+-  4.9 (scatter-based sem   17.4)  N   376.9

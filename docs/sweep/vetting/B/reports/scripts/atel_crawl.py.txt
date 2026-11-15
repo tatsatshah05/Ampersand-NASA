@@ -1,0 +1,39 @@
+"""Read ATel telegrams N1..N2 one at a time (polite, sequential) and save title/date/subjects/text as JSON lines.
+usage: python -I atel_crawl.py OUTFILE N1 N2"""
+import sys, re, html, json, time, urllib.request
+
+out, n1, n2 = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+done = set()
+try:
+    for l in open(out):
+        done.add(json.loads(l)["n"])
+except FileNotFoundError:
+    pass
+UA = "Mozilla/5.0 (compatible; generic-research-client/1.0)"
+with open(out, "a") as f:
+    for n in range(n1, n2 + 1):
+        if n in done:
+            continue
+        url = f"https://www.astronomerstelegram.org/?read={n}"
+        for attempt in range(3):
+            try:
+                raw = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=60).read().decode("utf-8", "replace")
+                break
+            except Exception as e:
+                raw = None; err = repr(e); time.sleep(5)
+        if raw is None:
+            f.write(json.dumps({"n": n, "error": err}) + "\n"); f.flush(); continue
+        t = re.sub(r"(?s)<script.*?</script>", "", raw)
+        title = re.search(r"(?s)<TITLE>(.*?)</TITLE>", t, re.I)
+        s = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", t)))
+        m = re.search(r" on (\d{1,2} \w{3} \d{4}); ", s)
+        subj = re.search(r"Subjects: (.*?) (?:Referred to by|Tweet)", s)
+        i = s.find("Tweet")
+        body = s[i + 5:] if i > 0 else s
+        j = body.find("Related ")
+        f.write(json.dumps({"n": n, "title": html.unescape(title.group(1).strip()) if title else "",
+                            "date": m.group(1) if m else "", "subjects": subj.group(1) if subj else "",
+                            "text": body[: j if j > 0 else 20000][:20000]}) + "\n")
+        f.flush()
+        time.sleep(0.6)
+print("finished", n1, n2)

@@ -1,0 +1,6 @@
+file complete: False; tables: 323; tables with rows: 4
+last table in file: IX/70/csc21mas
+  3.28" II/293/glimpse               n= 11  GLIMPSE sources in Galactic Center | ['G006.7117-00.6345', '270.803218', '-23.468284', 'A', '', '', '', '']
+  3.40" II/337/vvv1                  n= 16  VVV catalog DR1 (2014-07-15) | ['270.803159', '-23.468293', 'VVV J180312.75-232805.85', '-1', '', '', '0', '']
+  3.40" II/348/vvv2                  n= 21  VVV catalog DR2 (2015-08-19) | ['270.803176', '-23.468303', 'VVV J180312.76-232805.89', '-1', '', '', '0', '']
+1000000000.00" I/355/spectra                n=  1  Gaia DR3 spectra view (34468373 sources) | []

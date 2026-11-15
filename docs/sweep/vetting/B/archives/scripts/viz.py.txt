@@ -1,0 +1,16 @@
+import sys, os, requests
+UA = {"User-Agent": "generic-astro-client/1.0"}
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+def asu(source, ra, dec, radius_arcsec, extra=None, tag=None, out_cols="**"):
+    p = {"-source": source, "-c": f"{ra} {dec}", "-c.rs": str(radius_arcsec), "-out.max": "500", "-out": out_cols, "-out.add": "_r", "-sort": "_r", "-c.eq":"J2000", "-out.form":"|"}
+    if extra: p.update(extra)
+    r = requests.get("https://vizier.cds.unistra.fr/viz-bin/asu-tsv", params=p, headers=UA, timeout=300)
+    fn = os.path.join(OUT, f"viz_{(tag or source).replace('/','_')}_{int(radius_arcsec)}as_{ra:.4f}_{dec:.4f}.tsv")
+    open(fn, "w").write(r.text)
+    return r.status_code, r.text, fn
+if __name__ == "__main__":
+    src, ra, dec, rad = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])
+    s, t, fn = asu(src, ra, dec, rad)
+    print("HTTP", s, fn)
+    lines = [l for l in t.splitlines() if l and not l.startswith("#")]
+    print("\n".join(lines[:80]))

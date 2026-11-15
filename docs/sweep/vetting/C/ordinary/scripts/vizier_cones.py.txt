@@ -1,0 +1,76 @@
+"""Cone searches (60 arcsec) at C in named VizieR catalogues, each with a control.
+
+Control: the first row of the same table (no position given) supplies a position; a 5-arcsec cone
+there must return at least one row. An empty answer at C counts only when its control passes.
+"""
+import io
+import json
+import sys
+import time
+
+import requests
+
+S = requests.Session()
+S.headers["User-Agent"] = "generic-client/1.0"
+BASE = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"
+RA, DEC = 241.709051, -52.205612
+CATS = sys.argv[2:]
+
+
+def get(params):
+    for k in range(4):
+        try:
+            r = S.get(BASE, params=params, timeout=120)
+            if r.status_code == 200:
+                return r.text
+            err = f"HTTP {r.status_code}"
+        except Exception as e:  # noqa: BLE001
+            err = type(e).__name__
+        time.sleep(5 * (k + 1))
+    return f"#ERROR {err}"
+
+
+def rows(text):
+    out, header, state = [], None, None
+    for line in text.splitlines():
+        if line.startswith("#"):
+            if line.startswith("#Table") or line.startswith("#RESOURCE"):
+                state = "head"
+            continue
+        if not line.strip():
+            if state == "data":
+                state = "head"
+            continue
+        if state in (None, "head"):
+            header = line.split("\t"); state = "units"
+        elif state == "units":
+            state = "dash"
+        elif state == "dash":
+            state = "data"
+        elif state == "data":
+            out.append(dict(zip(header, line.split("\t"))))
+    return out
+
+
+report = {}
+for cat in CATS:
+    first = rows(get({"-source": cat, "-out.max": "1", "-out.add": "_RAJ2000,_DEJ2000", "-out": "_RAJ2000,_DEJ2000"}))
+    ctrl = None
+    if first:
+        try:
+            cra, cde = float(first[0]["_RAJ2000"]), float(first[0]["_DEJ2000"])
+            ctrl_rows = rows(get({"-source": cat, "-c": f"{cra} {cde}", "-c.rs": "5", "-out.max": "5",
+                                  "-out.add": "_r"}))
+            ctrl = {"ra": cra, "dec": cde, "n": len(ctrl_rows)}
+        except (KeyError, ValueError):
+            ctrl = {"error": f"no position columns: {list(first[0].keys())[:6]}"}
+    txt = get({"-source": cat, "-c": f"{RA} {DEC}", "-c.rs": "60", "-out.max": "200", "-out.add": "_r", "-sort": "_r",
+               "-out.all": "1"})
+    hits = rows(txt)
+    err = txt[:200] if txt.startswith("#ERROR") else None
+    report[cat] = {"n_at_C_60arcsec": len(hits), "control": ctrl, "error": err, "rows": hits[:20]}
+    print(f"{cat:22s} at C (60\"): {len(hits):3d} rows | control: {ctrl} {err or ''}")
+    for h in hits[:6]:
+        keep = {k: v for k, v in h.items() if v.strip()}
+        print("    ", json.dumps(keep)[:400])
+json.dump(report, open(sys.argv[1], "w"), indent=1)

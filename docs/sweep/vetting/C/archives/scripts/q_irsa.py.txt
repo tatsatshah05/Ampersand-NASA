@@ -1,0 +1,53 @@
+"""IRSA catalogue cones around candidate C. Prints a compact view; raw VOTables saved in data/."""
+import sys, warnings
+warnings.filterwarnings("ignore")
+sys.path.insert(0, __file__.rsplit("/", 1)[0])
+from qlib import *
+
+jobs = [
+    # table, radius arcsec, columns to show
+    ("fp_psc", 30, ["designation", "ra", "dec", "j_m", "h_m", "k_m", "ph_qual", "cc_flg", "jdate"]),
+    ("allwise_p3as_psd", 30, ["designation", "ra", "dec", "w1mpro", "w1sigmpro", "w2mpro", "w2sigmpro", "w3mpro", "w3sigmpro", "w4mpro", "w4sigmpro", "ph_qual", "cc_flags", "ext_flg", "var_flg", "nb"]),
+    ("allsky_4band_p3as_psd", 30, ["designation", "ra", "dec", "w1mpro", "w2mpro", "w3mpro", "w3sigmpro", "w4mpro", "w4sigmpro", "ph_qual", "cc_flags", "var_flg"]),
+    ("allwise_p3as_psr", 30, ["designation", "ra", "dec", "w1mpro", "w2mpro", "w3mpro", "w4mpro", "ph_qual", "cc_flags"]),
+    ("catwise_2020", 30, ["source_name", "ra", "dec", "w1mpro", "w1sigmpro", "w2mpro", "w2sigmpro", "pmra", "pmdec", "ab_flags", "cc_flags"]),
+    ("catwise_2020_reject", 30, ["source_name", "ra", "dec", "w1mpro", "w2mpro", "ab_flags", "cc_flags"]),
+    ("unwise_2019", 30, ["unwise_objid", "ra", "dec", "flux_1", "dflux_1", "flux_2", "dflux_2", "flags_unwise_1", "flags_unwise_2"]),
+    ("glimpse_s07", 30, ["designation", "ra", "dec", "mag_j", "mag_h", "mag_ks", "mag3_6", "d3_6m", "mag4_5", "d4_5m", "mag5_8", "d5_8m", "mag8_0", "d8_0m", "f4_5", "df4_5", "csf"]),
+    ("glimpse_s07_ar", 30, ["designation", "ra", "dec", "mag_ks", "mag3_6", "mag4_5", "mag5_8", "mag8_0", "f3_6", "f4_5", "f5_8", "f8_0"]),
+    ("glimpse2_v2cat", 30, ["designation", "ra", "dec", "mag3_6", "mag4_5"]),
+    ("glimpse3d_v1cat_tbl", 30, ["designation", "ra", "dec", "mag3_6", "mag4_5"]),
+    ("deepglimpsec", 30, ["designation", "ra", "dec", "mag3_6", "mag4_5"]),
+    ("glimpse360c", 30, ["designation", "ra", "dec", "mag3_6", "mag4_5"]),
+    ("apoglimpsec", 30, ["designation", "ra", "dec", "mag3_6", "mag4_5"]),
+    ("mipsgalc", 60, None),
+    ("mipsgala", 60, None),
+    ("higal70", 60, None),
+    ("higal160", 60, None),
+    ("higal250", 60, None),
+    ("higal360clump", 60, None),
+    ("msxc6", 120, None),
+    ("redmsx", 300, None),
+    ("iraspsc", 180, None),
+    ("irasfsc", 180, None),
+    ("akari_irc", 60, None),
+    ("akari_fis", 120, None),
+    ("varwisepure", 60, None),
+    ("varwiseext", 60, None),
+    ("gaia_dr3_source", 30, ["source_id", "ra", "dec", "phot_g_mean_mag", "phot_bp_mean_mag", "phot_rp_mean_mag", "pmra", "pmdec", "parallax", "parallax_error", "ruwe", "phot_variable_flag"]),
+]
+only = set(sys.argv[1:])
+for table, rad, cols in jobs:
+    if only and table not in only:
+        continue
+    try:
+        t = irsa_cone(table, rad)
+    except Exception as e:
+        print(f"### {table} r={rad}\": ERROR {e}")
+        continue
+    print(f"### {table} r={rad}\": {len(t)} rows")
+    if len(t) == 0:
+        continue
+    low = {c.lower(): c for c in t.colnames}
+    show = ["sep_arcsec"] + ([low[c.lower()] for c in cols if c.lower() in low] if cols else [c for c in t.colnames if c not in ("clon","clat")][:20])
+    t[show][:40].pprint(max_lines=60, max_width=260)

@@ -1,0 +1,34 @@
+"""Is C as sharp as the stars? Gaussian width of C and of the reference stars in the same bright-epoch exposures."""
+import glob, json, sys
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+sys.path.insert(0, sys.argv[1])
+from phot_c import gfit, PHOT_BAD
+CUT = "<repository>/backend/cache/sweep/cutouts/4ae14c5ec1"
+RA, DEC = 241.709051, -52.205612
+refs = json.load(open(sys.argv[2]))
+rows = []
+for f in sorted(glob.glob(CUT + "/*.fits")):
+    with fits.open(f) as h:
+        hd = h["IMAGE"].header; mjd = hd["MJD-AVG"]; det = hd["DETECTOR"]
+        if not (61085 < mjd < 61105 or 61250 < mjd < 61262):
+            continue
+        d = h["IMAGE"].data - h["ZODI"].data; fl = h["FLAGS"].data
+    w = WCS(hd); good = np.isfinite(d) & ((fl & PHOT_BAD) == 0)
+    x, y = (float(v) for v in w.all_world2pix(RA, DEC, 0))
+    g = gfit(d, good, x, y)
+    if not g or g["snr"] < 30:
+        continue
+    rs = []
+    for s in refs:
+        sx, sy = (float(v) for v in w.all_world2pix(s["ra"], s["dec"], 0))
+        gs = gfit(d, good, sx, sy) if 6 <= sx < d.shape[1] - 6 and 6 <= sy < d.shape[0] - 6 else None
+        if gs and gs["snr"] > 30:
+            rs.append(gs["sigma_px"])
+    if rs:
+        rows.append((det, mjd, g["sigma_px"], float(np.median(rs)), len(rs)))
+for det in range(1, 7):
+    r = [x for x in rows if x[0] == det]
+    if r:
+        print(f"D{det}: n={len(r)} exposures; C sigma median {np.median([x[2] for x in r]):.2f} px, reference stars median {np.median([x[3] for x in r]):.2f} px; C/stars per exposure median {np.median([x[2]/x[3] for x in r]):.2f}, range {min(x[2]/x[3] for x in r):.2f}-{max(x[2]/x[3] for x in r):.2f}")

@@ -1,0 +1,122 @@
+"""Crowded-field fit at the corrected position A' with the bright neighbour (2MASS 18031245-2327467 =
+AllWISE J180312.46-232746.7) and every other AllWISE source within 40 arcsec as fixed-position Gaussians
+with one shared shape per exposure. Also plain apertures at A' (r = 1.5 and 2.5 px).
+Own code; reads the cached cutouts only. Writes fit2.json."""
+import json, math, warnings, logging
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from scipy.optimize import least_squares
+warnings.simplefilter("ignore"); logging.getLogger("astropy").setLevel(logging.ERROR)
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from measure import (CUT, LIST, PHOT_BAD, SKY_BAD, OVF, SUR, SPILL, mask, clipped_median, frac_disk, names)
+
+D = Path(__file__).resolve().parent
+A_RA, A_DEC = 270.804063, -23.468200          # A', median epoch-3 D6 centroid (positions.py)
+N_RA, N_DEC = 270.801899, -23.462976          # 2MASS 18031245-2327467
+others = []
+for line in open(D / "downloads/II_328_allwise.tsv"):
+    if line.startswith("#") or not line.strip(): continue
+    p = line.split("\t")
+    try: ra, de = float(p[0]), float(p[1])
+    except ValueError: continue
+    if math.hypot((ra - N_RA) * math.cos(math.radians(N_DEC)), de - N_DEC) * 3600 < 1.5: continue  # the neighbour
+    others.append((ra, de))
+
+def one(args):
+    e, ep = args
+    p = CUT / f"{e['obs_id']}_D{e['detector']}.fits"
+    with fits.open(p) as h:
+        hd = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float); flg = h["FLAGS"].data.astype(np.int64)
+        var = h["VARIANCE"].data.astype(float); zod = h["ZODI"].data.astype(float); wav = h["WAVE"].data
+    w = WCS(hd); ny, nx = img.shape
+    ax, ay = (float(v) for v in w.all_world2pix(A_RA, A_DEC, 0))
+    sx_, sy_ = (float(v) for v in w.all_world2pix(N_RA, N_DEC, 0))
+    out = {"obs_id": e["obs_id"], "det": e["detector"], "epoch": ep, "mjd": float(hd["MJD-AVG"])}
+    if not (21 <= ax < nx - 21 and 21 <= ay < ny - 21):
+        out["status"] = "edge"; return out
+    out["wave"] = float(wav[int(round(ay)), int(round(ax))])
+    data = img - zod
+    data[img < -10 * np.sqrt(var)] = np.nan
+    to_mjy = float(proj_plane_pixel_area(w)) * (math.pi / 180) ** 2 * 1e9
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    r = np.hypot(xx - ax, yy - ay)
+    ring = (r >= 14) & (r < 20) & np.isfinite(data)
+    ok = ring & ((flg & SKY_BAD) == 0)
+    if ok.sum() < 100: ok = ring & ((flg & (SKY_BAD & ~mask("SOURCE", "OUTLIER"))) == 0)
+    sky, ssig, nsk = clipped_median(data[ok])
+    d = data - sky
+    good = np.isfinite(d) & ((flg & PHOT_BAD) == 0)
+    sat = (((flg & OVF) != 0) & ((flg & SUR) != 0)) | ((flg & SPILL) != 0) | (((flg & OVF) != 0) & ~np.isfinite(img))
+    # apertures at A'
+    for rad in (1.5, 2.5):
+        wt = frac_disk(nx, ny, ax, ay, rad); u = wt > 0
+        bad = (~good[u]).any(); s_ = sat[u].any()
+        out[f"ap{rad}"] = float(np.nansum(wt[u] * d[u]) * to_mjy)
+        out[f"ap{rad}_status"] = "saturated" if s_ else ("flagged" if bad else "ok")
+        bits = 0
+        for v in np.unique(flg[u]): bits |= int(v)
+        out[f"ap{rad}_flags"] = names(bits & ~mask("SOURCE"))
+    # same apertures at the neighbour
+    wt = frac_disk(nx, ny, sx_, sy_, 2.5); u = wt > 0
+    out["nb_ap2.5"] = float(np.nansum(wt[u] * d[u]) * to_mjy)
+    out["nb_status"] = "saturated" if sat[u].any() else ("flagged" if (~good[u]).any() else "ok")
+    # crowded fit on box around A' and neighbour
+    mx, my = (ax + sx_) / 2, (ay + sy_) / 2
+    box = (np.abs(xx - mx) <= 6) & (np.abs(yy - my) <= 6) & good
+    X, Y, Dv = xx[box], yy[box], d[box]
+    Vv = np.clip(var[box], 1e-12, None) + ssig ** 2
+    comps = [(ax, ay), (sx_, sy_)]
+    for ra, de in others:
+        ox, oy = (float(v) for v in w.all_world2pix(ra, de, 0))
+        if abs(ox - mx) <= 8 and abs(oy - my) <= 8: comps.append((ox, oy))
+    K = len(comps)
+    def model(p):
+        s1, s2, th = p[0], p[1], p[2]
+        ct, st = math.cos(th), math.sin(th)
+        m = np.full(X.shape, p[3])
+        for k, (cx, cy) in enumerate(comps):
+            u_ = (X - cx) * ct + (Y - cy) * st; v_ = -(X - cx) * st + (Y - cy) * ct
+            m = m + p[4 + k] * np.exp(-0.5 * (u_ ** 2 / s1 ** 2 + v_ ** 2 / s2 ** 2))
+        return m
+    p0 = [0.75, 0.75, 0.0, 0.0] + [max(np.nanmax(Dv), 1.0) * 0.3] * K
+    lo = [0.35, 0.35, -math.pi, -np.inf, -np.inf] + [0.0] * (K - 1)
+    hi = [2.5, 2.5, math.pi, np.inf] + [np.inf] * K
+    try:
+        res = least_squares(lambda q: (model(q) - Dv) / np.sqrt(Vv), p0, bounds=(lo, hi))
+        q = res.x
+        J = res.jac; chi2 = float(np.sum(res.fun ** 2)); dof = max(Dv.size - len(q), 1)
+        cov = np.linalg.pinv(J.T @ J) * max(chi2 / dof, 1.0)
+        err = np.sqrt(np.clip(np.diag(cov), 0, None))
+        norm = 2 * math.pi * q[0] * q[1] * to_mjy
+        out.update(fit_ok=True, sig1=float(q[0]), sig2=float(q[1]), fwhm_arcsec=float(2.3548 * math.sqrt(q[0] * q[1]) * 6.15),
+                   A_gauss=float(q[4] * norm), A_gauss_err=float(err[4] * norm),
+                   N_gauss=float(q[5] * norm), N_gauss_err=float(err[5] * norm),
+                   chi2_dof=chi2 / dof, n_pix=int(Dv.size), n_comp=K,
+                   n_sat_box=int((sat & (np.abs(xx - mx) <= 6) & (np.abs(yy - my) <= 6)).sum()))
+        # neighbour's light inside the A' apertures (from its fitted Gaussian), to subtract
+        ct, st = math.cos(q[2]), math.sin(q[2])
+        for rad in (1.5, 2.5):
+            wt = frac_disk(nx, ny, ax, ay, rad); u = wt > 0
+            uu = (xx[u] - sx_) * ct + (yy[u] - sy_) * st; vv = -(xx[u] - sx_) * st + (yy[u] - sy_) * ct
+            out[f"nb_in_ap{rad}"] = float(np.sum(wt[u] * q[5] * np.exp(-0.5 * (uu ** 2 / q[0] ** 2 + vv ** 2 / q[1] ** 2))) * to_mjy)
+    except Exception as ex:
+        out.update(fit_ok=False, fit_error=str(ex))
+    out["status"] = "done"
+    return out
+
+if __name__ == "__main__":
+    L = json.load(open(LIST)); L.sort(key=lambda e: e["mjd"])
+    ep, cur = [], 0
+    for i, e in enumerate(L):
+        if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+        ep.append(cur + 1)
+    from multiprocessing import Pool
+    with Pool(6) as pool:
+        R = pool.map(one, list(zip(L, ep)))
+    json.dump(R, open(D / "fit2.json", "w"), indent=1)
+    print("wrote", len(R))

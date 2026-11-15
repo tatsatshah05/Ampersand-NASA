@@ -1,0 +1,9 @@
+import requests
+url='https://simbad.harvard.edu/simbad/sim-tap/sync'
+for adql in ["SELECT TOP 40 i.id, b.main_id, b.otype FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id LIKE 'NOVA % 2024%' OR i.id LIKE 'NOVA % 2025%' OR i.id LIKE 'NOVA % 2026%'",
+             "SELECT TOP 20 i.id, b.main_id FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id LIKE 'AT 2025%'",
+             "SELECT TOP 20 i.id, b.main_id FROM ident AS i JOIN basic AS b ON i.oidref=b.oid WHERE i.id LIKE 'AT 2026%'",
+             "SELECT TOP 20 bibcode FROM ref WHERE bibcode LIKE '2026%' ",
+             "SELECT TOP 5 bibcode FROM ref WHERE bibcode LIKE '2026A&A%' ORDER BY bibcode DESC"]:
+    r = requests.post(url, data={'REQUEST':'doQuery','LANG':'ADQL','FORMAT':'csv','QUERY':adql}, headers={'User-Agent':'generic research client'}, timeout=180)
+    print('--', r.status_code, adql); print(r.text[:1500])

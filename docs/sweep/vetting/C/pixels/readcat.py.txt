@@ -1,0 +1,14 @@
+import csv, io, os, sys
+import numpy as np
+HERE = os.path.dirname(os.path.abspath(__file__)); DL = os.path.join(HERE, "downloads")
+def tsv(name):
+    lines = [l for l in open(os.path.join(DL, name + ".tsv")) if not l.startswith("#") and l.strip()]
+    hdr = lines[0].rstrip("\n").split("\t")
+    rows = []
+    for l in lines[3:]:
+        p = l.rstrip("\n").split("\t")
+        if len(p) != len(hdr): continue
+        rows.append({h.strip(): v.strip() for h, v in zip(hdr, p)})
+    return rows
+def gaia():
+    return list(csv.DictReader(open(os.path.join(DL, "gaia_30as.csv"))))

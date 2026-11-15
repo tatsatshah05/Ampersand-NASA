@@ -1,0 +1,26 @@
+"""CatWISE2020 within 30 arcsec: IRSA Gator, plus VizieR at CDS, with a control at a known CatWISE source."""
+import sys, time, requests
+W = "docs/sweep/vetting/B/pixels"
+UA = {"User-Agent": "python-requests (astronomy data check)"}
+def get(url, params, tries=6):
+    for a in range(tries):
+        try:
+            r = requests.get(url, params=params, headers=UA, timeout=120)
+            if r.status_code == 200:
+                return r.text
+            print("HTTP", r.status_code, file=sys.stderr)
+        except Exception as e:
+            print(type(e).__name__, file=sys.stderr)
+        time.sleep(2 + 3 * a)
+    return None
+g = get("https://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query",
+        {"catalog": "catwise_2020", "spatial": "cone", "radius": "30", "radunits": "arcsec", "objstr": "253.18044 -44.67687",
+         "outfmt": "1", "selcols": "source_name,ra,dec,sigra,sigdec,ra_pm,dec_pm,w1mpro,w1sigmpro,w2mpro,w2sigmpro,w1mpro_pm,w2mpro_pm,pmra,pmdec,meanobsmjd,ab_flags,cc_flags"})
+open(f"{W}/downloads/gator_catwise30.tbl", "w").write(g or "NONE")
+print(g[-6000:] if g else "Gator: no answer")
+for base in ["https://vizier.cds.unistra.fr/viz-bin/asu-tsv", "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"]:
+    for label, pos in [("target", "253.18044 -44.67687"), ("control_WISE0855", "133.7868 -7.2443")]:
+        t = get(base, {"-source": "II/365/catwise", "-c": pos, "-c.rs": "60", "-out": "Name,RA_ICRS,DE_ICRS,W2mproPM", "-out.add": "_r"})
+        n = None if t is None else len([l for l in t.splitlines() if l and not l.startswith("#")]) - 3
+        err = t is not None and "QUERY_STATUS=ERROR" in t
+        print(base, label, "rows~", n, "error" if err else "")

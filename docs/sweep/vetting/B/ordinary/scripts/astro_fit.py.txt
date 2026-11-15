@@ -1,0 +1,225 @@
+"""Per-exposure position and PSF-fit flux of candidate B, on the sweep's cached 0.15 deg cutouts.
+
+For every cutout:
+  * reference stars: 2MASS Ks < 10.5, isolated (no 2MASS star with Ks < Ks_ref + 3 within 25"),
+    more than 45" from the candidate and 6 px from the edge. Each fitted with a pixel-integrated
+    round Gaussian + constant; measured minus 2MASS position -> per-exposure astrometric offset
+    (median over the references, needs >= 3).
+  * candidate: pixel-integrated Gaussian at a FREE position, fitted jointly with every 2MASS star
+    Ks < 13.5 within 28" (fixed at its catalogue place, free amplitude) + constant, sigma fixed to the
+    median of the references in that exposure.
+Writes out/astro_points.json. Reads only; nothing is written outside this folder.
+"""
+import glob, json, math, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from scipy.optimize import least_squares
+from scipy.special import erf
+
+warnings.filterwarnings("ignore")
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CUT = "<repository>/backend/cache/sweep/cutouts/b464db86a4"
+RA0, DEC0 = 253.1804373105852, -44.67686583759027
+COS0 = math.cos(math.radians(DEC0))
+# Flag bits (Explanatory Supplement Table 16, as copied in backend/pipeline.py)
+BIT = {"TRANSIENT": 0, "OVERFLOW": 1, "SUR_ERROR": 2, "NONFUNC": 6, "DICHROIC": 7, "MISSING_DATA": 9, "HOT": 10,
+       "COLD": 11, "NONLINEAR": 15, "PERSIST": 17, "BLOOM": 26, "SNOWBALL": 27, "HALO": 28, "SATELLITE_HALO": 29}
+m = lambda *n: sum(1 << BIT[k] for k in n)
+BAD = m("SUR_ERROR", "NONFUNC", "MISSING_DATA", "HOT", "COLD", "NONLINEAR", "PERSIST", "BLOOM", "SNOWBALL", "HALO",
+        "SATELLITE_HALO", "TRANSIENT")
+
+
+def read_tsv(path):
+    rows, hdr = [], None
+    for line in open(path):
+        if line.startswith("#") or not line.strip():
+            continue
+        parts = line.rstrip("\n").split("\t")
+        if hdr is None:
+            hdr = [p.strip() for p in parts]
+            continue
+        if parts[0].startswith("---") or parts[0].strip() in ("arcsec",):
+            continue
+        rows.append({h: p.strip() for h, p in zip(hdr, parts)})
+    return rows
+
+
+def f(x):
+    try:
+        return float(x)
+    except Exception:
+        return None
+
+
+tm = [r for r in read_tsv(os.path.join(HERE, "data/2mass_330.tsv"))]
+stars = []
+for r in tm:
+    ra, de, k = f(r["RAJ2000"]), f(r["DEJ2000"]), f(r["Kmag"])
+    if ra is None or k is None:
+        continue
+    stars.append((ra, de, k, r["2MASS"]))
+S = np.array([(a, b, c) for a, b, c, _ in stars])
+
+
+def sep(ra1, de1, ra2, de2):
+    return np.hypot((ra1 - ra2) * math.cos(math.radians(de2)), de1 - de2) * 3600
+
+
+refs = []
+for i, (ra, de, k, name) in enumerate(stars):
+    if k >= 10.5 or sep(ra, de, RA0, DEC0) < 45:
+        continue
+    d = sep(S[:, 0], S[:, 1], ra, de)
+    close = (d > 0.01) & (d < 25) & (S[:, 2] < k + 3)
+    if close.any():
+        continue
+    refs.append((ra, de, k, name))
+neigh = [(ra, de, k, name) for ra, de, k, name in stars if k < 13.5 and 0.5 < sep(ra, de, RA0, DEC0) < 28]
+
+
+def pixgauss(nx, ny, x0, y0, s):
+    xs = np.arange(nx)
+    ys = np.arange(ny)
+    gx = 0.5 * (erf((xs + 0.5 - x0) / (math.sqrt(2) * s)) - erf((xs - 0.5 - x0) / (math.sqrt(2) * s)))
+    gy = 0.5 * (erf((ys + 0.5 - y0) / (math.sqrt(2) * s)) - erf((ys - 0.5 - y0) / (math.sqrt(2) * s)))
+    return np.outer(gy, gx)
+
+
+def fit_single(img, ok, x0, y0, half=4, s0=0.65, free_sigma=True):
+    xi, yi = int(round(x0)), int(round(y0))
+    ny, nx = img.shape
+    if not (half <= xi < nx - half and half <= yi < ny - half):
+        return None
+    win = img[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    good = ok[yi - half:yi + half + 1, xi - half:xi + half + 1] & np.isfinite(win)
+    if good.sum() < 0.8 * good.size:
+        return None
+    n = 2 * half + 1
+
+    def model(p):
+        a, dx, dy, s, b = p if free_sigma else (*p[:3], s0, p[3])
+        return a * pixgauss(n, n, half + dx, half + dy, s) + b
+
+    def res(p):
+        return (model(p) - win)[good]
+    b0 = float(np.nanmedian(win))
+    a0 = float(np.nansum(win - b0))
+    p0 = [max(a0, 1e-3), x0 - xi, y0 - yi, s0, b0] if free_sigma else [max(a0, 1e-3), x0 - xi, y0 - yi, b0]
+    lo = [0, -2, -2, 0.3, -np.inf] if free_sigma else [0, -2, -2, -np.inf]
+    hi = [np.inf, 2, 2, 2.0, np.inf] if free_sigma else [np.inf, 2, 2, np.inf]
+    try:
+        r = least_squares(res, p0, bounds=(lo, hi))
+    except Exception:
+        return None
+    p = r.x
+    dof = max(good.sum() - len(p), 1)
+    try:
+        cov = np.linalg.inv(r.jac.T @ r.jac) * (2 * r.cost / dof)
+        ex, ey = math.sqrt(cov[1, 1]), math.sqrt(cov[2, 2])
+    except Exception:
+        ex = ey = None
+    return {"x": xi + p[1], "y": yi + p[2], "amp": p[0], "sigma": p[3] if free_sigma else s0, "ex": ex, "ey": ey,
+            "rms": math.sqrt(2 * r.cost / dof)}
+
+
+def fit_target(img, ok, wcs, x0, y0, s, half=5):
+    xi, yi = int(round(x0)), int(round(y0))
+    ny, nx = img.shape
+    if not (half <= xi < nx - half and half <= yi < ny - half):
+        return None
+    win = img[yi - half:yi + half + 1, xi - half:xi + half + 1]
+    good = ok[yi - half:yi + half + 1, xi - half:xi + half + 1] & np.isfinite(win)
+    if good.sum() < 0.75 * good.size:
+        return None
+    n = 2 * half + 1
+    nb = []
+    for ra, de, k, name in neigh:
+        px, py = map(float, wcs.world_to_pixel_values(ra, de))
+        nb.append((px - (xi - half), py - (yi - half)))
+
+    def model(p):
+        a, dx, dy, b = p[:4]
+        mdl = a * pixgauss(n, n, half + dx, half + dy, s) + b
+        for (bx, by), an in zip(nb, p[4:]):
+            mdl = mdl + an * pixgauss(n, n, bx, by, s)
+        return mdl
+
+    def res(p):
+        return (model(p) - win)[good]
+    b0 = float(np.nanpercentile(win, 20))
+    a0 = float(np.nansum(win - b0)) * 0.5
+    p0 = [max(a0, 1e-3), x0 - xi, y0 - yi, b0] + [max(a0, 1e-3) * 0.1] * len(nb)
+    lo = [0, -2.5, -2.5, -np.inf] + [0] * len(nb)
+    hi = [np.inf, 2.5, 2.5, np.inf] + [np.inf] * len(nb)
+    try:
+        r = least_squares(res, p0, bounds=(lo, hi))
+    except Exception:
+        return None
+    p = r.x
+    dof = max(good.sum() - len(p), 1)
+    try:
+        cov = np.linalg.inv(r.jac.T @ r.jac) * (2 * r.cost / dof)
+        ex, ey, ea = math.sqrt(cov[1, 1]), math.sqrt(cov[2, 2]), math.sqrt(cov[0, 0])
+    except Exception:
+        ex = ey = ea = None
+    return {"x": xi + p[1], "y": yi + p[2], "amp": p[0], "amp_err": ea, "ex": ex, "ey": ey, "neigh_amp": list(p[4:]),
+            "rms": math.sqrt(2 * r.cost / dof), "n_good": int(good.sum())}
+
+
+out = []
+files = sorted(glob.glob(os.path.join(CUT, "*.fits")))
+for path in files:
+    with fits.open(path) as h:
+        hd = h["IMAGE"].header
+        img = (h["IMAGE"].data - h["ZODI"].data).astype(float)
+        flg = h["FLAGS"].data
+        wave = h["WAVE"].data
+        det = int(hd["DETECTOR"])
+        mjd = float(hd["MJD-AVG"])
+        wcs = WCS(hd)
+    ok = ((flg & BAD) == 0) & np.isfinite(img)
+    omega = proj_plane_pixel_area(wcs) * (math.pi / 180) ** 2  # sr per pixel
+    to_mjy = omega * 1e9
+    # references
+    offs = []
+    sig = []
+    for ra, de, k, name in refs:
+        px, py = map(float, wcs.world_to_pixel_values(ra, de))
+        if not (6 <= px < img.shape[1] - 6 and 6 <= py < img.shape[0] - 6):
+            continue
+        fr = fit_single(img, ok, px, py)
+        if fr is None or fr["amp"] * to_mjy < 15 or fr["ex"] is None or fr["ex"] > 0.15 or fr["ey"] > 0.15:
+            continue
+        mra, mde = map(float, wcs.pixel_to_world_values(fr["x"], fr["y"]))
+        offs.append(((mra - ra) * math.cos(math.radians(de)) * 3600, (mde - de) * 3600))
+        sig.append(fr["sigma"])
+    tx, ty = map(float, wcs.world_to_pixel_values(RA0, DEC0))
+    rec = {"file": os.path.basename(path), "det": det, "mjd": mjd, "n_ref": len(offs),
+           "wave_um": float(wave[int(round(ty)), int(round(tx))]) if 0 <= int(round(ty)) < wave.shape[0] and 0 <= int(round(tx)) < wave.shape[1] else None}
+    if len(offs) >= 3:
+        o = np.array(offs)
+        rec["corr_e"], rec["corr_n"] = float(np.median(o[:, 0])), float(np.median(o[:, 1]))
+        rec["corr_scatter"] = float(np.median(np.hypot(o[:, 0] - rec["corr_e"], o[:, 1] - rec["corr_n"])))
+        s = float(np.median(sig))
+    else:
+        rec["corr_e"] = rec["corr_n"] = None
+        s = {1: 0.55, 2: 0.55, 3: 0.55, 4: 0.62, 5: 0.62, 6: 0.65}[det]
+    rec["sigma_px"] = s
+    ft = fit_target(img, ok, wcs, tx, ty, s)
+    if ft is not None:
+        mra, mde = map(float, wcs.pixel_to_world_values(ft["x"], ft["y"]))
+        e = (mra - RA0) * COS0 * 3600
+        n = (mde - DEC0) * 3600
+        rec.update({"raw_e": e, "raw_n": n, "flux_mjy": ft["amp"] * to_mjy,
+                    "flux_err_mjy": ft["amp_err"] * to_mjy if ft["amp_err"] else None,
+                    "pos_err_arcsec": 6.15 * math.hypot(ft["ex"], ft["ey"]) / math.sqrt(2) if ft["ex"] else None,
+                    "neigh_mjy": [a * to_mjy for a in ft["neigh_amp"]], "rms": ft["rms"]})
+        if rec["corr_e"] is not None:
+            rec["e"], rec["n"] = e - rec["corr_e"], n - rec["corr_n"]
+    out.append(rec)
+
+json.dump({"refs_used": len(refs), "neighbours": [(ra, de, k, nm, round(float(sep(ra, de, RA0, DEC0)), 1)) for ra, de, k, nm in neigh],
+           "points": out}, open(os.path.join(HERE, "out/astro_points.json"), "w"), indent=1)
+print("refs", len(refs), "neighbours", len(neigh), "cutouts", len(out))

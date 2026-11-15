@@ -1,0 +1,58 @@
+"""Cone-search a list of VizieR catalogues (CfA mirror) at A: rows within 60" (listed with
+offsets) and, as a control that the catalogue answers here, the row count within 15'.
+Usage: vizloop.py OUTDIR"""
+import sys, time, urllib.parse, urllib.request
+from pathlib import Path
+OUT = Path(sys.argv[1]); OUT.mkdir(parents=True, exist_ok=True)
+RA, DEC = 270.80410, -23.46814
+CATS = [
+    ("B/vsx/vsx", "AAVSO VSX variable stars"),
+    ("I/358/vclassre", "Gaia DR3 variability classification"),
+    ("I/358/varisum", "Gaia DR3 variability summary"),
+    ("II/293/glimpse", "Spitzer GLIMPSE I/II/3D catalogue"),
+    ("J/AJ/136/2413/table1", "Robitaille+2008 GLIMPSE intrinsically red sources (YSO/AGB)"),
+    ("J/ApJS/254/33/table1", "SPICY Spitzer YSO candidates (Kuhn+2021)"),
+    ("J/MNRAS/487/2522/table1", "Marton+2019 Gaia+WISE YSO candidates"),
+    ("J/MNRAS/458/3479/clas", "Marton+2016 AllWISE YSO candidates"),
+    ("J/A+A/582/A68/table1", "maser database (Engels & Bunzel 2015)"),
+    ("J/A+AS/122/79/table2", "Sevenster+1997 OH/IR 1612 MHz bulge survey"),
+    ("V/84/main", "Strasbourg-ESO planetary nebulae (Acker)"),
+    ("IX/58/2sxps", "Swift-XRT 2SXPS"),
+    ("IX/69/xmm4d13s", "XMM 4XMM-DR13 (slim)"),
+    ("IX/57/csc2master", "Chandra Source Catalog 2"),
+    ("J/A+A/588/A103/cat2rxs", "ROSAT 2RXS"),
+    ("J/ApJS/247/54/table1", "MIPSGAL 24um point sources (Gutermuth+Heyer 2015)"),
+    ("II/365/catwise", "CatWISE2020"),
+    ("II/328/allwise", "AllWISE"),
+    ("I/355/gaiadr3", "Gaia DR3"),
+    ("J/A+A/566/A120/table1", "Schultheis+2014 VVV extinction map"),
+    ("J/MNRAS/464/3561/table2", "VVV high-amplitude variables / VVV-WIT? (Contreras Pena+2017)"),
+    ("J/MNRAS/465/3011/table1", "Lucas+2017 VVV high-amplitude IR variables"),
+]
+
+
+def get(params):
+    url = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?" + urllib.parse.urlencode(params)
+    for k in range(4):
+        try:
+            return url, urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "generic-python-client/1.0"}), timeout=180).read().decode("utf-8", "replace")
+        except Exception as e:
+            err = e; time.sleep(5 * (k + 1))
+    return url, f"#ERROR {err}"
+
+
+for cat, label in CATS:
+    url, txt = get([("-source", cat), ("-c", f"{RA} {DEC}"), ("-c.rs", "60"), ("-out.max", "200"), ("-out.add", "_r"), ("-sort", "_r"), ("-out", "*")])
+    (OUT / (cat.replace("/", "_") + "_60as.tsv")).write_text("# " + url + "\n" + txt)
+    data = [l for l in txt.splitlines() if l and not l.startswith("#")]
+    errs = [l for l in txt.splitlines() if l.startswith("#INFO") and ("rror" in l or "not found" in l.lower())] + [l for l in txt.splitlines() if l.startswith("#ERROR")]
+    nrows = max(0, len(data) - 3)
+    url2, txt2 = get([("-source", cat), ("-c", f"{RA} {DEC}"), ("-c.rm", "15"), ("-out.max", "9999"), ("-out", "_r")])
+    data2 = [l for l in txt2.splitlines() if l and not l.startswith("#")]
+    n2 = max(0, len(data2) - 3)
+    print(f"=== {cat} ({label}): within 60\": {nrows} rows | control within 15': {n2} rows {'ERR ' + ' '.join(errs)[:200] if errs else ''}")
+    if nrows:
+        print("\n".join(data[:2]))
+        for l in data[3:3 + 12]:
+            print("   ", l[:400])
+    time.sleep(1)

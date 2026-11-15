@@ -1,0 +1,25 @@
+import json, sys
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+d = json.load(open(sys.argv[1]))['VSXObjects']['VSXObject']
+c0 = SkyCoord(241.70931, -52.20484, unit='deg')
+print('objects within 1 deg:', len(d))
+ra = [float(o['RA2000']) for o in d]; de = [float(o['Declination2000']) for o in d]
+sep = SkyCoord(ra, de, unit='deg').separation(c0).arcsec
+import collections
+types = collections.Counter(o.get('VariabilityType','') for o in d)
+print('max OID', max(int(o['OID']) for o in d))
+erupt = ('N', 'NA', 'NB', 'NC', 'NR', 'N:', 'NA:', 'FUOR', 'EXOR', 'INSA', 'INS', 'YSO', 'UXOR', 'ISA', 'IN', 'UG', 'ZAND', 'CV', 'SN', 'ROT', 'LBV', 'SDOR', 'DYPer', 'RCB', 'GCAS', 'MISC', 'VAR')
+rows = []
+for o, s in zip(d, sep):
+    t = o.get('VariabilityType', '')
+    tt = set(t.replace('|', '+').replace(':', '').split('+'))
+    newish = int(o['OID']) > 10_000_000
+    if newish or tt & {'N','NA','NB','NC','NR','FUOR','EXOR','INSA','INS','INST','YSO','UXOR','ISB','UG','UGSS','UGSU','ZAND','CV','SN','DYPER'} or 'N' == t[:1] and t[:2] in ('N','NA','NB','NC','NR'):
+        rows.append((s, o['Name'], t, o.get('MaxMag',''), o.get('MinMag',''), o.get('OID'), o.get('Discoverer',''), o['RA2000'], o['Declination2000']))
+rows.sort()
+print('eruptive-type or OID>10M within 1 deg:', len(rows))
+for r in rows: print(f"{r[0]/60:6.2f}' | {r[1]} | {r[2]} | {r[3]} - {r[4]} | OID {r[5]} | {r[6]} | {r[7]} {r[8]}")
+print('top types:', types.most_common(25))
+print('nearest 5:')
+for i in sep.argsort()[:5]: print(f"  {sep[i]:.1f}\" {d[i]['Name']} {d[i].get('VariabilityType')} {d[i].get('MaxMag')}-{d[i].get('MinMag')}")

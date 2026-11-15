@@ -1,0 +1,99 @@
+"""Forced two-source photometry of candidate A on every cached exposure, all detectors.
+
+Positions are FIXED: A at its fitted 2026 position (dE +1.57, dN -2.50 arcsec from the
+sweep's position; this session's fits), and the bright neighbour 2MASS J18031245-2327467 /
+AllWISE J180312.46-232746.7 at its 2MASS position. Model: flat sky + two circular Gaussians
+of the header PSF_FWHM, free amplitudes (may go negative for A, so a non-detection gives a
+value near zero with an error). Window: 5 native px around A. Masked: photometry-flag-list
+pixels, saturated pixels (photometry.saturated_pixels) and empty pixels. Fluxes are the
+Gaussians' integrals in mJy (no PSF-wing correction: for the neighbour in D6 this gives
+~400 mJy against AllWISE W2 6.49 = 436 mJy). Read-only on the cache.
+Usage: forced.py OUT.csv
+"""
+import csv, json, math, sys
+from pathlib import Path
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+sys.path.insert(0, ".")
+from backend import photometry  # noqa: E402
+
+RA0, DEC0 = 270.80362, -23.46745
+COS = math.cos(math.radians(DEC0))
+A = (RA0 + 1.57 / 3600 / COS, DEC0 - 2.50 / 3600)
+CACHE = Path("<repository>/backend/cache/sweep")
+CUT = CACHE / "cutouts" / "250d2b7784"
+pts = json.load(open(CACHE / "photometry" / "2c3c31c3c37a6a21.json"))["points"]
+nb = [r for r in json.load(open(CACHE / "search2/catalogues/sweep_2MASS_7a07a3f53d4daca5.json"))
+      if r["name"] == "2MASS J18031245-2327467"][0]
+NB = (nb["ra"], nb["dec"])
+WIN = 5.0
+
+
+def fit(path):
+    with fits.open(path) as h:
+        hdr = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        flags = h["FLAGS"].data
+        var = h["VARIANCE"].data.astype(float)
+        w = WCS(hdr)
+    sig = float(hdr["PSF_FWHM"]) / 6.15 / 2.3548
+    ax, ay = [float(v) for v in w.all_world2pix(*A, 0)]
+    nx_, ny_ = [float(v) for v in w.all_world2pix(*NB, 0)]
+    ny, nx = img.shape
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    r = np.hypot(xx - ax, yy - ay)
+    sat = photometry.saturated_pixels(flags, img)
+    bad = ((flags & photometry.PHOTOMETRY_BAD) != 0) | sat | ~np.isfinite(img) | ~np.isfinite(var)
+    use = (r <= WIN) & ~bad
+    # is A's own core usable? (pixels within 1.5 px of A not masked)
+    core = r <= 1.5
+    core_ok = float((core & ~bad).sum() / core.sum())
+    if use.sum() < 30:
+        return None
+    X, Y, Z = xx[use].astype(float), yy[use].astype(float), img[use]
+    E = np.sqrt(np.maximum(var[use], 1e-8))
+    ga = np.exp(-((X - ax) ** 2 + (Y - ay) ** 2) / (2 * sig ** 2))
+    gn = np.exp(-((X - nx_) ** 2 + (Y - ny_) ** 2) / (2 * sig ** 2))
+    M = np.vstack([np.ones_like(Z), ga, gn]).T
+    Mw = M / E[:, None]; Zw = Z / E
+    coef, *_ = np.linalg.lstsq(Mw, Zw, rcond=None)
+    resid = Zw - Mw @ coef
+    chi2nu = float(np.sum(resid ** 2) / max(1, len(Z) - 3))
+    cov = np.linalg.inv(Mw.T @ Mw) * max(chi2nu, 1.0)
+    pix_sr = float(abs(np.linalg.det(w.pixel_scale_matrix))) * (math.pi / 180) ** 2
+    k = 2 * math.pi * sig ** 2 * pix_sr * 1e9
+    return {"A_mjy": coef[1] * k, "A_err": math.sqrt(cov[1, 1]) * k, "N_mjy": coef[2] * k, "N_err": math.sqrt(cov[2, 2]) * k,
+            "chi2nu": chi2nu, "npix": int(use.sum()), "A_core_ok": core_ok, "n_sat_win": int(((r <= WIN) & sat).sum())}
+
+
+def main():
+    out = []
+    for p in sorted(pts, key=lambda p: (p["detector"], p["mjd"])):
+        if p["status"] == "off_image":
+            continue
+        f = CUT / f"{p['obs_id']}_D{p['detector']}.fits"
+        if not f.exists():
+            continue
+        o = fit(f)
+        if o is None:
+            continue
+        out.append({"obs_id": p["obs_id"], "det": p["detector"], "epoch": p["epoch"], "mjd": round(p["mjd"], 4),
+                    "wl": round(p["wavelength_um"], 3), "status_sweep_aperture": p["status"],
+                    **{k: round(v, 3) if isinstance(v, float) else v for k, v in o.items()}})
+    with open(sys.argv[1], "w", newline="") as fh:
+        wr = csv.DictWriter(fh, fieldnames=list(out[0].keys())); wr.writeheader(); wr.writerows(out)
+    print("det ep  n  A_med  A_err_med  A_wmean+-err  N_med   (only exposures with A's core >= 80% unmasked)")
+    for det in range(1, 7):
+        for ep in (1, 2, 3):
+            rr = [x for x in out if x["det"] == det and x["epoch"] == ep and x["A_core_ok"] >= 0.8]
+            if not rr:
+                print(det, ep, 0); continue
+            a = np.array([x["A_mjy"] for x in rr]); e = np.array([x["A_err"] for x in rr]); n = np.array([x["N_mjy"] for x in rr])
+            wts = 1 / e ** 2
+            wm = float(np.sum(a * wts) / np.sum(wts)); we = float(1 / math.sqrt(np.sum(wts)))
+            print(f"D{det} {ep} {len(rr):2d} {np.median(a):8.1f} {np.median(e):7.1f}  {wm:8.1f}+-{we:5.1f} (scatter-based sem {np.std(a)/math.sqrt(len(a)):6.1f})  N {np.median(n):7.1f}")
+
+
+if __name__ == "__main__":
+    main()

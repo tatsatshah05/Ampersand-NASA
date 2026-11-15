@@ -21,7 +21,8 @@
  "survivors_by_kind": {
   "known_eruption": 2,
   "known_variable": 6,
-  "candidate": 6
+  "set_aside": 3,
+  "candidate": 3
  },
  "survivors": [
   {
@@ -46,25 +47,101 @@
    "tile": "l003.0_b+0.0",
    "ra": 267.49549,
    "dec": -27.56803,
-   "kind": "candidate",
+   "kind": "set_aside",
    "confirmed_in_all_exposures": false,
    "bright_mjy": 125.5,
    "direction": "faded"
   },
   {
    "tile": "l006.0_b+0.0",
-   "ra": 270.80362,
-   "dec": -23.46745,
+   "label": "A",
    "kind": "candidate",
-   "confirmed_in_all_exposures": true,
-   "bright_mjy": 2575.6,
-   "direction": "brightened"
+   "ra": 270.80408,
+   "dec": -23.46818,
+   "sexagesimal": "18:03:12.98 -23:28:05.4",
+   "position_error_arcsec": 0.3,
+   "l": 6.712,
+   "b": -0.635,
+   "constellation": "Sagittarius",
+   "allowed_sentence": "Candidate A, an infrared source in Sagittarius, was too faint to detect in SPHEREx images from late August and early September 2025 and was more than 100 times brighter by late March 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.",
+   "last_non_detection": "2025-09-10 09:53 UT, below about 14 mJy at 4.4-5.0 micrometres",
+   "first_detection": "2026-03-20 04:30 UT (the first 2026 exposure)",
+   "visits_d6": [
+    {
+     "dates": "2025-08-24 to 2025-09-10",
+     "text": "not detected: -5.5, -4.3 and -2.4 +/- 2.8 mJy in three fits with the neighbour modelled; upper limit about 10-14 mJy (about 40 mJy with no model)",
+     "low_mjy": null,
+     "high_mjy": 14
+    },
+    {
+     "dates": "2026-03-20 to 2026-04-01",
+     "text": "2,419-2,926 mJy, partly saturated",
+     "low_mjy": 2419,
+     "high_mjy": 2926
+    },
+    {
+     "dates": "2026-08-25 to 2026-09-02",
+     "text": "670-803 mJy",
+     "low_mjy": 670,
+     "high_mjy": 803
+    },
+    {
+     "dates": "2026-09-22",
+     "text": "about 420-620 mJy",
+     "low_mjy": 420,
+     "high_mjy": 620
+    }
+   ],
+   "rise": "more than 100 times within SPHEREx (at least about 170 on the fits, at least 60 without a model); at least about 500 times NEOWISE W2 (2014-2024), 1,000 times Spitzer GLIMPSE II [4.5] (2005-06) and 300 times VVV Ks (2010-2019)",
+   "at_the_place": "nothing within 9.4 arcsec in 2MASS, AllWISE, CatWISE2020 or Gaia DR3; only faint stars within 3 arcsec: VIRAC2 Ks 17.04 (0.10 mJy, steady over 119 epochs) at 1.5 arcsec and GLIMPSE II [4.5] 14.35 (0.33 mJy) at 2.9-3.0 arcsec; SIMBAD and VSX nearest 43-44 arcsec",
+   "spectrum": "a smooth, very red continuum: about 880 K in spring and 780-800 K in August 2026 with no reddening, 1,040-1,220 K if reddened. Tentative: a possible hydrogen Brackett-alpha excess at 4.05 micrometres in both 2026 visits (3.5-4.4 sigma each).",
+   "probably": "an unidentified dusty eruption hidden behind the Milky Way's dust. Best guess: a heavily obscured classical nova that formed dust while the field was near the Sun; next, a stellar merger. Not established.",
+   "direction": "brightened",
+   "source": "docs/sweep/vetting/ruling.json (2026-11-15)",
+   "fixed_follow_up": {
+    "position_offset_from_ruling_arcsec": 0.16,
+    "position_within_half_arcsec": true,
+    "position_n_exposures": 60,
+    "position_scatter_arcsec": 0.22,
+    "first_visit_fit_mjy": -0.73,
+    "first_visit_limit_3sigma_mjy": 14.97,
+    "first_visit_old_circle_was_neighbour_light": true,
+    "first_visit_absent": true,
+    "rise_at_least": 170.0,
+    "bright_d6_medians_mjy": {
+     "2026-03-20": 2537.62,
+     "2026-08-25": 669.32
+    },
+    "catalogue_kind": "candidate",
+    "catalogues_failed": [],
+    "at_the_place": [],
+    "no_false_counterpart": true,
+    "brightest_in_reach": [
+     {
+      "name": "WISEA J180312.46-232746.7",
+      "catalogue": "AllWISE",
+      "offset_arcsec": 20.14,
+      "band": "W2",
+      "mjy": 436.707,
+      "text": "W2 6.49 mag = 436.71 mJy"
+     },
+     {
+      "name": "CWISE J180312.48-232746.6",
+      "catalogue": "CatWISE2020",
+      "offset_arcsec": 20.16,
+      "band": "W2",
+      "mjy": 380.006,
+      "text": "W2 6.64 mag = 380.01 mJy"
+     }
+    ],
+    "possible_emission_line": false
+   }
   },
   {
    "tile": "l009.0_b+0.0",
    "ra": 272.10809,
    "dec": -22.28134,
-   "kind": "candidate",
+   "kind": "set_aside",
    "confirmed_in_all_exposures": false,
    "bright_mjy": 862.8,
    "direction": "faded"
@@ -116,12 +193,87 @@
   },
   {
    "tile": "l330.0_b+0.0",
-   "ra": 241.70931,
-   "dec": -52.20484,
+   "label": "C",
    "kind": "candidate",
-   "confirmed_in_all_exposures": true,
-   "bright_mjy": 178.1,
-   "direction": "brightened"
+   "ra": 241.70906,
+   "dec": -52.20564,
+   "sexagesimal": "16:06:50.17 -52:12:20.3",
+   "position_error_arcsec": 0.5,
+   "l": 330.413,
+   "b": -0.082,
+   "constellation": "Norma",
+   "allowed_sentence": "Candidate C, an infrared source in Norma, was too faint to detect in SPHEREx images from July and August 2025, was at least 30 times brighter in late February and early March 2026 and had faded again by August 2026; its light hints at a nova hidden behind the Milky Way's dust, but it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.",
+   "last_non_detection": "2025-08-19 22:57 UT, below about 3 mJy at 4-5 micrometres",
+   "first_detection": "2026-02-19 about 02:55 UT",
+   "visits_d6": [
+    {
+     "dates": "2025-07-30 to 2025-08-19",
+     "text": "about 0: -0.5 mJy (D6) and -0.6 (D5) in a forced fit with 28 neighbours modelled; 1.1 mJy in a small circle",
+     "low_mjy": null,
+     "high_mjy": 3
+    },
+    {
+     "dates": "2026-02-19 to 2026-03-03",
+     "text": "continuum about 85-110 mJy at 4-5 micrometres (forced fit D6 109.6, D5 112.9)",
+     "low_mjy": 85,
+     "high_mjy": 110
+    },
+    {
+     "dates": "2026-04-09 to 2026-04-10",
+     "text": "about a third of that",
+     "low_mjy": null,
+     "high_mjy": null
+    },
+    {
+     "dates": "2026-07-28 to 2026-09-12",
+     "text": "continuum about 3-5 mJy, while emission lines are still detected",
+     "low_mjy": 3,
+     "high_mjy": 5
+    }
+   ],
+   "rise": "at least about 30 times in its continuum within SPHEREx; at least about 20 times NEOWISE (2010-2024), 270 times GLIMPSE I [4.5], 560 times Deep GLIMPSE, 380 times APOGLIMPSE and 340 times VVV Ks",
+   "at_the_place": "nothing within 1.9 arcsec in any catalogue; faint steady VVV stars at 1.9 and 2.2 arcsec; a cold Hi-GAL dust clump (HIGALBM G330.4120-00.0823) 3.6-3.75 arcsec away; the GLIMPSE [4.5] 13.80 star is 6.0-6.2 arcsec away and is not the source; an uncatalogued faint red optical source (DECaPS2 z about 21.3) 0.9 arcsec away may be the quiet star before the outburst or an unrelated star",
+   "spectrum": "strong hydrogen emission lines in February-March 2026 (peak channel against the continuum: Paschen-alpha 200-250 against 19-29 mJy, Brackett-alpha 438-519 against 93-103, Pfund-beta or Humphreys-epsilon 311-392 against 88-102, Brackett-beta 204-205 against 55-68, Brackett-gamma 71 against 39); a continuum colour temperature of 1,125-1,160 K with no reddening. In July-September 2026 a line at 4.49 micrometres that was absent in February (46.6-58.6 against 2-4 mJy), tentatively [Mg IV] 4.487 micrometres. Fading 0.66-0.78 magnitudes per month at 2-5 micrometres.",
+   "probably": "probably a classical nova hidden behind dust, from the hydrogen lines, the line that appeared later and the fast fade. A young-star outburst is still possible, because the dust clump is 3.6-3.75 arcsec away. Not established.",
+   "direction": "brightened",
+   "source": "docs/sweep/vetting/ruling.json (2026-11-15)",
+   "fixed_follow_up": {
+    "position_offset_from_ruling_arcsec": 0.18,
+    "position_within_half_arcsec": true,
+    "position_n_exposures": 53,
+    "position_scatter_arcsec": 0.12,
+    "first_visit_fit_mjy": -0.09,
+    "first_visit_limit_3sigma_mjy": 2.07,
+    "first_visit_old_circle_was_neighbour_light": false,
+    "first_visit_absent": true,
+    "rise_at_least": 49.0,
+    "bright_d6_medians_mjy": {
+     "2026-02-19": 101.06
+    },
+    "catalogue_kind": "candidate",
+    "catalogues_failed": [],
+    "at_the_place": [],
+    "no_false_counterpart": true,
+    "brightest_in_reach": [
+     {
+      "name": "GLIMPSE SSTGLMC G330.4070-00.0826",
+      "catalogue": "GLIMPSE",
+      "offset_arcsec": 20.57,
+      "band": "[4.5]",
+      "mjy": 40.94,
+      "text": "[4.5] 9.11 mag = 40.94 mJy"
+     },
+     {
+      "name": "WISEA J160648.82-521237.1",
+      "catalogue": "AllWISE",
+      "offset_arcsec": 20.69,
+      "band": "W2",
+      "mjy": 38.85,
+      "text": "W2 9.11 mag = 38.85 mJy"
+     }
+    ],
+    "possible_emission_line": true
+   }
   },
   {
    "tile": "l333.0_b+0.0",
@@ -134,21 +286,92 @@
   },
   {
    "tile": "l342.0_b+0.0",
-   "ra": 253.18044,
-   "dec": -44.67687,
+   "label": "B",
    "kind": "candidate",
-   "confirmed_in_all_exposures": true,
-   "bright_mjy": 976.2,
-   "direction": "brightened"
+   "ra": 253.18038,
+   "dec": -44.67697,
+   "sexagesimal": "16:52:43.29 -44:40:37.1",
+   "position_error_arcsec": 0.3,
+   "l": 341.089,
+   "b": -0.416,
+   "constellation": "Scorpius",
+   "allowed_sentence": "Candidate B, an infrared source in Scorpius, was too faint to detect in SPHEREx images from August and September 2025, had appeared by late February 2026 and was at least 250 times brighter by August 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.",
+   "last_non_detection": "2025-09-15 22:09 UT, below 4 mJy at 4.4-5.0 micrometres",
+   "first_detection": "2026-02-26 14:18 UT, 49.7 +/- 7.3 mJy at 2.42 micrometres",
+   "visits_d6": [
+    {
+     "dates": "2025-08-02 to 2025-09-15",
+     "text": "not detected: 0.28, -0.5 +/- 1.1 and -0.75 +/- 1.6 mJy in three fits; 3-sigma limit 2.5-4.0 mJy",
+     "low_mjy": null,
+     "high_mjy": 4.0
+    },
+    {
+     "dates": "2026-02-26 to 2026-03-16",
+     "text": "393-424 mJy, rising about 10 per cent a day",
+     "low_mjy": 393,
+     "high_mjy": 424
+    },
+    {
+     "dates": "2026-08-08 to 2026-08-25",
+     "text": "1,006-1,089 mJy",
+     "low_mjy": 1006,
+     "high_mjy": 1089
+    }
+   ],
+   "rise": "at least 250 times from August 2025 to August 2026 (at least about 100 to March 2026); at least about 700 times NEOWISE W2 (2024-03-09), 1,400 times Spitzer [4.5] (2004 and 2012) and 400 times VVV Ks (inferred, not measured at the spot)",
+   "at_the_place": "nothing within 2.4 arcsec in any survey; the nearest listed object is a Ks 17.13 star 2.5 arcsec away. The CatWISE, GLIMPSE, 2MASS and Gaia stars 3.6-4.9 arcsec away are other stars, not the source. SIMBAD and VSX nearest 33-37 arcsec",
+   "spectrum": "warm dust: 567-575 K with no reddening in August 2026, up to about 860 K if heavily reddened. Tentative: a likely water-ice dip near 3 micrometres (March), a 20-30 per cent dip at 4.25 micrometres in three exposures (carbon dioxide ice is the likely cause, not established), and possible hydrogen Paschen-alpha and Brackett-alpha emission in March, each in single channels.",
+   "probably": "most likely an outburst of a young star still inside its birth cloud: it lies in a star-forming complex (the young-star group G341.1-0.3, an infrared-dark cloud and clumps about 2.5 arcmin away, a methanol maser 4 arcmin away). Alternatives: a nova behind heavy dust, or a stellar merger. Not established.",
+   "direction": "brightened",
+   "source": "docs/sweep/vetting/ruling.json (2026-11-15)",
+   "fixed_follow_up": {
+    "position_offset_from_ruling_arcsec": 0.21,
+    "position_within_half_arcsec": true,
+    "position_n_exposures": 97,
+    "position_scatter_arcsec": 0.33,
+    "first_visit_fit_mjy": -0.71,
+    "first_visit_limit_3sigma_mjy": 6.0,
+    "first_visit_old_circle_was_neighbour_light": true,
+    "first_visit_absent": true,
+    "rise_at_least": 167.0,
+    "bright_d6_medians_mjy": {
+     "2026-02-26": 420.34,
+     "2026-08-08": 1002.94
+    },
+    "catalogue_kind": "candidate",
+    "catalogues_failed": [],
+    "at_the_place": [],
+    "no_false_counterpart": true,
+    "brightest_in_reach": [
+     {
+      "name": "CWISE J165244.11-444031.9",
+      "catalogue": "CatWISE2020",
+      "offset_arcsec": 10.03,
+      "band": "W2",
+      "mjy": 42.246,
+      "text": "W2 9.02 mag = 42.25 mJy"
+     },
+     {
+      "name": "GLIMPSE SSTGLMC G341.0912-00.4166",
+      "catalogue": "GLIMPSE",
+      "offset_arcsec": 10.12,
+      "band": "[4.5]",
+      "mjy": 41.243,
+      "text": "[4.5] 9.10 mag = 41.24 mJy"
+     }
+    ],
+    "possible_emission_line": false
+   }
   },
   {
    "tile": "l354.0_b+0.0",
    "ra": 261.92881,
    "dec": -35.29494,
-   "kind": "candidate",
+   "kind": "set_aside",
    "confirmed_in_all_exposures": false,
    "bright_mjy": 38.9,
    "direction": "brightened"
   }
- ]
+ ],
+ "note": "'candidate' means a source we found in no catalogue or report we checked; nobody has confirmed it and nothing has been reported. 'set_aside': looked at and not kept (docs/sweep.md)."
 }

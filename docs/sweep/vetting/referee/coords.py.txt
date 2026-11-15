@@ -1,0 +1,27 @@
+import numpy as np
+from astropy.coordinates import SkyCoord, get_sun
+from astropy.time import Time
+import astropy.units as u
+sweep={'A':(270.80362,-23.46745),'B':(253.18044,-44.67687),'C':(241.70931,-52.20484)}
+rev={'A':{'pixels':(270.804063,-23.468200),'archives':(270.80409,-23.46819),'ordinary':(270.80410,-23.46814)},
+     'B':{'pixels':(253.180363,-44.676946),'archives':(253.18040,-44.67697),'reports':(253.18040,-44.67696),'ordinary':(253.180355,-44.677008)},
+     'C':{'pixels':(241.708995,-52.205658),'archives':(241.709120,-52.205661),'ordinary':(241.709051,-52.205612)}}
+for k in 'ABC':
+    ras=[v[0] for v in rev[k].values()]; decs=[v[1] for v in rev[k].values()]
+    mra=np.mean(ras); mdec=np.mean(decs)
+    m=SkyCoord(mra*u.deg,mdec*u.deg)
+    s=SkyCoord(*[x*u.deg for x in sweep[k]])
+    print(f"== {k}: adopted mean RA {mra:.6f} Dec {mdec:.6f}  = {m.to_string('hmsdms',precision=2,sep=':')}  l {m.galactic.l.deg:.4f} b {m.galactic.b.deg:.4f}")
+    print(f"   sweep -> adopted: {s.separation(m).arcsec:.2f} arcsec at PA {s.position_angle(m).deg:.0f}")
+    for n,v in rev[k].items():
+        c=SkyCoord(v[0]*u.deg,v[1]*u.deg)
+        print(f"   {n:9s} -> adopted {c.separation(m).arcsec:.2f}\"   -> sweep {c.separation(s).arcsec:.2f}\"")
+    # ecliptic latitude
+    print(f"   ecliptic lat {m.barycentrictrueecliptic.lat.deg:.2f}")
+    # Sun separation through time
+    for d in ['2025-09-15','2025-11-01','2025-12-01','2026-01-01','2026-02-01','2026-03-01','2026-11-15','2026-12-15','2027-01-15','2027-02-01','2027-02-15','2027-03-01']:
+        t=Time(d); sun=get_sun(t)
+        print(f"     {d} sun sep {m.separation(SkyCoord(sun.ra,sun.dec)).deg:5.1f} deg")
+# flux conversions
+for lab,mag,zp in [('W2 11.655',11.655,171.787),('W2 11.6',11.6,171.787),('W2 6.487',6.487,171.787),('W2 13.54',13.54,171.787),('W2 9.07',9.07,171.787),('[4.5] 13.80',13.80,179.7),('[4.5] 12.47',12.47,179.7),('[4.5] 14.35',14.35,179.7),('Ks 17.04',17.04,666.7),('Ks 15.17',15.17,666.7),('Ks 17.13',17.13,666.7),('Ks 17.28',17.28,666.7),('Ks 16.88',16.88,666.7)]:
+    print(f"{lab}: {zp*10**(-0.4*mag)*1e3:.3f} mJy")
