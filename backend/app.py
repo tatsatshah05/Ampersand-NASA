@@ -14,11 +14,12 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import astrometry, jobs, photometry, pipeline, smallbodies, spherex, stars, training
+from . import astrometry, jobs, photometry, pipeline, smallbodies, spherex, stars, training, watchlist_api
 
 log = logging.getLogger("backend.app")
 app = FastAPI(title="SPHEREx sky-change viewer")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"],
+                   allow_headers=["content-type", "x-voter"])
 pipeline.FRAMES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/frames", StaticFiles(directory=pipeline.FRAMES_DIR), name="frames")
 
@@ -151,6 +152,8 @@ def training_frames(ra: float = Query(..., ge=0, lt=360), dec: float = Query(...
     return _answer(lambda: training.build_training(ra, dec, fov, detector, mode, level, seed),
                    "building the practice round", "The SPHEREx archive (IRSA)")
 
+
+app.include_router(watchlist_api.router)   # the shared watchlist (backend/watchlist.py)
 
 # The frontend, at "/". Registered last so every /api and /frames route wins.
 # frontend/ is a React app that has to be built first (cd frontend && npm install &&

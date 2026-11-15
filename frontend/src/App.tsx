@@ -22,6 +22,8 @@ import { SmallBodiesPanel } from './components/SmallBodiesPanel'
 import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
 import { TrainingView } from './components/TrainingView'
+import { WatchlistView } from './components/WatchlistView'
+import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
 import { LoadingCard, StatusCard } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
 import { measuredPath, overallShift, SMALL_SHIFT_ARCSEC, startCentroid, toPicture } from './motion'
@@ -41,6 +43,7 @@ const SPECTRUM_APERTURE_ARCSEC = 2.5 * NATIVE_PIXEL_ARCSEC
 
 // Practice mode (?train=<seed>) is a separate screen: none of the viewer below is mounted for it.
 export default function App() {
+  if (isWatchlistAddress(window.location.search)) return <WatchlistView />
   return readAddress(window.location.search).selection.train !== null ? <TrainingView /> : <Viewer />
 }
 
@@ -269,7 +272,8 @@ function Viewer() {
         <p>
           <button type="button" onClick={() => window.location.assign(trainingAddress(selection, newSeed()))}>
             Practise: find a planted object
-          </button>
+          </button>{' '}
+          <a href={WATCHLIST_ADDRESS}>Help check what the search found</a>
         </p>
         {notes.map((note) => (
           <p key={note} className="notice" role="status">

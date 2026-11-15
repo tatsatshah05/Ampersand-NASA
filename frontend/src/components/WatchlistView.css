@@ -1,0 +1,171 @@
+/* The watchlist screen. Uses the page's colour variables. Works at phone width. */
+.watchlist {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.watchlist .intro {
+  max-width: 80ch;
+}
+
+.watchlist .button-link {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.watchlist .button-link:hover {
+  background: var(--control-hover);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tab.on,
+.vote-buttons button.on {
+  background: #26406e;
+  border-color: var(--focus);
+}
+
+.tab-explain {
+  max-width: 80ch;
+}
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  gap: 12px;
+}
+
+.wl-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  background: var(--panel);
+}
+
+.wl-card.known,
+.wl-card.artefact {
+  opacity: 0.95;
+  border-style: dashed;
+}
+
+.wl-kind {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.rank {
+  color: var(--muted);
+  margin-right: 6px;
+}
+
+.wl-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+}
+
+.wl-badge.clean {
+  color: #8be0a4;
+}
+
+.wl-badge.caution {
+  color: var(--notice);
+}
+
+.wl-badge.candidate-tag {
+  color: var(--focus);
+}
+
+.strip {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  background: #121212;
+}
+
+.strip-wrap {
+  overflow-x: auto;
+}
+
+.strip-wrap .strip {
+  min-width: 640px;
+}
+
+.no-picture {
+  border: 1px dashed var(--border);
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.wl-headline {
+  font-size: 1.05rem;
+}
+
+.wl-candidate {
+  border-left: 3px solid var(--focus);
+  padding-left: 8px;
+}
+
+.wl-flags {
+  margin: 4px 0;
+  padding-left: 20px;
+  color: var(--notice);
+}
+
+.wl-neowise {
+  border-left: 3px solid var(--notice);
+  padding-left: 8px;
+}
+
+.vote-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.note {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.note textarea {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  font: inherit;
+  color: var(--text);
+  background: var(--control);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  resize: vertical;
+}
+
+@media (max-width: 480px) {
+  .watchlist {
+    padding: 16px;
+  }
+  .vote-buttons button {
+    flex: 1 1 100%;
+  }
+}
