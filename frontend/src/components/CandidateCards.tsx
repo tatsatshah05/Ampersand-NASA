@@ -1,13 +1,16 @@
 // The first group of Observe anomalies: the three candidates of the sweep of the Milky Way's plane
 // (finds.ts), one card each. Two real pictures side by side, the last visit it was not seen in and the
-// visit it was brightest in, from the same /api/frames answer the Viewer shows for it; then the
-// referee's allowed sentence, "probably", the search for earlier reports and the status, word for
-// word from finds.ts (Beginner's "probably" is findsInfo.ts's plain one). Expert adds the position, the
-// brightness, the rise and the dates from finds.ts and the exported sweep data. No votes here.
+// visit it was brightest in, from the same /api/frames answer the Viewer shows for it, with what the
+// pictures are and which star nearby is its steady neighbour; in Expert, right under them, the numbers
+// an astronomer judges by (position, brightness, rise, dates, from finds.ts and the exported sweep
+// data); then the referee's allowed sentence, "probably", the search for earlier reports (Expert: and
+// what was searched) and the status, word for word from finds.ts (Beginner's "probably" and neighbour
+// are findsInfo.ts's plain ones). No votes here.
 import { useEffect, useState } from 'react'
 import type { UiLevel } from '../address'
 import {
   cardPair,
+  constellationLine,
   findAddress,
   findFramesUrl,
   PICTURE_LABEL,
@@ -23,7 +26,7 @@ import {
 } from '../anomalies'
 import { fetchFrames, hasFrames, type FramesReady } from '../api'
 import { FINDS, type Find } from '../finds'
-import { MAYBE_PLAIN } from '../findsInfo'
+import { MAYBE_PLAIN, NEIGHBOUR_PLAIN } from '../findsInfo'
 import { dateSpan } from '../wording'
 import './CandidateCards.css'
 
@@ -57,19 +60,9 @@ function CandidateCard({ find, level, sweep }: { find: Find; level: UiLevel; swe
       <h3 className="anomaly-name" id={nameId}>
         {find.name}
       </h3>
-      <p className="anomaly-where">{find.constellation}</p>
+      <p className="anomaly-where">{constellationLine(find)}</p>
 
       <CardPictures find={find} level={level} pictures={pictures} />
-
-      <blockquote className="anomaly-allowed">
-        <p>{find.allowed}</p>
-      </blockquote>
-      <p className="anomaly-probably">{level === 'beginner' ? MAYBE_PLAIN[find.key] : find.probably}</p>
-      <div className="anomaly-report">
-        <p className="anomaly-label">{REPORT_LABEL[level]}</p>
-        <p>{find.reportSearch}</p>
-      </div>
-      <p className="anomaly-status">{find.status}</p>
 
       {level === 'expert' && (
         <dl className="anomaly-facts">
@@ -84,7 +77,7 @@ function CandidateCard({ find, level, sweep }: { find: Find; level: UiLevel; swe
           {row?.rise && (
             <>
               <dt>Rise</dt>
-              <dd>{row.rise}</dd>
+              <dd>{row.rise.charAt(0).toUpperCase() + row.rise.slice(1)}</dd>
             </>
           )}
           <dt>Last seen absent</dt>
@@ -97,6 +90,17 @@ function CandidateCard({ find, level, sweep }: { find: Find; level: UiLevel; swe
           </dd>
         </dl>
       )}
+
+      <blockquote className="anomaly-allowed">
+        <p>{find.allowed}</p>
+      </blockquote>
+      <p className="anomaly-probably">{level === 'beginner' ? MAYBE_PLAIN[find.key] : find.probably}</p>
+      <div className="anomaly-report">
+        <p className="anomaly-label">{REPORT_LABEL[level]}</p>
+        <p>{find.reportSearch}</p>
+        {level === 'expert' && <p className="anomaly-checked">{find.checked}</p>}
+      </div>
+      <p className="anomaly-status">{find.status}</p>
 
       <p className="anomaly-actions">
         <a className="anomaly-watch" href={findAddress(find, level)}>
@@ -155,6 +159,7 @@ export function CardPictures({ find, level, pictures }: { find: Find; level: UiL
         })}
       </div>
       <p className="anomaly-pair-note">{PICTURES_NOTE[level]}</p>
+      <p className="anomaly-pair-note anomaly-neighbour">{level === 'beginner' ? NEIGHBOUR_PLAIN[find.key] : find.neighbour}</p>
     </div>
   )
 }

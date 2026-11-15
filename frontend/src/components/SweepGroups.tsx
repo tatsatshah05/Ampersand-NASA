@@ -1,7 +1,8 @@
 // The sweep of the Milky Way's plane on Observe anomalies: its 14 survivors (public/anomalies/sweep.json,
 // exported from docs/sweep/ by scripts/export_anomalies.py) in four groups: the three candidates (whose
 // cards are at the top of the screen), the two known novae, the six known variable stars and the three
-// set aside after a closer look. Each with its place, what it is known as and a link to the Viewer.
+// set aside after a closer look. Each with what it is known as and its place (Beginner: what it is and its
+// constellation only), and a link to the Viewer.
 import type { UiLevel } from '../address'
 import {
   findOf,
@@ -46,10 +47,11 @@ export function SweepGroups({ level, sweep, problem }: Props) {
               <ol className="sweep-items">
                 {items.map((s) => {
                   const find = findOf(s)
+                  const place = survivorPlace(s, level)
                   return (
                     <li key={`${s.ra},${s.dec}`} className={`sweep-item sweep-${s.kind}`}>
-                      <p className="sweep-name">{survivorName(s)}</p>
-                      <p className="sweep-place">{survivorPlace(s, level)}</p>
+                      <p className="sweep-name">{survivorName(s, level)}</p>
+                      {place && <p className="sweep-place">{place}</p>}
                       {survivorLines(s, level).map((line) => (
                         <p key={line} className="sweep-line">
                           {line}

@@ -1,5 +1,6 @@
 // The Observe anomalies screen (address: ?watchlist=1, the address of the watchlist it grew out of, so
-// old links still work). From the top: what an anomaly is; the three candidates of the sweep of the
+// old links still work; `&region=` keeps the chosen region, so Back and reload keep it). From the top:
+// what an anomaly is, and a line of links down the page; the three candidates of the sweep of the
 // Milky Way's plane (CandidateCards), under "Not reported anywhere we could find"; "Choose a region"
 // (RegionPicker); then the anomalies of the chosen region: the blind patch searches' three groups and,
 // for everywhere or the plane, the sweep's own groups (SweepGroups).
@@ -9,19 +10,25 @@
 // opinion. Their wording is src/search.ts's (reused) and src/watchlist.ts's. The bar of features is at
 // the top, as on every screen, with Observe anomalies as the current one, and the level switch in its
 // dock at the bottom right.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { chooseUiLevel, DEFAULT_SELECTION, readStoredLevel, storeLevel, TOOLS_ADDRESS, withTool, withUi, type UiLevel } from '../address'
 import {
   EVERYWHERE,
   fetchSweep,
   FINDS_HEADING,
-  PATCHES_HEADING,
+  FINDS_ID,
+  JUMP_LINKS,
+  PATCHES_CHECKED,
+  patchesHeading,
   patchRegionParam,
+  PLANE,
+  readRegion,
   regionOptions,
   SCREEN_TITLE,
   showsPatches,
   showsSweep,
   WHAT_IS_AN_ANOMALY,
+  withRegion,
   type SweepData,
 } from '../anomalies'
 import { newSeed, trainingAddress } from '../training'
@@ -32,6 +39,7 @@ import { RegionPicker } from './RegionPicker'
 import { ScienceFold } from './ScienceFold'
 import { SweepGroups } from './SweepGroups'
 import {
+  atFindLine,
   answeredSentence,
   candidateSentence,
   catalogueSentence,
@@ -51,10 +59,12 @@ import {
   asObject,
   asRejected,
   castVote,
+  emptyGroupSentence,
   EXPORT_CSV_URL,
   exampleSentence,
   fetchRegions,
   fetchWatchlist,
+  firstGroupWithRows,
   GROUPS,
   INTRO,
   NEOWISE_NOTE,
@@ -65,6 +75,7 @@ import {
   PLAIN_INTRO,
   PLAIN_TABS,
   pictureUrl,
+  plainSetAside,
   TABS,
   tallySentence,
   viewerAddress,
@@ -87,6 +98,25 @@ interface Tab {
 }
 const empty: Tab = { rows: [], total: 0, loading: true, error: null }
 
+/** The counts of the patch searches' groups in a region: everywhere's, a patch's, or null (the plane, or not loaded). */
+function regionCounts(key: string, regions: PatchRegions | null): Record<Group, number> | null {
+  if (!regions) return null
+  if (key === EVERYWHERE) return regions.counts
+  return regions.regions.find((r) => r.key === key)?.counts ?? null
+}
+
+/** Whether a region key names something on the screen: everywhere, the plane, or a searched patch. */
+const knownRegion = (key: string, regions: PatchRegions) => key === EVERYWHERE || key === PLANE || regions.regions.some((r) => r.key === key)
+
+/** Write the chosen region into the address in place, so that Back (from the Viewer) and reload keep it. */
+function writeRegion(key: string) {
+  try {
+    window.history.replaceState(null, '', withRegion(window.location.search, key))
+  } catch {
+    // Some places (a page opened as a local file) do not allow it; the screen still works.
+  }
+}
+
 export function WatchlistView() {
   const [voter] = useState(voterId)
   const [group, setGroup] = useState<Group>('eyes')
@@ -95,12 +125,21 @@ export function WatchlistView() {
   const [patches, setPatches] = useState<number | null>(null)
   // The region chosen (anomalies.ts: EVERYWHERE, PLANE or a searched patch's key), the searched
   // patches with their counts, and the sweep of the plane as exported.
-  const [region, setRegion] = useState<string>(EVERYWHERE)
+  // The region starts as the address says (Back and reload keep it), and is checked once the list of
+  // patches has arrived: a key that names no searched patch falls back to Everywhere.
+  const [region, setRegion] = useState<string>(() => readRegion(window.location.search))
   const [regions, setRegions] = useState<PatchRegions | null>(null)
   const [regionsProblem, setRegionsProblem] = useState<string | null>(null)
   const [sweep, setSweep] = useState<SweepData | null>(null)
   const [sweepProblem, setSweepProblem] = useState<string | null>(null)
   const regionParam = patchRegionParam(region)
+  const regionNow = useRef(region)
+  useEffect(() => {
+    regionNow.current = region
+  }, [region])
+  // The requests of the region on screen; a new region aborts them, so that a "Show more" still on its
+  // way never lands in the next region's list.
+  const regionRequests = useRef<AbortController | null>(null)
 
   const run = useCallback(
     (g: Group, offset: number, signal?: AbortSignal) => {
@@ -120,16 +159,31 @@ export function WatchlistView() {
   )
   const load = (g: Group, offset: number) => {
     setTabs((t) => ({ ...t, [g]: { ...t[g], loading: true, error: null } }))
-    run(g, offset)
+    run(g, offset, regionRequests.current?.signal)
   }
 
   useEffect(() => {
     document.title = SCREEN_TITLE
     const ctrl = new AbortController()
     fetchRegions(ctrl.signal)
-      .then(setRegions)
+      .then((r) => {
+        setRegions(r)
+        // The region the address named: kept if it is one of the list's, and opened on its first group with rows.
+        const key = regionNow.current
+        if (!knownRegion(key, r)) {
+          setRegion(EVERYWHERE)
+          writeRegion(EVERYWHERE)
+          return
+        }
+        const counts = regionCounts(key, r)
+        const first = firstGroupWithRows(counts)
+        if (first) setGroup((g) => (counts && counts[g] > 0 ? g : first))
+      })
       .catch((e: unknown) => {
-        if (!ctrl.signal.aborted) setRegionsProblem(e instanceof Error ? e.message : String(e))
+        if (ctrl.signal.aborted) return
+        setRegionsProblem(e instanceof Error ? e.message : String(e))
+        // Without the list a patch cannot be shown: back to everything.
+        if (regionNow.current !== EVERYWHERE && regionNow.current !== PLANE) setRegion(EVERYWHERE)
       })
     fetchSweep(ctrl.signal)
       .then(setSweep)
@@ -139,20 +193,27 @@ export function WatchlistView() {
     return () => ctrl.abort()
   }, [])
 
-  // The patch searches' groups, again whenever the region changes (the plane has none of them).
+  // The patch searches' groups, again whenever the region changes (the plane has none of them). A single
+  // patch is asked for only once the list of patches has said it exists.
   const patchesShown = showsPatches(region)
+  const canAsk = patchesShown && (region === EVERYWHERE || regions !== null)
   useEffect(() => {
-    if (!patchesShown) return
+    if (!canAsk) return
     const ctrl = new AbortController()
+    regionRequests.current = ctrl
     for (const g of GROUPS) run(g, 0, ctrl.signal)
     return () => ctrl.abort()
-  }, [run, patchesShown])
-  // A new region empties the groups at once, so no group of the last region is shown under the new one's name.
+  }, [run, canAsk])
+  // A new region empties the groups at once, so no group of the last region is shown under the new one's
+  // name, and opens on the first of its groups that has rows.
   const chooseRegion = (key: string) => {
     if (key === region) return // the same region again: its lists are already there
     setRegion(key)
     setCounts(null)
     setTabs({ eyes: empty, known: empty, artefact: empty })
+    const first = firstGroupWithRows(regionCounts(key, regions))
+    if (first) setGroup(first)
+    writeRegion(key)
   }
 
   const replaceRow = (g: Group, row: WatchRow) =>
@@ -185,7 +246,7 @@ export function WatchlistView() {
       <p className="intro">{INTRO}</p>
       <p className="intro">{ORDER_SENTENCE}</p>
       <p className="hint">
-        {patches !== null && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
+        {patches !== null && region === EVERYWHERE && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
         A search of a new patch takes minutes.
       </p>
       <p>
@@ -209,9 +270,18 @@ export function WatchlistView() {
               {line}
             </p>
           ))}
+          <p className="anomaly-jump">
+            Jump to:{' '}
+            {JUMP_LINKS.map((l, i) => (
+              <span key={l.href}>
+                {i > 0 && ' · '}
+                <a href={l.href}>{l.label}</a>
+              </span>
+            ))}
+          </p>
         </header>
 
-        <section className="anomaly-finds" aria-labelledby="anomaly-finds-title">
+        <section className="anomaly-finds" id={FINDS_ID} aria-labelledby="anomaly-finds-title">
           <h2 id="anomaly-finds-title" className="anomaly-finds-title">
             {FINDS_HEADING}
           </h2>
@@ -231,10 +301,11 @@ export function WatchlistView() {
         {patchesShown && (
           <section className="anomaly-patches" aria-labelledby="anomaly-patches-title">
             <h2 id="anomaly-patches-title" className="anomaly-patches-title">
-              {PATCHES_HEADING[level]}
+              {patchesHeading(region, level)}
             </h2>
             {level === 'beginner' ? (
               <>
+                <p className="intro anomaly-checks">{PATCHES_CHECKED}</p>
                 {PLAIN_INTRO.map((line) => (
                   <p key={line} className="intro">
                     {line}
@@ -286,9 +357,7 @@ export function WatchlistView() {
           </p>
         )}
         {tab.loading && tab.rows.length === 0 && !tab.error && <p role="status">Loading the list…</p>}
-        {!tab.loading && !tab.error && tab.rows.length === 0 && (
-          <p className="hint">Nothing is in this group yet: the list holds only what real searches have reported.</p>
-        )}
+        {!tab.loading && !tab.error && tab.rows.length === 0 && <p className="hint">{emptyGroupSentence(region === EVERYWHERE)}</p>}
 
         <ol className="cards">
           {tab.rows.map((row) => (
@@ -328,10 +397,19 @@ function Picture({ row }: { row: WatchRow }) {
   )
 }
 
-function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; level: UiLevel; onChange: (r: WatchRow) => void }) {
+export function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; level: UiLevel; onChange: (r: WatchRow) => void }) {
   const o = asObject(row)
   const rejected = asRejected(row)
-  const example = exampleSentence(row.group)
+  // At one of the sweep's candidates (within 5 arcsec), whatever the group: that comes first, with the way
+  // to its card, and the card is not offered as an example of anything.
+  const atFind = row.near_find?.at ? row.near_find : null
+  const example = atFind ? null : exampleSentence(row.group)
+  const findLine = atFind && (
+    <p className="wl-find">
+      {atFindLine(atFind)} <a href={`#find-${atFind.key}`}>See its card</a>
+    </p>
+  )
+  const nearFind = row.near_find && !row.near_find.at ? row.near_find : null
   const detail = o && o.evidence.kind === 'changer' ? changeDetail(o.evidence) : null
   const candidate = o && row.group === 'eyes' ? candidateSentence(o) : null
   const single = o && row.group === 'eyes' ? oneDetectorSentence(o) : null
@@ -357,7 +435,13 @@ function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; l
   )
   const verdict = o && (
     <p>
-      <strong>{o.verdict === 'clean' ? 'Verdict: clean.' : 'Verdict: caution.'}</strong> {verdictSentence(o)}
+      <strong>{o.verdict === 'clean' ? 'Verdict: clean.' : 'Verdict: caution.'}</strong> {verdictSentence(o, true)}
+      {nearFind && (
+        <>
+          {' '}
+          <a href={`#find-${nearFind.key}`}>See its card</a>
+        </>
+      )}
     </p>
   )
   const flags = o && o.flags.length > 0 && (
@@ -392,6 +476,7 @@ function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; l
     <li className={`wl-card ${row.group}`}>
       {kind}
       <Picture row={row} />
+      {findLine}
       {level === 'expert' ? (
         <>
           {place}
@@ -422,7 +507,7 @@ function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; l
           {o && <p className="wl-headline">{headline(o)}</p>}
           {rejected && (
             <p className="wl-headline">
-              <strong>Set aside.</strong>
+              <strong>Set aside.</strong> {plainSetAside(row.kind)}
             </p>
           )}
           {candidate && <p className="wl-candidate">{candidate}</p>}

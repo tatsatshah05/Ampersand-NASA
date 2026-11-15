@@ -20,9 +20,11 @@ docs/sweep/summary.json or docs/sweep.md itself. This script copies what it need
 
 It computes one thing: the constellation each survivor lies in (astropy's boundaries, backend.watchlist).
 
-`--check` builds the same file again from the docs and compares; the tile-record fields are compared too when the
-tile records are on disk (`--tiles`, by default <SPHEREX_CACHE_DIR>/sweep/sweep_work/tiles), and otherwise said to be
-unchecked. Nothing is typed in: a value the docs do not give is left out, never made up.
+`--check` builds the same file again from the docs and compares; the tile-record fields are compared too, against
+the tile records on disk (`--tiles`, by default <SPHEREX_CACHE_DIR>/sweep/sweep_work/tiles) or, when the cache has
+none, against the repository's copy of the pieces this export reads (tests/data/sweep_export/tiles), so that a
+hand-edited catalogue_name is caught on any machine. Nothing is typed in: a value the docs do not give is left out,
+never made up.
 """
 
 from __future__ import annotations
@@ -57,6 +59,11 @@ FIELDS_BY_KIND = {
     "known_variable": ("bright_mjy",),
     "set_aside": ("bright_mjy", "why"),
 }
+
+
+# The pieces of the tile records that the export reads (the known objects' positions and classifications),
+# copied unchanged into the repository: what --check compares with when the cache has no tile records.
+TILES_IN_REPO = ROOT / "tests" / "data" / "sweep_export" / "tiles"
 
 
 def default_tiles() -> Path:
@@ -302,7 +309,11 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     tiles = args.tiles or default_tiles()
     if args.check:
-        problems, notes = check(args.out, args.root, tiles)
+        fallback = args.tiles is None and not tiles.is_dir() and TILES_IN_REPO.is_dir()
+        problems, notes = check(args.out, args.root, TILES_IN_REPO if fallback else tiles)
+        if fallback:
+            notes.append(f"the cache has no tile records ({tiles}): the catalogue_* fields were checked against "
+                         f"the repository's copy, {TILES_IN_REPO.relative_to(ROOT)}")
         for p in problems:
             print("OUT OF DATE  " + p)
         for n in notes:

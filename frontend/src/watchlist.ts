@@ -3,7 +3,7 @@
 // a "new object", and a vote is an opinion, never a confirmation. The sentences about what the
 // machine saw and what the catalogues say are src/search.ts's: they are reused, not repeated.
 import { addressOf, DEFAULT_SELECTION } from './address'
-import { nearFindAt, type CatalogueStatus, type Evidence, type RejectedObject, type SearchObject } from './search'
+import { nearFindAt, type CatalogueStatus, type Evidence, type NearFind, type RejectedObject, type SearchObject } from './search'
 
 export type Group = 'eyes' | 'known' | 'artefact'
 export const GROUPS: readonly Group[] = ['eyes', 'known', 'artefact']
@@ -68,19 +68,24 @@ export interface WatchRow {
   detector?: number
   sigma?: number
   reasons?: string[]
-  /** Set on the page (markNearFind), never by the server: the candidate of our sweep this changer is, or is next to. */
-  near_find?: { name: string; arcsec: number; at: boolean }
+  /** Set on the page (markNearFind), never by the server: the candidate of our sweep this row is at, or is next to. */
+  near_find?: NearFind
 }
 
 /**
- * A brightness change at, or within reach of, one of the sweep's candidates (finds.ts) gets the same
- * caution and words as in the patch search (search.ts, markFinds): near B, the patch search had
- * flagged the steady star 10 arcsec away, whose circle holds B's light, as an unexplained change.
+ * Rows at or near one of the sweep's candidates (finds.ts). EVERY row within 5 arcsec of one, whatever
+ * its group or kind, is marked as at that candidate's place, so that a card the patch search set aside
+ * there (at B, a "mover" whose centre shifted differently in each colour: a blend, the search says) is never read as the app throwing the
+ * candidate out. A brightness change within 25 arcsec gets the same caution and words as in the patch
+ * search (search.ts, markFinds): near B, the patch search had flagged the steady star 10 arcsec away,
+ * whose circle holds B's light, as an unexplained change.
  */
 export function markNearFind(r: WatchRow): WatchRow {
-  if (r.group === 'artefact' || r.kind !== 'changer') return r
   const near_find = nearFindAt(r.ra, r.dec)
-  return near_find ? { ...r, verdict: 'caution', near_find } : r
+  if (!near_find) return r
+  if (near_find.at) return r.group === 'artefact' ? { ...r, near_find } : { ...r, verdict: 'caution', near_find }
+  if (r.group === 'artefact' || r.kind !== 'changer') return r
+  return { ...r, verdict: 'caution', near_find }
 }
 
 export interface WatchPage {
@@ -125,8 +130,8 @@ export const TABS: Record<Group, { label: string; explain: string }> = {
 /** Beginner's words for the three groups: what each holds, in plain words (the groups are the machine's, as in TABS). */
 export const PLAIN_TABS: Record<Group, { label: string; explain: string }> = {
   eyes: {
-    label: 'In no catalogue',
-    explain: 'No catalogue we asked lists these, and they passed every test for false alarms. Each is only a candidate.',
+    label: 'Not listed as changing',
+    explain: 'Catalogues list an object at each of these places, but none we asked lists it as changing. Each is only a candidate.',
   },
   known: {
     label: 'Already known',
@@ -181,6 +186,21 @@ export const ANSWER_LABEL: Record<Answer, string> = {
   real: 'Looks real',
   artefact: 'Looks like an artefact',
   unsure: 'Not sure',
+}
+
+/** Beginner's one plain line on a card the search set aside (its own reasons are in the fold). */
+export function plainSetAside(kind: WatchRow['kind']): string {
+  return `The computer decided this ${kind === 'mover' ? 'movement' : 'change'} was a false alarm.`
+}
+
+/** Under a group with nothing in it: everywhere, the list is empty; under a chosen region, only that region's part is. */
+export function emptyGroupSentence(everywhere: boolean): string {
+  return everywhere ? 'Nothing is in this group yet: the list holds only what real searches have reported.' : 'Nothing from this region is in this group.'
+}
+
+/** The group a region opens on: the first that has rows (null when none does, or the counts are not known). */
+export function firstGroupWithRows(counts: Record<Group, number> | null | undefined): Group | null {
+  return counts ? (GROUPS.find((g) => counts[g] > 0) ?? null) : null
 }
 
 export function exampleSentence(g: Group): string | null {

@@ -38,3 +38,24 @@
 .region-about p:first-child {
   color: var(--text);
 }
+
+/* The menu and, when a region is chosen, the plain way back to everything: one line in a wide window,
+   the button on its own line on a phone. */
+.region-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.region-everywhere {
+  min-height: 44px;
+  font-size: 15px;
+}
+
+@media (max-width: 599px) {
+  .region-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

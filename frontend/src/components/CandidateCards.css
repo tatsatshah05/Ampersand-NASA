@@ -38,14 +38,20 @@
   font-size: var(--size-body);
 }
 
-/* Two pictures side by side, each a square. */
+/* Two pictures side by side, each a square. Each figure's picture, label and date share three rows
+   with the other's (a subgrid), so the two dates line up when one label wraps and the other does not. */
 .anomaly-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-rows: auto auto auto;
+  column-gap: 10px;
 }
 
 .anomaly-shot {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  align-content: start;
   margin: 0;
   min-width: 0;
 }
@@ -118,14 +124,13 @@
 }
 
 .anomaly-shot figcaption {
-  display: flex;
-  flex-direction: column;
-  margin-top: 6px;
+  display: contents;
   font-size: var(--size-body);
   line-height: 1.35;
 }
 
 .anomaly-shot-label {
+  margin-top: 6px;
   font-weight: 600;
 }
 
@@ -166,6 +171,14 @@
 
 .anomaly-label {
   font-weight: 600;
+}
+
+/* Expert: what was searched, after the one sentence the search allows. */
+.anomaly-report .anomaly-checked {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--size-small);
+  line-height: 1.4;
 }
 
 .anomaly-status {

@@ -3,20 +3,42 @@
 // candidates in fixtures/frames/, the exported sweep in public/anomalies/sweep.json).
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { EVERYWHERE, findAddress, PLANE, regionOptions, WATCH_LINK, WRITEUP_URL, type SweepData } from '../anomalies'
+import { EVERYWHERE, findAddress, PATCHES_CHECKED, PLANE, regionOptions, WATCH_LINK, WRITEUP_URL, type SweepData } from '../anomalies'
 import type { FramesReady } from '../api'
 import { FINDS } from '../finds'
-import { MAYBE_PLAIN } from '../findsInfo'
+import { MAYBE_PLAIN, NEIGHBOUR_PLAIN } from '../findsInfo'
 import framesA from '../fixtures/frames/find_a_d6.json'
+import framesB from '../fixtures/frames/find_b_d6.json'
 import framesC from '../fixtures/frames/find_c_d6.json'
+import { markNearFind, type PatchRegions, type WatchRow } from '../watchlist'
 import { CandidateCards, CardPictures } from './CandidateCards'
 import { RegionPicker } from './RegionPicker'
 import { SweepGroups } from './SweepGroups'
-import { WatchlistView } from './WatchlistView'
+import { Card, WatchlistView } from './WatchlistView'
 
 const fsModule = 'node:fs'
 const { readFileSync } = (await import(/* @vite-ignore */ fsModule)) as { readFileSync: (p: URL, encoding: string) => string }
 const sweep = JSON.parse(readFileSync(new URL('../../public/anomalies/sweep.json', import.meta.url), 'utf8')) as SweepData
+
+// The two real rows of the patch search at Candidate B's patch, from the test copy of the database
+// (tests/data/watchlist/small.sqlite3), shaped as GET /api/watchlist shapes them (backend/watchlist.py, _row).
+// Read with node:sqlite where this Node has it (24 does); elsewhere the tests that need them are skipped.
+type Db = { prepare: (sql: string) => { get: (...a: unknown[]) => Record<string, unknown> | undefined } }
+const sqliteModule = 'node:sqlite'
+const sqlite = (await import(/* @vite-ignore */ sqliteModule).catch(() => null)) as { DatabaseSync: new (p: string, o: object) => Db } | null
+const db = sqlite ? new sqlite.DatabaseSync(decodeURIComponent(new URL('../../../tests/data/watchlist/small.sqlite3', import.meta.url).pathname), { readOnly: true }) : null
+function realRow(id: string): WatchRow {
+  const r = db!.prepare('SELECT * FROM candidates WHERE id = ?').get(id)!
+  const machine = JSON.parse(String(r.machine)) as Record<string, unknown>
+  const group = r.grp as WatchRow['group']
+  const row = {
+    ...machine, id: r.id, group, ra: r.ra, dec: r.dec, first_seen: r.first_seen, last_seen: r.last_seen, patches: JSON.parse(String(r.patches)),
+    votes: { real: 0, artefact: 0, unsure: 0, total: 0 }, my_vote: null, notes: [], rank_in_group: 1,
+    ...(group === 'artefact' ? { best_detector: machine.detector } : { neowise: { state: 'waiting' } }),
+  } as unknown as WatchRow
+  return markNearFind(row)
+}
+const card = (row: WatchRow, level: 'beginner' | 'expert') => renderToStaticMarkup(<Card row={row} voter="test" level={level} onChange={() => undefined} />)
 
 const BANNED = /\b(sigma|flux|fluxes|epoch|epochs|detector|detectors|centroid|centroids|mJy|aperture|photometry|ephemeris|S\/N)\b|σ/
 /** The visible text of some markup, leaving out what sits in a closed <details> (as the checks read it). */
@@ -61,13 +83,42 @@ describe('the three candidate cards', () => {
     }
   })
 
+  it('in Expert put the numbers right under the pictures, then the neighbour and what was searched in their places', () => {
+    const words = text(expert)
+    for (const f of FINDS) {
+      const at = (s: string) => words.indexOf(s)
+      const start = at(`${f.name} In the constellation ${f.constellation}`)
+      expect(start).toBeGreaterThanOrEqual(0)
+      // pictures' note, then the neighbour, then the facts, then the allowed sentence, then the search and what was searched
+      const order = ['Detector 6 (4.4–5.0 micrometres)', f.neighbour, 'Position', f.brightness, 'Rise', 'Last seen absent', 'First seen', f.allowed, f.probably, f.reportSearch, f.checked, f.status]
+      // Each found after the one before it.
+      let from = start
+      for (const s of order) {
+        const i = words.indexOf(s, from)
+        expect(i, s).toBeGreaterThan(from)
+        from = i
+      }
+    }
+    // The rise is written as a sentence: capital first.
+    expect(words).toContain('Rise More than 100 times within SPHEREx')
+  })
+
+  it('in Beginner say which star nearby is the steady neighbour, in the vetted plain words, and where each is', () => {
+    for (const f of FINDS) {
+      expect(text(beginner)).toContain(NEIGHBOUR_PLAIN[f.key])
+      expect(text(beginner)).toContain(`In the constellation ${f.constellation}`)
+      expect(text(beginner)).not.toContain(f.neighbour)
+      expect(text(beginner)).not.toContain(f.checked)
+    }
+  })
+
   it('in Expert add the position in both notations, the brightness, the rise, the dates and the write-up', () => {
     const words = text(expert)
     for (const f of FINDS) {
       const row = sweep.survivors.find((s) => s.label === f.key)
       expect(words).toContain(f.brightness)
       expect(words).toContain(`${row?.sexagesimal}`)
-      expect(words).toContain(`${row?.rise}`)
+      expect(words.toLowerCase()).toContain(`${row?.rise}`.toLowerCase())
       expect(words).toContain(`${row?.last_non_detection}`)
       expect(words).toContain(`${row?.first_detection}`)
     }
@@ -133,6 +184,26 @@ describe('the sweep’s groups', () => {
 })
 
 describe('the region picker', () => {
+  const REGIONS: PatchRegions = {
+    regions: [{ key: '253.180380_-44.676970_0.1000', ra: 253.18038, dec: -44.67697, fov: 0.1, area_sq_deg: 0.01, constellation: 'Scorpius', last_searched: '2026-11-15T10:11:15Z', count: 7, counts: { eyes: 2, known: 3, artefact: 2 } }],
+    total: 7, counts: { eyes: 2, known: 3, artefact: 2 }, patches_searched: 1, first_searched: '2026-11-15T10:11:15Z', last_searched: '2026-11-15T10:11:15Z',
+  }
+  const picker = (value: string, regions: PatchRegions | null = REGIONS) =>
+    renderToStaticMarkup(<RegionPicker level="beginner" value={value} options={regionOptions(regions, sweep)} patches={regions} sweep={sweep} problem={null} onChange={() => undefined} />)
+
+  it('names the chosen region first in its live lines, and offers "Show everywhere" right after the menu unless it is everywhere', () => {
+    const patch = picker('253.180380_-44.676970_0.1000')
+    expect(text(patch)).toMatch(/Choose a region .* Show everywhere Showing: Scorpius: Candidate B A patch 0\.1 degrees across/)
+    expect(patch).toMatch(/<\/select><button type="button" class="region-everywhere">Show everywhere<\/button>/)
+    expect(patch).toMatch(/<div class="region-about" aria-live="polite"><p>Showing: Scorpius: Candidate B<\/p>/)
+    expect(text(picker(PLANE))).toContain("Show everywhere Showing: The Milky Way's plane (472.6 square degrees swept)")
+    const all = picker(EVERYWHERE)
+    expect(all).not.toContain('Show everywhere')
+    expect(text(all)).toContain('Showing: Everywhere')
+    // A region from the address, before the list of patches has arrived: the menu still holds it, by name, with no count.
+    expect(picker('253.180380_-44.676970_0.1000', null)).toContain('<option value="253.180380_-44.676970_0.1000" selected="">A searched patch</option>')
+  })
+
   it('offers everywhere, the plane and each patch with its count, and says what the chosen one is', () => {
     const options = regionOptions(null, sweep)
     const html = renderToStaticMarkup(
@@ -162,7 +233,7 @@ describe('the screen', () => {
       'An anomaly is something our searches saw change',
       'Not reported anywhere we could find',
       'class="anomaly-card"',
-      'Choose a region',
+      '<label for="region-choice">Choose a region</label>',
       'Found by searching small patches',
       'role="tablist"',
       'Found by the sweep of the Milky Way’s plane',
@@ -171,9 +242,25 @@ describe('the screen', () => {
     expect(at.every((i) => i >= 0), JSON.stringify(at)).toBe(true)
     expect([...at].sort((x, y) => x - y)).toEqual(at)
     expect(html).toContain(`<option value="${EVERYWHERE}" selected="">Everywhere · 0 found</option>`)
-    // The groups' own words stay as they were.
-    expect(html).toContain('In no catalogue')
+    // Beginner's groups: the first is catalogued at every place, only not as changing.
+    expect(html).toContain('Not listed as changing')
+    expect(html).not.toContain('In no catalogue')
     expect(html).toContain('Set aside as false alarms')
+    // Under the patch searches' heading, first: these are not the three at the top.
+    expect(html.indexOf(PATCHES_CHECKED)).toBeGreaterThan(html.indexOf('Found by searching small patches'))
+    expect(html.indexOf(PATCHES_CHECKED)).toBeLessThan(html.indexOf('Our computer search marked these spots'))
+    // A line of links down the page, under the intro, to the three and to the region menu (which carry those ids).
+    expect(text(html)).toContain('Jump to: the three candidates · Choose a region')
+    expect(html).toContain('id="the-three-candidates"')
+    expect(html).toContain('id="choose-region"')
+    expect(html.indexOf('Jump to:')).toBeLessThan(html.indexOf('Not reported anywhere we could find'))
+  })
+
+  it('opens on the region the address names', () => {
+    const html = screen('?watchlist=1&ui=beginner&region=plane')
+    expect(text(html)).toContain("Showing: The Milky Way's plane")
+    // The plane has none of the patch searches' groups.
+    expect(html).not.toContain('role="tablist"')
   })
 
   it('in Expert names its groups as a scientist would', () => {
@@ -182,4 +269,116 @@ describe('the screen', () => {
     expect(html).toContain('Needs eyes')
     expect(html).toContain('Set aside as artefacts')
   })
+})
+
+describe('the patch search’s rows at Candidate B (the real rows of tests/data/watchlist/small.sqlite3)', () => {
+  it.skipIf(!db)('the "mover" it set aside 0.7 arcsec from B says first whose place it is, links to B’s card, and is no "Example"', () => {
+    const row = realRow('set-aside-mover-253.1807s44.6769')
+    expect(row.group).toBe('artefact')
+    expect(row.near_find).toMatchObject({ key: 'B', at: true })
+    for (const level of ['beginner', 'expert'] as const) {
+      const html = card(row, level)
+      const words = text(html)
+      // First, above the fold: whose place it is, and the way to its card (which carries that id).
+      expect(words).toMatch(/^ #\d+ Moved Candidate B's place, 0\.7 arcseconds away\. Its card is at the top of this page\. See its card /)
+      expect(html).toContain('<a href="#find-B">See its card</a>')
+      expect(html).not.toContain('Example')
+      expect(words.indexOf("Candidate B's place")).toBeLessThan(words.indexOf('Set aside.'))
+    }
+    // The patch search's own reason: in Beginner only inside the closed fold, with one plain line outside it.
+    expect(text(card(row, 'beginner'))).not.toContain('its motion is not the same in every colour')
+    expect(text(card(row, 'beginner'))).toContain('Set aside. The computer decided this movement was a false alarm.')
+    expect(text(card(row, 'expert'))).toContain('its motion is not the same in every colour')
+    expect(renderToStaticMarkup(<CandidateCards level="beginner" sweep={sweep} />)).toContain('id="find-B"')
+  })
+
+  it.skipIf(!db)('the steady star 10 arcsec from B keeps its caution, in short sentences, with the way to B’s card', () => {
+    const row = realRow('changer-253.1838s44.6755')
+    expect(row.near_find).toMatchObject({ key: 'B', at: false })
+    const beginner = text(card(row, 'beginner'))
+    const caution = "Verdict: caution. Candidate B is 10 arcseconds from here. Its light reaches this spot's measurement. So this change is most likely Candidate B's light. Its card is at the top of this page. See its card"
+    expect(beginner).toContain(caution)
+    expect(text(card(row, 'expert'))).toContain(caution)
+    // Never offered as a candidate of its own.
+    expect(beginner).not.toContain('Candidate, not a finding')
+    expect(card(row, 'beginner')).not.toContain('candidate-tag')
+  })
+})
+
+describe('the ruling’s "must not say" (docs/sweep/vetting/ruling.json) and the withdrawn positions', () => {
+  type Ruling = { rulings: { candidate: string; must_not_say: string }[] }
+  const ruling = JSON.parse(readFileSync(new URL('../../../docs/sweep/vetting/ruling.json', import.meta.url), 'utf8')) as Ruling
+  const vetted = JSON.parse(readFileSync(new URL('../../../docs/sweep/vetting/candidates.json', import.meta.url), 'utf8')) as {
+    candidates: { label: string; first_run_position_withdrawn: [number, number] }[]
+  }
+  const rendered = (level: 'beginner' | 'expert') => {
+    vi.stubGlobal('window', { location: { search: `?watchlist=1&ui=${level}` }, localStorage: { getItem: () => null, setItem: () => undefined } })
+    const screen = renderToStaticMarkup(<WatchlistView />)
+    vi.unstubAllGlobals()
+    const ready = (data: unknown) => ({ state: 'ready' as const, data: data as FramesReady })
+    // What is said about the three: their cards and pictures, and the patch search's rows at B.
+    const about = [
+      renderToStaticMarkup(<CandidateCards level={level} sweep={sweep} />),
+      ...[framesA, framesB, framesC].map((d, i) => renderToStaticMarkup(<CardPictures find={FINDS[i]} level={level} pictures={ready(d)} />)),
+      ...(db ? [card(realRow('set-aside-mover-253.1807s44.6769'), level), card(realRow('changer-253.1838s44.6755'), level)] : []),
+    ]
+    const rest = [
+      screen,
+      renderToStaticMarkup(<SweepGroups level={level} sweep={sweep} problem={null} />),
+      ...[EVERYWHERE, PLANE].map((v) =>
+        renderToStaticMarkup(<RegionPicker level={level} value={v} options={regionOptions(null, sweep)} patches={null} sweep={sweep} problem={null} onChange={() => undefined} />),
+      ),
+    ]
+    // Every word on screen, folds included (a scientist opens them).
+    const words = (parts: string[]) => unescape(parts.join(' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ')
+    return { all: words([...about, ...rest]), about: words(about) }
+  }
+  /** The phrases the ruling quotes as not to be said, e.g. 'Ratio 35' or 'A young star's outburst'. */
+  const quoted = ruling.rulings
+    .flatMap((r) => [...r.must_not_say.matchAll(/(?:^|[\s(])'(.+?)'(?=[\s,.;:)]|$)/g)].map((m) => m[1]))
+    // The one quoted phrase that is allowed: the qualifier that may follow "new".
+    .filter((p) => !p.startsWith('that we found in no catalogue'))
+  /** The sweep's withdrawn values, which the ruling lists after "The sweep's": "153, 187, 17 and 0.2 mJy". */
+  const withdrawnMjy = ruling.rulings.flatMap((r) =>
+    r.must_not_say
+      .split('\n')
+      .filter((line) => /the sweep's/i.test(line))
+      .flatMap((line) => [...line.matchAll(/((?:[\d,.]+(?:, | and ))*[\d.,]+) mJy/g)].flatMap((m) => m[1].split(/, | and /))),
+  )
+
+  it('reads them from the ruling', () => {
+    expect(quoted).toEqual(expect.arrayContaining(['Discovery', 'new', 'confirmed', 'first ever seen', 'Ratio 35', "A young star's outburst", '178 and 300 mJy', 'GLIMPSE 4.1 arcsec']))
+    expect(withdrawnMjy).toEqual(expect.arrayContaining(['153', '0.2', '644', '2,915', '24', '27.5', '86', '3.9', '8.5']))
+    expect(vetted.candidates).toHaveLength(3)
+  })
+
+  for (const level of ['beginner', 'expert'] as const) {
+    it(`appear nowhere on the screen in ${level}`, () => {
+      const { all, about } = rendered(level)
+      // The forms the ruling allows: its own qualified "new" (the search sentences, word for word) and "not confirmed".
+      const checked = all
+        .replace(/a new or brightening object/g, '')
+        .replace(/candidates, not discoveries/g, '')
+        .replace(/a new patch/g, '')
+        .replace(/nobody has confirmed it yet|Not confirmed|not confirmed|None is confirmed|None of them is confirmed|confirmed by nobody/g, '')
+      for (const phrase of quoted) {
+        if (phrase === 'Discovery') expect(checked).not.toMatch(/discover/i)
+        else if (phrase === 'new') expect(checked).not.toMatch(/\bnew\b/i)
+        else if (phrase === 'confirmed') expect(checked).not.toMatch(/\bconfirmed\b/i)
+        // "A nova" is forbidden as fact: never "is a nova" or "was a nova" (the known novae of the sweep are named as such).
+        else if (/^an? (dust-forming )?nova$/i.test(phrase)) expect(checked).not.toMatch(/\b(is|was) an? (dust-forming )?nova\b/i)
+        else if (phrase === '9 times') expect(checked).not.toMatch(/(?<![\d,.])9 times/)
+        else expect(checked.toLowerCase(), phrase).not.toContain(phrase.toLowerCase())
+      }
+      // The sweep's withdrawn values, wherever the three are spoken of (other objects of the sweep have numbers of their own).
+      for (const n of withdrawnMjy) expect(about, `${n} mJy`).not.toMatch(new RegExp(`(?<![\\d,.])${n.replace(/[.,]/g, '\\$&')} mJy`))
+      for (const c of vetted.candidates) {
+        const [ra, dec] = c.first_run_position_withdrawn
+        // As the sweep wrote them (5 decimals), as whole numbers: "44.67687" never, "44.67697" (the corrected place) of course.
+        for (const v of new Set([String(ra), String(Math.abs(dec)), ra.toFixed(5), Math.abs(dec).toFixed(5)]))
+          expect(checked, `${c.label}: ${v}`).not.toMatch(new RegExp(`(?<!\\d)${v.replace('.', '\\.')}(?!\\d)`))
+      }
+      expect(checked).not.toMatch(/never seen before|first ever|new planet/i)
+    })
+  }
 })

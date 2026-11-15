@@ -119,6 +119,22 @@ def test_check_fails_when_the_export_is_edited_or_missing(tmp_path: Path) -> Non
     assert missing == ["missing.json: missing (run scripts/export_anomalies.py)"]
 
 
+def test_the_command_line_check_falls_back_to_the_repositorys_tile_pieces(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    # No tile records in the cache: the catalogue_* fields are still checked, against tests/data/sweep_export/tiles.
+    monkeypatch.setenv("SPHEREX_CACHE_DIR", str(tmp_path / "empty-cache"))
+    assert X.main(["--check"]) == 0
+    assert "checked against the repository's copy, tests/data/sweep_export/tiles" in capsys.readouterr().out
+    # So a hand-edited catalogue_name is caught even there.
+    doc = json.loads(X.OUT.read_text())
+    edited = next(s for s in doc["survivors"] if s["kind"] == "known_variable")
+    edited["catalogue_name"] = "WISEA J000000.00-000000.0"
+    out = tmp_path / "sweep.json"
+    out.write_text(json.dumps(doc))
+    assert X.main(["--check", "--out", str(out)]) == 1
+    assert "catalogue_name differs from its tile record" in capsys.readouterr().out
+
+
 def test_the_command_line_check(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert X.main(["--check", "--tiles", str(PIECES)]) == 0
     assert "up to date" in capsys.readouterr().out

@@ -2,7 +2,7 @@
 // Field names are the backend's (backend/search.py `search()`, backend/jobs.py). The wording
 // follows docs/search.md. Anything the search finds that no catalogue lists is a CANDIDATE:
 // never a "discovery", never "new". Nothing here rounds a number up or fills in a missing one.
-import { findAt, findNear } from './finds'
+import { arcsecFrom, findAt, findNear } from './finds'
 
 export interface SearchQuery {
   ra: number
@@ -89,7 +89,16 @@ export interface SearchObject {
    * Set here, not by the backend: one of our sweep's candidates (finds.ts) is at this place or its
    * light reaches this place's measuring circle, so the change found is most likely the candidate's.
    */
-  near_find?: { name: string; arcsec: number; at: boolean }
+  near_find?: NearFind
+}
+
+/** One of our sweep's candidates at a place (within 5 arcsec) or whose light reaches its circle (within 25). */
+export interface NearFind {
+  key: 'A' | 'B' | 'C'
+  name: string
+  /** How far the place is from the candidate, arcseconds. */
+  arcsec: number
+  at: boolean
 }
 
 export interface RejectedObject {
@@ -178,20 +187,33 @@ export function markFinds(status: SearchStatus): SearchStatus {
   return { ...status, result: { ...status.result, objects } }
 }
 
-/** For a changer at (ra, dec): the candidate it is, or whose light reaches its circle (markFinds's `near_find`), or null. */
-export function nearFindAt(ra: number, dec: number): { name: string; arcsec: number; at: boolean } | null {
+/** For a place (ra, dec): the candidate there, or whose light reaches its circle (markFinds's `near_find`), or null. */
+export function nearFindAt(ra: number, dec: number): NearFind | null {
   const at = findAt(ra, dec)
   const near = at ? null : findNear(ra, dec)
   const find = at ?? near?.find
-  return find ? { name: find.name, arcsec: near?.arcsec ?? 0, at: at !== null } : null
+  if (!find) return null
+  return { key: find.key, name: find.name, arcsec: at ? arcsecFrom(at, ra, dec) : (near?.arcsec ?? 0), at: at !== null }
 }
 
-/** What a changer near one of our candidates is (markFinds), or null. */
-export function nearFindLine(o: SearchObject): string | null {
+/** Said on Observe anomalies after a line about a candidate: the screen opens with the candidate's own card. */
+export const CARD_ON_PAGE = 'Its card is at the top of this page.'
+
+/**
+ * What a changer near one of our candidates is (markFinds), or null. `cardOnPage`: on Observe
+ * anomalies, whose top holds the candidate's card, the line ends by saying so.
+ */
+export function nearFindLine(o: Pick<SearchObject, 'near_find'>, cardOnPage = false): string | null {
   const f = o.near_find
   if (!f) return null
   if (f.at) return `This is ${f.name}, one of the three candidates of our sweep of the Milky Way's plane: found in no catalogue or report we checked, and confirmed by nobody (docs/sweep.md).`
-  return `${f.name}, ${Math.round(f.arcsec)} arcseconds from here, appeared between 2025 and 2026 and its light reaches this place's measuring circle, so this change is most likely ${f.name}'s light, not a change of this source.`
+  const line = `${f.name} is ${Math.round(f.arcsec)} arcseconds from here. Its light reaches this spot's measurement. So this change is most likely ${f.name}'s light.`
+  return cardOnPage ? `${line} ${CARD_ON_PAGE}` : line
+}
+
+/** On Observe anomalies, the first line of a row at a candidate's place (within 5 arcsec): whose place it is, and how far. */
+export function atFindLine(f: NearFind): string {
+  return `${f.name}'s place, ${f.arcsec.toFixed(1)} arcseconds away. ${CARD_ON_PAGE}`
 }
 
 export const POLL_MS = 3000
@@ -406,8 +428,8 @@ export function flagSentence(flag: string): string {
   return FLAG_WORDS[flag] ?? `Flag from the search: ${flag}.`
 }
 
-export function verdictSentence(o: SearchObject): string {
-  const find = nearFindLine(o)
+export function verdictSentence(o: SearchObject, cardOnPage = false): string {
+  const find = nearFindLine(o, cardOnPage)
   if (find) return find
   return o.verdict === 'clean'
     ? 'Passed every artefact test the search has, and none of its caution flags was raised.'

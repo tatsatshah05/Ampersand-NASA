@@ -43,8 +43,21 @@
   margin-top: 2px;
 }
 
+/* A line of links down the page: on a phone the region menu is several screens below. */
+.watchlist .anomaly-jump {
+  margin: 12px 0 0;
+  font-size: var(--size-body);
+  color: var(--muted);
+}
+
 .anomaly-finds {
   margin-top: 36px;
+}
+
+/* Beginner, first under the patch searches' heading: these are not the three at the top. */
+.watchlist .anomaly-checks {
+  margin: 0 0 8px;
+  font-weight: 600;
 }
 
 .anomaly-finds-title,
@@ -195,6 +208,17 @@
 .wl-candidate {
   border-left: 3px solid var(--ink);
   padding-left: 12px;
+}
+
+/* A row at one of the sweep's candidates: whose place it is, first, with the way to its card. */
+.wl-find {
+  border-left: 3px solid var(--ink);
+  padding-left: 12px;
+  font-weight: 600;
+}
+
+.wl-find a {
+  font-weight: 400;
 }
 
 .wl-flags {
