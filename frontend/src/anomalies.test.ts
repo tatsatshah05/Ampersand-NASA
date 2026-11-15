@@ -4,6 +4,15 @@
 import { describe, expect, it } from 'vitest'
 import { LANDING, toFramesQuery } from './address'
 import {
+  AGAIN_LINE,
+  FIRST_SEARCH_NOTE,
+  KEEP_LOOKING,
+  lastSearchedLine,
+  NOTHING_FOUND,
+  patchKey,
+  PICK_HEADING,
+  PICK_INTRO,
+  watchProgress,
   ALL_THREE_LINK,
   allThreeLineOf,
   cardPair,
@@ -92,7 +101,7 @@ describe('the screen’s first words', () => {
   })
 
   it('offers a line of links down the page, to the three and to the region menu', () => {
-    expect(JUMP_LINKS.map((l) => `${l.label} ${l.href}`)).toEqual(['the three candidates #the-three-candidates', 'Choose a region #choose-region'])
+    expect(JUMP_LINKS.map((l) => `${l.label} ${l.href}`)).toEqual(['Pick a patch of sky #choose-region', 'the three candidates #the-three-candidates'])
   })
 
   it('heads the candidates with what can be shown, never "never seen before"', () => {
@@ -393,5 +402,42 @@ describe('a patch search’s row at or next to a candidate', () => {
     for (const g of Object.values(PLAIN_TABS)) for (const t of sentences(g.explain)) expect(words(t), t).toBeLessThanOrEqual(20)
     expect(plainSetAside('mover')).toBe('The computer decided this movement was a false alarm.')
     expect(plainSetAside('changer')).toBe('The computer decided this change was a false alarm.')
+  })
+})
+
+describe('the patch picker’s words', () => {
+  const info = { key: 'k', ra: 1, dec: 2, fov: 0.1, searched: true, last_searched: '2026-11-15T19:02:11Z', pictures_until: '2026-09-22', exposures: 364, new_pictures: false }
+  it('are the vetted sentences, word for word', () => {
+    expect(PICK_HEADING).toBe('Pick a patch of sky')
+    expect(PICK_INTRO.beginner).toBe(
+      'Type a star’s name or a place in the sky. We search that small patch for anything that moved or changed, and look again each time SPHEREx sends new pictures of it.',
+    )
+    expect(FIRST_SEARCH_NOTE).toBe(
+      'A patch nobody has searched before takes a few minutes: its pictures are fetched from NASA’s archive and compared. You can leave this page; the search carries on.',
+    )
+    expect(NOTHING_FOUND).toBe('Nothing moved or changed in this patch in SPHEREx’s pictures so far.')
+    expect(AGAIN_LINE).toBe('NASA’s archive has new pictures of this patch. Searching it again…')
+    expect(KEEP_LOOKING).toBe(
+      'We keep looking: every time this patch is opened we ask NASA’s archive for new pictures of it, and search again when there are some. SPHEREx returns to a patch about every six months.',
+    )
+  })
+  it('write the dates out and leave out the half that is null', () => {
+    expect(lastSearchedLine(info)).toBe('Last searched on 15 November 2026, with SPHEREx’s pictures up to 22 September 2026.')
+    expect(lastSearchedLine({ ...info, pictures_until: null })).toBe('Last searched on 15 November 2026.')
+    expect(lastSearchedLine({ ...info, last_searched: null })).toBe('The search used SPHEREx’s pictures up to 22 September 2026.')
+    expect(lastSearchedLine({ ...info, last_searched: null, pictures_until: null })).toBeNull()
+    expect(lastSearchedLine({ ...info, searched: false, last_searched: null, pictures_until: null })).toBeNull()
+  })
+  it('make the key the regions list uses', () => {
+    expect(patchKey(253.18038, -44.67697, 0.1)).toBe('253.180380_-44.676970_0.1000')
+  })
+  it('keep Beginner’s progress free of the scientist’s words', () => {
+    for (const status of ['queued', 'running'] as const) {
+      for (const done of [0, 3, 6]) {
+        const s = { status, seconds: 1, detector_now: 1, detectors_done: done, detectors_total: 6, searches_ahead: 0 }
+        expect(watchProgress(s, 'beginner')).not.toMatch(/sigma|flux|epoch|detector|centroid|mJy/i)
+        expect(watchProgress(s, 'expert').length).toBeGreaterThan(10)
+      }
+    }
   })
 })

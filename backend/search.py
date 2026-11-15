@@ -1975,7 +1975,7 @@ def _source_row(s: dict[str, Any], visits: list[int]) -> dict[str, Any]:
 def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, catalogues: bool = True,
                  bin_days: float | None = None, figures_dir: Path | None = None, use_cache: bool = True,
                  fetch: Fetch | None = None, min_sigma: float | None = None, offline: bool = False,
-                 progress: Callable[[int, int], None] | None = None) -> dict[str, Any]:
+                 progress: Callable[[int, int], None] | None = None, refresh: bool = False) -> dict[str, Any]:
     """Search one field in one detector for movers and changers. No target is given.
 
     ra, dec, fov in degrees (fov up to 0.5); detector 1 to 6. `bin_days` splits each
@@ -1984,8 +1984,9 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
     `fetch` replaces `spherex.fetch_cutouts` (same arguments and return value) for
     another way of getting the cutouts. `min_sigma` below 5 also returns weaker
     candidates, each marked `passes: false`; `search_detectors` uses that to add up
-    the evidence of several detectors. The result is plain data, ready for JSON: the
-    keys are described in docs/search.md.
+    the evidence of several detectors. `refresh` throws the answer on disk away first:
+    for a patch the archive has new pictures of. The result is plain data, ready for
+    JSON: the keys are described in docs/search.md.
     """
     if not 1 <= detector <= 6:
         raise ValueError("detector must be 1 to 6")
@@ -1996,6 +1997,10 @@ def search_field(ra: float, dec: float, fov: float = 0.1, detector: int = 5, *, 
     key_text = f"v{VERSION},{ra:.5f},{dec:.5f},{fov:.4f},{detector},{bin_days},{catalogues},{min_sigma},{offline}"
     key = hashlib.sha1(key_text.encode()).hexdigest()[:16]
     cache_file = SEARCH_DIR / "results" / f"{key}.json"
+    if refresh:
+        # The archive has pictures the answer on disk was made without (backend/watch.py). It goes first, so
+        # that it is never served as the new answer, also when the new search ends incomplete and is not kept.
+        cache_file.unlink(missing_ok=True)
     if use_cache and figures_dir is None and cache_file.exists():
         return json.loads(cache_file.read_text())
 

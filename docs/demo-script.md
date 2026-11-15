@@ -146,14 +146,15 @@ The names below were read off the finished screen, built and run on a laptop ser
 - **Show:** press **Observe anomalies** in the bar (`<SITE>/?watchlist=1&ui=beginner`). The screen opens with
   "SPHEREx is a NASA space telescope that takes pictures of the whole sky about every six months.", then three
   sentences on what an anomaly is, the last "A few are in no catalogue or report we could find, and those are
-  candidates, not discoveries.", and a line "Jump to: the three candidates · Choose a region". The first group is
+  candidates, not discoveries.", and a line "Jump to: Pick a patch of sky · the three candidates". Under "Pick a patch of sky" (a field, the button
+  **Watch this patch** and a menu of the patches already watched), the first group is
   headed "Not reported anywhere we could find": one card each for Candidates A, B and C ("In the constellation
   Sagittarius", Scorpius, Norma), with two real SPHEREx pictures side by side ("Not seen" and "At its
   brightest", each with its dates; for A, 24 Aug–4 Sep 2025 and 28 Mar–1 Apr 2026), the line saying which star
   nearby (for C, the crowd around it) is not the candidate, the candidate's sentence, what it probably is, "Has anyone reported it?" with the
   sentence about the search for earlier reports, and the status line "Not confirmed. Not yet reported to
   astronomers." Press **Watch it appear** on Candidate A: its view opens, blinking between "Before" and "After"
-  (**Blink before and after** pressed). Go back, then show **Choose a region**: "Everywhere · 156 found", "The
+  (**Blink before and after** pressed). Go back, then show the menu under **Pick a patch of sky**: "Everywhere · 156 found", "The
   Milky Way's plane (472.6 square degrees swept) · 14 found", and each searched patch by its constellation (for
   example "Scorpius: Candidate B · 7 found"). Choose "The Milky Way's plane": the line under the menu reads
   "Showing: The Milky Way's plane (472.6 square degrees swept)", a **Show everywhere** button appears beside the

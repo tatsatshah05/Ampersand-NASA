@@ -212,7 +212,9 @@ plain words; Expert adds the numbers, the detector and the settings.
    around it) is not the candidate, its allowed sentence, what it probably is, the sentence about the search
    for earlier reports ("Has anyone reported it?"; Expert: "Search for earlier reports"), its status ("Not
    confirmed. Not yet reported to astronomers.") and a link "Watch it appear". Expert puts the position, brightness, rise and dates right
-   under the pictures. Then "Choose a region": everywhere, the Milky Way's plane, or each searched patch by its
+   under the pictures. Above the candidates, "Pick a patch of sky": type a star's name or coordinates and press "Watch this patch" to have
+   that patch searched and kept under watch (it is searched again when NASA's archive has new pictures of it), or
+   choose from the menu: everywhere, the Milky Way's plane, or each searched patch by its
    constellation, each with how many were found, and a "Show everywhere" button once a region is chosen.
    Below that, the chosen region's groups. From the patch searches ("Found by searching small patches", or
    "Found by searching this patch"): "Not listed as changing", "Already known" and "Set aside as false

@@ -25,6 +25,7 @@ from . import (
     spherex,
     stars,
     training,
+    watch,
     watchlist_api,
 )
 
@@ -161,6 +162,16 @@ def blind_search(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., g
     "running", "done" (with `result`) or "failed" (with `error`); ask again every few seconds."""
     return _answer(lambda: jobs.search_status(ra, dec, fov, jobs.parse_detectors(detectors)),
                    "starting the search", "The SPHEREx archive (IRSA)")
+
+
+@app.get("/api/watch")
+def watched_patch(ra: float = Query(..., ge=0, lt=360), dec: float = Query(..., ge=-90, le=90),
+                  fov: float = Query(0.1, gt=0.02, le=0.5)):
+    """A patch of sky that /api/search has searched is watched: `searched`, `last_searched`, `pictures_until`
+    (the date of the newest exposure that search had), `exposures`, and `new_pictures`: the archive now lists
+    pictures the last search did not have, so the next /api/search for this patch searches it again. This
+    route never starts a search and never waits for the archive (it is asked at most once a day)."""
+    return _answer(lambda: watch.state(ra, dec, fov), "looking up this patch", "The SPHEREx archive (IRSA)")
 
 
 @app.get("/api/distant")

@@ -3,7 +3,8 @@
 // candidates in fixtures/frames/, the exported sweep in public/anomalies/sweep.json).
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { EVERYWHERE, findAddress, PATCHES_CHECKED, PLANE, regionOptions, WATCH_LINK, WRITEUP_URL, type SweepData } from '../anomalies'
+import { findPatch, openWatched, searchThisPatch } from '../watchPatch'
+import { AGAIN_LINE, EVERYWHERE, findAddress, KEEP_LOOKING, NOTHING_FOUND, FIRST_SEARCH_NOTE, lastSearchedLine, patchIsQuiet, patchKey, PATCHES_CHECKED, PLANE, regionOptions, WATCH_LINK, WRITEUP_URL, type SweepData } from '../anomalies'
 import type { FramesReady } from '../api'
 import { FINDS } from '../finds'
 import { MAYBE_PLAIN, NEIGHBOUR_PLAIN } from '../findsInfo'
@@ -193,7 +194,7 @@ describe('the region picker', () => {
 
   it('names the chosen region first in its live lines, and offers "Show everywhere" right after the menu unless it is everywhere', () => {
     const patch = picker('253.180380_-44.676970_0.1000')
-    expect(text(patch)).toMatch(/Choose a region .* Show everywhere Showing: Scorpius: Candidate B A patch 0\.1 degrees across/)
+    expect(text(patch)).toMatch(/Pick a patch of sky .* Show everywhere Showing: Scorpius: Candidate B A patch 0\.1 degrees across/)
     expect(patch).toMatch(/<\/select><button type="button" class="region-everywhere">Show everywhere<\/button>/)
     expect(patch).toMatch(/<div class="region-about" aria-live="polite"><p>Showing: Scorpius: Candidate B<\/p>/)
     expect(text(picker(PLANE))).toContain("Show everywhere Showing: The Milky Way's plane (472.6 square degrees swept)")
@@ -209,14 +210,15 @@ describe('the region picker', () => {
     const html = renderToStaticMarkup(
       <RegionPicker level="beginner" value={PLANE} options={options} patches={null} sweep={sweep} problem={null} onChange={() => undefined} />,
     )
-    expect(text(html)).toContain('Choose a region')
+    expect(text(html)).toContain('Pick a patch of sky')
     expect([...html.matchAll(/<option[^>]*>([^<]+)<\/option>/g)].map((m) => unescape(m[1]))).toEqual([
       'Everywhere · 14 found',
       "The Milky Way's plane (472.6 square degrees swept) · 14 found",
     ])
     expect(text(html)).toContain('472.6 square degrees of the Milky Way\'s plane, swept on 14 November 2026.')
     expect(html).toMatch(/<select id="region-choice"/)
-    expect(html).toMatch(/<label for="region-choice">Choose a region<\/label>/)
+    expect(html).toMatch(/<label for="region-choice">[^<]*<\/label>/)
+    expect(text(html)).toContain('Or choose a patch that is already being watched:')
   })
 })
 
@@ -231,9 +233,13 @@ describe('the screen', () => {
     const order = [
       '<h1>Observe anomalies</h1>',
       'An anomaly is something our searches saw change',
+      'Pick a patch of sky',
+      'Type a star’s name or a place in the sky.',
+      'A name or coordinates',
+      'Watch this patch',
+      'Or choose a patch that is already being watched:',
       'Not reported anywhere we could find',
       'class="anomaly-card"',
-      '<label for="region-choice">Choose a region</label>',
       'Found by searching small patches',
       'role="tablist"',
       'Found by the sweep of the Milky Way’s plane',
@@ -250,10 +256,10 @@ describe('the screen', () => {
     expect(html.indexOf(PATCHES_CHECKED)).toBeGreaterThan(html.indexOf('Found by searching small patches'))
     expect(html.indexOf(PATCHES_CHECKED)).toBeLessThan(html.indexOf('Our computer search marked these spots'))
     // A line of links down the page, under the intro, to the three and to the region menu (which carry those ids).
-    expect(text(html)).toContain('Jump to: the three candidates · Choose a region')
+    expect(text(html)).toContain('Jump to: Pick a patch of sky · the three candidates')
     expect(html).toContain('id="the-three-candidates"')
     expect(html).toContain('id="choose-region"')
-    expect(html.indexOf('Jump to:')).toBeLessThan(html.indexOf('Not reported anywhere we could find'))
+    expect(html.indexOf('Jump to:')).toBeLessThan(html.indexOf('Pick a patch of sky'))
   })
 
   it('opens on the region the address names', () => {
@@ -261,6 +267,14 @@ describe('the screen', () => {
     expect(text(html)).toContain("Showing: The Milky Way's plane")
     // The plane has none of the patch searches' groups.
     expect(html).not.toContain('role="tablist"')
+  })
+
+  it('puts a single chosen patch’s results under the picker, before the three candidates', () => {
+    const html = screen('?watchlist=1&ui=beginner&region=253.180380_-44.676970_0.1000')
+    const order = ['Pick a patch of sky', 'Found by searching this patch', 'role="tablist"', 'Not reported anywhere we could find']
+    const at = order.map((o) => html.indexOf(o))
+    expect(at.every((i) => i >= 0), JSON.stringify(at)).toBe(true)
+    expect([...at].sort((x, y) => x - y)).toEqual(at)
   })
 
   it('in Expert names its groups as a scientist would', () => {
@@ -360,6 +374,7 @@ describe('the ruling’s "must not say" (docs/sweep/vetting/ruling.json) and the
         .replace(/a new or brightening object/g, '')
         .replace(/candidates, not discoveries/g, '')
         .replace(/a new patch/g, '')
+        .replace(/new pictures/g, '')
         .replace(/nobody has confirmed it yet|Not confirmed|not confirmed|None is confirmed|None of them is confirmed|confirmed by nobody/g, '')
       for (const phrase of quoted) {
         if (phrase === 'Discovery') expect(checked).not.toMatch(/discover/i)
@@ -381,4 +396,157 @@ describe('the ruling’s "must not say" (docs/sweep/vetting/ruling.json) and the
       expect(checked).not.toMatch(/never seen before|first ever|new planet/i)
     })
   }
+})
+
+// ---- watching a patch: the flows, against a mocked server ----------------------------------------------
+
+describe('watching a patch', () => {
+  const B = { ra: 253.18038, dec: -44.67697 }
+  const KEY = patchKey(B.ra, B.dec, 0.1)
+  const regionEntry = { key: KEY, ...B, fov: 0.1, area_sq_deg: 0.01, constellation: 'Scorpius', last_searched: '2026-11-15T19:02:11Z', count: 2, counts: { eyes: 1, known: 1, artefact: 0 } }
+  const regionsWith = (list: object[]) => ({ regions: list, total: 2, counts: { eyes: 1, known: 1, artefact: 0 }, patches_searched: list.length, first_searched: null, last_searched: null })
+  const watchAnswer = (over: object = {}) => ({
+    key: KEY, ...B, fov: 0.1, searched: true, last_searched: '2026-11-15T19:02:11Z', pictures_until: '2026-09-22', exposures: 364, new_pictures: false, ...over,
+  })
+  const done = { status: 'done', seconds: 5, detector_now: null, detectors_done: 6, detectors_total: 6, searches_ahead: 0, searching_again: false, result: { field: {}, objects: [], rejected: [], summary: {}, limits: '' } }
+
+  /** A fake server: answers by path; every request is logged. */
+  function server(routes: Record<string, () => unknown | { status: number; body: unknown }>) {
+    const calls: string[] = []
+    vi.stubGlobal('fetch', async (input: string) => {
+      const url = String(input)
+      calls.push(url)
+      const path = url.split('?')[0]
+      const route = routes[path]
+      if (!route) return new Response('{}', { status: 404 })
+      const out = route() as { status?: number; body?: unknown } & Record<string, unknown>
+      const failed = typeof out.status === 'number' && 'body' in out
+      return new Response(JSON.stringify(failed ? out.body : out), { status: failed ? (out.status as number) : 200 })
+    })
+    return calls
+  }
+  const noop = () => undefined
+
+  it('typing a name runs the search, then the patch is chosen from the regions list', async () => {
+    const calls = server({
+      '/api/resolve': () => ({ name: 'NAME Scorpius B', ra: B.ra, dec: B.dec, source: 'SIMBAD' }),
+      '/api/search': () => done,
+      '/api/watchlist/regions': () => regionsWith([regionEntry]),
+      '/api/watch': () => watchAnswer(),
+    })
+    const place = await findPatch('Candidate Zed')
+    expect(place).toMatchObject({ ok: true, ra: B.ra, dec: B.dec })
+    if (!place.ok) return
+    const seen: string[] = []
+    const out = await searchThisPatch(place.patch, 'beginner', new AbortController().signal, (line) => seen.push(line))
+    expect(out.kind).toBe('done')
+    if (out.kind !== 'done') return
+    expect(out.key).toBe(KEY)
+    expect(out.regions?.regions.map((r) => r.key)).toContain(KEY)
+    expect(out.chosen).toBe(true)
+    expect(out.watch?.searched).toBe(true)
+    expect(calls.some((u) => u.startsWith('/api/search?') && u.includes('detectors=123456') && u.includes('fov=0.1'))).toBe(true)
+    // Search first, then the regions, and the patch's watch lines.
+    expect(calls.findIndex((u) => u.startsWith('/api/search'))).toBeLessThan(calls.findIndex((u) => u.startsWith('/api/watchlist/regions')))
+    expect(calls.some((u) => u.startsWith('/api/watch?'))).toBe(true)
+  })
+
+  it('reads coordinates without asking the name service, and says why a typed position cannot be read', async () => {
+    const calls = server({})
+    const p = await findPatch('253.18038389 -44.67697')
+    expect(p.ok).toBe(true)
+    if (p.ok) {
+      expect(p.ra).toBeCloseTo(253.18038, 5)
+      expect(p.patch.key).toBe(patchKey(p.ra, p.dec, 0.1))
+      expect(p.patch.fov).toBe(0.1)
+    }
+    expect(calls).toEqual([])
+    expect(await findPatch('   ')).toEqual({ ok: false, text: 'Type a name or coordinates first.' })
+    const bad = await findPatch('400 10')
+    expect(bad.ok).toBe(false)
+    server({ '/api/resolve': () => ({ status: 404, body: { detail: 'SIMBAD does not know that name.' } }) })
+    expect(await findPatch('Nowhereville')).toEqual({ ok: false, text: 'SIMBAD does not know that name.' })
+  })
+
+  it('a search that finds nothing says so, keeps the patch as the one watched, and still has the watch lines', async () => {
+    server({
+      '/api/search': () => done,
+      '/api/watchlist/regions': () => regionsWith([]),
+      '/api/watch': () => watchAnswer(),
+    })
+    const out = await searchThisPatch({ ...B, fov: 0.1, key: KEY }, 'beginner', new AbortController().signal, noop)
+    expect(out.kind).toBe('done')
+    if (out.kind !== 'done') return
+    expect(out.chosen).toBe(false)
+    expect(out.nothing).toBe(NOTHING_FOUND)
+    expect(NOTHING_FOUND).toBe('Nothing moved or changed in this patch in SPHEREx’s pictures so far.')
+    expect(lastSearchedLine(out.watch!)).toBe('Last searched on 15 November 2026, with SPHEREx’s pictures up to 22 September 2026.')
+    expect(KEEP_LOOKING).toContain('We keep looking')
+    expect(FIRST_SEARCH_NOTE).toContain('nobody has searched before')
+  })
+
+  it('a quiet patch that the list holds with nothing in it is chosen, and still says that nothing was found', async () => {
+    const quiet = { ...regionEntry, count: 0, counts: { eyes: 0, known: 0, artefact: 0 } }
+    server({
+      '/api/search': () => done,
+      '/api/watchlist/regions': () => regionsWith([quiet]),
+      '/api/watch': () => watchAnswer(),
+    })
+    const out = await searchThisPatch({ ...B, fov: 0.1, key: KEY }, 'beginner', new AbortController().signal, noop)
+    expect(out.kind).toBe('done')
+    if (out.kind !== 'done') return
+    expect(out.chosen).toBe(true)
+    expect(out.nothing).toBe(NOTHING_FOUND)
+    // The screen says so for a quiet patch however it was opened, and for no other choice.
+    expect(patchIsQuiet(KEY, regionsWith([quiet]) as never)).toBe(true)
+    expect(patchIsQuiet(KEY, regionsWith([regionEntry]) as never)).toBe(false)
+    expect(patchIsQuiet(EVERYWHERE, regionsWith([quiet]) as never)).toBe(false)
+    expect(patchIsQuiet(KEY, null)).toBe(false)
+  })
+
+  it('shows a failed search’s own error, and survives /api/watch failing', async () => {
+    server({ '/api/search': () => ({ ...done, status: 'failed', error: 'The archive did not answer.', result: undefined }) })
+    const failed = await searchThisPatch({ ...B, fov: 0.1, key: KEY }, 'beginner', new AbortController().signal, noop)
+    expect(failed).toEqual({ kind: 'failed', error: 'The archive did not answer.' })
+    server({ '/api/search': () => done, '/api/watchlist/regions': () => regionsWith([regionEntry]), '/api/watch': () => ({ status: 500, body: { detail: 'x' } }) })
+    const out = await searchThisPatch({ ...B, fov: 0.1, key: KEY }, 'beginner', new AbortController().signal, noop)
+    expect(out).toMatchObject({ kind: 'done', chosen: true, watch: null })
+  })
+
+  it('opening a patch whose /api/watch says new_pictures searches it again, with the “new pictures” line', async () => {
+    let asked = 0
+    const calls = server({
+      '/api/watch': () => watchAnswer(asked++ === 0 ? { new_pictures: true } : { pictures_until: '2027-03-01' }),
+      '/api/search': () => ({ ...done, searching_again: true }),
+      '/api/watchlist/regions': () => regionsWith([regionEntry]),
+    })
+    const lines: string[] = []
+    const out = await openWatched({ ...B, fov: 0.1, key: KEY }, 'beginner', new AbortController().signal, (l) => lines.push(l), (l) => lines.push(`note: ${l}`))
+    expect(lines).toContain(`note: ${AGAIN_LINE}`)
+    expect(AGAIN_LINE).toBe('NASA’s archive has new pictures of this patch. Searching it again…')
+    expect(out.searchedAgain).toBe(true)
+    expect(out.regions?.regions).toHaveLength(1)
+    expect(out.watch?.pictures_until).toBe('2027-03-01')
+    expect(calls.filter((u) => u.startsWith('/api/search'))).toHaveLength(1)
+    expect(calls.filter((u) => u.startsWith('/api/watch?'))).toHaveLength(2)
+  })
+
+  it('opening a patch with new_pictures false never asks /api/search', async () => {
+    const calls = server({ '/api/watch': () => watchAnswer(), '/api/search': () => done })
+    const out = await openWatched({ ...B, fov: 0.1, key: KEY }, 'expert', new AbortController().signal, noop, noop)
+    expect(out.searchedAgain).toBe(false)
+    expect(out.watch?.searched).toBe(true)
+    expect(calls.some((u) => u.startsWith('/api/search'))).toBe(false)
+    // A patch nobody has searched is not searched merely because it was opened, either.
+    const none = server({ '/api/watch': () => watchAnswer({ searched: false, last_searched: null, pictures_until: null, exposures: null }), '/api/search': () => done })
+    await openWatched({ ...B, fov: 0.1, key: KEY }, 'expert', new AbortController().signal, noop, noop)
+    expect(none.some((u) => u.startsWith('/api/search'))).toBe(false)
+  })
+
+  it('a failing /api/watch leaves an opened patch with no watch lines and no search', async () => {
+    const calls = server({ '/api/watch': () => ({ status: 502, body: { detail: 'down' } }), '/api/search': () => done })
+    const out = await openWatched({ ...B, fov: 0.1, key: KEY }, 'beginner', new AbortController().signal, noop, noop)
+    expect(out.watch).toBeNull()
+    expect(calls.some((u) => u.startsWith('/api/search'))).toBe(false)
+  })
 })

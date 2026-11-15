@@ -925,7 +925,22 @@ New data reaches cached results (2026-11-14, `tests/test_new_data.py`)
   a list older than a day is refreshed in a background thread (at most every 10 minutes
   when the archive does not answer) and the cached result is served meanwhile.
 - `SPHEREX_COLLECTIONS` (comma-separated) replaces the collection names without a code
-  change. Search results (`cache/search2/results`) are not refreshed automatically.
+  change.
+- A searched patch is watched (`backend/watch.py`, 2026-11-15, `tests/test_watch.py`). When `/api/search` finishes, a
+  note at `cache/search2/watch/<region key>.json` holds `last_searched`, `pictures_until` (the date of the newest
+  exposure the archive listed) and `exposures` (how many it listed). `GET /api/watch?ra=&dec=&fov=` returns the note
+  with `searched` and `new_pictures` (`spherex.list_changed` against that count); it never starts a search and never
+  waits for the archive. When `new_pictures` is true, the next `/api/search` for the patch throws the per-detector
+  answers on disk away (`search_field(refresh=True)`) and searches again; its answers carry `searching_again`.
+  Nothing runs on a timer: the question is asked when somebody opens the patch, and the archive at most once a day.
+  A patch in the list of finds without a note (every patch of the pre-built results) gets one at the first look,
+  from the exposure list on disk at that moment. The note's count must come from `spherex.find_exposures`, the
+  call `list_changed` compares with: counted from anything else, a patch was searched again on every request.
+  A watched patch whose search found nothing is in no row of the list of finds, so `/api/watchlist/regions` lists it
+  from its note with a count of 0 (`watchlist.regions(watch.patches())`) and `/api/watchlist?region=` answers it with
+  no rows; the screen then says "Nothing moved or changed in this patch in SPHEREx's pictures so far." and shows no
+  groups (`anomalies.ts` `patchIsQuiet`). Checked on a real patch (RA 200, Dec +30, 0.1 degrees): 407 exposures
+  listed, 404 used, 167 sources tested, nothing found, 150 s on a laptop with every cutout fetched.
 
 Novae of 2025 (2026-11-14, `scripts/check_nova.py`, `docs/novae.md`; outputs in `docs/novae/output_*.txt`)
 - V572 Vel (max 27 June 2025), 21 May to 19 July 2026 (day +328 to +386): about 41 mJy at 0.75 to 1.65 micrometres,
@@ -1100,19 +1115,31 @@ Observe anomalies (2026-11-15; `components/WatchlistView.tsx`, `CandidateCards.t
 - The watchlist screen is "Observe anomalies" (bar: "Observe anomalies" in Beginner, "Anomalies" in Expert); its
   address is still `?watchlist=1`, and `&region=<key>` (`anomalies.ts` `readRegion`, `withRegion`, written in place)
   keeps the chosen region through Back and reload. From the top: what SPHEREx is and what an anomaly is (four sentences,
-  both levels), and a line "Jump to: the three candidates · Choose a region"; "Not reported anywhere we could find" with
+  both levels), and a line "Jump to: Pick a patch of sky · the three candidates"; "Pick a patch of sky" (below); "Not reported anywhere we could find" with
   one card per candidate (id `find-A` etc.): "In the constellation ...", the Viewer's own `/api/frames` pictures of the
   last visit "none" and the brightest clear visit, cropped to the central 2 arcmin, with their dates aligned; the
   pictures' note; the neighbour (Beginner: `findsInfo.ts` NEIGHBOUR_PLAIN; Expert: `finds.ts` `neighbour`); Expert only,
   right under those, the facts (Position, Brightness, Rise, Last seen absent, First seen, Write-up); the allowed
   sentence; "probably" (Beginner: MAYBE_PLAIN); `reportSearch`, the second search's `what_can_be_said`, word for word
   (Expert adds `finds.ts` `checked` after it); `status` in `finds.ts`, today "Not confirmed. Not yet reported to
-  astronomers.", the one field to change the day a report is filed; no votes. Then "Choose a region" (everywhere, the
-  plane sweep, each searched patch), "Showing: <name>" first under the menu (in the live region) and a "Show
+  astronomers.", the one field to change the day a report is filed; no votes. The picker's menu (everywhere, the
+  plane sweep, each searched patch) has "Showing: <name>" first under it (in the live region) and a "Show
   everywhere" button whenever the choice is not Everywhere; a new region opens on its first group with rows. Then the
   chosen region's groups: the patch searches' ("Found by searching small patches", or "... this patch"; Beginner first
   says "These have had only the computer's quick checks. Nobody has searched the reports for them yet.") and, for
   everywhere or the plane, the sweep's. Never "never seen before".
+- "Pick a patch of sky" (2026-11-15, branch `agent/watch-a-patch`; `RegionPicker.tsx`, `watchPatch.ts`) is the screen's
+  first section, in place of "Choose a region" (same id, same `&region=`): the field "A name or coordinates" with the
+  button "Watch this patch", then "Or choose a patch that is already being watched:" and the menu. Submitting searches
+  the 0.1 degree patch there in all six detectors (`/api/search`), then chooses that patch if anything was found, or
+  says "Nothing moved or changed in this patch in SPHEREx's pictures so far." Opening a patch (menu or address) asks
+  only `/api/watch` and starts a search only when it answers `new_pictures`. For one patch the order is: picker, that
+  patch's groups, the three candidates; for everywhere or the plane: picker, candidates, groups. Two lines say how a
+  watched patch stands: "Last searched on 15 November 2026, with SPHEREx's pictures up to 22 September 2026." and "We
+  keep looking: every time this patch is opened we ask NASA's archive for new pictures of it, and search again when
+  there are some. SPHEREx returns to a patch about every six months." Every sentence is in `anomalies.ts`. The flow
+  was driven in a browser, not by a component test (the project has no jsdom): `watchPatch.ts` holds the logic and
+  `anomalies.test.tsx` tests it against a stubbed `fetch`.
 - Rows at or near a candidate (`watchlist.ts` `markNearFind`): EVERY row within 5 arcsec of one, whatever its group or
   kind, opens with "Candidate B's place, 0.7 arcseconds away. Its card is at the top of this page." and "See its card"
   (`search.ts` `atFindLine`), and is not tagged "Example": at B's patch the search set aside a "mover" 0.7 arcsec from
@@ -1164,7 +1191,9 @@ The page's address (`frontend/src/address.ts`, `readAddress`; every unusable val
 Routes (`backend/app.py`, `backend/watchlist_api.py`) besides those under Endpoints: `GET /api/identify?ra=&dec=`
 (`radius` in arcsec, default `identify.DEFAULT_RADIUS_ARCSEC`; `epoch`, default 2026.0): what Gaia DR3 and SIMBAD know
 at a place, for What is it?; a catalogue that does not answer is named in `unreachable`. `GET /api/search` (blind
-search, in the background, `status` queued, running, done or failed). `GET /api/smallbodies?ra=&dec=&fov=&detector=`
+search, in the background, `status` queued, running, done or failed, with `searching_again`). `GET /api/watch?ra=&dec=&fov=`
+(a searched patch is watched: when it was last searched and whether the archive has new pictures of it; never starts
+a search). `GET /api/smallbodies?ra=&dec=&fov=&detector=`
 (JPL). `GET /api/training` (simulation). `GET /api/watchlist` (`group`, `kind`, `region`, `limit`, `offset`, header
 `X-Voter`), `GET /api/watchlist/regions`, `/api/watchlist/export.csv`, `/api/watchlist/export.json`, `/api/watchlist/{id}`, `POST /api/watchlist/{id}/vote`,
 `/api/watchlist/{id}/picture.png`. The frontend is served at `/`, with `/lab/` (the Three tools files, made by
@@ -1174,7 +1203,8 @@ The bar (`frontend/src/features.ts`, `components/FeatureBar.tsx`), ten items, Be
 Brightness / Light curve, Colours / Spectrum, Find changes / Blind search, Far-off planet / Planet X search, Asteroids /
 Small bodies, What is it? / Object card, Practise / Training, Observe anomalies / Anomalies, Three tools / Methods. The
 ninth is at `?watchlist=1`: a first group "Not reported anywhere we could find" with one card per candidate (status
-from `finds.ts` `status`, link "Watch it appear"), then "Choose a region", then the chosen region's groups; it reads
+from `finds.ts` `status`, link "Watch it appear"), above it "Pick a patch of sky" (type a place to have it searched and watched, or choose a
+searched patch), then the chosen region's groups; it reads
 `GET /api/watchlist/regions` and `frontend/public/anomalies/sweep.json`, made by `scripts/export_anomalies.py` (which has
 a `--check` mode); the paragraph "Observe anomalies" above describes it. With "Observe anomalies" all ten items fit on
 one line at 1280 px and wider in both levels (polish.css's 10 px padding; measured 2026-11-15: at 1280 the last item
