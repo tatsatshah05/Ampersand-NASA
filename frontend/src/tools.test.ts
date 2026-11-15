@@ -28,6 +28,8 @@ import {
   type TransitFile,
 } from './tools'
 import { PAGE, SCI, T1, T2, T3 } from './toolsWording'
+import { DEFAULT_SELECTION, LANDING, readAddress } from './address'
+import { isHeldFind } from './finds'
 
 // Vitest gives a stylesheet imported with ?raw back empty, so the file is read from disk.
 const fsModule = 'node:fs'
@@ -559,11 +561,19 @@ describe('the address', () => {
   it('is ?tools=1, carrying the place the visitor came from', () => {
     expect(isToolsAddress('?tools=1')).toBe(true)
     expect(isToolsAddress('?ra=1&dec=2')).toBe(false)
-    expect(toolsAddress({ ra: 27.4, dec: -0.12, name: 'Eris' })).toBe('?tools=1&ra=27.4&dec=-0.12&name=Eris')
+    expect(toolsAddress({ ...DEFAULT_SELECTION, ra: 27.4, dec: -0.12, name: 'Eris' })).toBe('?tools=1&ra=27.4&dec=-0.12&fov=0.1&det=5&mode=normal&name=Eris')
   })
   it('goes back to the place, or to the start', () => {
     expect(toolsBackAddress('?tools=1')).toBe('/')
     expect(toolsBackAddress('?tools=1&ra=27.4&dec=-0.12')).toMatch(/^\?ra=27\.4&dec=-0\.12/)
+  })
+  it('keeps the whole view for the way back: the landing comes back as Candidate B held at its place, in detector 6', () => {
+    const back = readAddress(toolsBackAddress(toolsAddress(LANDING))).selection
+    expect(isHeldFind(back)).toBe(true)
+    expect(back).toMatchObject({ ra: LANDING.ra, dec: LANDING.dec, det: 6, pmra: 0, pmdec: 0, name: 'Candidate B', fov: LANDING.fov, mode: 'normal' })
+    // A star with a catalogue motion keeps it too.
+    const barnard = { ...DEFAULT_SELECTION, pmra: -801.551, pmdec: 10362.394, parallax: 546.976 }
+    expect(readAddress(toolsBackAddress(toolsAddress(barnard))).selection).toMatchObject({ pmra: -801.551, pmdec: 10362.394, parallax: 546.976 })
   })
 })
 

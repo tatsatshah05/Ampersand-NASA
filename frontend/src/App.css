@@ -1430,6 +1430,11 @@ main.watchlist {
   max-width: min(100%, 640px);
 }
 
+/* "What is it?": the line saying the picture can be pressed, then the card, a little apart. */
+.context-slot .context-press {
+  margin: 0 0 14px;
+}
+
 /* ---- narrower windows -------------------------------------------------------------------- */
 
 @media (max-width: 1199px) {

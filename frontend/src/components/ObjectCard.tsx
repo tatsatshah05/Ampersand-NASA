@@ -66,6 +66,11 @@ export interface ObjectCardProps {
    * for a position from /api/resolve, which is for 2026.0.
    */
   epoch?: number
+  /**
+   * how close (arcsec) a catalogue entry must be to count as the object here; the server's 4 arcsec
+   * when left out. A place pressed on a SPHEREx picture is only as exact as its pixels (6.15 arcsec).
+   */
+  radius?: number
   /** the name the page already has for exactly this place, if any */
   name?: string
   level: UiLevel
@@ -77,17 +82,17 @@ type Load = { state: 'loading' } | { state: 'error'; message: string } | { state
 
 export function ObjectCard(props: ObjectCardProps) {
   // A new place (or picture date) is a new card: its state starts again from "loading".
-  return <Lookup key={`${props.ra},${props.dec},${props.epoch ?? ''}`} {...props} />
+  return <Lookup key={`${props.ra},${props.dec},${props.epoch ?? ''},${props.radius ?? ''}`} {...props} />
 }
 
-function Lookup({ ra, dec, epoch, name, level, onLook }: ObjectCardProps) {
+function Lookup({ ra, dec, epoch, radius, name, level, onLook }: ObjectCardProps) {
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     const ctrl = new AbortController()
     // Started on the next tick, so React's discarded first mount in development sends nothing.
     const timer = window.setTimeout(() => {
-      fetchIdentify(identifyUrl(ra, dec, undefined, epoch), ctrl.signal)
+      fetchIdentify(identifyUrl(ra, dec, radius, epoch), ctrl.signal)
         .then((result) => setLoad({ state: 'done', result }))
         .catch((e: unknown) => {
           if (!ctrl.signal.aborted) setLoad({ state: 'error', message: e instanceof Error ? e.message : String(e) })
@@ -97,7 +102,7 @@ function Lookup({ ra, dec, epoch, name, level, onLook }: ObjectCardProps) {
       window.clearTimeout(timer)
       ctrl.abort()
     }
-  }, [ra, dec, epoch, attempt])
+  }, [ra, dec, epoch, radius, attempt])
   const retry = () => {
     setLoad({ state: 'loading' })
     setAttempt((n) => n + 1)

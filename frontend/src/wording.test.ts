@@ -24,8 +24,8 @@ import findBNoMotionJson from './fixtures/frames/find_b_d6_nomotion.json'
 import findCJson from './fixtures/frames/find_c_d5.json'
 import findCNoMotionJson from './fixtures/frames/find_c_d5_nomotion.json'
 import findC6Json from './fixtures/frames/find_c_d6.json'
-import { FINDS } from './finds'
-import { movementInfo, pictureInfo } from './guide'
+import { CANDIDATE_LINE, FINDS } from './finds'
+import { infoFor, INFO_NAMES, movementInfo, pictureInfo } from './guide'
 import {
   BRIGHTNESS_LINE,
   CHANGE_CAUTION,
@@ -37,6 +37,7 @@ import {
   changeHeadline,
   compassWord,
   expertVerdict,
+  markMotionFrom,
   dateSpan,
   expertCells,
   expertResult,
@@ -149,6 +150,17 @@ describe('a target given with its own motion (the name lookup)', () => {
   it('compares with the motion given, not with Gaia', () => {
     expect(tableCaption(request)).toBe('Shift since visit 1 in ″, east and north; + from the motion given. px: SPHEREx pixels of 6.15″.')
     expect(catalogueLine(request)).toBe('Its catalogue motion predicted 10.3 arcseconds: they agree.')
+  })
+  it('says Gaia DR3 predicts when the motion given is the one the name lookup took from Gaia DR3 (src=gaia)', () => {
+    const t = request.target!
+    const gaia = markMotionFrom(request, 'gaia', t.pmra, t.pmdec)
+    expect(tableCaption(gaia)).toBe('Shift since visit 1 in ″, east and north; + from Gaia. px: SPHEREx pixels of 6.15″.')
+    expect(expertVerdict(gaia)).toMatch(/; Gaia DR3 predicts 10\.3″/)
+    expect(expertVerdict(request)).toMatch(/; the given motion predicts 10\.3″/)
+    // Only for that very motion, and never for a view the server already matched to a Gaia star.
+    expect(markMotionFrom(request, 'gaia', 0, 0)).toBe(request)
+    expect(markMotionFrom(request, null, t.pmra, t.pmdec)).toBe(request)
+    expect(markMotionFrom(barnard, 'gaia', null, null)).toBe(barnard)
   })
 })
 
@@ -364,7 +376,7 @@ describe('something that appears: the three candidates', () => {
     expect(overallResult(findA)).toEqual({
       sentence: 'Not seen in August 2025. Clearly there by March 2026.',
       more: [],
-      after: [allowed('A')],
+      after: [CANDIDATE_LINE],
       pointer: null,
     })
     // Beginner's column says how clearly it is seen in each visit, and how it changed from the last
@@ -379,7 +391,7 @@ describe('something that appears: the three candidates', () => {
     expect(overallResult(findB)).toEqual({
       sentence: 'Not seen in August 2025. Clearly there by March 2026.',
       more: [],
-      after: [allowed('B')],
+      after: [CANDIDATE_LINE],
       pointer: null,
     })
     expect(plain(findB)).toEqual(['not seen', 'seen clearly', 'seen clearly, brighter'])
@@ -400,7 +412,7 @@ describe('something that appears: the three candidates', () => {
     expect(overallResult(findC)).toEqual({
       sentence: 'Not seen in August 2025. Clearly there in March 2026, and faint again by August 2026.',
       more: [],
-      after: [allowed('C')],
+      after: [CANDIDATE_LINE],
       pointer: null,
     })
     expect(plain(findC)).toEqual(['not seen', 'seen clearly', 'picture spoiled here', 'only just seen'])
@@ -458,12 +470,25 @@ describe('something that appears: the three candidates', () => {
     }
   })
 
-  it('keeps Beginner’s words around the referee’s sentence few (70, 73 and 99 words with it)', () => {
+  it('keeps Beginner’s words few: one short line under the table instead of the referee’s sentence (35, 35 and 44 words)', () => {
     const counts = [findA, findB, findC].map((d) => {
       const r = overallResult(d)
       return words([r.sentence, ...r.more, ...(r.after ?? []), seenLine(d) ?? '', ...plain(d), ...tableNotes(d, 'beginner')].join(' '))
     })
-    expect(counts).toEqual([70, 73, 99])
+    expect(counts).toEqual([35, 35, 44])
+  })
+  it('Beginner’s line under a candidate’s table has an "i" that quotes the referee’s allowed sentence word for word', () => {
+    for (const [d, key] of [[findA, 'A'], [findB, 'B'], [findC, 'C'], [findC5, 'C']] as const) {
+      expect(overallResult(d).after).toEqual([CANDIDATE_LINE])
+      expect(infoFor('candidate', d)).toEqual([allowed(key)])
+      // Expert keeps the whole sentence on the page.
+      expect(expertResult(d)?.more[0]).toBe(allowed(key))
+    }
+    expect(INFO_NAMES.candidate).toBe('About this candidate')
+    // Nowhere else is there anything behind it.
+    expect(infoFor('candidate', barnard)).toEqual([])
+    expect(infoFor('candidate', null)).toEqual([])
+    expect(CANDIDATE_LINE).toBe('A candidate: we found it in no catalogue or report we checked, and nobody has confirmed it yet.')
   })
 })
 

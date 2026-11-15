@@ -6,7 +6,7 @@
 // Every number comes from /lab/{reflex,colourwalk,transits}.json through tools.ts, and every
 // visible string from toolsWording.ts. Nothing moves unless the visitor asks: the only timed
 // sequence is "Walk through the colours", which runs once, on request.
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import {
   binFolded,
   fold,
@@ -66,7 +66,8 @@ export function ToolsView() {
   const retry = (name: LabName) => setAttempts((a) => ({ ...a, [name]: a[name] + 1 }))
 
   // The level is the app's: kept in the address and on this device, and carried by every link.
-  // This screen has one wording; the level changes the bar's words and is passed on.
+  // This screen has one wording; the level changes the bar's words, is passed on, and opens the
+  // "For scientists" fold-outs in Expert (closed in Beginner).
   const [level, setLevel] = useState<UiLevel>(() => chooseUiLevel(search, readStoredLevel()))
   const changeLevel = (ui: UiLevel) => {
     storeLevel(ui)
@@ -93,7 +94,7 @@ export function ToolsView() {
         <p className="brand">SPHEREx sky-change viewer</p>
         <FeatureBar level={level} current="tools" links={links} />
       </header>
-      <ToolsPage reflex={reflex} colourwalk={colourwalk} transits={transits} back={back} onRetry={retry} />
+      <ToolsPage reflex={reflex} colourwalk={colourwalk} transits={transits} back={back} onRetry={retry} level={level} />
       <LevelDock level={level} onChange={changeLevel} />
     </>
   )
@@ -113,10 +114,23 @@ interface PageProps {
   transits: Load<TransitFile>
   back: string
   onRetry: (name: LabName) => void
+  /** The app's level: in Expert the "For scientists" fold-outs are open when the screen loads. Beginner when left out. */
+  level?: UiLevel
 }
 
+/** The level in use, for the "For scientists" fold-outs deep inside each tool. */
+const LevelOfPage = createContext<UiLevel>('beginner')
+
 /** The whole page from three loads: separate from the fetching so that it renders in tests. */
-export function ToolsPage({ reflex, colourwalk, transits, back, onRetry }: PageProps) {
+export function ToolsPage({ level = 'beginner', ...page }: PageProps) {
+  return (
+    <LevelOfPage.Provider value={level}>
+      <Page {...page} />
+    </LevelOfPage.Provider>
+  )
+}
+
+function Page({ reflex, colourwalk, transits, back, onRetry }: Omit<PageProps, 'level'>) {
   const rv = reflex.state === 'ready' ? reflexView(reflex.data) : null
   const cv = colourwalk.state === 'ready' ? colourView(colourwalk.data) : null
   const tv = transits.state === 'ready' ? transitView(transits.data) : null
@@ -353,9 +367,11 @@ const LoadingBoxes = ({ n }: { n: number }) => (
   </>
 )
 
-function Fold({ summary, children, className }: { summary: string; children: ReactNode; className?: string }) {
+function Fold({ summary, children, className, defaultOpen = false }: { summary: string; children: ReactNode; className?: string; defaultOpen?: boolean }) {
+  // Open or closed as the visitor leaves it; `defaultOpen` is only how it starts.
+  const [open, setOpen] = useState(defaultOpen)
   return (
-    <details className={`tl-fold${className ? ` ${className}` : ''}`}>
+    <details className={`tl-fold${className ? ` ${className}` : ''}`} open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>{summary}</summary>
       <div className="tl-fold-body">{children}</div>
     </details>
@@ -385,9 +401,11 @@ function Answers({ intro, something, nothing, cannot, extra }: { intro?: string;
 }
 
 function Scientists({ paragraphs }: { paragraphs: string[] }) {
+  const level = useContext(LevelOfPage)
   if (paragraphs.length === 0) return null
+  // Open in Expert, closed in Beginner; a switch of level starts it again in the new level's way.
   return (
-    <Fold summary={PAGE.foldScientists} className="scientists">
+    <Fold key={level} summary={PAGE.foldScientists} className="scientists" defaultOpen={level === 'expert'}>
       {paragraphs.map((p) => (
         <p key={p}>{p}</p>
       ))}

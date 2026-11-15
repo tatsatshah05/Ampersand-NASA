@@ -1054,7 +1054,9 @@ The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the refe
   (both always there, the one on screen marked: no word changes while it plays) and "Blink before and after"; with
   reduced motion it opens still on "before". Beginner marks the fixed place with a white cross in every visit and
   draws no path; its table says "seen clearly, brighter/fainter" (the page's own fitted mJy, 1.5 times either way)
-  and "picture spoiled here"; the allowed sentence sits under the table so the headline and the visits stay in view.
+  and "picture spoiled here"; under the table Beginner shows one short line, "A candidate: we found it in no
+  catalogue or report we checked, and nobody has confirmed it yet." (`finds.ts` `CANDIDATE_LINE`), whose "i"
+  (`guide.ts`, key `candidate`) is the allowed sentence word for word, so Beginner stays within 190 visible words.
   Expert shows the headline, the allowed sentence and the reviewers' brightness over its table, never "moving 0.00″
   a year" (the zero was the button's), position errors no smaller than 0.3 arcsec, and the candidate's notes
   (neighbour, dates over all detectors, probably, what was searched) under it. Every one of those sentences is in
@@ -1072,3 +1074,14 @@ The sweep's candidates in the app (2026-11-15, `frontend/src/finds.ts`; the refe
   allowed sentence for a candidate (`findAt`, within 5 arcsec) or one hedged line elsewhere. It never fires without
   a target, with a blended Gaia neighbour, with saturation at the place in a "not seen" visit, near the picture's
   edge, or when a "not seen" visit is too shallow for the brightness seen elsewhere to have been clear in it.
+- The joined page (branch agent/finish-page): "What is it?" (bar item 7) shows the ObjectCard first, then the other
+  surveys, with one line "Press any star in the picture to ask about it.". While it is the current item, a press on
+  the picture (never a drag or a zoom) asks `/api/identify` about that place with the picture's date as `epoch` and
+  `radius` 12.3 (two SPHEREx pixels; `features.ts` `pressOnPicture`), and the page scrolls to the card; otherwise
+  Expert's press measures a spectrum as before. "Look at this one" (only for a pressed place) chooses that object as
+  a target with its motion. The links to the tools screen carry the whole view, and an address at a candidate's
+  place with no motion reads as that candidate held still (`address.ts`), so going there and back keeps Candidate B
+  held. A name's motion from Gaia DR3 is carried as `src=gaia`, so the comparison says "Gaia DR3 predicts" rather
+  than "the given motion". After the landing, every star chosen opens in detector 5 (`usualDetectorOf`) and paused
+  (`usePlayer.ts` `openingFor`: the pair's own blinking is not carried over). The tools screen opens its "For
+  scientists" folds in Expert.

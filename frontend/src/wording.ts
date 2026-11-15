@@ -12,7 +12,7 @@
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady, type Target } from './api'
 import { blendNotes, coreNotes, detectionNotes, detectionShort, isMarginal, listVisits } from './detection'
 import { DETECTORS } from './address'
-import { findAt, type Find } from './finds'
+import { CANDIDATE_LINE, findAt, type Find } from './finds'
 import {
   measuredRows,
   realShiftBar,
@@ -314,10 +314,22 @@ export function expertCells(row: VisitRow, data: FramesReady): ExpertCells {
   }
 }
 
+/**
+ * A view whose target's motion is the one the page gave (origin 'request'), marked as Gaia DR3's
+ * when the selection says that motion came from Gaia DR3 (a name looked up: /api/resolve, source
+ * "Gaia DR3"; the address's src=gaia) and it is the very motion the view was made with. The same
+ * object otherwise, so nothing is drawn again for it.
+ */
+export function markMotionFrom<T extends { target: Target | null }>(data: T, from: 'gaia' | null | undefined, pmra: number | null, pmdec: number | null): T {
+  const t = data.target
+  if (from !== 'gaia' || !t || t.origin !== 'request' || t.source_id || t.pmra == null || t.pmra !== pmra || t.pmdec !== pmdec) return data
+  return { ...data, target: { ...t, motion_from: 'Gaia DR3' } }
+}
+
 /** Whose prediction the table compares with: "Gaia", "the motion given", or null when there is none. */
 export function predictedBy(target: Target | null): string | null {
   if (!target || target.pmra == null || target.pmdec == null) return null
-  return target.source_id ? 'Gaia' : 'the motion given'
+  return target.source_id || target.motion_from === 'Gaia DR3' ? 'Gaia' : 'the motion given'
 }
 
 /** The visit the shifts are measured from, or null when no visit has a position. */
@@ -712,7 +724,7 @@ export interface Result {
   sentence: string
   /** Lines in normal type right under the sentence. */
   more: string[]
-  /** Lines in normal type under the table (one of our candidates in Beginner: its allowed sentence). */
+  /** Lines in normal type under the table (one of our candidates in Beginner: CANDIDATE_LINE, with its allowed sentence behind an "i"). */
   after?: string[]
   /** A line of its own under the table; none now: the pointer to Brightness is said in the line under the sentence. */
   pointer: string | null
@@ -725,13 +737,13 @@ export function overallResult(data: FramesReady): Result {
   // Something that is not seen in some visits and clearly is in others: that, and nothing about movement.
   const change = changeHeadline(data)
   if (change) {
-    const lines = changeLines(data, 'beginner')
-    // One of our candidates: its allowed sentence under the table, so the headline and the visits stay
-    // together at the top of the column in a short window (the sentence for C alone is 73 words).
-    // Anywhere else, CHANGE_CAUTION already names the brightness tool.
+    // One of our candidates: one short line under the table (CANDIDATE_LINE), whose "i" gives the
+    // referee's allowed sentence word for word, so the headline and the visits stay together at the
+    // top of the column and the page stays short (the sentence for C alone is 73 words). Expert keeps
+    // the whole sentence on the page. Anywhere else, CHANGE_CAUTION already names the brightness tool.
     return findAt(data.ra, data.dec)
-      ? { sentence: change.sentence, more: [], after: lines, pointer: null }
-      : { sentence: change.sentence, more: lines, pointer: null }
+      ? { sentence: change.sentence, more: [], after: [CANDIDATE_LINE], pointer: null }
+      : { sentence: change.sentence, more: changeLines(data, 'beginner'), pointer: null }
   }
   const rows = visitRows(data)
   const measured = measuredRows(rows)

@@ -9,6 +9,7 @@
 // or "centroid" here, and never "discovery" or "new planet" (guide.test.ts checks all of it).
 import { NATIVE_PIXEL_ARCSEC, type Frame, type FramesReady } from './api'
 import { times } from './detection'
+import { findAt } from './finds'
 import { findChangeInfo, findPictureInfo, findPlayerInfo } from './findsInfo'
 import { measuredRows, realShiftBar, shiftBetween, visitRows } from './motion'
 import { brightnessMayBeTheChange, catalogueCheck, isDrifting, listVisits, monthYear, monthYearLong, NOT_FOUND_WORDS, notFoundWhy, type NotFoundWhy } from './wording'
@@ -67,6 +68,7 @@ export const INFO_NAMES = {
   bright: 'About the bright-star warning',
   level: 'About Beginner and Expert',
   steps: 'About these steps',
+  candidate: 'About this candidate',
 } as const
 
 export type InfoKey = keyof typeof INFO_NAMES
@@ -338,5 +340,17 @@ export function infoFor(key: InfoKey, data: FramesReady | null, bright?: BrightS
       return levelInfo()
     case 'steps':
       return stepsInfo()
+    case 'candidate':
+      return candidateInfo(data)
   }
+}
+
+/**
+ * The "i" of the line under one of our candidates' table (CANDIDATE_LINE): the referee's allowed
+ * sentence, word for word, the one sentence the ruling lets a public page say about it. It is
+ * longer than the other popovers on purpose: it is quoted, never reworded.
+ */
+export function candidateInfo(data: FramesReady | null): string[] {
+  const find = data ? findAt(data.ra, data.dec) : null
+  return find ? [find.allowed] : []
 }

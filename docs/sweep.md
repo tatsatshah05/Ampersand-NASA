@@ -80,8 +80,10 @@ these are every sentence the app shows about A, B and C, quoted here word for wo
 `frontend/src/finds.ts` and `frontend/src/findsInfo.ts` (`frontend/src/finds.test.ts` checks that this page
 and the app agree). Every number in them is the reviewers'.
 
-- **The allowed sentence** of each, quoted under "Read this first": in Beginner under the table of visits, in
-  Expert over it, and as the description of each candidate's button.
+- **The allowed sentence** of each, quoted under "Read this first": in Expert over the table of visits, as
+  the description of each candidate's button, and in Beginner behind the "i" of the one line under the table
+  of visits, which reads: "A candidate: we found it in no catalogue or report we checked, and nobody has
+  confirmed it yet."
 - **Its brightness**, in Expert under the allowed sentence (never a 2025 brightness: only "not detected"):
   - A: "At 4.4–5.0 micrometres, in the reviewers' fits with the neighbouring star modelled: not detected on 24 August–10 September 2025 (below about 10–14 mJy), 2,419–2,926 mJy on 20 March–1 April 2026 (partly saturated) and 670–803 mJy on 25 August–2 September 2026."
   - B: "At 4.4–5.0 micrometres, in the reviewers' fits with the neighbouring star modelled: not detected on 2 August–15 September 2025 (3-sigma limit 2.5–4.0 mJy), 393–424 mJy in March 2026 (8–16 March, rising about 10% a day) and 1,006–1,089 mJy on 8–25 August 2026."

@@ -140,6 +140,19 @@ describe('with the shipped files', () => {
     expect(html).not.toContain('<details open')
     for (const s of [PAGE.foldHowSure, PAGE.foldAnswers, PAGE.foldScientists]) expect(html).toContain(`<summary>${s.replace(/'/g, '&#x27;')}</summary>`)
   })
+  it('in Expert opens the three "For scientists" fold-outs when the screen loads, and nothing else; its words are the same', () => {
+    const expert = renderToStaticMarkup(
+      <ToolsPage reflex={ready(reflex)} colourwalk={ready(colour)} transits={ready(transit)} back="/" onRetry={() => undefined} level="expert" />,
+    )
+    const open = [...expert.matchAll(/<details class="([^"]*)" open="">/g)].map((m) => m[1])
+    expect(open).toEqual(['tl-fold scientists', 'tl-fold scientists', 'tl-fold scientists'])
+    expect(decode(expert)).toBe(text)
+    // Beginner, given or left out, keeps every fold closed.
+    const beginner = renderToStaticMarkup(
+      <ToolsPage reflex={ready(reflex)} colourwalk={ready(colour)} transits={ready(transit)} back="/" onRetry={() => undefined} level="beginner" />,
+    )
+    expect(beginner).toBe(html)
+  })
   it('keeps every live region silent until the visitor acts', () => {
     const live = [...html.matchAll(/aria-live="polite"[^>]*>([^<]*)</g)].map((m) => m[1])
     expect(live).toHaveLength(3)

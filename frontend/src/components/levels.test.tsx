@@ -74,9 +74,10 @@ describe('the bar of features at the top', () => {
     expect(beginner[0].startsWith(`?${at}`)).toBe(true)
     expect(beginner[0]).toMatch(/&train=\d+/)
     expect(new URLSearchParams(beginner[0]).get("ui")).toBe("beginner")
-    // The methods screen carries the place on screen, for its way back to it.
+    // The methods screen carries the whole view on screen (the candidate held still, in its own
+    // detector), for its way back to it.
     expect(beginner[1]).toBe('?watchlist=1&ui=beginner')
-    expect(beginner[2].startsWith(`?tools=1&${at}&name=`) && beginner[2].endsWith('&ui=beginner')).toBe(true)
+    expect(beginner[2]).toMatch(new RegExp(`^\\?tools=1&${at}&fov=0\\.1&det=6&mode=normal&pmra=0&pmdec=0&name=Candidate\\+B.*&ui=beginner$`))
     const expert = hrefs(viewerAt('?ui=expert'))
     expect(expert[1]).toBe('?watchlist=1&ui=expert')
     expect(expert[2].endsWith('&ui=expert')).toBe(true)

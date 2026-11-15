@@ -138,3 +138,29 @@ export function scrollToShow(bar: { left: number; width: number; scrollLeft: num
   const want = from < 0 ? bar.scrollLeft + from - margin : bar.scrollLeft + from + item.width - bar.width + margin
   return Math.max(0, want)
 }
+
+/**
+ * How close a catalogue entry must be to a place pressed on the picture to be the thing pressed:
+ * two SPHEREx pixels (6.15 arcsec each; api.ts NATIVE_PIXEL_ARCSEC). A press is only as exact as
+ * the picture's pixels, and a bright star's light spreads over more than one; among the entries
+ * this close, /api/identify takes the one that puts the most light at the place.
+ */
+export const PRESS_RADIUS_ARCSEC = 12.3
+
+/** What a press on the picture does (a drag or a zoom is never one: components/Stage.tsx). */
+export type Press = { kind: 'ask'; ra: number; dec: number; epoch: number | undefined } | { kind: 'spectrum'; ra: number; dec: number } | null
+
+/**
+ * A press at (ra, dec) on the picture whose mean date is `mjd` (null with none on screen). While
+ * "What is it?" is the current feature it asks the card about that place on that picture's date,
+ * at both levels; otherwise Expert measures the spectrum there, and Beginner does nothing. The
+ * place is kept to five decimals of a degree, as the spectrum's always was.
+ */
+export function pressOnPicture(current: FeatureKey, level: UiLevel, ra: number, dec: number, mjd: number | null): Press {
+  const at = { ra: Number(ra.toFixed(5)), dec: Number(dec.toFixed(5)) }
+  if (current === 'context') return { kind: 'ask', ...at, epoch: mjd === null ? undefined : decimalYear(mjd) }
+  return level === 'expert' ? { kind: 'spectrum', ...at } : null
+}
+
+/** The decimal Julian year of a Modified Julian Date (J2000.0 is MJD 51544.5), to four places: the card's `epoch`. */
+export const decimalYear = (mjd: number): number => Number((2000 + (mjd - 51544.5) / 365.25).toFixed(4))

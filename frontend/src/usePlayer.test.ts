@@ -1,6 +1,6 @@
 // The player's timer, and its rest while nobody can see the picture (D7).
 import { describe, expect, it } from 'vitest'
-import { INITIAL_PLAYBACK, nextIndex, ticks, watchSight, type SightPage } from './usePlayer'
+import { INITIAL_PLAYBACK, nextIndex, openingFor, ticks, watchSight, type SightPage } from './usePlayer'
 
 describe('the timer', () => {
   it('opens still on every machine: nothing moves until the visitor presses Play or Blink', () => {
@@ -26,6 +26,28 @@ describe('the timer', () => {
     expect(nextIndex('blinking', 1, 4, [0, 1])).toBe(0)
     expect(nextIndex('blinking', 3, 4, [0, 1])).toBe(0)
     expect(nextIndex('playing', 3, 4, [0, 1])).toBe(0)
+  })
+})
+
+describe('how a set of frames opens', () => {
+  const none = { pairedFor: null, autoBlink: null }
+  it('a pair view (the landing, a candidate) opens on "before", blinking by itself; still for people who ask for less motion', () => {
+    expect(openingFor(none, 'B', true, false)).toEqual({ pairedFor: 'B', autoBlink: 'B', playback: 'blinking', toBefore: true })
+    expect(openingFor(none, 'B', true, true)).toEqual({ pairedFor: 'B', autoBlink: null, playback: null, toBefore: true })
+    // Once per set: the same set again changes nothing.
+    expect(openingFor({ pairedFor: 'B', autoBlink: 'B' }, 'B', true, false)).toBeNull()
+  })
+  it('pair view, then a plain view with nothing pressed in between: the plain view opens paused', () => {
+    expect(openingFor({ pairedFor: 'B', autoBlink: 'B' }, 'barnard', false, false)).toEqual({ pairedFor: 'B', autoBlink: null, playback: 'paused', toBefore: false })
+    // And only once: after that, Play or Blink pressed on the plain view is the visitor's own.
+    expect(openingFor({ pairedFor: 'B', autoBlink: null }, 'barnard', false, false)).toBeNull()
+  })
+  it('a blinking or playing the visitor chose carries over to the next view (a press clears the page’s own blinking)', () => {
+    expect(openingFor({ pairedFor: 'B', autoBlink: null }, 'wise', false, false)).toBeNull()
+    expect(openingFor(none, 'wise', false, false)).toBeNull()
+  })
+  it('does nothing while there are no frames', () => {
+    expect(openingFor({ pairedFor: 'B', autoBlink: 'B' }, '', false, false)).toBeNull()
   })
 })
 

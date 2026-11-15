@@ -1,7 +1,7 @@
 // The three candidates as data: the referee's corrected positions and allowed sentences, and the
 // words a public page must never use about them.
 import { describe, expect, it } from 'vitest'
-import { FIND_EVIDENCE, FINDS, findAt, findNear, isHeldFind } from './finds'
+import { CANDIDATE_LINE, FIND_EVIDENCE, FINDS, findAt, findNear, isHeldFind } from './finds'
 import { MAYBE_PLAIN, NEIGHBOUR_PLAIN } from './findsInfo'
 import lcB from './fixtures/lightcurve/find_b_d6.json'
 import searchB from './fixtures/search/find_b.json'
@@ -106,7 +106,13 @@ const sentencesOf = (f: (typeof FINDS)[number]) => [
 describe('every sentence about them', () => {
   it('is quoted word for word in docs/sweep.md, so the page and the write-up cannot drift apart', () => {
     for (const f of FINDS) for (const s of sentencesOf(f)) expect(writeUp, s).toContain(flat(s))
-    for (const s of [FIND_EVIDENCE, TIMES_SCATTER_NOTE]) expect(writeUp, s).toContain(s)
+    for (const s of [FIND_EVIDENCE, TIMES_SCATTER_NOTE, CANDIDATE_LINE]) expect(writeUp, s).toContain(s)
+  })
+
+  it('Beginner’s one line under the table claims nothing the allowed sentences do not', () => {
+    expect(CANDIDATE_LINE).toBe('A candidate: we found it in no catalogue or report we checked, and nobody has confirmed it yet.')
+    expect(CANDIDATE_LINE).not.toMatch(/discover|first ever|\bnew\b|nova|young star|counterpart|\bconfirmed\b(?! it yet)/i)
+    for (const f of FINDS) expect(f.allowed).toMatch(/candidate/i)
   })
 
   it('breaks none of the ruling’s "must not say"', () => {

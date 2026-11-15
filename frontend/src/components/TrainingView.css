@@ -94,3 +94,12 @@
   fill: none;
   stroke: #ffd24d;
 }
+
+/* A phone: the Beginner | Expert dock floats over the bottom right of the window, which is where
+   the picture's zoom buttons are when this screen opens. Here they lie in a row along the
+   picture's top edge instead, clear of it. */
+@media (max-width: 600px) {
+  .training .stage-buttons {
+    flex-direction: row;
+  }
+}

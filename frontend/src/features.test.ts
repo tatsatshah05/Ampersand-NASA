@@ -3,7 +3,8 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { FeatureBar, type FeatureLinks } from './components/FeatureBar'
-import { feature, FEATURES, isToolKey, scrollToShow, TOOL_KEYS, type FeatureKey } from './features'
+import { NATIVE_PIXEL_ARCSEC } from './api'
+import { decimalYear, feature, FEATURES, isToolKey, PRESS_RADIUS_ARCSEC, pressOnPicture, scrollToShow, TOOL_KEYS, type FeatureKey } from './features'
 
 // The words a newcomer must not meet (the same list as the checks of the Beginner panels).
 const SCIENTISTS_WORDS = /\b(sigma|flux|fluxes|epoch|epochs|detector|detectors|centroid|centroids|mJy|aperture|photometry|ephemeris|S\/N)\b|σ/
@@ -129,5 +130,31 @@ describe('keeping the current item in view inside the bar', () => {
     // An item scrolled off to the left: back to it, not below zero.
     expect(scrollToShow({ left: 0, width: 390, scrollLeft: 500 }, { left: -477, width: 61 })).toBe(500 - 477 - 8)
     expect(scrollToShow({ left: 0, width: 390, scrollLeft: 4 }, { left: -4, width: 61 })).toBe(0)
+  })
+})
+
+describe('a press on the picture', () => {
+  // A picture of 11 August 2026 (MJD 61263.92).
+  const mjd = 61263.92
+  it('while "What is it?" is the current feature asks the card about that place, on the picture’s date, and never measures a spectrum', () => {
+    for (const level of ['beginner', 'expert'] as const) {
+      expect(pressOnPicture('context', level, 269.4432123, 4.7957891, mjd)).toEqual({ kind: 'ask', ra: 269.44321, dec: 4.79579, epoch: decimalYear(mjd) })
+    }
+    // No picture on screen: no date is sent, and the card reads the place as for 2026.0.
+    expect(pressOnPicture('context', 'beginner', 10, 5, null)).toEqual({ kind: 'ask', ra: 10, dec: 5, epoch: undefined })
+  })
+  it('with any other feature current, measures the spectrum there in Expert, as before, and does nothing in Beginner', () => {
+    for (const current of ['watch', 'spectrum', 'brightness', 'search', 'distant', 'smallbodies'] as const) {
+      expect(pressOnPicture(current, 'expert', 269.4432123, 4.7957891, mjd)).toEqual({ kind: 'spectrum', ra: 269.44321, dec: 4.79579 })
+      expect(pressOnPicture(current, 'beginner', 269.4432123, 4.7957891, mjd)).toBeNull()
+    }
+  })
+  it('counts a catalogue entry within two SPHEREx pixels as the thing pressed', () => {
+    expect(PRESS_RADIUS_ARCSEC).toBeCloseTo(2 * NATIVE_PIXEL_ARCSEC, 6)
+  })
+  it('dates the picture as a decimal Julian year', () => {
+    expect(decimalYear(51544.5)).toBe(2000)
+    expect(decimalYear(51544.5 + 365.25 * 26.5)).toBe(2026.5)
+    expect(decimalYear(mjd)).toBe(2026.6103)
   })
 })
