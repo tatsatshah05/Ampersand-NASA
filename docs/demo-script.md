@@ -9,6 +9,8 @@ they can open. **The public web address is not known yet** (nothing is deployed)
 written `<SITE>` below. **[TO CONFIRM]** Replace `<SITE>` with the real address and run
 the "Before recording" checklist on it.
 
+The page opens in **Beginner** (just the picture and what moved). The switch "Beginner | Expert" is at the top, under the title: press **Expert** before shot 2, or open the addresses below, which carry `ui=expert`. The page remembers the choice in that browser.
+
 Words: a **visit** is one pass of SPHEREx over a patch of sky; a **detector** is one of the
 six infrared cameras (D1 to D6, short to long wavelength).
 
@@ -46,18 +48,18 @@ the marker can follow the wrong object at WISE 0855.
 
 | Target | Address |
 |---|---|
-| Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&name=Barnard%27s+Star` |
-| Epsilon Indi B | `/?ra=331.096653&dec=-56.800663&fov=0.1&det=5&mode=normal&pmra=3981.97666296105&pmdec=-2466.8318147663504&parallax=270.6580324694526&name=eps+Ind+B` |
-| WISE 0855-0714 | `/?ra=133.759765&dec=-7.242182&fov=0.1&det=6&mode=normal&pmra=-8123.7&pmdec=673.2&parallax=439&name=WISEA+J085510.74-071442.5` |
-| RW Aurigae | `/?ra=76.956587&dec=30.401291&fov=0.1&det=5&mode=normal&pmra=7.23&pmdec=-20.33&parallax=15.42&name=RW+Aur` |
-| R Draconis | `/?ra=248.167233&dec=66.755024&fov=0.1&det=5&mode=normal&pmra=-20.642811719160797&pmdec=6.148818852711324&parallax=1.2509180143740992` (not seen on the page; assembled from the values in `docs/results.md`) |
-| Serpens South young star | `/?ra=277.50547&dec=-2.06198&fov=0.1&det=6&mode=normal&name=Young+star+in+Serpens+South` |
+| Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&name=Barnard%27s+Star&ui=expert` |
+| Epsilon Indi B | `/?ra=331.096653&dec=-56.800663&fov=0.1&det=5&mode=normal&pmra=3981.97666296105&pmdec=-2466.8318147663504&parallax=270.6580324694526&name=eps+Ind+B&ui=expert` |
+| WISE 0855-0714 | `/?ra=133.759765&dec=-7.242182&fov=0.1&det=6&mode=normal&pmra=-8123.7&pmdec=673.2&parallax=439&name=WISEA+J085510.74-071442.5&ui=expert` |
+| RW Aurigae | `/?ra=76.956587&dec=30.401291&fov=0.1&det=5&mode=normal&pmra=7.23&pmdec=-20.33&parallax=15.42&name=RW+Aur&ui=expert` |
+| R Draconis | `/?ra=248.167233&dec=66.755024&fov=0.1&det=5&mode=normal&pmra=-20.642811719160797&pmdec=6.148818852711324&parallax=1.2509180143740992&ui=expert` (not seen on the page; assembled from the values in `docs/results.md`) |
+| Serpens South young star | `/?ra=277.50547&dec=-2.06198&fov=0.1&det=6&mode=normal&name=Young+star+in+Serpens+South&ui=expert` |
 
 ## Shots
 
 ### 1. The question (0:00 to 0:15)
 
-- **On screen:** `<SITE>/`, before anything is clicked (it opens on Barnard's Star).
+- **On screen:** `<SITE>/`, before anything is clicked (it opens on Barnard's Star, in Beginner: a good first picture).
 - **Say:** "NASA's SPHEREx telescope maps the whole sky in infrared light, and then maps it
   again about six months later. Anything that moved or changed between maps is interesting:
   a nearby star, a failed star, maybe a world nobody has found yet. The data is public, but

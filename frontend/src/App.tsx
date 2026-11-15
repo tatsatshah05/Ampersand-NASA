@@ -4,7 +4,7 @@
 // (#12), spectrum (#11) and brightness chart (#9) are components of their own that only
 // need the frames and the frame on screen.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { addressOf, DEFAULT_SELECTION, readAddress, toFramesQuery, withTarget, writeAddress, type Selection } from './address'
+import { addressOf, DEFAULT_SELECTION, readAddress, readStoredLevel, storeLevel, toFramesQuery, withTarget, writeAddress, type Selection, type UiLevel } from './address'
 import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
 import { BrightnessPanel } from './components/BrightnessPanel'
 import { ContextView } from './components/ContextView'
@@ -13,6 +13,7 @@ import { DetectionReadout } from './components/DetectionReadout'
 import { isMarginal } from './detection'
 import { FrameDetails } from './components/FrameDetails'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
+import { BeginnerGuide, LevelSwitch } from './components/LevelSwitch'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
 import { PlayerControls } from './components/PlayerControls'
 import { SearchBar, type SearchTarget } from './components/SearchBar'
@@ -47,9 +48,9 @@ export default function App() {
   return readAddress(window.location.search).selection.train !== null ? <TrainingView /> : <Viewer />
 }
 
-function Viewer() {
+export function Viewer() {
   // What the address asks for, and what in it could not be used.
-  const [fromAddress] = useState(() => readAddress(window.location.search))
+  const [fromAddress] = useState(() => readAddress(window.location.search, readStoredLevel()))
   const [selection, setSelection] = useState(fromAddress.selection)
   const [notes, setNotes] = useState(fromAddress.notes)
   const [attempt, setAttempt] = useState(0)
@@ -74,6 +75,10 @@ function Viewer() {
   const [showContext, setShowContext] = useState(false)
   // Issue #10: the Gaia stars of the view, placed on every visit's frame, and the view they belong to.
   const [stars, setStars] = useState<{ view: string; data: StarsResponse } | { view: string; error: string } | null>(null)
+
+  // Beginner shows the picture and what moved; Expert shows everything. Nothing is mounted for
+  // Beginner that only Expert has, and the choices made in Expert (which overlays, which panels) wait unchanged.
+  const expert = selection.ui === 'expert'
 
   const url = framesUrl(toFramesQuery(selection))
   const load = useFrames(url, attempt)
@@ -128,7 +133,7 @@ function Viewer() {
   useEffect(() => {
     writeAddress(fromAddress.selection, 'replace')
     const onPop = () => {
-      const read = readAddress(window.location.search)
+      const read = readAddress(window.location.search, readStoredLevel())
       setSpectrum(null)
       setBrightness(null)
       setSelection(read.selection)
@@ -137,6 +142,24 @@ function Viewer() {
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [fromAddress])
+
+  /** Switch level without losing the place: same target, frame and zoom. Beginner closes the expert panels. */
+  const changeLevel = (ui: UiLevel) => {
+    storeLevel(ui)
+    if (ui === 'expert') {
+      show({ ...selection, ui }, 'replace')
+      return
+    }
+    const wasChanged = selection.mode !== DEFAULT_SELECTION.mode || selection.fov !== DEFAULT_SELECTION.fov
+    setSpectrum(null)
+    setBrightness(null)
+    setSearch(null)
+    setSearchFound([])
+    setShowSmallBodies(false)
+    setShowContext(false)
+    show({ ...selection, ui, mode: DEFAULT_SELECTION.mode, fov: DEFAULT_SELECTION.fov }, 'replace')
+    if (wasChanged) setNotes(['Beginner shows the normal view at the usual size, so the picture has gone back to that.'])
+  }
 
   // The browser tab, and so the entries under the Back button, say which target this is.
   const whereInWords = selection.name ?? `RA ${selection.ra.toFixed(4)}°, Dec ${selection.dec.toFixed(4)}°`
@@ -257,6 +280,8 @@ function Viewer() {
           that moved or changed stands out.
         </p>
 
+        <LevelSwitch level={selection.ui} onChange={changeLevel} />
+
         {/* Issue #6: a name or coordinates, and the five test targets. What it finds goes to applyTarget. */}
         <div className="search-slot">
           <SearchBar onSelect={applyTarget} />
@@ -273,7 +298,7 @@ function Viewer() {
           <button type="button" onClick={() => window.location.assign(trainingAddress(selection, newSeed()))}>
             Practise: find a planted object
           </button>{' '}
-          <a href={WATCHLIST_ADDRESS}>Help check what the search found</a>
+          <a href={expert ? `${WATCHLIST_ADDRESS}&ui=expert` : WATCHLIST_ADDRESS}>Help check what the search found</a>
         </p>
         {notes.map((note) => (
           <p key={note} className="notice" role="status">
@@ -281,16 +306,18 @@ function Viewer() {
           </p>
         ))}
 
-        <Selectors
-          selection={selection}
-          motionKnown={motionKnown}
-          onChange={(change) => {
-            if (change.det !== undefined) usualDetector.current = change.det
-            show({ ...selection, ...change }, 'replace')
-          }}
-        />
-        {data && <p className="mode-note">{modeSentence(data)}</p>}
-        {saturation && <p className="notice">{saturation}</p>}
+        {expert && (
+          <Selectors
+            selection={selection}
+            motionKnown={motionKnown}
+            onChange={(change) => {
+              if (change.det !== undefined) usualDetector.current = change.det
+              show({ ...selection, ...change }, 'replace')
+            }}
+          />
+        )}
+        {expert && data && <p className="mode-note">{modeSentence(data)}</p>}
+        {expert && saturation && <p className="notice">{saturation}</p>}
         {failures && (
           <p className="notice">
             {failures}{' '}
@@ -333,17 +360,17 @@ function Viewer() {
               box={box}
               onBoxChange={changeBox}
               onReset={() => setZoomed(null)}
-              showPixels={showPixels}
-              onPick={(ra, dec) => setSpectrum({ kind: 'spot', ra: Number(ra.toFixed(5)), dec: Number(dec.toFixed(5)) })}
+              showPixels={expert && showPixels}
+              onPick={expert ? (ra, dec) => setSpectrum({ kind: 'spot', ra: Number(ra.toFixed(5)), dec: Number(dec.toFixed(5)) }) : undefined}
               describedBy="stage-help"
             >
               {(scale) => (
                 <>
-                  {showFlags && frame.flags_image && <img className="flags" src={frame.flags_image} alt="" />}
-                  {showGaia && starsData && starsFrame >= 0 && (
+                  {expert && showFlags && frame.flags_image && <img className="flags" src={frame.flags_image} alt="" />}
+                  {expert && showGaia && starsData && starsFrame >= 0 && (
                     <FieldStars data={starsData} current={starsFrame} sizePx={load.data.size_px} pixelArcsec={load.data.pixel_arcsec} />
                   )}
-                  {showMotion && (
+                  {expert && showMotion && (
                     <MotionLayer
                       sizePx={grid.sizePx}
                       scale={scale}
@@ -354,7 +381,7 @@ function Viewer() {
                       arrow={arrow}
                     />
                   )}
-                  {showGaia && (
+                  {expert && showGaia && (
                     <GaiaOverlay
                       frames={gaiaFrames}
                       current={gaiaCurrent}
@@ -363,16 +390,16 @@ function Viewer() {
                       target={load.data.target}
                     />
                   )}
-                  {search && searchFound.length > 0 && <SearchMarkers objects={searchFound} grid={grid} scale={scale} />}
-                  {aperture && <ApertureMark sizePx={grid.sizePx} at={aperture} radiusPx={SPECTRUM_APERTURE_ARCSEC / grid.pixelArcsec} />}
+                  {expert && search && searchFound.length > 0 && <SearchMarkers objects={searchFound} grid={grid} scale={scale} />}
+                  {expert && aperture && <ApertureMark sizePx={grid.sizePx} at={aperture} radiusPx={SPECTRUM_APERTURE_ARCSEC / grid.pixelArcsec} />}
                 </>
               )}
             </Stage>
             <p id="stage-help" className="hint">
-              Scroll or pinch to zoom, drag to move, click a spot to measure its spectrum. The space bar plays and
-              pauses and the arrow keys step. With the image selected, + and - zoom and Shift with an arrow key
-              moves it. North is up and east is left. A flat white patch is too bright to measure; hatching is sky
-              with no data.
+              Scroll or pinch to zoom, drag to move{expert ? ', click a spot to measure its spectrum' : ''}. The space bar
+              plays and pauses and the arrow keys step. With the image selected, + and - zoom and Shift with an arrow key
+              moves it. North is up and east is left. A flat white patch is too bright to measure
+              {expert ? '; hatching is sky with no data.' : '.'}
             </p>
           </>
         )}
@@ -388,7 +415,7 @@ function Viewer() {
                 {frameLabel(frame, load.data)}
               </p>
               <p className="motion-readout">{motionSentence(frame, load.data)}</p>
-              <DetectionReadout frame={frame} />
+              <DetectionReadout frame={frame} detectionOnly={!expert} />
             </div>
 
             <PlayerControls
@@ -404,6 +431,7 @@ function Viewer() {
               onSpeed={player.setSpeedMs}
             />
 
+            {expert && (
             <div className="controls">
               {toggle(showMotion, setShowMotion, 'Motion markers', 'Mark where the target was measured in each frame')}
               {toggle(
@@ -445,8 +473,9 @@ function Viewer() {
                 Asteroids and comets
               </button>
             </div>
+            )}
 
-            {showFlags && hasFlags && (
+            {expert && showFlags && hasFlags && (
               <p className="readout">
                 <span className="key nodata">■</span> no data · <span className="key saturated">■</span> saturated: no
                 value in any exposure of this frame
@@ -456,13 +485,13 @@ function Viewer() {
               </p>
             )}
 
-            {showPixels && (
+            {expert && showPixels && (
               <p className="hint">
                 Each square is {load.data.pixel_arcsec} arcseconds across. The frames are drawn on a finer grid than
                 SPHEREx's own pixels, which are {NATIVE_PIXEL_ARCSEC} arcseconds across.
               </p>
             )}
-            {showMotion && path.length > 0 && (
+            {expert && showMotion && path.length > 0 && (
               <MotionLegend
                 start={path.length > 1}
                 path={path.length > 1}
@@ -473,7 +502,7 @@ function Viewer() {
             )}
             {/* The Gaia readout compares frames with the first one. With a single frame and a
                 known motion there is nothing to compare, so one line says what the marks are. */}
-            {showGaia &&
+            {expert && showGaia &&
               (gaiaFrames.length > 1 || load.data.target?.pmra == null || load.data.target.pmdec == null ? (
                 <GaiaReadout frames={gaiaFrames} current={gaiaCurrent} target={load.data.target} gaiaError={load.data.gaia_error} pixelArcsec={load.data.pixel_arcsec} />
               ) : (
@@ -487,13 +516,14 @@ function Viewer() {
               ))}
             {/* Shown whether or not the overlay is on: it warns about shapes in the picture itself. */}
             {starsData?.bright_note && <p className="hint bright-star">{starsData.bright_note}</p>}
-            {showGaia && starsData && starsFrame >= 0 && <p className="readout">{fieldStarsSummary(starsData, load.data.pixel_arcsec)}</p>}
-            {showGaia && starsData && starsFrame < 0 && (
+            {expert && showGaia && starsData && starsFrame >= 0 && <p className="readout">{fieldStarsSummary(starsData, load.data.pixel_arcsec)}</p>}
+            {expert && showGaia && starsData && starsFrame < 0 && (
               <p className="hint">The other Gaia stars are drawn on single visits only, so not on a sum of all visits.</p>
             )}
-            {showGaia && starsError && <p className="hint">The other Gaia stars could not be loaded: {starsError}.</p>}
+            {expert && showGaia && starsError && <p className="hint">The other Gaia stars could not be loaded: {starsError}.</p>}
           </section>
 
+          {expert && (
           <div className="side">
             <FrameDetails frame={load.data.frames[player.current]} detector={load.data.detector} />
             {showContext ? (
@@ -508,9 +538,10 @@ function Viewer() {
               </section>
             )}
           </div>
-          {spectrum && <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />}
-          {brightness && <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} />}
-          {search && (
+          )}
+          {expert && spectrum && <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />}
+          {expert && brightness && <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} />}
+          {expert && search && (
             <SearchPanel
               key={`${search.ra},${search.dec},${search.fov}`}
               query={search}
@@ -519,7 +550,7 @@ function Viewer() {
               onLook={lookAt}
             />
           )}
-          {showSmallBodies && (
+          {expert && showSmallBodies && (
             <SmallBodiesPanel
               query={{ ra: load.data.ra, dec: load.data.dec, fov: load.data.fov, detector: load.data.detector }}
               onClose={() => setShowSmallBodies(false)}
@@ -527,6 +558,8 @@ function Viewer() {
           )}
         </>
       )}
+
+      {!expert && <BeginnerGuide />}
 
       <footer>
         <p>

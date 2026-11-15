@@ -47,6 +47,13 @@ infrared cameras, together covering 0.75 to 5.0 micrometres.
   that cannot be closed and the word SIMULATION in every picture say so, and it has its
   own endpoint, so it never reaches the real views or any measurement.
 
+- **Beginner and Expert.** A switch at the top. Beginner shows the search, the picture with
+  play, step, blink, zoom and drag, the plain sentences about what moved, and a short
+  "What am I looking at?"; Expert shows everything above.
+- **Shared links keep the level.** `ui=expert` in the address opens Expert; without it the page
+  uses the visitor's last choice, and Beginner on a first visit. An address with a mode, detector
+  or field of view other than the defaults opens in Expert.
+
 A view can be shared through the address, for example
 `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal`.
 
