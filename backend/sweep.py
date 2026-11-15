@@ -1116,6 +1116,44 @@ def follow_up(sv: dict[str, Any], log: Any = print, small_bodies: bool = True) -
     return out
 
 
+def exposure_confirmation(sv: dict[str, Any], detectors: tuple[int, ...] = (5, 6), ratio: float = 5.0,
+                          min_points: int = 3) -> dict[str, Any]:
+    """Does the change survive in every clean exposure of detectors 5 and 6, not only in the tile's images?
+
+    Uses the points saved by `follow_up`. Epochs are runs of exposures with no gap over 30 days; the
+    bright and the faint epoch are the ones holding the tile's bright and faint measurements. Both
+    medians are over the 3.8 to 5.0 micrometre exposures; the change is "confirmed" when the bright
+    median reaches the detection limit, there are at least `min_points` clean exposures on each side,
+    and the bright median is at least `ratio` times the faint one (floored at 1 mJy). The factor is
+    lower than the tile's ten because medians over many exposures mix wavelengths and positions.
+    """
+    lc = sv.get("follow_up", {}).get("lightcurve")
+    if not lc:
+        return {"confirmed": None, "reason": "no light curve"}
+    pts = [p for p in lc["points"] if p["d"] in detectors]
+    pts.sort(key=lambda p: p["mjd"])
+    groups: list[list[dict[str, Any]]] = []
+    for p in pts:
+        if groups and p["mjd"] - groups[-1][-1]["mjd"] <= EPOCH_GAP_DAYS:
+            groups[-1].append(p)
+        else:
+            groups.append([p])
+
+    def group_of(epoch: int) -> list[dict[str, Any]]:
+        mj = [m["mjd"] for m in sv["measurements"] if m["epoch"] == epoch]
+        lo, hi = min(mj) - 3.0, max(mj) + 3.0
+        return [p for g in groups for p in g if lo - 20 <= p["mjd"] <= hi + 20]
+
+    b, f = group_of(sv["pair"]["bright_epoch"]), group_of(sv["pair"]["faint_epoch"])
+    if len(b) < min_points or len(f) < min_points:
+        return {"confirmed": False, "reason": f"only {len(b)} and {len(f)} clean exposures", "n_bright": len(b),
+                "n_faint": len(f)}
+    mb, mf = float(np.median([p["mjy"] for p in b])), float(np.median([p["mjy"] for p in f]))
+    r = mb / max(mf, 1.0)
+    return {"confirmed": bool(mb >= DETECT_MJY and r >= ratio), "bright_median_mjy": round(mb, 1),
+            "faint_median_mjy": round(mf, 1), "ratio": round(r, 1), "n_bright": len(b), "n_faint": len(f)}
+
+
 def lightcurve_picture(points: list[dict[str, Any]], path: Path, title: str = "") -> None:
     """Brightness against date for every clean exposure, one colour per detector (a plain chart, drawn with PIL)."""
     from PIL import Image, ImageDraw
@@ -1173,7 +1211,9 @@ def summarise(include_proof: bool = False) -> dict[str, Any]:
         for sv in t.get("survivors", []):
             k = sv["classification"]["kind"] + ("_single_image" if sv.get("single_image_only") else "")
             kinds[k] = kinds.get(k, 0) + 1
+            conf = exposure_confirmation(sv) if sv["classification"]["kind"].startswith("candidate") else None
             survivors.append({"tile": t["name"], "ra": round(sv["ra"], 5), "dec": round(sv["dec"], 5), "kind": k,
+                              "confirmed_in_all_exposures": conf and conf["confirmed"],
                               "bright_mjy": round(sv["pair"]["bright_mjy"], 1), "direction": sv.get("direction")})
     return {"tiles_done": len(done), "tiles_skipped": len(tiles) - len(done),
             "area_sq_deg": round(sum(t["area_sq_deg"] for t in done), 2), "tally": total,
