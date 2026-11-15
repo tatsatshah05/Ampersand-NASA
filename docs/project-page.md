@@ -6,9 +6,9 @@ review of this text. Check the submission form for length limits before pasting:
 are given.
 
 **Read before pasting.** Every number and claim below is in the code, in a results file or in a write-up in the
-repository; the write-up is named where it matters. Two things must be supplied or checked by a person and
-are marked **[TO CONFIRM]**: the public web address (nothing is deployed yet) and the answer about AI tools,
-which the team must agree is complete. Do not paste a marked sentence as it stands.
+repository; the write-up is named where it matters. One thing must be checked by a person and is marked
+**[TO CONFIRM]**: the answer about AI tools, which the team must agree is complete. Do not paste a marked
+sentence as it stands. The public web address is filled in: the site was deployed on 2026-11-15.
 
 Rules this text keeps, and any edit must keep: the three sweep sources are **candidates**, "found in no
 catalogue or report we checked" and "not confirmed"; their three sentences are the referee's, word for word
@@ -305,8 +305,8 @@ a search for change, checks against catalogues, and plain words for every result
   guard the page (`scripts/checks/`): the words hold still while the pictures play, and the bar and the switch
   work at both levels.
 - Code: https://github.com/tatsatshah05/Ampersand-NASA
-- Public web address: **[TO CONFIRM: nothing is deployed yet; add the address once it is. Open it and check the
-  five targets and the three candidates before pasting.]**
+- Public web address: https://spherex-sky-change-viewer.onrender.com (deployed on 2026-11-15 on Render's free plan: after 15 minutes without a
+  visitor it sleeps, and the next visitor waits about a minute while it starts).
 
 ### Use of AI tools
 

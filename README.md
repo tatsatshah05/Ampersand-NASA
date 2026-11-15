@@ -78,7 +78,8 @@ The first request for a new position reads about 60 image cutouts per detector f
 archive on Amazon S3, with IRSA's cutout service as the automatic fallback. They are kept in `backend/cache/`
 (`SPHEREX_CACHE_DIR` moves it), so a repeat is instant. Deploying, and the warm-up that prepares every view the
 page opens or links to, are in [docs/deploy.md](docs/deploy.md); the short path for Render is
-[docs/deploy-render.md](docs/deploy-render.md).
+[docs/deploy-render.md](docs/deploy-render.md). The public copy is at https://spherex-sky-change-viewer.onrender.com
+(Render's free plan: it sleeps after 15 minutes without a visitor and takes about a minute to wake).
 
 ## Run the checks
 

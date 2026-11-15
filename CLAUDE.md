@@ -1233,7 +1233,8 @@ behaves):
 How to run them: `scripts/checks/README.md`. After deploying, the warm-up of every place the page opens or links to:
 `docs/deploy.md`, "After deploying: warm-up".
 
-Deploying (2026-11-15): the team chose Render. `render.yaml` is its blueprint (one free web service from the
+Deploying (2026-11-15): the team chose Render, and the site is up at https://spherex-sky-change-viewer.onrender.com (free plan).
+`render.yaml` is its blueprint (one free web service from the
 `Dockerfile`, redeployed on every push to the branch it was made from, `main`). The `Dockerfile` downloads the
 pre-built demo results (release file `demo-cache-2` of this repository: about 240 MB of finished views and answers
 for the eleven buttons, no cutouts) and unpacks them into the cache folder, so the site opens at once on a host

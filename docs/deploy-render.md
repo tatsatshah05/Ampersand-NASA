@@ -3,6 +3,9 @@
 The general notes on hosting are in `docs/deploy.md`. This page is the short path for
 Render (render.com), chosen by the team on 2026-11-15.
 
+**Status: deployed on 2026-11-15 at https://spherex-sky-change-viewer.onrender.com** (free plan, from the branch `main`; every push
+to `main` builds and goes live by itself).
+
 ## What is in the repository for it
 
 - `render.yaml`: a Render blueprint. One web service, built from the `Dockerfile`, on the
@@ -83,7 +86,15 @@ Tested on a laptop on 2026-11-15:
   used about 130 MB, and answered the opening view (Candidate B) in 0.4 seconds from the
   pre-built results.
 
-Not tested: Render itself. Nobody on the team had deployed there when this was written.
+On Render itself, on 2026-11-15, minutes after a teammate applied the blueprint (the build
+then running was the one before the loading drawing): the opening view's data answered in
+0.7 seconds and Barnard's Star's in 1.5; in a browser the opening picture was up half a
+second after the page; the buttons Barnard's Star, Candidate A and WISE 0855 each showed
+their result within the five seconds waited; Observe anomalies (142 rows), Three tools and
+the practice round opened in under two seconds each; no failed request and no page error.
+
+Not tested on Render: a position nobody has asked for, a new search of a patch, waking
+from sleep, and the phone.
 
 ## Refreshing the pre-built demo results
 
