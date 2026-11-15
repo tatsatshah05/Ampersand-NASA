@@ -16,15 +16,17 @@ the two exposures of the SAME detector, in OTHER visits, nearest in wavelength, 
 (SPHEREx has one wavelength per detector per exposure, so a like-for-like template needs another
 visit). No ephemeris is used anywhere in the search; JPL is called only afterwards to label.
 
-Shift-and-stack is an established technique (TESS, ACT, HST, ZTF); only its use on SPHEREx data is
-new as far as we could find. One visit reaches about V 19 for a grey body: about two magnitudes
-short of Pan-STARRS and of Planet Nine's predicted brightness. This module does NOT test Planet
-Nine and says so in its answer.
+Shift-and-stack and distance from the parallax bend of a short arc are established techniques
+(Bernstein & Khushalani 2000; Rice & Laughlin 2020; KBMOD; heliostack). Only their use on SPHEREx
+data is new as far as we could find. One visit reaches about 0.6 magnitudes fainter than Eris
+(about V 19.3 for an Eris-coloured body): about two magnitudes short of Pan-STARRS and of Planet
+Nine's predicted brightness. This module does NOT test Planet Nine and says so in its answer.
 
-Analysis choices, fixed before any known answer was scored (see docs/reflex.md):
-detectors D1-D3, field 0.13 deg, coarse grid 3 arcsec, fine grid 1.5 arcsec, drift step 0.5
-arcsec/day, 1/d step 0.0015 (coarse) and 0.0005 (fine), template of 2 exposures, bright-static
-mask 0.5 mJy, candidate threshold from blank fields (CANDIDATE_SNR), no HALO.
+Analysis choices were made AFTER a probe had already found Eris (so they are not blind to the
+answer; see docs/reflex.md): detectors D1-D3, field 0.13 deg, coarse grid 3 arcsec, fine grid 1.5
+arcsec, drift step 0.5 arcsec/day, 1/d step 0.0015 (coarse) and 0.0005 (fine), template of 2
+exposures, bright-static mask 0.5 mJy. CANDIDATE_SNR is NOT yet derived from a blank-field
+distribution: raw peaks that are not fixed stars reach 8 and above in null runs.
 """
 
 from __future__ import annotations
@@ -46,7 +48,7 @@ from scipy.optimize import minimize
 
 from . import distant, photometry, pipeline, smallbodies, spherex
 
-VERSION = 1
+VERSION = 3
 REFLEX_DIR = spherex.CACHE / "reflex"
 ARCSEC_PER_RADIAN = 206264.806
 
@@ -66,12 +68,18 @@ DRIFT_RADIUS_MAX = 25.0
 ORBIT_FACTOR = 1.5  # bound-orbit speed allowance: this times a circular orbit's
 DRIFT_PAD = 1.0  # arcsec/day added to every box
 MERGE_ARCSEC = 9.0
-CANDIDATE_SNR = 8.0  # replaced by the blank-field maximum plus margin, see docs/reflex.md
+CANDIDATE_SNR = 8.0  # NOT calibrated: null runs exceed it, see docs/reflex.md; the vetting below does the work
+MIN_STRAIGHT_SNR = 5.0  # a distance is only quoted for a source seen on its best straight track
+MAX_TOP3_SHARE = 0.5  # more of the signal than this from 3 exposures: artefact, rejected
+MAX_CHI2_DOF = 3.0  # a track that fits a constant flux worse than this is rejected
+EDGE_ARCSEC = 30.0  # peaks this close to the field edge are not trusted
+EPOCH_GAP_DAYS = 0.2  # exposures of one detector closer than this make one epoch
+N_BOOT = 40
+MF_TO_APERTURE = 0.68  # matched-filter flux / aperture flux, 13 stars in the Eris field (reviewer measurement)
 MEASURED_DELTA_S2 = 9.0  # "distance measured" needs S^2(best) - S^2(1/d = 0) at least this
 N_RANDOM = 500
 AU_PER_KM_PER_S_DAY = 86400.0 / 1.495978707e8  # km/s -> AU/day
 V_CIRC_1AU_KMS = 29.78
-# Calibration of the flux limit: V of a grey body is not computed here; see docs/reflex.md.
 
 
 def SEARCHED_AREA_DEG2(fov: float) -> float:  # noqa: N802
@@ -79,15 +87,27 @@ def SEARCHED_AREA_DEG2(fov: float) -> float:  # noqa: N802
 
 
 CREDIT = (
-    "Method: shift-and-stack along tracks that include the Earth's parallax over one visit "
-    "(established technique: Bernstein et al. 2004, Rice & Laughlin 2020, heliostack). "
-    "Applied here to SPHEREx data; we do not know of this having been done with SPHEREx "
-    "data (searched: SPHEREx + TNO / Planet Nine / shift-and-stack, arXiv and ADS, 2026-11-14)."
+    "Method: shift-and-stack along tracks that include the Earth's parallax over one visit. The "
+    "distance from the parallax bend of a short arc is Bernstein & Khushalani 2000 (AJ 120, 3323); "
+    "shift-and-stack along distance-dependent tracks: Bernstein et al. 2004, Rice & Laughlin 2020 "
+    "(TESS), KBMOD, heliostack (HST). Applied here to real SPHEREx data; we do not know of this "
+    "having been done with SPHEREx data (searches listed in docs/reflex.md, 2026-11-14)."
 )
 DEPTH_NOTE = (
-    "One visit reaches only about V 19 for a grey body. That is about 2 magnitudes shallower than "
-    "Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test "
-    "Planet Nine or Planet X."
+    "One visit reaches only about 0.6 magnitudes fainter than Eris: about V 19.3 for an "
+    "Eris-coloured body, about V 20.7 for a Sedna-coloured one (scaled from Eris at S/N 14.3 and "
+    "Sedna at forced S/N 7.5). That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and "
+    "than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X."
+)
+RANGING_NOTE = (
+    "Detects movers from 50 AU outward. A distance needs S/N x (1/d) large enough: in a 15-day "
+    "visit within about 120 AU at the S/N 8 threshold and about 200 AU for an Eris-bright body; "
+    "within about half that in a 10-day visit (scaled from the measured Eris profile). Farther "
+    "bodies are detected but not ranged."
+)
+DISTANCE_NOTE = (
+    "Distance intervals: the 2 sigma interval from the S/N profile is statistical only and about "
+    "2 to 3 times too narrow; the epoch bootstrap interval is the one to quote."
 )
 
 
@@ -401,7 +421,21 @@ def coarse_search(
             if progress and i % 5000 == 0:
                 progress("coarse", i, len(jobs))
     results.sort(reverse=True)
-    return {"trials": results, "n_trials": len(jobs)}
+    # robust sigma of S (formal sigma = 1) over a sample of trials: the real-to-formal noise ratio
+    rng = np.random.default_rng(0)
+    scales = []
+    for j in rng.choice(len(jobs), size=min(25, len(jobs)), replace=False):
+        invd, ve, vn = jobs[int(j)]
+        oe, on = ve * dt + invd * fnl[:, 0], vn * dt + invd * fnl[:, 1]
+        num, den = stack_integer(d_cube, w_cube, np.round(oe / COARSE_ARCSEC), np.round(on / COARSE_ARCSEC))
+        with np.errstate(invalid="ignore", divide="ignore"):
+            sv = num / np.sqrt(den)
+        okm = (den > COVER * wsum) & np.isfinite(sv)
+        if okm.sum() > 50:
+            vals = sv[okm]
+            scales.append(1.4826 * np.median(np.abs(vals - np.median(vals))))
+    ratio = float(np.median(scales)) if scales else float("nan")
+    return {"trials": results, "n_trials": len(jobs), "noise_ratio": ratio}
 
 
 def merge_peaks(trials: list[tuple], radius: float = MERGE_ARCSEC) -> list[dict]:
@@ -449,6 +483,17 @@ class Track:
             return -1e9
         return float(np.sum(w * val) / np.sqrt(w.sum()))
 
+    def samples(self, params, invd: float) -> tuple[np.ndarray, np.ndarray]:
+        """Flux (mJy) in every exposure along a track and a mask of the exposures actually on the data."""
+        pe, pn, ve, vn = params
+        oe = pe + ve * self.dt + invd * self.fnl[:, 0]
+        on = pn + vn * self.dt + invd * self.fnl[:, 1]
+        x = oe / self.step + self.n // 2
+        y = on / self.step + self.n // 2
+        val = map_coordinates(self.d0, [self.idx, y, x], order=1, mode="constant", cval=0.0)
+        ok = map_coordinates(self.valid, [self.idx, y, x], order=1, mode="constant", cval=0.0) > 0.99
+        return val, ok
+
     def flux(self, params, invd: float, mask: np.ndarray | None = None) -> tuple[float, float]:
         """Weighted mean flux (mJy) along a track and its formal error."""
         pe, pn, ve, vn = params
@@ -481,63 +526,220 @@ class Track:
         return float(np.median(a)), float(1.4826 * np.median(np.abs(a - np.median(a)))), len(a)
 
 
-def refine(
-    track: Track, start: tuple[float, float, float, float], invd0: float, nearest_au: float, half: float, seed: int = 1
-) -> dict:
-    """Profile of S against 1/d. At each 1/d place and drift are optimised; S in noise units."""
-    grid = np.arange(-0.012, 1.0 / nearest_au + 1e-9, INVD_STEP_FINE)
+def _grid(nearest_au: float, step: float = INVD_STEP_FINE) -> np.ndarray:
+    return np.arange(-0.012, 1.0 / nearest_au + 1e-9, step)
+
+
+def profile(
+    track: Track,
+    start: tuple[float, float, float, float],
+    grid: np.ndarray,
+    limit=None,
+    mask: np.ndarray | None = None,
+    n_starts: int = 3,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Raw S against 1/d with place and drift optimised at each 1/d.
+
+    Nelder-Mead gets an explicit initial simplex (1 arcsec in place, 0.3 arcsec/day in drift) so a
+    parameter that starts at exactly zero is still optimised, and several starts. `limit(invd)`
+    returns the drift box (centre east, centre north, radius); a drift outside it (plus one drift
+    step) is penalised and, if it still ends outside, the point is marked invalid (NaN), as is any
+    point where the track leaves the data (the -1e9 sentinel is never used as a value).
+    """
     s0 = np.array(start, float)
     x_prev = s0.copy()
-    rows = []
-    for invd in grid:
-        runs = [
-            minimize(
-                lambda p, inv=float(invd): -track.s(p, inv),
-                st,
+    shifts = [np.zeros(4), np.array([0.0, 0.5, 0.0, 0.0]), np.array([0.5, 0.0, 0.0, 0.0])][:n_starts]
+    vals = np.full(len(grid), np.nan)
+    pars = np.full((len(grid), 4), np.nan)
+    for i, invd in enumerate(grid):
+        invd = float(invd)
+        box = limit(invd) if limit is not None else None
+
+        def obj(p, inv=invd, box=box):
+            v = track.s(p, inv, mask)
+            if v < -1e8:
+                return 1e9
+            if box is not None:
+                ex = float(np.hypot(p[2] - box[0], p[3] - box[1])) - box[2]
+                if ex > 0:
+                    v -= 20.0 * ex
+            return -v
+
+        best = None
+        for st in [x_prev, *(s0 + sh for sh in shifts)]:
+            x0 = np.array(st, float)
+            sim = np.vstack([x0, x0 + [1, 0, 0, 0], x0 + [0, 1, 0, 0], x0 + [0, 0, 0.3, 0], x0 + [0, 0, 0, 0.3]])
+            r = minimize(
+                obj,
+                x0,
                 method="Nelder-Mead",
-                options={"xatol": 0.02, "fatol": 1e-4, "maxiter": 800},
+                options={"initial_simplex": sim, "xatol": 0.02, "fatol": 1e-4, "maxiter": 600},
             )
-            for st in (x_prev, s0)
-        ]
-        best = min(runs, key=lambda r: r.fun)
+            if best is None or r.fun < best.fun:
+                best = r
+        assert best is not None
         x_prev = best.x
-        rows.append((invd, -best.fun, *best.x))
-    prof = np.array(rows)
-    ib = int(np.argmax(prof[:, 1]))
+        v = track.s(best.x, invd, mask)
+        inside = box is None or float(np.hypot(best.x[2] - box[0], best.x[3] - box[1])) <= box[2] + DRIFT_STEP
+        if v > -1e8 and inside:
+            vals[i] = v
+            pars[i] = best.x
+    return vals, pars
+
+
+def _interval(grid: np.ndarray, snr: np.ndarray, ib: int, drop: float) -> tuple[float | None, float | None]:
+    """Distance interval (near, far) in AU where S^2 >= best - drop on the contiguous stretch around the best.
+
+    Only positive, valid S/N counts (a negative S/N is never 'inside' because it is squared), the end is
+    interpolated linearly in S^2. A far end of None means infinity (the profile never drops by `drop`
+    before 1/d <= 0); a near end of None cannot occur on the searched grid.
+    """
+    s2 = np.where(np.isfinite(snr) & (snr > 0), snr**2, 0.0)
+    thr = s2[ib] - drop
+
+    def edge(step: int) -> float:
+        j = ib
+        while 0 <= j + step < len(grid) and s2[j + step] >= thr:
+            j += step
+        k = j + step
+        if not 0 <= k < len(grid):
+            return float(grid[j])
+        denom = s2[j] - s2[k]
+        frac = 0.0 if denom <= 0 else (s2[j] - thr) / denom
+        return float(grid[j] + frac * (grid[k] - grid[j]))
+
+    lo_i, hi_i = edge(-1), edge(1)
+    return (1.0 / hi_i if hi_i > 0 else None), (1.0 / lo_i if lo_i > 0 else None)
+
+
+def _straight_snr(track: Track, start, med: float, scale: float, mask) -> float:
+    v, _ = profile(track, tuple(start), np.array([0.0]), None, mask, n_starts=2)
+    return float((v[0] - med) / scale) if np.isfinite(v[0]) else float("nan")
+
+
+def refine(
+    track: Track,
+    start: tuple[float, float, float, float],
+    invd0: float,
+    nearest_au: float,
+    half: float,
+    seed: int = 1,
+    limit=None,
+) -> dict:
+    """Profile of S against 1/d (see `profile`), S/N from the noise at random places."""
+    grid = _grid(nearest_au)
+    vals, pars = profile(track, start, grid, limit)
+    if not np.isfinite(vals).any():
+        return {"ok": False}
+    ib = int(np.nanargmax(vals))
     rng = np.random.default_rng(seed)
-    pe_b, pn_b, ve_b, vn_b = prof[ib, 2:]
-    med, scale, n_rand = track.random_scale(prof[ib, 2:], prof[ib, 0], (pe_b, pn_b), half, rng)
-    snr = (prof[:, 1] - med) / scale
-    s2 = snr**2
-    best_s2 = s2[ib]
-
-    def interval(drop: float) -> tuple[float | None, float | None]:
-        """Distance interval in AU where S^2 >= best - drop; None as the far end means 'infinity'."""
-        inside = grid[s2 >= best_s2 - drop]
-        lo_i, hi_i = float(inside.min()), float(inside.max())
-        near = 1.0 / hi_i if hi_i > 0 else None
-        far = 1.0 / lo_i if lo_i > 0 else None
-        return near, far
-
-    i0 = int(np.argmin(np.abs(grid)))
-    neg = grid < -1e-9
+    pe_b, pn_b, ve_b, vn_b = pars[ib]
+    med, scale, n_rand = track.random_scale(pars[ib], grid[ib], (pe_b, pn_b), half, rng)
+    snr = (vals - med) / scale  # NaN where the point is invalid
+    # the straight-line comparison lets the drift be ANYTHING (a body at 1/d = 0 with a free straight track):
+    # that is the test of whether the bend is needed; the bounded-drift profile is not
+    snr0 = _straight_snr(track, (pe_b, pn_b, ve_b, vn_b), med, scale, None)
+    neg = (grid < -1e-9) & np.isfinite(snr)
+    best = float(snr[ib])
+    s0_pos = max(snr0, 0.0) if np.isfinite(snr0) else 0.0
     return {
+        "ok": True,
         "grid": grid,
         "snr": snr,
-        "params": prof[:, 2:],
+        "raw": vals,
+        "params": pars,
         "best_index": ib,
         "best_inv_d": float(grid[ib]),
-        "best_snr": float(snr[ib]),
+        "best_snr": best,
         "place": (float(pe_b), float(pn_b)),
         "drift": (float(ve_b), float(vn_b)),
-        "interval_1sigma": interval(1.0),
-        "interval_2sigma": interval(4.0),
-        "snr_infinite": float(snr[i0]),
-        "delta_s2_infinite": float(best_s2 - snr[i0] ** 2),
+        "interval_2sigma": _interval(grid, snr, ib, 4.0),
+        "snr_infinite": snr0,
+        "delta_s2_infinite": float(best**2 - s0_pos**2) if best > 0 else 0.0,
         "reversed_best_snr": float(np.max(snr[neg])) if neg.any() else None,
         "noise_scale": scale,
         "noise_median": med,
         "n_random": n_rand,
+    }
+
+
+def epochs_of(T: np.ndarray, det: np.ndarray) -> list[np.ndarray]:
+    """Index groups: exposures of one detector separated by less than EPOCH_GAP_DAYS are one epoch."""
+    groups: list[np.ndarray] = []
+    for d in sorted(set(int(x) for x in det)):
+        idx = np.where(det == d)[0]
+        idx = idx[np.argsort(T[idx])]
+        cur = [int(idx[0])]
+        for a, b in zip(idx[:-1], idx[1:], strict=True):
+            if T[b] - T[a] > EPOCH_GAP_DAYS:
+                groups.append(np.array(cur))
+                cur = []
+            cur.append(int(b))
+        groups.append(np.array(cur))
+    return groups
+
+
+def epoch_resampling(
+    track: Track,
+    res: dict,
+    epochs: list[np.ndarray],
+    limit,
+    rng,
+    n_boot: int = N_BOOT,
+    threads: int = 4,
+) -> dict:
+    """Leave-one-epoch-out and epoch-bootstrap of the best 1/d and of S^2(best) - S^2(1/d = 0).
+
+    The noise scale of the full run is reused (a different mask changes the sum but not the scale of S).
+    Both use a coarser 1/d grid. The bootstrap resamples whole epochs with replacement, which is what
+    keeps a few exposures from deciding the distance without the interval showing it.
+    """
+    grid = np.arange(res["grid"].min(), res["grid"].max() + 1e-9, 0.001)
+    start = (*res["place"], *res["drift"])
+    med, scale = res["noise_median"], res["noise_scale"]
+    n = len(track.dt)
+
+    def one(mask: np.ndarray) -> tuple[float, float]:
+        vals, _ = profile(track, start, grid, limit, mask, n_starts=1)
+        if not np.isfinite(vals).any():
+            return float("nan"), float("nan")
+        snr = (vals - med) / scale
+        ib = int(np.nanargmax(vals))
+        s0 = _straight_snr(track, start, med, scale, mask)
+        s0 = max(s0, 0.0) if np.isfinite(s0) else 0.0
+        return float(grid[ib]), float(snr[ib] ** 2 - s0**2) if snr[ib] > 0 else 0.0
+
+    jobs = []
+    for e in epochs:
+        m = np.ones(n)
+        m[e] = 0.0
+        jobs.append(m)
+    for _ in range(n_boot):
+        pick = rng.integers(0, len(epochs), len(epochs))
+        m = np.zeros(n)
+        for k in pick:
+            m[epochs[k]] += 1.0
+        jobs.append(m)
+    with ThreadPoolExecutor(threads) as pool:
+        out = list(pool.map(one, jobs))
+    jk = np.array(out[: len(epochs)])
+    bs = np.array(out[len(epochs) :])
+    inv = bs[:, 0][np.isfinite(bs[:, 0])]
+
+    def dist(q: float) -> float | None:
+        v = float(np.percentile(inv, q))
+        return round(1.0 / v, 1) if v > 1e-6 else None
+
+    return {
+        "n_epochs": len(epochs),
+        "leave_one_epoch_out_delta_s2": [round(float(x), 1) for x in jk[:, 1]],
+        "leave_one_epoch_out_min_delta_s2": round(float(np.nanmin(jk[:, 1])), 1),
+        "leave_one_epoch_out_inv_d_sigma": round(float(np.nanstd(jk[:, 0])), 5),
+        "n_bootstrap": int(len(inv)),
+        "bootstrap_distance_au_68": [dist(84.0), dist(16.0)],  # near, far; None = unbounded
+        "bootstrap_distance_au_95": [dist(97.5), dist(2.5)],
+        "bootstrap_share_unbounded": round(float(np.mean(inv <= 1e-6)), 3),
+        "grid_step": 0.001,
     }
 
 
@@ -561,9 +763,30 @@ def per_detector(track: Track, result: dict, dets: np.ndarray, half: float, seed
         out[f"D{d}"] = {
             "n_exposures": int(m.sum()),
             "flux_mjy": round(fl, 4),
+            "flux_error_mjy": round(err * scale, 4),
             "snr": round(float((s_here - med) / scale), 2) if s_here > -1e8 else None,
         }
     return out
+
+
+def track_checks(track: Track, params, invd: float) -> dict:
+    """Share of the signal in the 3 strongest exposures, chi2 per degree of freedom about a constant flux,
+    and the span (days) of the exposures that are on the data along this track."""
+    val, ok = track.samples(params, invd)
+    w = track.w * ok
+    if w.sum() <= 0 or ok.sum() < 5:
+        return {"top3_share": None, "chi2_dof": None, "usable_span_days": 0.0, "n_usable": int(ok.sum())}
+    mean = float(np.sum(w * val) / w.sum())
+    contrib = (w * val)[ok]
+    pos = np.clip(contrib, 0, None)
+    top3 = float(np.sort(pos)[-3:].sum() / pos.sum()) if pos.sum() > 0 else 1.0
+    chi2 = float(np.sum(w * (val - mean) ** 2) / max(int(ok.sum()) - 1, 1))
+    return {
+        "top3_share": round(top3, 3),
+        "chi2_dof": round(chi2, 2),
+        "usable_span_days": round(float(np.ptp(track.dt[ok])), 2),
+        "n_usable": int(ok.sum()),
+    }
 
 
 def still_there(
@@ -637,9 +860,82 @@ def label_known(
     return {"n_known_in_field": len(bodies), "near": near}
 
 
+KNOWN_DISTANT = [
+    "136199 Eris",
+    "136472 Makemake",
+    "136108 Haumea",
+    "90377 Sedna",
+    "225088 Gonggong",
+    "50000 Quaoar",
+    "90482 Orcus",
+    "134340 Pluto",
+]
+
+
+def label_known_distant(
+    mjd: float, ra: float, dec: float, found: list[tuple[float, float]], radius_arcsec: float = 60.0
+) -> list[list[dict]]:
+    """Second known-body check: JPL Horizons for the named dwarf planets (sb_ident missed Eris).
+
+    Asked only AFTER the search and never steers it. A service that is down gives an `error` entry,
+    never a silent 'none'. It lists only these named bodies, so it cannot rule out an unnamed known TNO.
+    """
+    out: list[list[dict]] = [[] for _ in found]
+    cosd = np.cos(np.radians(dec))
+    for name in KNOWN_DISTANT:
+        try:
+            eph = smallbodies.ephemeris(name, [mjd])[0]
+        except Exception as e:  # noqa: BLE001
+            for lst in out:
+                lst.append({"name": name, "error": f"{type(e).__name__}"})
+            continue
+        for lst, (fra, fdec) in zip(out, found, strict=True):
+            sep = float(np.hypot((eph["ra"] - fra) * cosd, eph["dec"] - fdec) * 3600)
+            if sep <= radius_arcsec:
+                lst.append({"name": name, "separation_arcsec": round(sep, 1), "vmag": eph.get("vmag")})
+    return out
+
+
 # ---------------------------------------------------------------------------------------------
 # Entry function
 # ---------------------------------------------------------------------------------------------
+
+
+def _mirror(res: dict, best_inv: float) -> float | None:
+    if best_inv <= 0 or res["grid"].min() > -best_inv:
+        return None
+    v = float(res["snr"][int(np.argmin(np.abs(res["grid"] + best_inv)))])
+    return round(v, 2) if np.isfinite(v) else None
+
+
+def _vet_reversed(track, cube, p, dets_f, half, half_field, detectors, t0, others) -> dict:
+    """The same vetting a real candidate gets, for a reversed-Earth control peak at or above threshold."""
+    params = np.array([p["east"], p["north"], p["ve"], p["vn"]])
+    fake = {"params": params[None, :], "best_index": 0, "best_inv_d": p["inv_d"], "place": (p["east"], p["north"])}
+    dets = per_detector(track, fake, dets_f, half)
+    n_det = sum(1 for v in dets.values() if v["snr"] is not None and v["snr"] >= 2.0)
+    mean_flux, _ = track.flux(params, p["inv_d"])
+    there = still_there(cube, p["east"], p["north"], mean_flux, detectors, t0, others)
+    chk = track_checks(track, params, p["inv_d"])
+    edge = bool(max(abs(p["east"]), abs(p["north"])) > half_field - EDGE_ARCSEC)
+    fixed = any(v.get("there") for v in there)
+    survives = bool(
+        not fixed
+        and n_det >= 2
+        and not edge
+        and (chk["top3_share"] or 1.0) <= MAX_TOP3_SHARE
+        and (chk["chi2_dof"] or 99.0) <= MAX_CHI2_DOF
+    )
+    return {
+        "snr": round(p["snr"], 2),
+        "place_arcsec": [p["east"], p["north"]],
+        "inv_d": p["inv_d"],
+        "n_detectors_with_2sigma": n_det,
+        "still_there_in_other_visit": fixed,
+        "at_field_edge": edge,
+        "track_checks": chk,
+        "survives_the_vetting_a_candidate_gets": survives,
+    }
 
 
 def _key(ra, dec, fov, detectors, visit, nearest_au, threshold, shuffle) -> str:
@@ -764,16 +1060,25 @@ def reflex_search(
         "n_reversed_trials": len(neg),
         "n_reversed_above_threshold": sum(1 for p in control_peaks if p["snr"] >= threshold),
     }
-    limit = None
-    # noise of the stacked mean flux in one trial = 1/sqrt(sum w): the flux that gives `threshold` sigma
+    # noise of the stacked mean flux in one trial = 1/sqrt(sum w), times the measured ratio of real to
+    # formal noise (the robust sigma of S over the coarse trial maps), on the matched-filter flux scale
     mean_noise = float(1.0 / np.sqrt(cube["W"].sum()))
+    ratio = coarse["noise_ratio"]
+    mf_limit = threshold * mean_noise * ratio
     limit = {
         "threshold_snr": threshold,
-        "stacked_mean_noise_mjy": round(mean_noise, 5),
-        "faintest_mean_flux_mjy": round(threshold * mean_noise, 4),
+        "stacked_mean_noise_mjy_formal": round(mean_noise, 5),
+        "noise_ratio_measured_to_formal": round(ratio, 3),
+        "faintest_mean_flux_mjy_matched_filter_scale": round(mf_limit, 4),
+        "faintest_mean_flux_mjy_aperture_scale": round(mf_limit / MF_TO_APERTURE, 3),
+        "completeness": "50 per cent level (a source of this flux is found about half the time), not a hard limit",
+        "flux_scale_note": (
+            "matched-filter fluxes are about 0.68 of aperture-photometry fluxes (13 stars of the Eris field, "
+            "reviewer measurement); the aperture-scale figure divides by that and is not re-measured per field"
+        ),
         "detectors": list(detectors),
         "searched_area_deg2": base["searched_area_deg2"],
-        "distance_range_au": [nearest_au, "about 1000"],
+        "ranging_note": RANGING_NOTE,
         "note": DEPTH_NOTE,
     }
     out: dict[str, Any] = {
@@ -788,8 +1093,9 @@ def reflex_search(
             {k: (round(v, 3) if isinstance(v, float) else v) for k, v in p.items()} for p in merge_peaks(pos)[:5]
         ],
     }
-    candidates = []
-    if peaks:
+    candidates: list[dict[str, Any]] = []
+    rev_hits = [p for p in control_peaks if p["snr"] >= threshold][:3]
+    if peaks or rev_hits:
         cube_f = build_cube(exposures, paths, chosen, ra, dec, fov, FINE_ARCSEC, detectors)
         keep = [i for i, k in enumerate(cube_f["keys"]) if k in set(cube["keys"])]
         dcf = cube_f["D"][keep]
@@ -799,106 +1105,167 @@ def reflex_search(
         fnl_f, _ = parallax_curve(tf, ra, dec, t0)
         track = Track(dcf, cube_f["W"][keep], tf - t0, fnl_f, FINE_ARCSEC)
         dets_f = cube_f["det"][keep]
-        half = fov / 2 * 3600.0 - 10
+        half_field = fov / 2 * 3600.0
+        half = half_field - 10
+
+        def limit_fn(inv: float) -> tuple[float, float, float]:
+            return drift_box(inv, slope[0], slope[1], nearest_au)
+
+        out["reversed_earth_peaks_vetted"] = [
+            _vet_reversed(track, cube, p, dets_f, half, half_field, detectors, t0, others) for p in rev_hits
+        ]
         for p in peaks[:5]:
-            res = refine(track, (p["east"], p["north"], p["ve"], p["vn"]), p["inv_d"], nearest_au, half)
+            res = refine(track, (p["east"], p["north"], p["ve"], p["vn"]), p["inv_d"], nearest_au, half, limit=limit_fn)
+            if not res["ok"]:
+                continue
             ib = res["best_index"]
             best_inv = res["best_inv_d"]
             c_east, c_north = res["place"]
-            c_ra, c_dec = _sky(ra, dec, c_east, c_north)
+            fnl0 = np.array([np.interp(0.0, track.dt, track.fnl[:, k]) for k in range(2)])
+            m_east, m_north = c_east + best_inv * fnl0[0], c_north + best_inv * fnl0[1]  # model place at t0
+            c_ra, c_dec = _sky(ra, dec, m_east, m_north)
             dets = per_detector(track, res, dets_f, half)
             n_det = sum(1 for v in dets.values() if v["snr"] is not None and v["snr"] >= 2.0)
             mean_flux, _ = track.flux(res["params"][ib], best_inv)
             there = still_there(cube, c_east, c_north, mean_flux, detectors, t0, others)
-            measured = res["delta_s2_infinite"] >= MEASURED_DELTA_S2 and best_inv > 0
-            near1, far1 = res["interval_1sigma"]
+            chk = track_checks(track, res["params"][ib], best_inv)
+            at_edge = bool(max(abs(c_east), abs(c_north)) > half_field - EDGE_ARCSEC)
+            straight = res["snr_infinite"]
+            measured = bool(
+                res["delta_s2_infinite"] >= MEASURED_DELTA_S2
+                and best_inv > 0
+                and np.isfinite(straight)
+                and straight >= MIN_STRAIGHT_SNR
+                and chk["usable_span_days"] >= MIN_DISTANCE_DAYS
+            )
+            gone_fixed = any(v.get("there") for v in there)
+            basic = bool(
+                not gone_fixed
+                and n_det >= 2
+                and not at_edge
+                and (chk["top3_share"] or 1.0) <= MAX_TOP3_SHARE
+                and (chk["chi2_dof"] or 99.0) <= MAX_CHI2_DOF
+            )
+            resamp = None
+            if basic and measured:
+                resamp = epoch_resampling(
+                    track, res, epochs_of(track.dt + t0, dets_f), limit_fn, np.random.default_rng(11)
+                )
+                measured = bool(resamp["leave_one_epoch_out_min_delta_s2"] >= MEASURED_DELTA_S2)
             near2, far2 = res["interval_2sigma"]
             cand: dict[str, Any] = {
                 "ra": round(c_ra, 6),
                 "dec": round(c_dec, 6),
                 "mjd_t0": t0,
-                "offset_arcsec": [round(c_east, 2), round(c_north, 2)],
+                "offset_arcsec": [round(m_east, 2), round(m_north, 2)],
+                "offset_p0_arcsec": [round(c_east, 2), round(c_north, 2)],
                 "drift_arcsec_day": [round(res["drift"][0], 3), round(res["drift"][1], 3)],
                 "snr": round(res["best_snr"], 2),
                 "coarse_snr": round(p["snr"], 2),
-                "mean_flux_mjy": round(mean_flux, 4),
+                "mean_flux_mjy_matched_filter_scale": round(mean_flux, 4),
                 "per_detector": dets,
                 "n_detectors_with_2sigma": n_det,
                 "still_there": there,
+                "track_checks": chk,
+                "at_field_edge": at_edge,
                 "delta_s2_infinite": round(res["delta_s2_infinite"], 1),
-                "snr_at_infinity": round(res["snr_infinite"], 2),
-                "reversed_earth_snr_mirror_distance": round(
-                    float(res["snr"][int(np.argmin(np.abs(res["grid"] + best_inv)))]), 2
-                )
-                if best_inv > 0 and res["grid"].min() <= -best_inv
-                else None,
-                "distance_measured": bool(measured and duration >= MIN_DISTANCE_DAYS),
+                "snr_at_infinity": None if not np.isfinite(straight) else round(straight, 2),
+                "reversed_earth_snr_mirror_distance": _mirror(res, best_inv),
+                "distance_measured": measured and duration >= MIN_DISTANCE_DAYS,
+                "epoch_resampling": resamp,
                 "profile": {
                     "inv_d": [round(float(x), 5) for x in res["grid"][::2]],
-                    "snr": [round(float(x), 2) for x in res["snr"][::2]],
+                    "snr": [None if not np.isfinite(x) else round(float(x), 2) for x in res["snr"][::2]],
                 },
+                "basic_vetting_passed": basic,
             }
             if cand["distance_measured"]:
                 cand.update(
                     {
                         "distance_au": round(1.0 / best_inv, 1),
-                        "interval_1sigma_au": [
-                            None if near1 is None else round(near1, 1),
-                            None if far1 is None else round(far1, 1),
-                        ],
-                        "interval_2sigma_au": [
+                        "interval_2sigma_au_statistical_only": [
                             None if near2 is None else round(near2, 1),
                             None if far2 is None else round(far2, 1),
                         ],
+                        "interval_note": DISTANCE_NOTE,
                     }
                 )
             else:
-                # lower limit: the nearest distance still within 2 sigma (S^2 >= best - 4)
                 cand.update(
                     {
                         "distance_au": None,
                         "lower_limit_au": None if near2 is None else round(near2, 1),
-                        "note": "distance not measured: the signal is not significantly better than at infinity"
-                        if duration >= MIN_DISTANCE_DAYS
-                        else "visit shorter than 8 days: detection only",
+                        "note": "no distance: the bend is not significant, not seen on a straight track, or decided by "
+                        "one epoch (or the exposures on the data span under 8 days)",
                     }
                 )
             candidates.append(cand)
         if label:
             lab = label_known(t0, ra, dec, fov, [(c["ra"], c["dec"]) for c in candidates])
             out["known_body_labelling"] = {k: v for k, v in lab.items() if k != "near"}
-            for c, near in zip(candidates, lab["near"], strict=True):
+            dist_known = label_known_distant(t0, ra, dec, [(c["ra"], c["dec"]) for c in candidates])
+            for c, near, dk in zip(candidates, lab["near"], dist_known, strict=True):
                 c["known_body"] = near
+                c["known_distant_body"] = [x for x in dk if "error" not in x]
+                c["known_distant_check_errors"] = [x for x in dk if "error" in x]
         for c in candidates:
             gone_fixed = any(v.get("there") for v in c["still_there"])
             if c.get("known_body"):
                 c["verdict"] = "known body (JPL sb_ident within 30 arcsec): not a candidate"
+            elif c.get("known_distant_body"):
+                names = ", ".join(x["name"] for x in c["known_distant_body"])
+                c["verdict"] = (
+                    f"known distant body ({names}, JPL Horizons within 60 arcsec): known-answer, not a candidate"
+                )
             elif gone_fixed:
                 c["verdict"] = "still there in another visit at the same place: a fixed or variable source, rejected"
             elif c["n_detectors_with_2sigma"] < 2:
                 c["verdict"] = "shows in fewer than two detectors: rejected"
+            elif c["at_field_edge"]:
+                c["verdict"] = "within 30 arcsec of the field edge: rejected"
+            elif (c["track_checks"]["top3_share"] or 1.0) > MAX_TOP3_SHARE or (
+                c["track_checks"]["chi2_dof"] or 99.0
+            ) > MAX_CHI2_DOF:
+                c["verdict"] = "signal from a few exposures or not constant along the track: artefact, rejected"
+            elif not c["distance_measured"] and float(np.hypot(*c["drift_arcsec_day"])) < 1.0:
+                c["verdict"] = "possible artefact or variable within this visit (no measured distance, drift near zero)"
             else:
-                c["verdict"] = "candidate (unexplained moving source; not a discovery)"
+                c["verdict"] = (
+                    "candidate (unlabelled moving source: sb_ident and the named-body Horizons check do not list it, "
+                    "neither covers every known body; not a discovery)"
+                )
     out["candidates"] = candidates
     good = [c for c in candidates if c["verdict"].startswith("candidate")]
-    out["status"] = "candidates" if good else "nothing_found"
-    if good:
-        c = good[0]
-        dist = (
-            f"at about {c['distance_au']:.0f} AU "
-            f"(2 sigma {c['interval_2sigma_au'][0]} to {c['interval_2sigma_au'][1]} AU)"
-            if c.get("distance_au")
-            else "with no measured distance"
-        )
+    known_ok = [c for c in candidates if c["verdict"].startswith("known distant body") and c["basic_vetting_passed"]]
+    out["status"] = "candidates" if good else ("known_body_recovered" if known_ok else "nothing_found")
+    shown = (good or known_ok)[:1]
+    if shown:
+        c = shown[0]
+        eb = c.get("epoch_resampling")
+        if c.get("distance_au") and eb:
+            lo68, hi68 = eb["bootstrap_distance_au_68"]
+            hi95 = eb["bootstrap_distance_au_95"][1]
+            dist = (
+                f"with a distance of about {c['distance_au']:.0f} AU (epoch bootstrap 68% range {lo68} to "
+                f"{hi68 if hi68 is not None else 'unbounded'} AU; at 95% the far side is "
+                f"{'unbounded' if hi95 is None else hi95}). "
+            )
+        else:
+            dist = "with no measured distance. "
+        what = "unlabelled moving source" if good else "known distant body recovered blind"
         out["answer"] = (
-            f"{len(good)} unexplained moving source(s); the strongest has S/N {c['snr']:.1f} {dist}. "
-            "A candidate, not a discovery. " + DEPTH_NOTE
+            f"{len(good) or len(known_ok)} {what}(s); the strongest has S/N {c['snr']:.1f} {dist}"
+            "A candidate at most, not a discovery. " + RANGING_NOTE + " " + DEPTH_NOTE
         )
     else:
         out["answer"] = (
-            f"Nothing moving above S/N {threshold:g} in {base['searched_area_deg2']} square degrees, "
+            f"Nothing moving above S/N {threshold:g} survived the vetting in "
+            f"{base['searched_area_deg2']} square degrees, "
             f"{nearest_au:g} to about 1000 AU, one visit: stacked mean flux limit "
-            f"{limit['faintest_mean_flux_mjy']} mJy in D{'/D'.join(str(d) for d in detectors)}. " + DEPTH_NOTE
+            f"{limit['faintest_mean_flux_mjy_matched_filter_scale']} mJy on the matched-filter scale "
+            f"(about {limit['faintest_mean_flux_mjy_aperture_scale']} mJy on the aperture scale) at the 50 per cent "
+            f"completeness level, D{'/D'.join(str(d) for d in detectors)}. The S/N {threshold:g} threshold itself is "
+            "not calibrated against blank fields. " + DEPTH_NOTE
         )
     out["runtime_s"] = round(time.time() - started, 1)
     out["map_and_search_s"] = round(time.time() - t_maps, 1)
