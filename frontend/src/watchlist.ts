@@ -157,7 +157,8 @@ export function exampleSentence(g: Group): string | null {
 /** The address that opens the normal viewer centred on the candidate, in its best detector. */
 export function viewerAddress(r: Pick<WatchRow, 'ra' | 'dec' | 'best_detector'>): string {
   const det = r.best_detector && r.best_detector >= 1 && r.best_detector <= 6 ? r.best_detector : DEFAULT_SELECTION.det
-  return addressOf({ ...DEFAULT_SELECTION, ra: r.ra, dec: r.dec, name: null, fov: 0.1, det, mode: 'normal' })
+  // Opened in Expert: someone checking a candidate needs the detectors, the difference view and the charts.
+  return addressOf({ ...DEFAULT_SELECTION, ra: r.ra, dec: r.dec, name: null, fov: 0.1, det, mode: 'normal', ui: 'expert' })
 }
 
 export const WATCHLIST_ADDRESS = '?watchlist=1'
