@@ -315,9 +315,9 @@ six tools and three screens of their own. Each needs something on the server's d
 these steps in order. Steps 1 and 2 run in the checkout, before the image is built; the
 others on the server, or against it. Nothing here was run on a hosting service yet. On a
 laptop on 2026-11-15, against the shared cache: step 1 (`export_lab.py --check`: "lab
-files are up to date with the results files"), step 2 (on `Dev` before the Observe
-anomalies and finish-page branches are merged, the copies in `scripts/checks/` fail in
-known ways, and the layout check passed: see `scripts/checks/README.md`), step 3's
+files are up to date with the results files"; `export_anomalies.py --check`: up to date),
+step 2 (both checks in `scripts/checks/` print `ALL PASS` on a build with the Observe
+anomalies screen: see `scripts/checks/README.md`), step 3's
 `--check` (661 views of the eleven objects, every one from disk in under a second with
 the network blocked, 1.7 minutes), step 4's loop for Candidate B, step 5 (5 seconds, its
 search already on disk), step 6.1 on a copy of the list (0 new rows; one field, IC 5146,
@@ -334,14 +334,13 @@ python scripts/export_lab.py --check
 It exits 1 if a file is out of date; then run `python scripts/export_lab.py` (it needs the
 cached cutouts of the three methods; see its docstring) and commit the new files. This
 check reads `docs/`, which is not in the image (`.dockerignore`), so it cannot run on the
-server. **Once the Observe anomalies screen is merged** (branch `agent/anomalies`, commit
-`674b595`, not in `Dev` when this was written), that screen reads
-`frontend/public/anomalies/sweep.json`, made from `docs/sweep/summary.json` and
-`docs/sweep.md` by `scripts/export_anomalies.py`; check it the same way before building:
-`python scripts/export_anomalies.py --check` (offline; it also compares the known objects'
-catalogue rows when the sweep's tile records are in the cache, and otherwise says they were
-not checked). Both scripts were written so that their `--check` mode catches a file that
-has drifted from the write-ups.
+server. The Observe anomalies screen reads `frontend/public/anomalies/sweep.json`, made
+from `docs/sweep/summary.json` and `docs/sweep.md` by `scripts/export_anomalies.py`; check
+it the same way before building: `python scripts/export_anomalies.py --check` (offline; it
+also compares the known objects' catalogue rows with the sweep's tile records in the cache,
+or, when the cache has none, with the repository's copy in `tests/data/sweep_export/tiles`).
+Both scripts were written so that their `--check` mode catches a file that has drifted from
+the write-ups.
 
 **2. Before building, optionally: the browser checks.** Run `scripts/checks/` against a
 local server built from the same commit (`scripts/checks/README.md`).
@@ -432,7 +431,7 @@ folder:
    `$SITE/?watchlist=1` shows pictures.
 
 The first group of Observe anomalies, the three candidates, uses the candidates' views
-from step 3 (and, once merged, the file of step 1). Votes cast on the laptop's copy go
+from step 3 and the file of step 1. Votes cast on the laptop's copy go
 with the file; to start the server with no votes, copy it before anyone votes.
 
 **7. Open each place once in a browser**, on the public address: `/` (Candidate B,

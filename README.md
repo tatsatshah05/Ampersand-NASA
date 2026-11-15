@@ -28,7 +28,7 @@ A bar across the top of every screen lists every feature, in this order (Beginne
 | 6 | Asteroids | Small bodies | Known asteroids and comets that JPL predicts in the patch | `tool=smallbodies` |
 | 7 | What is it? | Object card | What Gaia DR3 and SIMBAD know about the object, a drawing made from their numbers ("Illustration drawn from measurements. Not a photograph."), and the patch in older surveys | `tool=context` |
 | 8 | Practise | Training | SIMULATION: real pictures with one made-up moving object, to practise on | `?train=<seed>` |
-| 9 | Observe anomalies | Anomalies | What the searches found, for people to look at and vote on: first the three candidates ("Not reported anywhere we could find"), then "Choose a region", then the chosen region's groups. On the branch `agent/anomalies` (commit `674b595`), not yet merged: until it is, this item reads Vote / Watchlist and shows only the blind searches' groups | `?watchlist=1` |
+| 9 | Observe anomalies | Anomalies | What the searches found, for people to look at and vote on: first the three candidates ("Not reported anywhere we could find"), then "Choose a region" (everywhere, the Milky Way's plane, or one searched patch), then the chosen region's groups: the patch searches' "Not listed as changing", "Already known" and "Set aside as false alarms" (Expert: "Needs eyes", "Already known", "Set aside as artefacts"), with votes, and the sweep's 14 survivors in four groups | `?watchlist=1` (`&region=` keeps the choice) |
 | 10 | Three tools | Methods | "Three tools, three known worlds": three planet-finding methods, each tested on a known world | `?tools=1` |
 
 The page opens on Candidate B. A view is shared through its address, for example

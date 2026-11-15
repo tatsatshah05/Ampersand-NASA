@@ -6,11 +6,9 @@ review of this text. Check the submission form for length limits before pasting:
 are given.
 
 **Read before pasting.** Every number and claim below is in the code, in a results file or in a write-up in the
-repository; the write-up is named where it matters. Three things must be supplied or checked by a person and
-are marked **[TO CONFIRM]**: the public web address (nothing is deployed yet), the ninth item of the bar
-(Observe anomalies: built on the branch `agent/anomalies`, commit `674b595`, and not yet merged into `Dev`; it
-was read from that commit, built and run on a laptop; see "What a visitor can do"), and the answer about AI
-tools, which the team must agree is complete. Do not paste a marked sentence as it stands.
+repository; the write-up is named where it matters. Two things must be supplied or checked by a person and
+are marked **[TO CONFIRM]**: the public web address (nothing is deployed yet) and the answer about AI tools,
+which the team must agree is complete. Do not paste a marked sentence as it stands.
 
 Rules this text keeps, and any edit must keep: the three sweep sources are **candidates**, "found in no
 catalogue or report we checked" and "not confirmed"; their three sentences are the referee's, word for word
@@ -199,25 +197,30 @@ plain words; Expert adds the numbers, the detector and the settings.
    the centre, and a drawing of it made from the catalogues' numbers: the colour of a glowing body at Gaia's
    temperature for it, and its size to scale with the Sun. The drawing is labelled "Illustration drawn from
    measurements. Not a photograph." The same patch in older surveys (WISE, 2MASS, DSS) is shown below it.
+   While What is it? is open, pressing any star in the picture asks the catalogues about that star, and its
+   card offers "Look at this one", which makes it the star the page follows.
 8. **Practise** (Expert: **Training**). Real SPHEREx pictures with one made-up moving object added, to learn
    what a mover looks like. A banner that cannot be closed and the word SIMULATION in every picture say that
    it is practice. The same made-up object is used in one other place a visitor can open: the planted run of
    the Planet X search, in Expert, which is also marked as a simulation. To test that search we also planted
    made-up objects in real pictures and counted how many it found (the 177 of 205 above). Everything else is
    real data: SPHEREx's pictures, and the catalogues and older surveys they are compared with.
-9. **Observe anomalies** (Expert: **Anomalies**) **[TO CONFIRM: seen running only as a build of the branch
-   `agent/anomalies` (commit `674b595`), which is not yet merged into `Dev`; check the screen before pasting.
-   Until it is merged the item reads "Vote" (Expert: "Watchlist").]** Everything our searches saw change, for people to look at.
-   It first says what an anomaly is. Then comes a group headed "Not reported anywhere we could find":
-   Candidates A, B and C, each with two real SPHEREx pictures ("Not seen" and "At its brightest"), its allowed
-   sentence, what it probably is, the sentence about the search for earlier reports ("Has anyone reported
-   it?"), its status ("Not confirmed. Not yet reported to astronomers.") and a link "Watch it appear". Then
-   "Choose a region": everywhere, the Milky Way's plane, or each searched patch by its constellation, each with
-   how many were found. Below that, the chosen region's groups: from the patch searches, "In no catalogue",
-   "Already known" and "Set aside as false alarms" (Expert: "Needs eyes", "Already known", "Set aside as
-   artefacts"), with votes; from the sweep of the plane, its 14 survivors in four groups. A vote is an opinion,
-   not a confirmation, and it never changes the machine's order. Scientists can download the whole list as a
-   CSV file.
+9. **Observe anomalies** (Expert: **Anomalies**). Everything our searches saw change, for people to look at.
+   It first says what SPHEREx is and what an anomaly is. Then comes a group headed "Not reported anywhere we
+   could find": Candidates A, B and C, each with two real SPHEREx pictures ("Not seen" and "At its brightest";
+   Expert: "Last visit not detected" and "Brightest visit"), a line saying which star nearby (for C, the crowd
+   around it) is not the candidate, its allowed sentence, what it probably is, the sentence about the search
+   for earlier reports ("Has anyone reported it?"; Expert: "Search for earlier reports"), its status ("Not
+   confirmed. Not yet reported to astronomers.") and a link "Watch it appear". Expert puts the position, brightness, rise and dates right
+   under the pictures. Then "Choose a region": everywhere, the Milky Way's plane, or each searched patch by its
+   constellation, each with how many were found, and a "Show everywhere" button once a region is chosen.
+   Below that, the chosen region's groups. From the patch searches ("Found by searching small patches", or
+   "Found by searching this patch"): "Not listed as changing", "Already known" and "Set aside as false
+   alarms" (Expert: "Needs eyes", "Already known", "Set aside as artefacts"), with votes. From the sweep of
+   the plane, its 14 survivors in four groups: "Candidates", "Known novae", "Known stars that change" and "Set
+   aside after a closer look" (Expert: "Candidates", "Known eruptions (novae)", "Catalogued stars that varied",
+   "Set aside after a closer look"). A vote is an opinion, not a confirmation, and it never changes the
+   machine's order. Scientists can download the whole list as a CSV file.
 10. **Three tools** (Expert: **Methods**). Three ways to learn about hidden worlds, each tested on a world that
     astronomers already know, on a screen of its own (below).
 
