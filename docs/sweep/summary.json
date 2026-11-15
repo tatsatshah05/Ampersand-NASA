@@ -1,47 +1,29 @@
 {
- "tiles_done": 42,
+ "tiles_done": 63,
  "tiles_skipped": 0,
- "area_sq_deg": 301.43,
+ "area_sq_deg": 472.64,
  "tally": {
-  "sources": 818618,
-  "comparable": 810220,
-  "changed_anchors": 3706,
-  "killed_second_image": 3104,
-  "single_image_only": 535,
-  "changed_all_images": 67,
+  "sources": 1162894,
+  "comparable": 1151201,
+  "changed_anchors": 6023,
+  "killed_second_image": 5128,
+  "single_image_only": 786,
+  "changed_all_images": 109,
   "killed_edge": 0,
-  "killed_shape": 29,
-  "killed_neighbour": 3,
-  "killed_saturation_residue": 16,
+  "killed_shape": 31,
+  "killed_neighbour": 41,
+  "killed_saturation_residue": 22,
   "killed_ghost_risk": 1,
-  "survivors": 18,
-  "single_image_killed": 535,
+  "survivors": 14,
+  "single_image_killed": 786,
   "survivors_single_image": 0
  },
  "survivors_by_kind": {
-  "known_variable": 8,
   "known_eruption": 2,
-  "candidate": 8
+  "known_variable": 6,
+  "candidate": 6
  },
  "survivors": [
-  {
-   "tile": "l000.0_b+0.0",
-   "ra": 265.9055,
-   "dec": -28.41522,
-   "kind": "known_variable",
-   "confirmed_in_all_exposures": null,
-   "bright_mjy": 112.2,
-   "direction": "brightened"
-  },
-  {
-   "tile": "l000.0_b+0.0",
-   "ra": 266.19368,
-   "dec": -29.26382,
-   "kind": "known_variable",
-   "confirmed_in_all_exposures": null,
-   "bright_mjy": 73.8,
-   "direction": "brightened"
-  },
   {
    "tile": "l000.0_b-2.5",
    "ra": 270.96968,
@@ -133,15 +115,6 @@
    "direction": "faded"
   },
   {
-   "tile": "l027.0_b+0.0",
-   "ra": 279.73756,
-   "dec": -3.86269,
-   "kind": "candidate",
-   "confirmed_in_all_exposures": false,
-   "bright_mjy": 1300.6,
-   "direction": "faded"
-  },
-  {
    "tile": "l330.0_b+0.0",
    "ra": 241.70931,
    "dec": -52.20484,
@@ -157,15 +130,6 @@
    "kind": "known_variable",
    "confirmed_in_all_exposures": null,
    "bright_mjy": 38.9,
-   "direction": "brightened"
-  },
-  {
-   "tile": "l339.0_b+0.0",
-   "ra": 250.48507,
-   "dec": -46.02356,
-   "kind": "candidate",
-   "confirmed_in_all_exposures": true,
-   "bright_mjy": 54.1,
    "direction": "brightened"
   },
   {

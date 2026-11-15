@@ -90,89 +90,111 @@ eruption (1,612 mJy).
 
 ## What was swept
 
-- **Area:** 42 tiles, 301 square degrees of the sky counted where at least two epochs are each covered by
-  at least two images (the cells are 0.1 degree squares; each tile answers only for the sky nearer its own
-  centre than any other planned tile's, so nothing is counted twice). All 21 tiles of the row at
-  Galactic latitude 0 (longitudes 330 to 360 to 30 degrees, every 3 degrees), 18 of the 21 tiles at
-  latitude -2.5 (missing: l 27, 330, 339) and 3 of the 21 at +2.5 (l 354, 0, 3). 21 of the planned 63 tiles are
-  not done (see "How to resume").
-- **Sources compared:** 818,618, from 2,024,926 detections of the images (the rest lie in the overlaps
+- **Area: all 63 planned tiles are done, 472.6 square degrees**, counted where at least two epochs are each
+  covered by at least two images (the cells are 0.1 degree squares; each tile answers only for the sky nearer its
+  own centre than any other planned tile's, so nothing is counted twice). The tiles are centred every 3 degrees of
+  Galactic longitude from 330 through 0 to 30 degrees, on three rows of latitude (-2.5, 0 and +2.5), so the sweep
+  spans latitude -3.75 to +3.75 where covered.
+- **Sources compared:** 1,162,894, from 2,808,554 detections of the images (the rest lie in the overlaps
   belonging to other tiles).
 - **Brightness limit actually reached:** a source of 30 mJy and at least 8 times the local scatter in
-  its aperture. The typical error of one measurement is 4.1 mJy (median over the tiles; 2 mJy at the
+  its aperture. The typical error of one measurement is 3.4 mJy (median over the tiles; about 2 mJy at the
   10th percentile, 11 to 25 mJy at the 90th, where the 3 per cent calibration term on bright stars
-  dominates), so 30 mJy is a 7 sigma source in an ordinary field and fainter than that in the crowded
-  centre is not looked for. Eruptions fainter than 30 mJy at 4.6 micrometres (magnitude 9.4) are not seen.
+  dominates), so 30 mJy is a 9 sigma source in an ordinary field; in the crowded centre fainter changes are not
+  looked for. Eruptions fainter than 30 mJy at 4.6 micrometres (magnitude 9.4) are not seen.
+- Disk: the sweep's cache stayed under 3.1 GB; the whole-detector images are deleted after each tile.
 
-## The tallies, every stage (42 tiles)
+## The tallies, every stage (63 tiles)
 
 | Stage | Sources |
 |---|---|
-| Sources compared | 818,618 |
-| Measurable in at least two epochs | 810,220 |
-| Changed by ten times, one image per epoch | 3,706 |
-| Killed: second image disagrees or is missing (glitches, movers, noise) | 3,104 |
-| Passed in one usable image only (cannot be confirmed) | 535 |
-| ... all 535 then killed by the ghost or neighbour check (by hand in the proof tile: 14 ghost risk, 1 neighbour) | 535 |
-| Changed in every image, two or more in the bright epoch | 67 |
+| Sources compared | 1,162,894 |
+| Measurable in at least two epochs | 1,151,201 |
+| Changed by ten times, one image per epoch | 6,023 |
+| Killed: second image disagrees or is missing (glitches, movers, noise) | 5,128 |
+| Passed in one usable image only (cannot be confirmed) | 786 |
+| ... all 786 then killed by the ghost, neighbour or saturation check | 786 |
+| Changed in every image, two or more in the bright epoch | 109 |
 | Killed: image edge | 0 |
-| Killed: not a star shape | 29 |
-| Killed: much brighter neighbour | 3 |
-| Killed: saturated-star residue | 16 |
+| Killed: not a star shape | 31 |
+| Killed: much brighter neighbour | 41 |
+| Killed: saturated-star residue | 22 |
 | Killed: reflection risk | 1 |
-| **Survivors** | **18** |
-| ... known variables (catalogued, already bright) | 8 |
+| **Survivors** | **14** |
+| ... known variables (catalogued, already bright) | 6 |
 | ... known eruptions | 2 |
-| ... candidates before the all-exposure check | 8 |
+| ... unexplained, before the all-exposure check | 6 |
 
-Of the 8 "candidates", 4 are shown not to be what they seemed (below), 4 remain (3 clear, 1 weak).
-Counting them as false alarms, the sweep's false-alarm rate after every check is 4 in 818,618.
+Of the 6 unexplained survivors, 3 are shown not to be what they seemed (below) and 3 remain (A, B, C). Counting
+those 3 as false alarms, the sweep's false-alarm rate after every check is 3 in 1,162,894. The 21 tiles added
+at the end (the +2.5 row and l 27, 330, 339 at -2.5) produced no new survivor.
 
 Tile by tile (`area` in square degrees; "naive" is the one-image-per-epoch changes):
 
 | Tile | Area | Sources | Naive | Survivors |
 |---|---|---|---|---|
-| l000.0_b+0.0 | 6.08 | 20,753 | 109 | 2 |
+| l000.0_b+0.0 | 6.08 | 20,753 | 109 | 0 |
 | l000.0_b+2.5 | 8.33 | 25,760 | 70 | 0 |
 | l000.0_b-2.5 | 8.86 | 29,154 | 69 | 1 |
 | l003.0_b+0.0 | 5.84 | 19,693 | 69 | 2 |
 | l003.0_b+2.5 | 5.97 | 19,295 | 63 | 0 |
 | l003.0_b-2.5 | 8.94 | 28,083 | 81 | 0 |
 | l006.0_b+0.0 | 6.16 | 20,768 | 64 | 1 |
+| l006.0_b+2.5 | 9.15 | 25,132 | 80 | 0 |
 | l006.0_b-2.5 | 5.33 | 15,549 | 61 | 0 |
 | l009.0_b+0.0 | 6.64 | 20,848 | 63 | 1 |
+| l009.0_b+2.5 | 4.15 | 9,714 | 32 | 0 |
 | l009.0_b-2.5 | 9.39 | 23,925 | 107 | 0 |
 | l012.0_b+0.0 | 5.39 | 16,876 | 52 | 0 |
+| l012.0_b+2.5 | 8.72 | 19,869 | 105 | 0 |
 | l012.0_b-2.5 | 6.26 | 14,863 | 72 | 0 |
 | l015.0_b+0.0 | 6.46 | 18,945 | 71 | 1 |
+| l015.0_b+2.5 | 8.93 | 16,027 | 111 | 0 |
 | l015.0_b-2.5 | 9.15 | 19,464 | 124 | 0 |
 | l018.0_b+0.0 | 3.74 | 11,735 | 68 | 1 |
+| l018.0_b+2.5 | 8.34 | 16,232 | 105 | 0 |
 | l018.0_b-2.5 | 11.54 | 23,174 | 167 | 0 |
 | l021.0_b+0.0 | 6.71 | 21,954 | 99 | 0 |
+| l021.0_b+2.5 | 8.77 | 19,833 | 158 | 0 |
 | l021.0_b-2.5 | 9.29 | 18,638 | 124 | 0 |
 | l024.0_b+0.0 | 7.06 | 22,915 | 107 | 2 |
+| l024.0_b+2.5 | 10.59 | 19,514 | 172 | 0 |
 | l024.0_b-2.5 | 5.96 | 12,543 | 76 | 0 |
-| l027.0_b+0.0 | 6.97 | 20,212 | 79 | 2 |
+| l027.0_b+0.0 | 6.97 | 20,212 | 79 | 1 |
+| l027.0_b+2.5 | 11.52 | 20,280 | 196 | 0 |
+| l027.0_b-2.5 | 7.94 | 13,824 | 90 | 0 |
 | l030.0_b+0.0 | 7.58 | 21,739 | 86 | 0 |
+| l030.0_b+2.5 | 8.78 | 15,330 | 118 | 0 |
 | l030.0_b-2.5 | 10.70 | 16,980 | 118 | 0 |
 | l330.0_b+0.0 | 6.10 | 17,815 | 93 | 1 |
+| l330.0_b+2.5 | 7.62 | 13,174 | 102 | 0 |
+| l330.0_b-2.5 | 8.61 | 15,504 | 106 | 0 |
 | l333.0_b+0.0 | 6.77 | 20,296 | 105 | 1 |
+| l333.0_b+2.5 | 7.54 | 15,555 | 165 | 0 |
 | l333.0_b-2.5 | 9.40 | 16,123 | 122 | 0 |
 | l336.0_b+0.0 | 7.02 | 21,228 | 77 | 0 |
+| l336.0_b+2.5 | 5.85 | 10,974 | 69 | 0 |
 | l336.0_b-2.5 | 7.78 | 15,091 | 111 | 0 |
-| l339.0_b+0.0 | 6.89 | 22,431 | 127 | 1 |
+| l339.0_b+0.0 | 6.89 | 22,431 | 127 | 0 |
+| l339.0_b+2.5 | 8.62 | 14,356 | 102 | 0 |
+| l339.0_b-2.5 | 8.08 | 15,228 | 97 | 0 |
 | l342.0_b+0.0 | 6.60 | 19,318 | 86 | 1 |
+| l342.0_b+2.5 | 9.17 | 15,226 | 119 | 0 |
 | l342.0_b-2.5 | 8.18 | 15,629 | 94 | 0 |
 | l345.0_b+0.0 | 6.18 | 17,458 | 69 | 0 |
+| l345.0_b+2.5 | 4.85 | 9,890 | 60 | 0 |
 | l345.0_b-2.5 | 8.29 | 15,632 | 109 | 0 |
 | l348.0_b+0.0 | 2.32 | 7,260 | 36 | 0 |
+| l348.0_b+2.5 | 8.18 | 16,501 | 118 | 0 |
 | l348.0_b-2.5 | 7.42 | 15,648 | 96 | 0 |
 | l351.0_b+0.0 | 5.93 | 18,764 | 83 | 0 |
+| l351.0_b+2.5 | 9.19 | 20,290 | 138 | 0 |
 | l351.0_b-2.5 | 5.86 | 14,283 | 71 | 0 |
 | l354.0_b+0.0 | 6.92 | 24,115 | 78 | 1 |
 | l354.0_b+2.5 | 8.92 | 22,736 | 93 | 0 |
 | l354.0_b-2.5 | 9.35 | 26,879 | 116 | 0 |
 | l357.0_b+0.0 | 5.41 | 18,999 | 74 | 0 |
+| l357.0_b+2.5 | 6.61 | 21,823 | 74 | 0 |
 | l357.0_b-2.5 | 7.76 | 25,047 | 67 | 0 |
 
 Tile `l348.0_b+0.0` has only 2.3 square degrees: fewer of its images overlap the tile in two epochs.
@@ -185,14 +207,17 @@ Tile `l348.0_b+0.0` has only 2.3 square degrees: fewer of its images overlap the
 | V0691 Serpentis (nova) | RA 279.74438, Dec -3.86389 | 11,766 mJy, saturated, in September 2025 | AAVSO VSX type NA, 2.7 arcsec away; faded to 173 mJy by spring 2026 |
 
 Pictures: `docs/sweep/l000.0_b-2.5_270.9697-31.4573.png`, `docs/sweep/l027.0_b+0.0_279.7444-3.8639.png`
-and their `_lightcurve.png`. A second "candidate" 24 arcseconds from V0691 Ser
-(`l027.0_b+0.0_279.7376-3.8627.png`) is the wing of that very bright nova: it is saturated in the same images, it is
-absent in the other epochs, and every exposure of detectors 1 to 4 shows nothing there, so it is set aside
-as part of the nova's glare. (The neighbour check looks 3 pixels out and the saturation-residue check
-ignores a clump within 6 pixels as "the source itself"; this one lay 4 pixels from the core and slipped
-between them. It is a hole in the checks, found by looking at the pictures.)
+and their `_lightcurve.png`. In the first run a second "candidate" 24 arcseconds
+(4 pixels) from V0691 Ser, the wing of that very bright nova, slipped through: the saturation-residue check
+took the nova's saturated clump for the source's own core because it ignored any clump within 6 pixels. That is
+fixed (a saturated clump counts as a source's own only within 2 pixels, and in an image where the source has one
+of its own the clumps around it are its bloom; the reflection check ignores a bright neighbour closer than 15
+pixels). The test `test_the_wing_of_a_saturated_nova_is_not_a_candidate` uses the real V0691 Ser cutouts of the six
+images: the nova survives, the wing is killed as saturation residue. The seven tiles that held a survivor with a
+saturated image, or a reflection kill, were rerun with the fixed rule; three survivors went away (the wing, one weak
+candidate, below, and two known variables near saturated stars) and one reflection kill became a residue kill.
 
-Eight survivors are catalogued stars that were already bright (AllWISE, CatWISE or a variable type in
+Six survivors are catalogued stars that were already bright (AllWISE, CatWISE or a variable type in
 VSX, SIMBAD or Gaia): long-period variables and similar. They are not what the sweep is after and are counted
 only (`docs/sweep/summary.json` lists their positions).
 
@@ -286,13 +311,13 @@ a cold dust clump.
 - Searched: Transient Name Server (60 arcseconds, empty); web search by catalogue names and position (one
   result about CX330, a different Galactic Centre object, not this one): no report found.
 
-### Candidate D (weak): RA 250.48507, Dec -46.02356, l 338.837, b +0.158
+### Candidate D (weak) is withdrawn: RA 250.48507, Dec -46.02356, l 338.837, b +0.158
 
-D6 14 mJy, 66, 52; D5 9, 76, 43 (Aug 2025, Mar 2026, Aug 2026): a fourfold brightening of a counterpart
-that is already 15 mJy at 4.6 micrometres, against a GLIMPSE [4.5] of 13.31 (0.85 mJy). It passes only
-through the "absent" rule (15 mJy is under three times its noise) and not the ten-times ratio (3.6), and
-the bright images are partly saturated. Reported for completeness; it would not be called a candidate on the
-ten-times rule. `docs/sweep/l339.0_b+0.0_250.4851-46.0236.png`. Transient Name Server (60 arcseconds): empty.
+In the first run this was a fourfold brightening (D6 14, 66, 52 mJy; D5 9, 76, 43; Aug 2025, Mar 2026, Aug 2026) of
+a counterpart already at 15 mJy, against a GLIMPSE [4.5] of 13.31 (0.85 mJy). It passed only through the "absent"
+rule (15 mJy is under three times its noise), not the ten-times ratio (3.6), and the bright images were partly
+saturated. With the fixed saturation rule a saturated clump within 15 pixels now kills it, so it is no longer a
+survivor. Its picture `docs/sweep/l339.0_b+0.0_250.4851-46.0236.png` was removed. Transient Name Server (60 arcseconds): empty.
 
 ### Looked at and set aside
 
@@ -300,7 +325,7 @@ ten-times rule. `docs/sweep/l339.0_b+0.0_250.4851-46.0236.png`. Transient Name S
 |---|---|
 | RA 267.49549, Dec -27.56803 (l 1.668, b -0.115) | its brightness in the tile images swung (136, 126, 23, 116, 125) but the median of all 3.8 to 5 micrometre exposures is 143, 135 and 157 mJy in D5 and 111, 96 and 118 in D6: steady. One tile image was measured on a crowded background. |
 | RA 272.10809, Dec -22.28134 | the catalogued planetary nebula PN M 1-40 lies 0.7 arcseconds away; NEOWISE saw it steady (21 visits, 1.05 times); all-exposure medians 96, 86, 178 mJy in D6. A bright nebula, not a transient. |
-| RA 279.73756, Dec -3.86269 | the glare of V0691 Ser, above. |
+| RA 279.73756, Dec -3.86269 | the glare of V0691 Ser, above; no longer a survivor after the fix, so its picture was removed. |
 | RA 261.92881, Dec -35.29494 | 39 mJy against 1.4 in a 4-image comparison, but the all-exposure medians of D6 are 4, 15 and 2 mJy and D5 negative: 5 sigma at most, not confirmed. A methanol maser and sub-millimetre clump lie 8 arcseconds away, so it may be worth a look by someone who knows that region. |
 
 An earlier run of the sweep, before the faint side was required to be a full measurement and not a saturated
@@ -331,17 +356,18 @@ None of A, B or C is confirmed, and none should be called a discovery. To go fur
   imperfect when the field is full of stars, so a source below about 10 mJy cannot be measured
   as absent and a faint change next to a brighter star is lost.
 - **Hidden by a saturated star**: a change within 3 pixels of a much brighter neighbour, or within 15 of a
-  saturated one, is killed rather than examined.
-- **Ghosts are not understood**: the check is a heuristic (a source within 300 pixels of a very bright star
+  saturated clump that is not the source's own, is killed rather than examined (this also removed two catalogued
+  variables and one weak candidate that sat near saturated stars).
+- **Ghosts are not understood**: the check is a heuristic (a source 15 to 300 pixels from a very bright star
   must be seen at the same sky position in two images where that star sits at least 100 pixels apart on the
-  detector). It killed 1 survivor in the sweep and made every single-image case fail; it is not a model of
+  detector). It killed 1 survivor in the sweep and made nearly every single-image case fail; it is not a model of
   SPHEREx's reflections, which the archive does not flag.
-- **Single-image sources are lost**: 535 sources passed the two-visit rule with only one usable image in the
-  bright epoch and all were killed by the ghost or neighbour check. Real eruptions near very bright stars
+- **Single-image sources are lost**: 786 sources passed the two-visit rule with only one usable image in the
+  bright epoch and all were killed by the ghost, neighbour or saturation check. Real eruptions near very bright stars
   are among them.
-- **Gaps**: a tile counts only the sky where two epochs are each covered by two images. Tiles cover 4 to 12
-  square degrees of their 7 to 12 and the part not covered is not examined. The plane within 2.5 degrees of
-  latitude 0 is covered only in part: the +2.5 row and three tiles of the -2.5 row are not done.
+- **Gaps**: a tile counts only the sky where two epochs are each covered by two images. Each tile's
+  covered part is 2 to 12 square degrees and the part not covered is not examined, so the 472.6 square degrees above
+  are what was examined, not the full 63 tile areas.
 - **Catalogue searches are positions only**: the catalogues are asked at the sweep's centroid within 20
   arcseconds, and the 6.2 arcsecond "at the place" rule can call a blended pair a counterpart or miss a high-motion
   star.
@@ -350,7 +376,7 @@ None of A, B or C is confirmed, and none should be called a discovery. To go fur
 ## How to run and resume
 
 ```
-SPHEREX_CACHE_DIR="backend/cache/sweep" python scripts/sweep_plane.py            # all remaining tiles, skips finished ones
+SPHEREX_CACHE_DIR="backend/cache/sweep" python scripts/sweep_plane.py            # all remaining tiles, skips finished ones (none are left)
 SPHEREX_CACHE_DIR="backend/cache/sweep" python scripts/sweep_plane.py --shard 0/3 # three of these in parallel: 0/3, 1/3, 2/3
 SPHEREX_CACHE_DIR="backend/cache/sweep" python scripts/sweep_plane.py --summary   # the tallies so far
 SPHEREX_CACHE_DIR="backend/cache/sweep" python scripts/sweep_plane.py --proof     # the V7994 Sgr proof tile
@@ -358,5 +384,6 @@ SPHEREX_CACHE_DIR="backend/cache/sweep" python scripts/sweep_plane.py --proof   
 
 Each tile downloads six whole detector images (about 100 MB each, about 20 seconds each from NASA's
 public S3 bucket), measures them (about 1 to 3 minutes), asks the catalogues, and deletes the images. The
-whole run, three at a time, takes about 12 minutes per three tiles. A tile that is finished has a file in
+whole run, three at a time, takes about 12 minutes per three tiles. The script stops when less than 14 GB of disk
+is free or its cache passes 6 GB. A tile that is finished has a file in
 `<cache>/sweep_work/tiles/`; delete a file to redo that tile.
