@@ -1,0 +1,13 @@
+# Render blueprint for the SPHEREx sky-change viewer: one web service built from the Dockerfile.
+# How to use it, what the free plan means and how to refresh the pre-built demo views:
+# docs/deploy-render.md.
+services:
+  - type: web
+    name: spherex-sky-change-viewer
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free                      # no card needed; sleeps after 15 minutes without visitors (see the doc)
+    region: oregon                  # next to NASA's public copy of the archive on Amazon (us-west-2)
+    healthCheckPath: /openapi.json
+    autoDeploy: true                # every push to the deployed branch builds and goes live
