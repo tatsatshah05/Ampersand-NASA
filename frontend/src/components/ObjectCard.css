@@ -215,6 +215,13 @@
   color: var(--muted);
 }
 
+/* Inside a tool panel the page's `.panel dl` makes every list a two-column grid, which would put
+   each row of this list in a column one character wide. This list lays out its own rows. */
+.oc dl.oc-ids {
+  display: block;
+  margin: 8px 0 0;
+}
+
 .oc-ids div {
   display: flex;
   gap: 8px;

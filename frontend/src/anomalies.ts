@@ -9,7 +9,7 @@
 // "never seen before", or "new" without "that we found in no catalogue or report we checked".
 import { addressOf, DEFAULT_SELECTION, type Selection, type UiLevel } from './address'
 import { framesUrl, skyOffsetArcsec, type Frame } from './api'
-import { FIND_RADIUS_ARCSEC, findAt, FINDS, type Find } from './finds'
+import { CANDIDATE_LINE, FIND_RADIUS_ARCSEC, findAt, FINDS, type Find } from './finds'
 import type { Group, PatchRegion, PatchRegions } from './watchlist'
 
 export const SCREEN_TITLE = 'Observe anomalies'
@@ -380,10 +380,14 @@ export const ALL_THREE_LINK: Record<UiLevel, string> = {
   expert: 'All three in Anomalies',
 }
 
-/** The candidate whose allowed sentence `line` is, when the Viewer is at that candidate's place; else null. */
-export function allowedLineOf(line: string, ra: number, dec: number): Find | null {
+/**
+ * The candidate whose allowed sentence `line` gives, when the Viewer is at that candidate's place:
+ * the sentence itself (Expert, under the headline) or Beginner's short CANDIDATE_LINE under the table,
+ * whose "i" quotes it word for word. Else null. The link to all three follows that line.
+ */
+export function allThreeLineOf(line: string, ra: number, dec: number): Find | null {
   const find = findAt(ra, dec)
-  return find && find.allowed === line ? find : null
+  return find && (find.allowed === line || line === CANDIDATE_LINE) ? find : null
 }
 
 /** The groups' counts add up to the region's: used by the screen's own check. */

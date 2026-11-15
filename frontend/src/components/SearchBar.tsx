@@ -45,6 +45,8 @@ export interface SearchTarget {
   parallax?: number | null
   /** A detector (1 to 6) to switch to, for an object that only shows up in one. */
   det?: number
+  /** 'gaia' when /api/resolve took the motion from Gaia DR3 (its `source`), so the page can say whose prediction it compares with. */
+  motionFrom?: 'gaia'
 }
 
 interface Preset {
@@ -279,6 +281,7 @@ function useSkySearch(onSelect: OnSelect): SearchState {
       pmdec: found.pmdec,
       parallax: found.parallax,
     }
+    if (found.source === 'Gaia DR3' && found.pmra !== null && found.pmdec !== null) target.motionFrom = 'gaia'
     if (preset?.det !== undefined) target.det = preset.det
     onSelectNow.current(target, preset?.name)
   }
@@ -416,7 +419,7 @@ export function SearchField({ search }: { search: SearchState }) {
           value={text}
           onChange={(e) => search.edit(e.target.value)}
           aria-label="Search by name or coordinates"
-          placeholder="Search a star or coordinates"
+          placeholder="Search the sky"
           maxLength={200}
           autoComplete="off"
           autoCapitalize="none"

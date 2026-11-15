@@ -10,7 +10,7 @@
 import type { FramesQuery, Mode, Reference, Track } from './api'
 import type { SearchTarget } from './components/SearchBar'
 import { isToolKey, TOOL_KEYS, type ToolKey } from './features'
-import { FINDS, type Find } from './finds'
+import { findAt, FINDS, type Find } from './finds'
 
 /** The six SPHEREx detectors and the wavelengths each one sees, in micrometres. */
 export const DETECTORS = [
@@ -51,6 +51,12 @@ export interface Selection {
   pmra: number | null
   pmdec: number | null
   parallax: number | null
+  /**
+   * Where that motion came from, when it is Gaia DR3's (a name looked up: /api/resolve takes it from
+   * Gaia when SIMBAD lists a Gaia identifier). `src=gaia` in the address. The comparison then says
+   * Gaia DR3 predicts, not "the given motion". Absent or null: not known (typed, or another catalogue).
+   */
+  motionFrom?: 'gaia' | null
   fov: number
   det: number
   mode: Mode
@@ -222,6 +228,9 @@ export function readAddress(search: string, stored: string | null = null): { sel
   }
 
   // The object's motion belongs to the position, so it is read only when that was usable.
+  // One of our candidates (finds.ts) with no motion in the address: a link that left it out, as
+  // links to other screens did, or typed coordinates.
+  let heldFind: Find | null = null
   if (positionGiven) {
     const pmraRaw = p.get('pmra')
     const pmdecRaw = p.get('pmdec')
@@ -230,6 +239,7 @@ export function readAddress(search: string, stored: string | null = null): { sel
     if (validMotion(pmra) && validMotion(pmdec)) {
       s.pmra = pmra
       s.pmdec = pmdec
+      if (p.get('src') === 'gaia') s.motionFrom = 'gaia'
       const parallaxRaw = p.get('parallax')
       const parallax = numberFrom(parallaxRaw)
       if (validParallax(parallax)) s.parallax = parallax
@@ -239,6 +249,15 @@ export function readAddress(search: string, stored: string | null = null): { sel
         "The address gives the object's motion incompletely (pmra and pmdec must both be numbers), so the motion is not used. " +
           'A fast-moving object may then be marked in the wrong place.',
       )
+    } else {
+      // It is shown as its button shows it: held still at its place (a motion of zero), and in its
+      // own detector unless the address names one. Without a motion /api/frames would measure the
+      // brightest spot near the centre, which in 2025 was a neighbouring star (finds.ts, findTarget).
+      heldFind = findAt(s.ra, s.dec)
+      if (heldFind) {
+        s.pmra = 0
+        s.pmdec = 0
+      }
     }
   }
 
@@ -256,6 +275,7 @@ export function readAddress(search: string, stored: string | null = null): { sel
   const detRaws = [p.get('det'), p.get('detector')].filter((raw): raw is string => raw !== null)
   const det = detRaws.map(numberFrom).find(validDetector)
   if (det !== undefined) s.det = det
+  else if (heldFind && !detRaws.length) s.det = heldFind.det
   else if (detRaws.length) {
     notes.push(`The address asks for detector ${quote(detRaws[0])}, but SPHEREx has detectors 1 to 6, so detector ${DEFAULT_SELECTION.det} is used.`)
   }
@@ -347,7 +367,7 @@ export function withUi(address: string, level: UiLevel): string {
 export const TOOLS_ADDRESS = '?tools=1'
 
 // The parameters this module owns. Anything else in the address is left as it is.
-const OWN_KEYS = ['ra', 'dec', 'fov', 'det', 'detector', 'mode', 'pmra', 'pmdec', 'parallax', 'reference', 'track', 'name', 'train', 'level', 'ui']
+const OWN_KEYS = ['ra', 'dec', 'fov', 'det', 'detector', 'mode', 'pmra', 'pmdec', 'parallax', 'src', 'reference', 'track', 'name', 'train', 'level', 'ui']
 
 /** The query string ("?ra=...") for a selection, keeping other parameters of `current`. */
 export function addressOf(s: Selection, current = ''): string {
@@ -364,6 +384,7 @@ export function addressOf(s: Selection, current = ''): string {
     p.set('pmra', String(s.pmra))
     p.set('pmdec', String(s.pmdec))
     if (s.parallax !== null) p.set('parallax', String(s.parallax))
+    if (s.motionFrom === 'gaia') p.set('src', 'gaia')
   }
   if (s.mode === 'difference') p.set('reference', s.reference)
   if (s.mode === 'sum') p.set('track', s.track)
@@ -406,6 +427,17 @@ export function toFramesQuery(s: Selection): FramesQuery {
 }
 
 /**
+ * The detector a page opened on `s` takes as the visitor's usual one: the address's, except on one
+ * of our candidates in the candidate's own detector (the landing view among them), which is the
+ * candidate's choice, not the visitor's: then the usual detector, 5. Without that, every star
+ * chosen after the landing would open in detector 6, not only the first.
+ */
+export function usualDetectorOf(s: Selection): number {
+  const find = findAt(s.ra, s.dec)
+  return find && s.det === find.det ? DEFAULT_SELECTION.det : s.det
+}
+
+/**
  * The selection after choosing a new target: its position, name and motion replace the
  * old ones (a target that comes without a motion has none: nothing is carried over);
  * the field of view and mode stay. The detector is the one the target suggests (WISE
@@ -432,6 +464,7 @@ export function withTarget(s: Selection, target: SearchTarget, usualDetector = s
     pmra: moving ? (target.pmra ?? null) : null,
     pmdec: moving ? (target.pmdec ?? null) : null,
     parallax: moving && validParallax(target.parallax ?? null) ? (target.parallax ?? null) : null,
+    motionFrom: moving && target.motionFrom === 'gaia' ? 'gaia' : null,
     det: validDetector(target.det ?? null) ? (target.det ?? usualDetector) : usualDetector,
     // Following the target only makes sense for the target it was chosen for.
     track: moving ? s.track : 'sky',

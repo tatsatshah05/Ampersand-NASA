@@ -35,7 +35,8 @@ export const PAGE = {
     'A tool must get known answers right before anyone can trust it on sky nobody has checked.',
   ],
   smallPrint: [
-    'As far as we could find, nobody has used these ideas on SPHEREx pictures before.',
+    // Not "nobody has": docs/reflex.md allows no more than "we do not know of this having been done".
+    'We do not know of anyone using these ideas on real SPHEREx pictures before.',
     'Similar ideas have been used with other telescopes.',
   ],
   notFinal: 'These numbers come from our tests so far. They may change after more checks.',

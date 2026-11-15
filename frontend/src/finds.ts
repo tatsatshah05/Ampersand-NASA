@@ -180,6 +180,13 @@ export const FINDS: readonly Find[] = [
   },
 ]
 
+/**
+ * Beginner's one line under a candidate's table of visits. It claims nothing its allowed sentence
+ * does not; the allowed sentence itself is behind this line's "i" (guide.ts, 'candidate'), word for
+ * word, and stays on the page in Expert and in each candidate button's description.
+ */
+export const CANDIDATE_LINE = 'A candidate: we found it in no catalogue or report we checked, and nobody has confirmed it yet.'
+
 /** Said after a candidate's `circle` note in the tools: where the right numbers are. */
 export const FIND_EVIDENCE =
   "The values left are this circle's light, its neighbours' included; the reviewers' fits, with the neighbours modelled, are in the project's write-up, docs/sweep.md."

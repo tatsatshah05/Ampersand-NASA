@@ -12,13 +12,14 @@
 // as panels below, at both levels (the level changes how they are written, not what they
 // show), and the page scrolls to them. The Beginner | Expert switch is in a dock at the
 // bottom right (LevelDock).
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   DEFAULT_SELECTION,
   readAddress,
   readStoredLevel,
   storeLevel,
   toFramesQuery,
+  usualDetectorOf,
   toolFrom,
   withTarget,
   withUi,
@@ -57,7 +58,7 @@ import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
 import { PlateLoading, PlateMessage } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
-import type { FeatureKey, ToolKey } from './features'
+import { PRESS_RADIUS_ARCSEC, pressOnPicture, type FeatureKey, type ToolKey } from './features'
 import { brightLine, infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
 import { isRealShift, measuredPath, overallEnds, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
@@ -68,8 +69,9 @@ import { fetchStars, fieldStarsSummary, type StarsResponse } from './stars'
 import { newSeed, trainingAddress } from './training'
 import { useFrames } from './useFrames'
 import { usePlayer, useResting } from './usePlayer'
-import { isHeldFind } from './finds'
-import { ALL_THREE_LINK, allowedLineOf } from './anomalies'
+import { CANDIDATE_LINE, findAt, findTarget, isHeldFind } from './finds'
+import { PRESS_TO_ASK, type LookTarget } from './identify'
+import { ALL_THREE_LINK, allThreeLineOf } from './anomalies'
 import {
   beforeAfter,
   expertResult,
@@ -77,6 +79,7 @@ import {
   failuresSentence,
   flagsNote,
   frameLabel,
+  markMotionFrom,
   modeSentence,
   motionSentence,
   overallResult,
@@ -92,6 +95,13 @@ import './inspector.css'
 
 /** The circle /api/spectrum adds up: 2.5 SPHEREx pixels in radius (backend/photometry.py). */
 const SPECTRUM_APERTURE_ARCSEC = 2.5 * NATIVE_PIXEL_ARCSEC
+
+/** A place pressed on the picture for "What is it?", and the decimal (Julian) year of the picture it was pressed on. */
+interface Asked {
+  ra: number
+  dec: number
+  epoch: number | undefined
+}
 
 const prefersStillness = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
 
@@ -131,6 +141,10 @@ export function Viewer() {
   // Issue #12: the same patch of sky in other surveys. Off until asked for: it loads a
   // large sky-atlas library and depends on servers in Strasbourg that are not always up.
   const [showContext, setShowContext] = useState(false)
+  // "What is it?" (in that panel): the place last pressed on the picture while the panel was the
+  // current feature, with the date of the picture it was pressed on. Null while the card is about
+  // the object on screen. Fixed at the press, so nothing in the card changes while the visits play.
+  const [asked, setAsked] = useState<Asked | null>(null)
   // The tool last opened (from the bar, or a spot clicked for its spectrum): the bar's current
   // feature while its panel is open. Watch otherwise.
   const [focusTool, setFocusTool] = useState<ToolKey | null>(null)
@@ -153,10 +167,15 @@ export function Viewer() {
 
   const url = framesUrl(toFramesQuery(selection))
   const load = useFrames(url, attempt)
-  // The view asked for, once it has arrived.
-  const fresh = load.state === 'ready' ? load.data : null
+  // The view asked for, once it has arrived. A motion the page gave from Gaia DR3 (a name looked
+  // up) is said to be Gaia's (wording.ts, markMotionFrom): the server only knows it was given.
+  const arrived = load.state === 'ready' ? load.data : null
+  const previous = load.state === 'loading' ? load.previous : null
+  const { motionFrom, pmra: givenPmra, pmdec: givenPmdec } = selection
+  const fresh = useMemo(() => arrived && markMotionFrom(arrived, motionFrom, givenPmra, givenPmdec), [arrived, motionFrom, givenPmra, givenPmdec])
+  const stillShown = useMemo(() => previous && markMotionFrom(previous, motionFrom, givenPmra, givenPmdec), [previous, motionFrom, givenPmra, givenPmdec])
   // What the picture shows: that view or, while a new one is on its way, the one before it.
-  const data = fresh ?? (load.state === 'loading' ? load.previous : null)
+  const data = fresh ?? stillShown
   // Loading for longer than a moment (or with nothing to show meanwhile): the picture is
   // dimmed with a message over it, and the player waits.
   const busy = load.state === 'loading' && (load.slow || load.previous === null)
@@ -212,9 +231,10 @@ export function Viewer() {
   useEffect(() => {
     latest.current = selection
   })
-  // The detector the visitor picked (or the address asked for). A target can suggest
-  // another one; the next target that suggests none goes back to this.
-  const usualDetector = useRef(fromAddress.selection.det)
+  // The detector the visitor picked (or the address asked for, unless it is a candidate's own:
+  // address.ts, usualDetectorOf). A target can suggest another one; the next target that suggests
+  // none goes back to this.
+  const usualDetector = useRef(usualDetectorOf(fromAddress.selection))
 
   /** Show a selection: keep it, put it in the address, and let the frames reload. */
   const show = useCallback((next: Selection, how: 'push' | 'replace') => {
@@ -225,6 +245,8 @@ export function Viewer() {
     if (!sameTarget) {
       setSpectrum(null)
       setBrightness(null)
+      // A place pressed on the last target's picture is not on this one: the card goes back to the object on screen.
+      setAsked(null)
     }
     // The two searches belong to the patch they searched: its place and its size. A search of
     // another patch must never be shown under this one (the bar and the address then fall back to Watch).
@@ -276,6 +298,7 @@ export function Viewer() {
       setDistant(null)
       setShowSmallBodies(false)
       setShowContext(false)
+      setAsked(null)
       setFocusTool(null)
       pendingTool.current = toolFrom(window.location.search)
       setPopped((n) => n + 1)
@@ -419,9 +442,12 @@ export function Viewer() {
       title.focus({ preventScroll: true })
     }
   }, [opened])
-  /** Watch: the picture back in view, and the feature on screen. */
-  const backToPicture = () => {
-    setFocusTool(null)
+  /**
+   * Watch: the picture back in view, and the feature on screen. `keepTool` scrolls back without
+   * making Watch current: "What is it?" stays current, so the next press on the picture still asks it.
+   */
+  const backToPicture = (keepTool = false) => {
+    if (!keepTool) setFocusTool(null)
     shell.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
     // The picture takes the focus, so the space bar and the arrow keys play and step again
     // (the button that was pressed goes away once the picture is in view).
@@ -457,6 +483,30 @@ export function Viewer() {
   // The bar's current feature: the tool last opened while its panel is open (closing it, or a
   // new target closing it, makes Watch current again).
   const current: FeatureKey = focusTool && isOpen(focusTool) ? focusTool : 'watch'
+
+  /**
+   * A press on the picture (Stage counts a drag or a zoom as none). While "What is it?" is the
+   * current feature it asks the card about that place, on the date of the picture on screen, and
+   * the page scrolls to the card. Otherwise, in Expert, it measures the spectrum there, as before.
+   */
+  const pick = (ra: number, dec: number) => {
+    const press = pressOnPicture(current, selection.ui, ra, dec, frame?.mjd_mean ?? null)
+    if (press?.kind === 'ask') {
+      setAsked({ ra: press.ra, dec: press.dec, epoch: press.epoch })
+      openTool('context')
+    } else if (press?.kind === 'spectrum') {
+      setSpectrum({ kind: 'spot', ra: press.ra, dec: press.dec })
+      openTool('spectrum')
+    }
+  }
+  const pickable = !busy && (current === 'context' || expert)
+  /** The card's "Look at this one": the page's own way of choosing a target, with the object's motion; a candidate held at its place. */
+  const lookFromCard = (t: LookTarget) => {
+    const find = findAt(t.ra, t.dec)
+    if (find) applyTarget(findTarget(find), find.name)
+    else applyTarget({ ra: t.ra, dec: t.dec, name: t.name ?? undefined, pmra: t.pmra, pmdec: t.pmdec, parallax: t.parallax })
+    backToPicture()
+  }
 
   // Search mode's "Look at this one": zoom to the object if it is in this picture, else move the view to it.
   const lookAt = (ra: number, dec: number) => {
@@ -543,8 +593,9 @@ export function Viewer() {
   const links: FeatureLinks = {
     practise: withUi(trainingAddress(selection, practiceSeed), selection.ui),
     vote: withUi(WATCHLIST_ADDRESS, selection.ui),
-    // The methods screen keeps the place the visitor came from, for its way back.
-    tools: withUi(toolsAddress({ ra: selection.ra, dec: selection.dec, name: shownName ?? selection.name }), selection.ui),
+    // The methods screen keeps the whole view the visitor came from (a candidate held still, in its
+    // own detector), for its way back.
+    tools: withUi(toolsAddress({ ...selection, name: shownName ?? selection.name }), selection.ui),
   }
 
   const visits: Visit[] = data ? data.frames.map((f) => ({ src: f.image, label: frameLabel(f, data), ...visitCaption(f, data) })) : []
@@ -570,9 +621,10 @@ export function Viewer() {
   const seen = data && !expert ? seenLine(data) : null
   const underTable = data ? tableNotes(data, expert ? 'expert' : 'beginner') : []
   const verdict = data && expert ? expertVerdict(data) : null
-  // After one of our candidates' allowed sentence: a short way to all three on the Observe anomalies screen.
+  // After the line that gives one of our candidates' allowed sentence (Expert: the sentence; Beginner: the short
+  // candidate line whose "i" quotes it): a short way to all three on the Observe anomalies screen.
   const allThree = (line: string) =>
-    data && allowedLineOf(line, data.ra, data.dec) ? (
+    data && allThreeLineOf(line, data.ra, data.dec) ? (
       <>
         {' '}
         <a className="all-three-link" href={withUi(WATCHLIST_ADDRESS, selection.ui)}>
@@ -614,14 +666,7 @@ export function Viewer() {
                     onBoxChange={changeBox}
                     onReset={() => setZoomed(null)}
                     showPixels={expert && showPixels}
-                    onPick={
-                      expert && !busy
-                        ? (ra, dec) => {
-                            setSpectrum({ kind: 'spot', ra: Number(ra.toFixed(5)), dec: Number(dec.toFixed(5)) })
-                            openTool('spectrum')
-                          }
-                        : undefined
-                    }
+                    onPick={pickable ? pick : undefined}
                     describedBy="stage-help"
                   >
                     {(scale) => (
@@ -774,9 +819,11 @@ export function Viewer() {
               {/* Expert: the whole run against the catalogue in one line, in a scientist's units, over the table. */}
               {data && verdict && <p className="expert-verdict">{verdict}</p>}
               {data && <VisitTable data={data} current={player.current} expert={expert} disabled={busy} onShow={showVisit} follow={voice !== ''} />}
+              {/* One of our candidates in Beginner: one short line, whose "i" quotes the referee's allowed sentence. */}
               {result?.after?.map((line) => (
                 <p key={line} className="result-more result-after">
                   {line}
+                  {line === CANDIDATE_LINE && infoButton('candidate')}
                   {allThree(line)}
                 </p>
               ))}
@@ -955,19 +1002,32 @@ export function Viewer() {
               dec={selection.dec}
               fov={selection.fov}
               level={selection.ui}
-              onClose={() => setShowContext(false)}
+              onClose={() => {
+                setShowContext(false)
+                setAsked(null)
+              }}
               target={data?.target ?? null}
               name={shownName}
             >
-              {/* What the catalogues know about the object at the centre (Dev's ObjectCard), then the same patch in older surveys. */}
-              <ObjectCard ra={selection.ra} dec={selection.dec} name={shownName ?? undefined} level={selection.ui} />
+              {/* First what the catalogues know: about the object on screen, or about the place last
+                  pressed on the picture (on that picture's date). Then the same patch in older surveys. */}
+              <p className="hint context-press">{PRESS_TO_ASK}</p>
+              <ObjectCard
+                ra={asked?.ra ?? selection.ra}
+                dec={asked?.dec ?? selection.dec}
+                epoch={asked?.epoch}
+                radius={asked ? PRESS_RADIUS_ARCSEC : undefined}
+                name={asked ? undefined : (shownName ?? undefined)}
+                level={selection.ui}
+                onLook={asked ? lookFromCard : undefined}
+              />
             </ContextView>
           </div>
         )}
       </div>
 
       {anyTool && !benchInView && (
-        <button type="button" className="back-to-plate" onClick={backToPicture}>
+        <button type="button" className="back-to-plate" onClick={() => backToPicture(current === 'context')}>
           Back to the picture
         </button>
       )}

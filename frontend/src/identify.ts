@@ -1141,3 +1141,8 @@ export function lookTarget(r: IdentifyResult, name?: string): LookTarget {
     name: found(r) ? (namedSystem(r, name) ? cardTitle(r, name) : name ?? (r.simbad ? readableName(r.simbad.display_name) : null) ?? r.gaia?.name ?? null) : (name ?? null),
   }
 }
+
+// ---- for the page that mounts the card ----------------------------------------------------
+
+/** The one line in the "What is it?" panel that says the picture can be pressed (both levels). */
+export const PRESS_TO_ASK = 'Press any star in the picture to ask about it.'

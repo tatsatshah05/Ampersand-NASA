@@ -14,7 +14,8 @@
 //
 // Every other view opens paused on its first visit, on every machine: nothing on the page moves
 // or changes until the visitor presses Play, Blink, an arrow or a visit (three people who tried
-// the page could not read the side column while the film ran by itself).
+// the page could not read the side column while the film ran by itself). That holds after a
+// candidate too: a pair's blinking, which the visitor did not choose, is not carried to the next view.
 import { useCallback, useEffect, useState, type RefObject } from 'react'
 
 export type Playback = 'playing' | 'blinking' | 'paused'
@@ -48,6 +49,37 @@ export const nextIndex = (playback: Playback, index: number, count: number, pair
   return index === 0 ? count - 1 : 0
 }
 
+/** What the player remembers about how the sets of frames it was given opened. */
+export interface Opened {
+  /** The last set with a before-and-after pair: it has been opened on its "before" frame. */
+  pairedFor: string | null
+  /** The set whose pair turned blinking on by itself, while the visitor has pressed nothing since. */
+  autoBlink: string | null
+}
+
+/**
+ * What a set of frames does to the player as it arrives, or null for nothing. A set with a pair,
+ * the first time: on its "before" frame, blinking (still, for people who ask for less motion),
+ * and that blinking is the page's, not the visitor's. A set without a pair after such a set,
+ * the visitor having pressed nothing since: paused, as every other view opens; a blinking or
+ * playing the visitor chose carries over.
+ */
+export function openingFor(
+  was: Opened,
+  framesKey: string,
+  hasPair: boolean,
+  still: boolean,
+): (Opened & { playback: Playback | null; toBefore: boolean }) | null {
+  if (!framesKey) return null
+  if (hasPair && was.pairedFor !== framesKey) {
+    return { pairedFor: framesKey, autoBlink: still ? null : framesKey, playback: still ? null : 'blinking', toBefore: true }
+  }
+  if (!hasPair && was.autoBlink !== null && was.autoBlink !== framesKey) {
+    return { pairedFor: was.pairedFor, autoBlink: null, playback: 'paused', toBefore: false }
+  }
+  return null
+}
+
 /**
  * `framesKey` names the set of frames being played and `count` is how many there are.
  * A new set starts again from its first frame; playing or paused carries over. While
@@ -61,12 +93,18 @@ export function usePlayer(framesKey: string, count: number, resting = false, pai
   const [at, setAt] = useState({ key: framesKey, index: 0 })
   // A set of frames with a before-and-after pair opens on "before", blinking (once per set).
   const [pairedFor, setPairedFor] = useState<string | null>(null)
+  // The set of frames whose pair turned blinking on by itself, while the visitor has pressed nothing
+  // since: the next set without a pair then opens paused, as every other view does (the pair's
+  // blinking was never the visitor's choice, so it is not carried over).
+  const [autoBlink, setAutoBlink] = useState<string | null>(null)
   const before = pair && pair[0] < count && pair[1] < count ? pair[0] : null
   const after = before !== null && pair ? pair[1] : null
-  if (before !== null && framesKey && pairedFor !== framesKey) {
-    setPairedFor(framesKey)
-    setAt({ key: framesKey, index: before })
-    if (!prefersStillness()) setPlayback('blinking')
+  const opening = openingFor({ pairedFor, autoBlink }, framesKey, before !== null, prefersStillness())
+  if (opening) {
+    if (opening.pairedFor !== pairedFor) setPairedFor(opening.pairedFor)
+    if (opening.autoBlink !== autoBlink) setAutoBlink(opening.autoBlink)
+    if (opening.playback) setPlayback(opening.playback)
+    if (opening.toBefore && before !== null) setAt({ key: framesKey, index: before })
   }
   const current = at.key === framesKey && at.index < count ? at.index : 0
 
@@ -89,6 +127,7 @@ export function usePlayer(framesKey: string, count: number, resting = false, pai
   const show = useCallback(
     (index: number) => {
       if (count === 0) return
+      setAutoBlink(null)
       setPlayback('paused')
       setAt({ key: framesKey, index: Math.min(Math.max(index, 0), count - 1) })
     },
@@ -99,6 +138,7 @@ export function usePlayer(framesKey: string, count: number, resting = false, pai
   const step = useCallback(
     (by: number) => {
       if (count === 0) return
+      setAutoBlink(null)
       setPlayback('paused')
       setAt((was) => {
         const index = was.key === framesKey && was.index < count ? was.index : 0
@@ -109,12 +149,19 @@ export function usePlayer(framesKey: string, count: number, resting = false, pai
   )
 
   /** Stop where it is (a visitor reading an explanation should not have it change under them). */
-  const pause = useCallback(() => setPlayback('paused'), [])
+  const pause = useCallback(() => {
+    setAutoBlink(null)
+    setPlayback('paused')
+  }, [])
 
-  const togglePlay = useCallback(() => setPlayback((was) => (was === 'paused' ? 'playing' : 'paused')), [])
+  const togglePlay = useCallback(() => {
+    setAutoBlink(null)
+    setPlayback((was) => (was === 'paused' ? 'playing' : 'paused'))
+  }, [])
 
   /** Blink starts on the first frame (or the pair's "before"), so the first flip goes to the last (or "after"). */
   const toggleBlink = useCallback(() => {
+    setAutoBlink(null)
     setPlayback((was) => (was === 'blinking' ? 'paused' : 'blinking'))
     const ends = before !== null && after !== null ? [before, after] : [0, count - 1]
     setAt((was) => (was.key === framesKey && ends.includes(was.index) ? was : { key: framesKey, index: ends[0] }))

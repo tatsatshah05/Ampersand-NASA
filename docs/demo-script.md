@@ -1,289 +1,298 @@
 # Demo video: shot-by-shot outline
 
-For issue #16. Written for the teammate who records the video; no astronomy needed. Target
-length: about three and a half minutes. Check the submission form for a video length
-limit; if it is shorter, cut shot 7 (practice) first, then shot 1.
+For issue #16. Written for the teammate who records the video; no astronomy is needed. Target length: about three
+and a half minutes. Check the submission form for a length limit; if it is shorter, cut shot 4 (practice) first,
+then shot 7 (What is it?).
 
-Record from the deployed site, not a laptop server, so what the judges see matches what
-they can open. **The public web address is not known yet** (nothing is deployed); it is
-written `<SITE>` below. **[TO CONFIRM]** Replace `<SITE>` with the real address and run
-the "Before recording" checklist on it.
+Record from the deployed site, not a laptop server, so that what the judges see matches what they can open.
+**The public web address is not known yet** (nothing is deployed); it is written `<SITE>` below. **[TO CONFIRM]**
+Replace `<SITE>` with the real address and run "Before recording" on it.
 
-The page opens in **Beginner** (just the picture and what moved). The switch "Beginner | Expert" is at the top, under the title: press **Expert** before shot 2, or open the addresses below, which carry `ui=expert`. The page remembers the choice in that browser.
+Rebuilt on 2026-11-15 and checked again after an independent review. Every control name below was read off the
+running page (built from `Dev` at commit `0221046`) in a headless browser at 1440 x 900, in Beginner and in
+Expert, except shot 5. Shot 5's screen, Observe anomalies, is on the branch `agent/anomalies` (commit `674b595`)
+and not yet merged into `Dev`; its names were read off a build of that commit (see shot 5). Nobody has played the video in
+real time on the deployed site or tried a phone. Nothing is simulated, except the made-up object of the practice
+round in shot 4, which says so on screen. If something shows nothing, say so on camera: that is the result.
 
-Words: a **visit** is one pass of SPHEREx over a patch of sky; a **detector** is one of the
-six infrared cameras (D1 to D6, short to long wavelength).
+How the page is laid out (the names are the page's own):
 
-Everything below was checked on 2026-11-14 on the running page (a local server built from
-`Dev` after the search panel was merged), by loading it in a headless browser, reading what it
-printed and looking at screenshots. Nobody played the video-style loop in real time or tried a phone. Nothing was simulated, substituted
-or retouched, except the practice mode in shot 7, which says so on screen. If a target shows
-nothing, say so on camera: that is the result.
+- **The bar** across the top lists every feature. In Beginner: Watch, Brightness, Colours, Find changes, Far-off
+  planet, Asteroids, What is it?, Practise, Observe anomalies, Three tools. In Expert: Viewer, Light curve,
+  Spectrum, Blind search, Planet X search, Small bodies, Object card, Training, Anomalies, Methods. (Until the
+  Observe anomalies screen is merged, its place reads Vote, in Expert Watchlist.)
+- **The switch** "Beginner | Expert" is at the bottom right of every screen.
+- **The row of buttons** beside the search box ("Search the sky"): Candidate A, Candidate B, Candidate C,
+  Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae, R Draconis, Serpens South, V462 Lupi, V572 Velorum.
+- **The side column** beside the picture: one sentence about the whole run of visits and one table of all
+  visits. These words do not change while the pictures play; only the mark of the visit on screen moves.
+
+Words: a **visit** is one pass of SPHEREx over a patch of sky; a **detector** is one of its six infrared cameras.
 
 ## Before recording
 
-- [ ] Site is deployed and `python scripts/warm_cache.py --check` passes on the server.
-- [ ] Open every address in the shot list once on the recording machine. The first time a
-      new position loads it can take up to a minute; after that it is instant.
-- [ ] **Run the blind search once on each patch you will use** (WISE 0855 in shot 5, Serpens
-      South in shot 6): press "Search this patch for anything that moved or changed". The
-      first run takes 20 to 50 seconds when the images are already on the server, about three
-      minutes when they are not. The answer is then kept, and a repeat is instant. The warm-up
-      script does not do this for you.
-- [ ] Field of view stays at 0.1 degrees. Only that size is prepared; any other size
-      downloads for about a minute per detector, live.
-- [ ] Browser zoom 100%, window about 1280 x 720 (the search panel is below the picture:
-      scroll to it), no bookmarks bar, notifications off.
-- [ ] Do not open the "Sky context" panel on camera (see "If an outside service is down").
-- [ ] Re-read `docs/results.md` and `docs/verification.md`: they say what each target really
-      shows and which frames to avoid.
+- [ ] The site is deployed and every step of `docs/deploy.md`, "After deploying: warm-up", is done:
+      `python scripts/export_lab.py --check` passed in the checkout before the build, and
+      `python scripts/warm_cache.py --check` passes on the server.
+- [ ] The bar's ninth item reads **Observe anomalies** in Beginner. If it reads **Vote**, the new screen is not
+      merged: record shot 5 on the Vote screen (see the note in shot 5) or cut it.
+- [ ] Open every address below once on the recording machine. A position the server has never been asked for
+      can take up to a minute the first time; after that it is instant.
+- [ ] The practice round: open its address (shot 4) once, so the round is built before recording. The same
+      `train=1` gives the same made-up object every time, so you can rehearse it. The bar's **Practise** link
+      does not: it starts a new round, with a random made-up object at the position on screen.
+- [ ] Open shots 2, 3 and 7 from their addresses, not from the row of buttons. A button keeps some of the last
+      view's settings: pressed straight after shot 1, **Barnard's Star** opens already blinking, and pressed
+      after Barnard's Star, **RW Aurigae** opens in detector 6 instead of 5 (seen on 15 November).
+- [ ] Browser zoom 100%, window 1280 x 720 or 1440 x 900, no bookmarks bar, notifications off.
+- [ ] The operating system's "reduce motion" setting is off. With it on, a candidate's view opens still on its
+      "before" picture instead of blinking.
+- [ ] Start every shot from its address, which says `ui=beginner` or `ui=expert`: the page otherwise remembers
+      the last level chosen in that browser.
+- [ ] Do not scroll to the older-survey pictures at the bottom of What is it? on camera (see "If an outside
+      service is down").
+- [ ] Re-read "Things not to say" at the end.
 
-## The targets, and the addresses that open them
+## The addresses
 
-On the page, the five challenge targets and the Serpens South star are buttons under the
-search box. Each button looks the name up (SIMBAD) and moves the position to where the
-object is now, and puts the object's motion in the address. If the name service is down,
-paste one of these addresses instead (`<SITE>` then the text). The motion matters: without it
-the marker can follow the wrong object at WISE 0855.
+`<SITE>` then the text. The name buttons look the name up and move the position to where the star is now; if the
+name service is down, these addresses do the same without it.
 
-| Target | Address |
-|---|---|
-| Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&name=Barnard%27s+Star&ui=expert` |
-| Epsilon Indi B | `/?ra=331.096653&dec=-56.800663&fov=0.1&det=5&mode=normal&pmra=3981.97666296105&pmdec=-2466.8318147663504&parallax=270.6580324694526&name=eps+Ind+B&ui=expert` |
-| WISE 0855-0714 | `/?ra=133.759765&dec=-7.242182&fov=0.1&det=6&mode=normal&pmra=-8123.7&pmdec=673.2&parallax=439&name=WISEA+J085510.74-071442.5&ui=expert` |
-| RW Aurigae | `/?ra=76.956587&dec=30.401291&fov=0.1&det=5&mode=normal&pmra=7.23&pmdec=-20.33&parallax=15.42&name=RW+Aur&ui=expert` |
-| R Draconis | `/?ra=248.167233&dec=66.755024&fov=0.1&det=5&mode=normal&pmra=-20.642811719160797&pmdec=6.148818852711324&parallax=1.2509180143740992&ui=expert` (not seen on the page; assembled from the values in `docs/results.md`) |
-| Serpens South young star | `/?ra=277.50547&dec=-2.06198&fov=0.1&det=6&mode=normal&name=Young+star+in+Serpens+South&ui=expert` |
+| Shot | What | Address |
+|---|---|---|
+| 1 | Candidate B (the page's own opening) | `/?ui=beginner` |
+| 2 | Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&name=Barnard%27s+star&ui=beginner` |
+| 3 | RW Aurigae, Brightness open | `/?ra=76.956587&dec=30.401291&fov=0.1&det=5&mode=normal&pmra=7.23&pmdec=-20.33&parallax=15.42&name=RW+Aur&ui=beginner&tool=brightness` |
+| 4 | Practice round | `/?train=1&level=easy&ui=beginner` |
+| 5 | Observe anomalies | `/?watchlist=1&ui=beginner` |
+| 5 | Candidate A (what "Watch it appear" opens) | `/?ra=270.80408&dec=-23.46818&fov=0.1&det=6&mode=normal&pmra=0&pmdec=0&name=Candidate+A&ui=beginner` |
+| 6 | Three tools | `/?tools=1&ui=beginner` |
+| 7 | What is it? on Barnard's Star | `/?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&pmra=-801.5509783684709&pmdec=10362.394206546573&parallax=546.975939730948&name=Barnard%27s+star&ui=beginner&tool=context` |
 
 ## Shots
 
-### 1. The question (0:00 to 0:15)
+### 1. A source appears (0:00 to 0:25)
 
-- **On screen:** `<SITE>/`, before anything is clicked (it opens on Barnard's Star, in Beginner: a good first picture).
-- **Say:** "NASA's SPHEREx telescope maps the whole sky in infrared light, and then maps it
-  again about six months later. Anything that moved or changed between maps is interesting:
-  a nearby star, a failed star, maybe a world nobody has found yet. The data is public, but
-  it is not easy to look at. We built a way for anyone to watch a patch of sky change."
-- **Basis:** the six-month revisit is in `docs/results.md`: three or four visits per target
-  between April 2025 and October 2026.
+- **Open:** `<SITE>/?ui=beginner`. The page opens on **Candidate B**, blinking by itself between two pictures
+  marked "Before · Aug 2025" and "After · Mar 2026". The button **Blink before and after** is pressed. The side
+  column reads "Candidate B", then "Not seen in August 2025. Clearly there by March 2026.", a table (Visit 1 Aug
+  2025 not seen; Visit 2 Mar 2026 seen clearly; Visit 3 Aug 2026 seen clearly, brighter), and the candidate's
+  sentence. Keep the sentence in the picture. (Once the branch `agent/finish-page`, commit `49de312`, is
+  merged, Beginner shows the short line "A candidate: we found it in no catalogue or report we checked, and
+  nobody has confirmed it yet." with the full sentence behind its "i": press the "i" to show it. Read from that
+  commit's message, not seen running.)
+- **Say:** "For ten years NASA's NEOWISE telescope looked at the whole sky in infrared light, twice a year. It
+  stopped in August 2024. NASA's SPHEREx telescope now photographs the whole infrared sky, again and again. Our
+  tool searches those pictures for change, and shows anyone the before and the after. This is a source in
+  Scorpius. In August 2025 SPHEREx could not detect it. By March 2026 it was clearly there. We found it in no
+  catalogue or report we checked. It is a candidate: nobody has confirmed it yet."
+- **Do not say:** discovery, new (without "that we found in no catalogue or report we checked"), first,
+  confirmed, "a young star's outburst" as fact, any 2025 brightness for it, or that it has been reported.
+  Do not read out the "times the background scatter" numbers as brightness.
+- **Basis:** `frontend/src/finds.ts` (the sentence, word for word), `docs/sweep.md`.
 
-### 2. Barnard's Star moves (0:15 to 0:50)
+### 2. The page's own steps: a star that moves (0:25 to 0:55)
 
-- **Press:** the button "Barnard's Star" (or open its address above). Detector D5
-  (3.81 to 4.43 microns) is selected.
-- **Do:** let the three frames play in a loop. Press "Pause", then the "next frame" arrow
-  (or the right arrow key) to step through the visits with "Motion markers" and "Gaia overlay"
-  on. Tick "Blink first and last".
-  Then open the "Mode" menu and choose "Difference (what changed)": the star is a white patch
-  beside a black one.
-- **On screen, at the last visit, the page itself reads:** "Since frame 1: measured shift
-  10.2″ north, 2.2″ west. Gaia predicts 10.3″ north, 0.8″ west. They differ by 1.4″, which is
-  0.23 of a SPHEREx pixel." Keep that text in the picture.
-- **Say:** "This is Barnard's Star, the fastest-moving star in the sky. Each frame is one
-  SPHEREx visit: about twenty exposures, stacked. Watch the star step north while everything
-  around it stays put. We measured that step, and the Gaia star catalogue predicts it:
-  measured 10.2 arcseconds north, predicted 10.3. They agree to within a quarter of one SPHEREx
-  pixel."
-- **Say, on the difference view:** "Subtract the first visit from a later one and everything
-  that stayed still cancels. What is left is the thing that moved."
-- **Worth one sentence:** "The star's catalogue position is from the year 2000. It has moved
-  four and a half arcminutes since, so the tool first works out where it is now."
-- **Say, if time allows (honest):** the page also says "The core is overexposed, so the
-  position is good to about 1″". The star overloads the detector, so one arcsecond is as
-  well as it can be placed.
-- **Basis:** `docs/results.md` (Barnard's Star: marker within 1.5 arcseconds of the catalogue
-  in all 18 frames), `docs/verification.md` section 4.
-- **Avoid:** detectors D1 to D4 for this star in close-up: its core is saturated there (a flat
-  white patch). D5 and D6 are clean.
+- **Show:** the three numbered steps under the table: "1 Pick any star", "2 Press Play or Blink", "3 Read what
+  changed". Then open the shot-2 address: Barnard's Star opens paused, so press **Play**. (If you press the
+  **Barnard's Star** button straight after shot 1 instead, it opens already blinking, with **Blink first and
+  last** pressed: press it once to stop the blink, then press **Play**.) Let the three visits play; then press
+  **Blink first and last**.
+- **On screen, the side column reads:** "It moved 10.4 arcseconds north between August 2025 and August 2026. Its
+  catalogue motion predicted 10.3 arcseconds: they agree." and "Seen clearly in all 3 visits." Keep it in the
+  picture while the visits play: the words do not change, only the mark of the visit on screen moves.
+- **Say:** "This is Barnard's Star, the fastest-moving star in the sky. Each picture is one SPHEREx visit: about
+  twenty photos, added up. Watch it step north while the stars around it stay still. The page measured 10.4
+  arcseconds in a year. The Gaia star catalogue predicts 10.3. They agree."
+- **If time allows:** "Its catalogue position is from the year 2000. It has moved four and a half arcminutes
+  since, so the tool first works out where it is now."
+- **Do not say:** that every picture is one photo; that it is "real time" or "live".
+- **Basis:** the running page; `docs/verification.md`, section 4; `CLAUDE.md`, "Verified facts".
 
-### 3. A star that changes brightness: RW Aurigae (0:50 to 1:20)
+### 3. The bar and the switch: one tool at two levels (0:55 to 1:25)
 
-- **Press:** the button "RW Aurigae" (opens in D5). Press "Brightness over time". A panel
-  opens with one small chart per detector. Point at the D1 chart (0.75 to 1.12 microns): the
-  dots climb from the first visit to the third. The text at the top of the panel reads
-  "brighter in D1 (+64%, visit 1 to visit 3)". Then press "Outer light": the D5 and D6 charts
-  fall, and the text reads "fainter in D5 (−48%), fainter in D6 (−44%)".
-  Optional, before the chart: choose Mode "Difference (what changed)" and D1 (white star) then
-  D6 (black star).
-- **Say:** "Some things do not move; they change. This young star, RW Aurigae, became about
-  1.7 times brighter at the shortest wavelengths and about half as bright at 3.9 to 5 microns
-  between September 2025 and September 2026. Observers on the ground recorded the same
-  brightening. The fading at the long wavelengths we can only see from SPHEREx. The chart
-  compares measurements only at the same colour, because each exposure sees the star at a
-  different colour."
-- **Careful:** the page's own figure is "+64%" for detector 1 (the middle of 13 colour
-  bins). "About 1.7 times" is the year-on-year figure that ground observers also found
-  (`docs/verification.md` section 2). Do not say "2.5 times": that compares a dip of a few
-  days with a normal state. Point at the chart rather than reading numbers aloud.
-- **Say it is relative:** the long-wavelength fading is the star's "outer light" (the star's
-  centre is overexposed there), a relative brightness, not a brightness in physical units.
-- **Mention if asked:** RW Aurigae is a close pair that SPHEREx measures as one; the page says
-  so in the box at the top of the panel.
-- **Do not use R Draconis for this shot.** It is so bright that its core is saturated in every
-  exposure of every detector; only a relative brightness of its outer light exists, in
-  detectors D5 and D6. It can be mentioned as a limit: "very bright stars overload the
-  detector."
+- **Show:** open the shot-3 address, which opens RW Aurigae in detector 5 with **Brightness** open (pressed
+  after Barnard's Star, the **RW Aurigae** button kept detector 6 on 15 November; the panel's words are the
+  same, the picture is not the rehearsed one). The panel "Brightness over time" opens under the picture. In
+  Beginner it reads: "It changed between September 2025 and September 2026. In SPHEREx's shortest infrared
+  colours it became about 1.6 times as bright. In SPHEREx's longest infrared colours the light just around it
+  became about half as bright." and "Another star is so close that its light is mixed into these numbers."
+- **Then press Expert** on the switch at the bottom right. The bar now reads Viewer, Light curve, Spectrum ...
+  and the same panel shows "brighter in D1 (+64%, visit 1 to visit 3)", "The star's outer light also shows a
+  change: fainter in D5 (−48%), fainter in D6 (−44%)", and a table per detector. Then press **Beginner** again.
+- **Say:** "Every tool is in this bar. Each has two levels. In Beginner it speaks plainly: this young star became
+  about one and a half times as bright in the shortest infrared colours, and about half as bright in the longest.
+  One press, and Expert shows the scientist's view: each detector, each wavelength compared only with itself,
+  and the numbers to download. Observers on the ground saw the same brightening."
+- **Do not say:** "2.5 times" (that compared a dip of a few days with a normal state); that the long-wavelength
+  fading is checked by anyone else (it has no outside check); "flux" for the outer light (it is a relative
+  measure).
+- **Basis:** the running page; `docs/verification.md`, section 2.
 
-### 4. The hardest target: WISE 0855 (1:20 to 1:50)
+### 4. Practice: can you spot a mover? (1:25 to 1:45)
 
-- **Press:** the button "WISE 0855" (opens in D6, 4.41 to 5.01 microns, with its motion in the
-  address). Pause, then step to visit 1. The page reads "Marginal detection, 3.4 times the
-  background scatter: treat with care", and the marker is drawn dashed. Step to visit 2: "Detected
-  clearly, 15 times the background scatter". Keep the text in the picture.
-  Then open the Detector menu and choose D2: nothing is there. Back to D6 and Mode "Sum (one
-  deeper frame)".
-- **Say:** "This is a very cold brown dwarf, and it moves almost as fast as Barnard's Star. In
-  ordinary near-infrared light it is invisible. At the longest wavelengths SPHEREx measures,
-  it is there, and it moves west from one visit to the next, where the catalogue says it
-  should. The first visit is marginal: only three exposures, 3.4 times the background scatter.
-  After that it is clear: 14.6 and 11.2 times."
-- **Say this too, it is part of the honest result:** "By the third visit it has drifted to
-  within four arcseconds of an ordinary background star, closer than SPHEREx can separate. The
-  star supplies about a quarter of the light at the longest wavelengths."
-- **Basis:** `docs/verification.md` section 1. The detection strengths 3.4, 14.6 and 11.2 are the
-  page's; the separate check found 3.7, 17.5 and 14.2.
-- **Do not say** "S/N 5, 19, 27", "within 1.3 arcseconds" or "only after summing": the first two
-  are not detection strengths (see `docs/verification.md`), and it is already visible in each
-  visit's frame in D5 and D6; the summed frame just shows it more clearly.
-- **Wording:** "very cold" and "about 8 arcseconds a year" are from the project brief. Anything
-  stronger ("the coldest known") must be checked against a NASA page first.
-- **Trap:** this object has moved 212 arcseconds since 2000, so a search on its catalogue
-  coordinates looks at the wrong spot, and without the motion values in the address the marker
-  can follow the background star. Open it with the button or the address in the table above.
-  Check the text under the frame at visit 3 before recording: it should name the neighbouring
-  star.
+- **Show:** open `<SITE>/?train=1&level=easy&ui=beginner`, the round you rehearsed. Do not press **Practise**
+  in the bar for the recording: it starts a new round, with a random made-up object at the position on
+  screen. The screen "Practice: find a made-up object" opens with a banner that reads "SIMULATION. One made-up
+  moving object has been added to these real SPHEREx images. It is not a real detection, and nothing here is a
+  discovery." The word SIMULATION is drawn in the corner of every picture. Keep both in the frame. In the **Frames** menu choose
+  **Difference frames**, press **Play**, click where you think the object is, then press **Show me**.
+- **Say:** "To learn what a mover looks like, there is a practice round. It adds one made-up object to real
+  SPHEREx pictures, and it says so in a banner that cannot be closed. Apart from the same made-up object in the
+  Planet X search's planted run, which is also marked as a simulation, this is the only made-up thing in the
+  tool."
+- **Do not say:** that the practice object is real, or a detection.
+- **Basis:** `CLAUDE.md`, "Training mode"; the running page.
 
-### 5. The search finds the known objects by itself (1:50 to 2:20)
+### 5. Observe anomalies (1:45 to 2:15)
 
-- **Press:** with WISE 0855 still open, scroll to the buttons under the picture and press
-  "Search this patch for anything that moved or changed". The panel "Anything that moved or
-  changed in this patch" opens below the picture (scroll down). Reading from a search made
-  beforehand, it says: "188 sources tested in 19 seconds: 1 object moved or changed, 0 set aside
-  as artefacts", then one card: "Moved 7.3 arcseconds a year (give or take 0.7), heading west",
-  "Already known: WISEA J085510.74-071442.5, whose catalogued motion matches the measured one",
-  "Verdict: clean". A numbered ring marks it on the picture.
-- **Say:** "We also built a blind search. You give it a patch of sky and it looks at every source
-  for anything that moves or changes brightness between visits, without being told what is
-  there. Given only the field centres, it found Barnard's Star, the brown dwarfs WISE 0855 and
-  Epsilon Indi B moving at their catalogued speeds, and RW Aurigae changing: brighter in the far
-  red and about half as bright at 4 to 5 microns."
-- **Say:** "It tries hard to fool itself first. Every detection is compared with the same
-  measurement at hundreds of empty places in the same picture, and every candidate is tested
-  against the artefacts we found in SPHEREx data: reflections of bright stars, overlapping
-  glitches, saturated stars, blends. In ordinary star fields it reported only real, known
-  objects, and it threw out convincing-looking movers that turned out to be a reflection,
-  blends and patches of nebula."
-- **If asked about numbers:** on the five challenge fields, 30 searches, 5 objects reported, all of
-  them the targets, no false alarm found by eye; that is a small sample (`docs/search.md`).
-- **Optional picture:** `docs/search/rejected_ghost_epsindib_D6.png`, the ring that looked like a
-  7-sigma mover and was rejected.
-- **Fallback if the search is slow or fails:** show `docs/search/recovery_wise0855_D5.png` and
-  `docs/search/recovery_barnard_D5.png` (the saved output of the same search) and say they are
-  its saved output.
+**Not yet in `Dev`.** This screen is on the branch `agent/anomalies` (commit `674b595`, 15 November); the
+branch `agent/anomalies-final` did not exist. The names below were read off that commit, built and run on a
+laptop server against the shared cache at 1440 x 900, in Beginner and in Expert. Check every name on the
+deployed page before recording: the branch may still change.
 
-### 6. A candidate nobody lists: Serpens South (2:20 to 3:10)
+- **Show:** press **Observe anomalies** in the bar (`<SITE>/?watchlist=1&ui=beginner`). The screen opens with
+  three sentences on what an anomaly is, the last "A few are in no catalogue or report we could find, and those
+  are candidates, not discoveries." The first group is headed "Not reported anywhere we could find": one card
+  each for Candidates A, B and C, with two real SPHEREx pictures side by side ("Not seen" and "At its
+  brightest", each with its dates; for A, 24 Aug–4 Sep 2025 and 28 Mar–1 Apr 2026), the candidate's sentence,
+  what it probably is, "Has anyone reported it?" with the sentence about the search for earlier reports, and the
+  status line "Not confirmed. Not yet reported to astronomers." Press **Watch it appear** on Candidate A: its view
+  opens, blinking between "Before" and "After" (**Blink before and after** pressed). Go back, then show **Choose
+  a region**: "Everywhere · 156 found", "The Milky Way's plane (472.6 square degrees swept) · 14 found", and each
+  searched patch by its constellation (for example "Scorpius: Candidate B · 7 found"). Below it, "Found by
+  searching small patches" with the tabs **In no catalogue**, **Already known** and **Set aside as false alarms**
+  and the vote buttons **Looks real**, **Looks like an artefact** and **Not sure**; then "Found by the sweep of
+  the Milky Way's plane": Candidates (3), Known novae (2), Known stars that change (6), Set aside after a closer
+  look (3). (Expert names the tabs Needs eyes, Already known and Set aside as artefacts. The counts were those
+  of 15 November.)
+- **Say:** "Our sweep compared 472.6 square degrees of the Milky Way's plane between SPHEREx's visits. It found
+  two known novae by itself, and three sources we could not explain. Four independent reviewers attacked each
+  one. We searched more than thirty catalogues and alert lists for earlier reports and found none, but some
+  sources are not yet searched in full, so this does not prove that no one else has seen them. They are
+  candidates: nobody has confirmed them, and we have not reported them yet. Everything else our searches found
+  is here too, for anyone to look at and vote on. A vote is an opinion, not a confirmation."
+- **Do not say:** discovery, new, first, confirmed; that nobody else has seen them (some sources are not yet
+  searched in full); "a nova" as fact; "nothing in SIMBAD, so nobody has reported it"; that a vote
+  confirms anything; that anything has been sent or reported.
+- **If the screen still reads Vote:** the first group and Choose a region are not there. Open Candidate A from
+  the row of buttons instead of Watch it appear, and on the Vote screen show only the three groups ("In no
+  catalogue", "Already known", "Set aside as false alarms") and the vote buttons.
+- **Basis:** `docs/sweep.md`, `docs/sweep/searches-for-earlier-reports.md`, `docs/watchlist.md`.
 
-- **Press:** the button "Young star in Serpens South" (under "Or look at what our own search
-  flagged (a candidate)"). D6 opens. The page warns that a very bright star is near (Gaia
-  magnitude 5.1, 6.8 arcminutes away, outside the picture): leave it on screen, it is part of
-  the honest picture. Press "Brightness over time": D3 to D6 are marked "brighter" across the four visits.
-  Then press "Search this patch for anything that moved or changed" (a previously run search
-  answers at once; 4 objects appear). Scroll to card 1: "Changed brightness between 3 Sep 2025
-  and 30 Aug 2026: brighter, 4.5 times as bright as before", marked "Candidate", with the text "A
-  candidate, not a finding: the catalogues that answered do not list it as a variable". Do not
-  dwell on cards 3 and 4: they are marked "Caution", seen in one detector only, and not claimed
-  (`docs/search.md`).
-- **Cut to the picture:** `docs/search/serpsouth_neowise_spherex.png` (open the file full
-  screen; it is NEOWISE 2014 to 2024 in grey dots and SPHEREx in coloured squares, 4.6 microns on
-  top).
-- **Say, on the page (word for word, `docs/search.md` "Words for the demo"):** "Then we pointed it
-  at four young star clusters. Most of what it flagged there are young stars already listed as
-  variable. Two are not listed as variable in Gaia, AAVSO's variable star index or AllWISE, and
-  passed every test we have. The strongest is a young star buried in the Serpens South cloud that
-  became about five times brighter at 2.4 to 5 microns between September 2025 and March 2026 and
-  stayed bright through September 2026."
-- **Say, on the chart (word for word, except the last words of the second sentence, see below):**
-  "We then checked it against another telescope. NASA's NEOWISE mission measured the same spot
-  twice a year from 2014 to 2024, and its public archive shows this star swinging by a factor of
-  nine. NEOWISE's last look, in March 2024, caught it at its faintest in ten years, at exactly the
-  level SPHEREx found in September 2025. So our search, knowing nothing, picked out a star that
-  really is strongly variable, and SPHEREx watched it climb back out of a deep dip, in 102 colours
-  at once. It is not a new kind of event, and specialists who study young stars have very likely
-  seen it vary. What we can say is that none of the variable-star lists we asked has it, and that
-  SPHEREx's pixels cannot tell which star of a tight group is the one changing."
-  (`docs/search.md` says "its deepest dip on record"; the record is NEOWISE's ten years, so this
-  script says "a deep dip" here. The NEOWISE table gives the factor as 9 at 4.6 microns and 7 at
-  3.4 microns.)
-- **Say "not listed as variable in Gaia DR3, AAVSO VSX or AllWISE"; never "new", "discovered" or
-  "erupted".** Say "it came back from a dip". Say "candidate" and say what would confirm it: an
-  infrared image from 2026 at a sharper scale than SPHEREx's, and the next SPHEREx visits.
-- **Do not say** the search "discovered" it, and do not quote the search's "times the noise" as
-  "signal to noise".
+### 6. Three tools: Eris appears (2:15 to 2:50)
 
-### 7. Practice: can you spot a mover? (3:10 to 3:30)
+- **Show:** press **Three tools** in the bar (`<SITE>/?tools=1&ui=beginner`). The screen "Three tools, three
+  known worlds" opens; the box under the title reads "Nothing on this screen is a new planet." Tool 1, **Follow
+  the bend**, shows "Found its test world. Distance only rough." and "Our tool: about 111", "NASA: 95.6". Scroll
+  to **Try it: make Eris appear**. Choose **One picture** (caption: "One picture. Eris is in here, but too faint
+  to see."), then **All, as taken** (the light smears out), then press **Slide and stack** (caption: "Each
+  picture slid to follow Eris, then added. Now Eris piles up into one sharp dot."). Press **Show where NASA says
+  Eris is**. If time allows, move the **How far away?** slider under **Try it: find the distance** and watch the
+  dot sharpen and blur.
+- **Say:** "Three tools, each tested on a world astronomers already know, so you can check the answer. The first
+  adds up 57 SPHEREx photos of one patch taken over 15 days. Added as they are, the dwarf planet Eris is too faint
+  to see. Slid along the path that the Earth's own motion bends, and added, it piles up into one dot, where NASA
+  says Eris is. The size of the bend gives a rough distance: about 111 times the Earth's distance from the Sun,
+  where NASA gives about 96. The patch was centred on Eris, so this is a test on a known answer, not a search of
+  the sky." Then, scrolling past the other two: "The second, Off-centre in red, is not proven yet. The third,
+  Line up the dips, showed a known planet's dip, and was mixed on a second."
+- **Do not say:** discovery, first, new planet; "finds Planet X", "a Planet Nine test" or "a Planet Nine search";
+  "without being told where Eris is"; that the distance is precise, or "105 AU"; "6.8 sigma" (the straight path is
+  rejected at about 7 sigma with all photos and about 4 sigma with the first day left out); "a spectrum from 0.75
+  to 5 micrometres"; "covers 50 to 400 AU". For tool 3: not "blind", not that SPHEREx can find transiting planets,
+  not that the TESS candidate TOI-4055.01 is a planet. For tool 2: not "candidate", not that a shift is a
+  companion, not that it works blind.
+- **Basis:** `docs/reflex.md`, `docs/transits.md` and `docs/colourwalk.md` ("Words for the demo" and their "do not
+  say" lists); `frontend/src/toolsWording.ts`.
 
-- **Press:** go to `<SITE>/`, then the button "Practise: find a planted object". A banner across
-  the top reads "SIMULATION. Simulation: one made-up moving object has been added to these real
-  SPHEREx images. It is not a real detection, and nothing here is a discovery." and the word
-  SIMULATION is drawn in the corner of the picture. Keep both in the frame throughout. Pick
-  "Difference frames" in the "Frames" menu, then press "Show me": rings joined by a line show where
-  the made-up object was in each visit.
-- **Say:** "To let anyone try this, there is a practice mode. It adds one made-up moving object to
-  real SPHEREx pictures, and says so in a banner that cannot be closed. Find the dot that is in a
-  different place in each frame. This is a simulation for practice, not a detection."
-- **Basis:** `CLAUDE.md` "Training mode": the only simulated thing in the project; it has its own
-  endpoint and never reaches the real views.
+### 7. What is it? (2:50 to 3:10)
 
-### 8. Close (3:30 to 3:40)
+- **Show:** open the shot-7 address (Barnard's Star with **What is it?** open; on camera you may then press
+  **What is it?** in the bar to show where it lives). The card reads "SIMBAD lists it as an M dwarf: a small, cool star (astronomers call these red
+  dwarfs)." Beside it, a drawing of the star next to the Sun, marked "Illustration drawn from measurements. Not a
+  photograph." and "DRAWING, NOT A PHOTO", and "How far: 5.96 light-years (Gaia)."
+- **Say:** "What is it? says what the star catalogues know about any object, in plain words, and draws it from
+  their numbers: the colour of a body at its measured temperature, and its size next to the Sun. It is a drawing,
+  and the page says so."
+- **Do not say:** that the drawing is a photograph, or that SPHEREx measured these numbers (they are Gaia's and
+  SIMBAD's).
+- **Basis:** the running page; `frontend/src/identify.ts`.
 
-- **On screen:** the site address, the team name, and the credits line.
-- **Say:** "Type a star's name or a position and watch that patch of sky. Built by Team Ampersand
-  for NASA Space Apps 2026."
-- **Credits on screen (must be legible):** Data: NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared
-  Science Archive (IRSA); ESA Gaia DR3. Name lookup: SIMBAD (CDS, Strasbourg). Brightness check:
-  NEOWISE (NASA/IPAC IRSA).
+### 8. Close: what is and is not claimed (3:10 to 3:30)
 
-## If an outside service is down
-
-The page depends on a few services outside our control. On 2026-11-14 some of them were down.
-
-| What depends on it | What you will see | What to do |
-|---|---|---|
-| Sky context panel (Aladin Lite; Gaia stars from VizieR) | On the page tested: "Gaia stars could not be loaded from VizieR right now." The panel can also stay empty | Do not open it in the video. It is not needed for any shot |
-| Name lookup (SIMBAD), used by the search box and the target buttons | A red message under the search box | Paste the addresses from the table above instead |
-| The SPHEREx archive, for a position not yet downloaded | A long wait, or "The frames could not be loaded" with "Try again" | Use only positions opened beforehand (see "Before recording"). The cache on the server's disk needs no outside service |
-| The catalogues the blind search checks (five) | The panel says which catalogues answered, and what it could not check | Run it beforehand; a finished search is kept |
-
-If something fails on the day, show the saved pictures in `docs/results/` and `docs/search/`
-and say they are saved outputs of the same code.
+- **On screen:** the site address, the team name and the credits line.
+- **Say:** "Everything you saw is real data, from SPHEREx and the star catalogues, except the made-up object of
+  the practice round and of the Planet X search's planted run, which say so; the drawings say that they are
+  drawings. We claim no discovery and no new planet. The three sources are candidates that we found in no catalogue or report we
+  checked; a bigger telescope's spectrum and SPHEREx's next visits will tell what they are. Type any star or position, and
+  watch that patch of sky change. Built by Team Ampersand for NASA Space Apps 2026."
+- **Credits on screen (must be legible):** Data: NASA/JPL-Caltech SPHEREx; NASA/IPAC Infrared Science Archive
+  (IRSA); ESA Gaia DR3. Names: SIMBAD (CDS, Strasbourg). Brightness checks: NEOWISE (NASA/IPAC IRSA) and AAVSO
+  observers.
 
 ## Optional extra shots
 
-- **Epsilon Indi B (a pair of brown dwarfs).** Press "Epsilon Indi B": it is visible in all six
-  detectors and moves south-east about 6.3 arcseconds between April 2025 and October 2026, on the
-  catalogue track. The page reads "No Gaia star near the centre" only if opened without the motion:
-  use the button. Its bright primary star is 6.7 arcminutes away, outside the default frame, so
-  "moving with the primary" needs a wider field of view (`docs/results.md`).
-- **What SPHEREx adds: the spectrum.** On Epsilon Indi B press "Spectrum of the target" (or click
-  on the object). Say: "The existing tool for this kind of search, WiseView, uses the WISE
-  telescope's infrared bands. SPHEREx measures 102 colours from 0.75 to 5 microns. This is the
-  light of a brown dwarf, colour by colour: bright peaks with deep gaps between them." Basis: 298
-  measurements trace its brightness from 0.75 to 5 microns, the same curve at all four visits
-  (`docs/results/eps_indi_b_brightness.png`). Do not explain the gaps ("water", "methane") unless
-  someone has checked that against a published source. Check the WiseView wording against the
-  WiseView page; this project did not check it.
+- **Far-off planet (the Planet X search).** On WISE 0855 press **Far-off planet** (Expert: **Planet X search**).
+  Its first run on a patch takes a few minutes; run it before recording. Say, from `docs/distant.md`: a distant
+  world jumps between visits because we look from opposite sides of the Earth's path; this search looks for that
+  jump; on the real sky it finds nothing here, and it says how bright an object would have had to be. In Expert,
+  **Try it on a planted object (simulation)** shows it finding a made-up object, marked as a simulation. Do not
+  say that a planet was found, that this rules Planet Nine in or out, or that the limit is deeper than WISE's.
+- **Find changes on WISE 0855.** Beginner reads "It tested 188 points of light in this patch. 1 thing moved, and
+  nothing changed brightness. It is already known in star catalogues." Expert (Blind search) reads "Moved 7.3
+  arcseconds a year (give or take 0.7), heading west". Run it once before recording.
+- **Candidate C.** Its table has four visits, one of them "picture spoiled here" (April 2026). Do not say that C
+  had gone by August 2026: its emission lines were still there.
+
+## If an outside service is down
+
+| What depends on it | What you will see | What to do |
+|---|---|---|
+| Name lookup (SIMBAD), used by the search box and the name buttons of the five targets | A message under the search box | Open the addresses in the table above. The three candidates' buttons need no lookup |
+| What is it? (Gaia DR3 and SIMBAD) | The card names the catalogue that did not answer | Open it on Barnard's Star once before recording; or cut shot 7 |
+| The older-survey pictures at the bottom of What is it? (Aladin Lite, CDS) | An empty box, or "Gaia stars could not be loaded from VizieR right now." | Do not scroll to them. No shot needs them |
+| The SPHEREx archive, for a position not yet downloaded | A long wait, or "The frames could not be loaded" | Use only positions opened before (see "Before recording"). Positions on the server's disk need no outside service |
+| The catalogues the searches check | The panel says which catalogues answered | Run each search before recording; a finished search is kept |
+| Three tools, Observe anomalies, the practice round | Nothing: they read files on the server | If a picture is missing there, the server's warm-up was not finished (`docs/deploy.md`) |
+
+If something fails on the day, show the saved pictures in `docs/sweep/vetting/` (for example
+`docs/sweep/vetting/B/pixels/pictures/zoom_visits_marked.png`), `docs/results/` and `docs/search/`, and say that
+they are saved outputs of the same data.
 
 ## Things not to say
 
-- Not "real time" or "live": SPHEREx data arrives in releases, and each visit is months apart.
-- Not "discovers Planet X" or "discovered": the tool makes moving objects easier to spot; it has
-  not found anything new. The Serpens South star is a candidate, not listed as variable in the
-  catalogues we asked, and very likely known to specialists.
+About the three candidates (the referee's lists, `docs/sweep/vetting/ruling.json`):
+
+- Not "discovery", "confirmed", "first ever seen". Not "new" without "that we found in no catalogue or report we
+  checked". Not that nobody else has seen them.
+- Not that anything has been reported, sent or filed: nothing has.
+- Not "nothing in SIMBAD, so nobody has reported it". Not "ZTF or Rubin saw nothing" as evidence (they cannot see
+  B's field).
+- Not "a nova" or "a young star's outburst" as fact. Not "hydrogen emission detected" for A, "ice detected" for B,
+  or "[Mg IV] detected" for C.
+- Not any 2025 brightness for A or B, and none of the first write-up's withdrawn statements
+  (`docs/sweep.md`, "What the sweep's first write-up got wrong"): their 2025 values were the light of
+  neighbouring stars.
+- Not "a thousand times its old brightness" for B, and not "a pre-existing red star erupted".
+- Not that C had gone, or nearly gone, by August 2026; not "178 and 300 mJy" for C; not "a flare lasting half a
+  year" (its start is not known).
+- Not an exact spring-2026 brightness for A without saying the readings were saturated.
+
+About the three methods (each write-up's "do not say" list): not discovery, first or new planet; not "blind";
+not "finds Planet X" or "tests Planet Nine"; not "without being told where Eris is"; not that SPHEREx can find
+transiting planets; not that TOI-4055.01 is a planet; not that the colour walk is proven or found a companion.
+
+About the rest:
+
+- Not "real time" or "live": SPHEREx data come in releases, and visits are months apart.
+- Not "every picture is one photo": each is the photos of one visit, added up.
+- Not "discovers Planet X", and not that the Planet X search sets a new limit on Planet Nine.
+- Not "S/N 5, 19, 27", "within 1.3 arcseconds" or "only after summing" for WISE 0855.
+- Not "2.5 times" for RW Aurigae, and not "flux" or "brightness in physical units" for R Draconis.
 - Not "new" or "erupted" about the Serpens South star: it came back from a dip.
-- Not "every frame is one photo": each frame is a stack of the exposures from one visit.
-- Not "only after summing" for WISE 0855.
-- Not "S/N 5, 19, 27" or "within 1.3 arcseconds" for WISE 0855.
-- Not "2.5 times" for RW Aurigae, and not "flux" or "brightness in physical units" for R Draconis
-  (relative brightness from the star's outer light).
-- Not a brightness claim from two ordinary frames; use the difference view or the chart.
-- Not that the practice object is real. It is a simulation, and the banner stays in view.
+- Not that the practice object is real. Keep its banner in view.
+- Not "the only made-up thing" without the Planet X search's planted run, and not "everything is real" without
+  the made-up objects and the drawings.
+- Not "nobody has done this with SPHEREx before": say "we do not know of it having been done with real SPHEREx
+  data".

@@ -8,7 +8,7 @@
 // A value that is missing (absent, or null with a `why`) never reaches the page as "undefined",
 // "NaN" or a placeholder: the sentence that needs it is left out (see `fill`).
 import { useEffect, useState } from 'react'
-import { readAddress, type Selection } from './address'
+import { addressOf, readAddress, type Selection } from './address'
 import { NATIVE_PIXEL_ARCSEC } from './api'
 import { realSkyAddress } from './training'
 import { PAGE, SCI, T1, T2, T3 } from './toolsWording'
@@ -17,11 +17,13 @@ import { PAGE, SCI, T1, T2, T3 } from './toolsWording'
 
 export const isToolsAddress = (search: string) => new URLSearchParams(search).has('tools')
 
-/** The screen's address, carrying the place the visitor came from. */
-export function toolsAddress(s: Pick<Selection, 'ra' | 'dec' | 'name'>): string {
-  const p = new URLSearchParams({ tools: '1', ra: String(s.ra), dec: String(s.dec) })
-  if (s.name) p.set('name', s.name)
-  return `?${p}`
+/**
+ * The screen's address, carrying the whole view the visitor came from (its place, name, motion,
+ * detector, field and mode), so the way back shows that same view: one of our candidates held
+ * still at its place in its own detector, not the brightest spot near it.
+ */
+export function toolsAddress(s: Selection): string {
+  return `?tools=1&${addressOf({ ...s, train: null }).slice(1)}`
 }
 
 /** Back to the sky viewer: to the place the visitor came from, when the address carries one. */

@@ -86,6 +86,7 @@ export function trainingAddress(s: Selection, seed: number, level: Level = 'easy
     pmra: null,
     pmdec: null,
     parallax: null,
+    motionFrom: null,
     train: seed,
     level,
   })

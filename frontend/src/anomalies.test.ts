@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { LANDING, toFramesQuery } from './address'
 import {
   ALL_THREE_LINK,
-  allowedLineOf,
+  allThreeLineOf,
   cardPair,
   EVERYWHERE,
   findAddress,
@@ -33,7 +33,7 @@ import {
   type SweepData,
 } from './anomalies'
 import { framesUrl, type Frame, type FramesReady } from './api'
-import { FINDS, NOT_REPORTED } from './finds'
+import { CANDIDATE_LINE, FINDS, NOT_REPORTED } from './finds'
 import framesA from './fixtures/frames/find_a_d6.json'
 import framesB from './fixtures/frames/find_b_d6.json'
 import framesC from './fixtures/frames/find_c_d6.json'
@@ -261,12 +261,16 @@ describe('regions', () => {
 })
 
 describe('the way in from the Viewer', () => {
-  it('follows only the allowed sentence of the candidate on screen', () => {
+  it('follows only the line that gives the allowed sentence of the candidate on screen', () => {
     expect(ALL_THREE_LINK).toEqual({ beginner: 'See all three in Observe anomalies', expert: 'All three in Anomalies' })
-    expect(allowedLineOf(byKey.B.allowed, 253.18038, -44.67697)?.key).toBe('B')
-    expect(allowedLineOf(byKey.A.allowed, 253.18038, -44.67697)).toBeNull()
-    expect(allowedLineOf(byKey.B.brightness, 253.18038, -44.67697)).toBeNull()
-    expect(allowedLineOf(byKey.B.allowed, 269.446267, 4.768222)).toBeNull()
+    // Expert: the allowed sentence itself, under the headline.
+    expect(allThreeLineOf(byKey.B.allowed, 253.18038, -44.67697)?.key).toBe('B')
+    expect(allThreeLineOf(byKey.A.allowed, 253.18038, -44.67697)).toBeNull()
+    expect(allThreeLineOf(byKey.B.brightness, 253.18038, -44.67697)).toBeNull()
+    expect(allThreeLineOf(byKey.B.allowed, 269.446267, 4.768222)).toBeNull()
+    // Beginner: the short candidate line under the table, whose "i" quotes the allowed sentence.
+    expect(allThreeLineOf(CANDIDATE_LINE, 241.70906, -52.20564)?.key).toBe('C')
+    expect(allThreeLineOf(CANDIDATE_LINE, 269.446267, 4.768222)).toBeNull()
   })
 })
 

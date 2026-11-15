@@ -112,6 +112,11 @@ export interface Target {
   pmdec: number | null // milliarcseconds per year, northward
   parallax: number | null // milliarcseconds
   gmag: number | null
+  /**
+   * Set by the page, never by the server: 'Gaia DR3' when the motion of a `request` target is the
+   * one /api/resolve took from Gaia DR3 (the address's src=gaia). The server then knows no source_id.
+   */
+  motion_from?: 'Gaia DR3' | null
 }
 
 /** The earlier name of Target, still used by the Gaia overlay. */

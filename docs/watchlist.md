@@ -19,9 +19,10 @@ sources, and a way to use many volunteers' eyes on it. The watchlist is that lis
    the list holds only what real searches reported, and starts with the fields already searched
    (`scripts/watchlist_ingest.py`).
 2. **A second opinion** from another telescope's archive (NEOWISE) for brightness changes.
-3. **People look and vote** on a separate screen (`?watchlist=1`, linked from the main page as
-   "Help check what the search found"): a picture strip for each candidate, what the machine saw
-   in plain words, what the catalogues say, the NEOWISE sentence, and three buttons.
+3. **People look and vote** on a separate screen (`?watchlist=1`, the ninth item of the bar at the
+   top of every screen: "Vote" in Beginner and "Watchlist" in Expert on 15 November; it is being
+   renamed "Observe anomalies" / "Anomalies"): a picture strip for each candidate, what the machine
+   saw in plain words, what the catalogues say, the NEOWISE sentence, and three buttons.
 4. **Scientists download the list** (`/api/watchlist/export.csv` or `.json`) with all the evidence.
 
 Everything on the list is a **candidate**. Nothing is called a discovery or a new object.
@@ -121,7 +122,7 @@ and a link that opens the viewer on it. These are candidates.
 ```
 export SPHEREX_CACHE_DIR=<the shared cache>
 export SPHEREX_WATCHLIST_DB=<optional: where the list is kept; default <cache>/watchlist/watchlist.sqlite3>
-.venv/bin/python scripts/watchlist_ingest.py --fields hunt2/fields.txt --neowise
+.venv/bin/python scripts/watchlist_ingest.py --fields docs/search/hunt2_fields.txt --neowise
 ```
 
 Fields whose searches are not on disk are skipped and named; the script never starts a fresh

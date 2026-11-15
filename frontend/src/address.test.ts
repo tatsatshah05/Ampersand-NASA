@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { addressOf, chooseUiLevel, DEFAULT_SELECTION, LANDING, readAddress, readStoredLevel, storeLevel, toolFrom, withTarget, withTool, withUi, writeTool } from './address'
+import { addressOf, chooseUiLevel, DEFAULT_SELECTION, LANDING, readAddress, readStoredLevel, storeLevel, toolFrom, usualDetectorOf, withTarget, withTool, withUi, writeTool } from './address'
 import { TOOL_KEYS } from './features'
+import { isHeldFind } from './finds'
 import { realSkyAddress, trainingAddress } from './training'
 
 describe('the tool open under the picture (tool=<key>)', () => {
@@ -165,10 +166,44 @@ describe('what the page opens on', () => {
     // Its address reads back as the same view, in Beginner.
     expect(readAddress(addressOf(LANDING)).selection).toEqual(LANDING)
   })
+  it('a candidate’s place with no motion in the address is that candidate held still, in its own detector unless the address names one', () => {
+    const plain = readAddress('?ra=253.18038&dec=-44.67697&name=Candidate+B').selection
+    expect(isHeldFind(plain)).toBe(true)
+    expect([plain.pmra, plain.pmdec, plain.parallax, plain.det]).toEqual([0, 0, null, 6])
+    // A detector in the address is kept; a motion in the address is used as given.
+    expect(readAddress('?ra=253.18038&dec=-44.67697&det=5').selection).toMatchObject({ pmra: 0, pmdec: 0, det: 5 })
+    expect(readAddress('?ra=253.18038&dec=-44.67697&pmra=12&pmdec=-3').selection).toMatchObject({ pmra: 12, pmdec: -3, det: 5 })
+    // Anywhere else nothing is added.
+    expect(readAddress('?ra=269.446267&dec=4.768222').selection).toMatchObject({ pmra: null, pmdec: null, det: 5 })
+  })
+  it('keeps where a motion came from, Gaia DR3, with the motion and only with it', () => {
+    const gaia = withTarget(DEFAULT_SELECTION, { ra: 269.446267, dec: 4.768222, name: "Barnard's star", pmra: -801.551, pmdec: 10362.394, parallax: 546.976, motionFrom: 'gaia' })!
+    expect(gaia.motionFrom).toBe('gaia')
+    expect(addressOf(gaia)).toContain('&parallax=546.976&src=gaia&')
+    expect(readAddress(addressOf(gaia)).selection.motionFrom).toBe('gaia')
+    // No motion, no source; a typed position has neither.
+    expect(readAddress('?ra=10&dec=5&src=gaia').selection.motionFrom ?? null).toBeNull()
+    expect(withTarget(gaia, { ra: 10, dec: 5 })!.motionFrom).toBeNull()
+  })
+  it('the landing comes back held from the practice screen, whose address carries no motion', () => {
+    const practice = readAddress(trainingAddress(LANDING, 7)).selection
+    const back = readAddress(realSkyAddress(practice)).selection
+    expect(isHeldFind(back)).toBe(true)
+    expect(back).toMatchObject({ ra: LANDING.ra, dec: LANDING.dec, det: 6, pmra: 0, pmdec: 0, train: null })
+  })
   it('Barnard’s Star stays the example: an unusable position, and a practice round with none, still show it', () => {
     expect(readAddress('?ra=abc&dec=5').selection.name).toBe("Barnard's Star")
     expect(readAddress('?train=7&level=easy').selection.ra).toBe(DEFAULT_SELECTION.ra)
     expect(DEFAULT_SELECTION.det).toBe(5)
+  })
+  it('opening on a candidate in its own detector, the visitor’s usual detector is still 5, for every star chosen after it', () => {
+    expect(usualDetectorOf(LANDING)).toBe(5)
+    expect(usualDetectorOf({ ...LANDING, det: 3 })).toBe(3)
+    expect(usualDetectorOf({ ...DEFAULT_SELECTION, det: 6 })).toBe(6)
+    // The landing, then Barnard's Star, then Epsilon Indi B: both in detector 5.
+    const barnard = withTarget(LANDING, { ra: 269.446267, dec: 4.768222, name: "Barnard's Star" }, usualDetectorOf(LANDING))!
+    expect(barnard.det).toBe(5)
+    expect(withTarget(barnard, { ra: 330.87, dec: -56.79, name: 'Epsilon Indi B' }, usualDetectorOf(LANDING))!.det).toBe(5)
   })
   it('leaving a candidate in its own detector, a star that suggests none goes back to detector 5', () => {
     const barnard = { ra: 269.446267, dec: 4.768222, name: "Barnard's Star" }

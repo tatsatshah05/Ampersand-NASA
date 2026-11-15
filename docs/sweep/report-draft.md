@@ -2,13 +2,14 @@
 
 Nothing in this file has been sent, filed or posted anywhere. No account was made and no form was filled.
 This is a draft for a team member with no astronomy training. It is built from the vetting ruling of
-2026-11-15 (`docs/sweep/vetting/ruling.json`, each candidate's "for_a_person_to_do"); where this file and the
-ruling differ, the ruling wins. The candidates are explained in plain words in `docs/sweep.md`.
+2026-11-15 (`docs/sweep/vetting/ruling.json`); where this file and the ruling differ, the ruling wins. Part one
+is the checklist of the wider search for earlier reports made after the ruling, kept in
+`docs/sweep/searches-for-earlier-reports.md`. The candidates are explained in plain words in `docs/sweep.md`.
 
 **Order:** do every check in part one for all three candidates, and write down the answers. Only if they all
 come back empty, and the team agrees, and a professional astronomer (for example a mentor) has checked the
-corrected numbers, may anyone use part two. If any check finds a report at a candidate's place, stop: that
-candidate is already reported, and the team should be told at once.
+corrected numbers, may anyone use part two. If any check finds a report at or near a candidate's place, follow
+"If any check finds a report" at the end of the checklist: stop, save the page, and tell the team the same day.
 
 Use only these positions (J2000). The sweep's first positions were wrong and must not be used.
 
@@ -22,117 +23,25 @@ Use only these positions (J2000). The sweep's first positions were wrong and mus
 
 ## Part one: the checks only a person can make
 
-Each check has a **control**: a known object the same search must find. If the control is not found, the
-search did not work, and an empty answer means nothing. Write the date, the time (UTC) and what you saw on the
-lines. Then copy each answer into the candidate's "Searched by a person" list in `docs/sweep.md`.
+Part one is the checklist in `docs/sweep/searches-for-earlier-reports.md`, section (d). It is the wider search's
+checklist for a person (2026-11-15), word for word, with a space after each check for the date, the UTC time,
+what was typed and what came back. It is kept in that one place, so that there is never a second, different
+list: work through it there, and write every answer there.
 
-### Check 1. The Transient Name Server (the official list of reported transients)
+Its six steps, in short (the checklist itself has the addresses, the controls and the boxes that say what counts
+as the same place):
 
-The reviewers searched it on 2026-11-15, but around the sweep's first positions. Repeat it at the corrected
-positions on the day.
+1. The Astronomer's Telegram, full text, with V7994 (ATel 17419) as the control.
+2. NASA ADS, with `bibstem:ATel abs:V7994` as the control.
+3. SIMBAD at CDS, once it shows the 2025 nova V7994 Sgr.
+4. On the day of publishing: the Transient Name Server (control AT 2025nlr) and CBAT's list of unconfirmed
+   transients, again.
+5. Optional: AAVSO's campaigns.
+6. Optional, low priority: the Lucas et al. 2024 table.
 
-1. Open the control first:
-   `https://www.wis-tns.org/search?ra=227.01362&decl=-40.14308&radius=60&coords_unit=arcsec`
-   It must list **AT 2025nlr** (the nova V462 Lup). If it does not, stop: the search is not working.
-
-   - [ ] Control found AT 2025nlr. Date and time: ____________ Result: ____________
-
-2. Open each candidate's search. Expect "No results found".
-
-   - [ ] A: `https://www.wis-tns.org/search?ra=270.80408&decl=-23.46818&radius=60&coords_unit=arcsec`
-     Date and time: ____________ Result: ____________
-   - [ ] B: `https://www.wis-tns.org/search?ra=253.18038&decl=-44.67697&radius=60&coords_unit=arcsec`
-     Date and time: ____________ Result: ____________
-   - [ ] C: `https://www.wis-tns.org/search?ra=241.70906&decl=-52.20564&radius=60&coords_unit=arcsec`
-     Date and time: ____________ Result: ____________
-
-   The Transient Name Server misses some novae in our Galaxy (V7994 Sgr is not in it), so checks 2 to 5
-   matter more, especially for C.
-
-### Check 2. The Astronomer's Telegram, full text (short reports astronomers post about events in the sky)
-
-The reviewers could read only the titles and first lines: the site asks "are you a robot?" when a program
-reads it, and they did not get around that. A person can.
-
-1. Open `https://www.astronomerstelegram.org/` and type **V7994** into its search box. It must find **ATel
-   17419**. If it does not, the search is not working.
-
-   - [ ] Control found ATel 17419. Date and time: ____________
-
-2. Search these words one at a time, and open every telegram from **July 2025 on** (for C, **August 2025 on**)
-   about a nova, a transient, a young star or an infrared source. A position inside the box given goes to the
-   team at once.
-
-   - [ ] A: `Sgr`, `Sagittarius`, `SPHEREx`, `infrared`, `18:03`, `18 03`.
-     Box: RA 18:03:09 to 18:03:17 and Dec -23:27:05 to -23:29:05.
-     Date and time: ____________ Result: ____________
-   - [ ] B: `Sco`, `Scorpius`, `Norma`, `Ara`, `SPHEREx`, `infrared`, `16:52`, `16 52`.
-     Box: RA 16:52:38 to 16:52:49 and Dec -44:39:37 to -44:41:37.
-     Date and time: ____________ Result: ____________
-   - [ ] C: `Nor`, `Norma`, `nova`, `SPHEREx`, `infrared`, `16:06`, `16 06`.
-     Box: RA 16:06:44 to 16:06:57 and Dec -52:11:20 to -52:13:20.
-     Date and time: ____________ Result: ____________
-
-### Check 3. NASA ADS (the index of astronomy papers and telegrams)
-
-Open `https://ui.adsabs.harvard.edu/` and paste each line below into the search box, one at a time. Look for
-anything near the candidate's position (A near 18h03m, -23 deg 28'; B near 16h52m, -44 deg 40'; C near 16h06m,
--52 deg 12').
-
-- [ ] A: `bibstem:"ATel" year:2025-2026 abs:"Sgr"`, then `bibstem:"ATel" year:2025-2026 abs:"Sagittarius"`,
-  then `abs:"SPHEREx" year:2025-2026`
-  Date and time: ____________ Result: ____________
-- [ ] B: `bibstem:"ATel" year:2025-2026 abs:"Sco"`, then `bibstem:"ATel" year:2025-2026 abs:"Scorpius"`, then
-  `bibstem:"ATel" year:2025-2026 abs:"Norma"`, then `abs:"SPHEREx" year:2025-2026`
-  Date and time: ____________ Result: ____________
-- [ ] C: `bibstem:"ATel" year:2025-2026 abs:"Nor"`, then `bibstem:"ATel" year:2025-2026 abs:"Norma"`, then
-  `abs:"nova" abs:"Norma" year:2025-2026`, then `abs:"SPHEREx" year:2025-2026`
-  Date and time: ____________ Result: ____________
-
-### Check 4. SIMBAD at CDS (the main database of named objects)
-
-It was down all day on 2026-11-15 (still "Page unavailable" at 06:21 UTC). The copy that answered lacks the
-2025 novae, so it proves nothing.
-
-1. Open `https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V7994+Sgr`. Only if it shows the 2025 nova is
-   SIMBAD up to date. If not, write "not current" and try another day.
-
-   - [ ] SIMBAD shows V7994 Sgr. Date and time: ____________
-
-2. Open each cone search (1 arcminute around the position):
-
-   - [ ] A: `https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=270.80408+-23.46818&Radius=1&Radius.unit=arcmin`
-     Expect only 2MASS J18031598-2327530, about 43 arcsec away (an unrelated variable star).
-     Date and time: ____________ Result: ____________
-   - [ ] B: `https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=253.18038+-44.67697&Radius=1&Radius.unit=arcmin`
-     Expect nothing closer than 2MASS J16524039-4440242 (about 33 arcsec) and an RR Lyrae star (about 37 arcsec).
-     Date and time: ____________ Result: ____________
-   - [ ] C: `https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=241.70906+-52.20564&Radius=1&Radius.unit=arcmin`
-     Expect only the dust clump HIGALBM G330.4120-00.0823, about 4 arcsec away.
-     Date and time: ____________ Result: ____________
-
-### Check 5. CBAT's list of unconfirmed transients, and the nova list
-
-1. Open `http://www.cbat.eps.harvard.edu/unconf/tocp.html` and press Ctrl-F (Cmd-F on a Mac):
-
-   - [ ] A: search `J1803`. A name with `-232` in its declination part goes to the team.
-     Date and time: ____________ Result: ____________
-   - [ ] B: search `J1652`. A name with `-444` in its declination part goes to the team.
-     Date and time: ____________ Result: ____________
-   - [ ] C: search `J1606`. A name with `-521` in its declination part goes to the team.
-     Date and time: ____________ Result: ____________
-
-2. For C: open `https://asd.gsfc.nasa.gov/Koji.Mukai/novae/novae.html` and look at the 2025-2026 entries for any
-   nova in Norma.
-
-   - [ ] C on Mukai's list. Date and time: ____________ Result: ____________
-
-### Check 6. Before anything is filed
-
-- [ ] Checks 1 to 5 are done for all three, and every answer is written in `docs/sweep.md`.
-- [ ] The team agrees to report.
-- [ ] A professional astronomer has checked the corrected positions and numbers. Date: ____________
-  (Write who checked only with their permission.)
+What has already been done towards these steps, and by whom, is written in the checklist (by 2026-11-15 a
+person had run only the NASA ADS control and one search for Sagittarius). The same section ends with the three
+boxes to tick before anything is filed: the checks done, the team agreed, and a professional astronomer's check.
 
 ---
 
@@ -187,6 +96,10 @@ These are the ruling's lists ("must_not_say"), for every report, page, slide and
 ---
 
 ## Part two: the texts, ready to paste only after part one comes back empty
+
+The searches named in each draft below ("We found no report or catalogue entry ... in ...") are those of the
+first round, made for the ruling. Before anything is sent, add the wider search's and the person's own checks
+from `docs/sweep/searches-for-earlier-reports.md`, as they stand on that day.
 
 How brightness is given: as an AB magnitude, **AB = 8.90 - 2.5 log10(flux in Jy)**, always with its
 wavelength. Bigger AB numbers are fainter.
