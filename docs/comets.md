@@ -5,6 +5,26 @@ Images: NASA/JPL-Caltech SPHEREx, NASA/IPAC IRSA. Code: `backend/follow.py`, com
 `scripts/follow_body.py`, tests `tests/test_follow.py`. Pictures and the measured points of every body are in
 `docs/comets/` (one `.json` per body, with every exposure's measurement).
 
+## In one minute
+
+- **It works.** `follow_body("name")` finds every public SPHEREx exposure that contains a known body at its predicted place
+  (Horizons, seen from the spacecraft), measures it there against noise measured the same way at empty places, and gives one
+  point per exposure: a spectrum, one colour per exposure.
+- **Vesta**: 34 usable measurements of 312 (the rest are saturated). A smooth spectrum with heat rising toward 5 micrometres,
+  no gas band, agrees with the earlier measurement of the project.
+- **3I/ATLAS**: finds the carbon dioxide band the SPHEREx team published (detected in August 2025) and the December 2025
+  rise of water, carbon monoxide and carbon dioxide. **It does not recover the published carbon dioxide absolute number:
+  2.3 times lower at the peak channel**; the reasons tried and not tried are listed.
+- **Pluto (with Charon)**: 229 exposures contain it; a picture of the same patch of sky on six days shows Pluto moving 113
+  arcsec in 7 days against fixed stars. The spectrum has a methane-like shape, but **no methane dip is established** by the
+  rules used here (2.3 micrometres is 7 times its error and marginal).
+- **Comets**: carbon dioxide band measured in C/2025 R2, C/2025 A6, 24P, C/2025 T1, 10P and 29P; water but no carbon
+  dioxide in C/2025 K1; carbon monoxide and carbon dioxide in 29P (already published by JWST). Several are measured only
+  by comparing channels taken minutes apart, and none is checked against a published spectrum of the same body; I did not
+  check the literature beyond the web searches written down below.
+- **Not done**: stacking of the faint bodies, the web endpoint and panel, a reduction of the SPHEREx calibration
+  features, and any confirmation from an independent pipeline.
+
 ## What it does, in plain words
 
 SPHEREx looks at the whole sky through a filter that changes colour across each image, so every exposure sees a
@@ -75,8 +95,8 @@ image.** Vesta is so bright that every exposure of detector 1 to 4 (0.75 to 3.8 
 detectors 5 and 6 (3.8 to 5.0 micrometres) saturate in all 50 measurable exposures of June to August 2025 (V 6.5 to 7.4; 7 more are off the
 image) and in 14 of 55 in July 2026 (V 7.7). The 34 measurements are all from 11 to 20 July 2026: 26 in detector 5 and 8 in detector 6.
 
-What the spectrum shows (12.3 arcsec circle): 1.18 to 1.63 Jy at 3.8 to 4.6 micrometres, rising from 1.6 Jy at 4.6 to
-**3.1 and 2.9 Jy at 4.96 and 5.0 micrometres**. That is what an asteroid should give at these wavelengths: sunlight it
+What the spectrum shows (12.3 arcsec circle): 1.2 to 1.5 Jy at 3.8 to 4.4 micrometres (the scatter is Vesta's rotation),
+1.6 to 1.7 Jy at 4.5 to 4.6, then **3.1 and 2.9 Jy at 4.96 and 5.0 micrometres**. That is what an asteroid should give at these wavelengths: sunlight it
 reflects falls off with wavelength, its own heat takes over from about 4 micrometres and rises steeply. Rough check by
 hand, not a calibration: a body of Vesta's size (radius 262 km) at 2.14 au from SPHEREx, as a 230 K black body, gives
 about 2.5 Jy at 5 micrometres; 2.9 to 3.1 Jy corresponds to about 235 K. There is no gas band, as there should not be.
@@ -88,7 +108,7 @@ caption); bottom, the same sky place in an exposure of another day, with the sam
 there.
 
 Against what was measured before: `docs/smallbodies.md` measured 1.44 to 1.63 Jy at 4.2 to 4.4 micrometres on 16 July
-2026 in a 15.4 arcsec circle. Here, on 16 July 2026, 4.23 to 4.30 micrometres, 12.3 arcsec circle: 1.52, 1.58, 1.57
+2026 in a 15.4 arcsec circle. Here, on 16 July 2026, 4.23 to 4.30 micrometres, 12.3 arcsec circle: 1.57, 1.58, 1.52
 Jy. Same data, a different circle and a different code path: the numbers agree.
 
 **A warning that the Vesta result gives for free.** The gas-band arithmetic, run on Vesta's 34 points, reports a
@@ -106,8 +126,8 @@ What it does not show: the sunlight part (below 3.8 micrometres) because every e
 `python scripts/follow_body.py "3I/ATLAS" --strip 6` (Horizons knows it as C/2025 N1): 364 exposures contain it, 357
 measured: **237 ok, 57 `star_in_the_way`, 57 flagged, 1 saturated, 5 off the image.** The fields it crossed in August
 2025 are in the Milky Way's crowded Sagittarius, which is why so many points have a star in the way. The visits
-(2025 August 6 to 15, December 8 to 9, December 14 to 15, 2026 March 17 to 23 and March 28 to April 6) are the five
-sets of exposures with enough points. Each colour above is one visit; the shaded bands are water, carbon dioxide and
+(2025 August 6 to 15, December 8 to 9, December 14 to 15, 2026 March 17 to 23 and March 28 to April 6, besides 7 points
+on 1 August) are the sets of exposures with enough points. Each colour above is one visit; the shaded bands are water, carbon dioxide and
 carbon monoxide.
 
 What the SPHEREx team published (searched: "SPHEREx 3I/ATLAS spectrum Lisse carbon dioxide coma water ice arXiv").
@@ -206,11 +226,224 @@ error, but the channels scatter far more than their errors (reduced chi-squared 
 days and changes by tens of per cent, the 12.3 arcsec circle in this crowded field catches stars, and each channel
 comes from a different exposure on a different day), so a trough that size can also arise at other places (other places of the spectrum give dips of up to 5.2 times
 the error and bumps of up to 7.7 times). I did not
-check the published Pluto spectrum for these channels beyond the band positions the team lead gave. No gas band is
+check the published Pluto spectrum for these channels; the band positions are the ones given in the brief. No gas band is
 seen for Pluto: water, carbon dioxide and carbon monoxide are all "not seen" (0.0 to 1.0 times their error).
 
 Searched: "SPHEREx Pluto spectrum methane ice 0.75-5 micron observation": no SPHEREx paper on Pluto came back. That
 does not show that none exists; it is one web search.
+
+## Looking where it may not have been looked: the comets
+
+**How the bodies were chosen.** For each candidate Horizons gave the path seen from SPHEREx; I kept the days inside the
+SPHEREx elongation range and read off the brightest predicted total magnitude (Horizons' formula) in that range. The
+brief's threshold was "about 14 or brighter":
+
+| Body | Brightest predicted, inside SPHEREx's range | What was done |
+|---|---|---|
+| C/2025 R2 (SWAN) | 10.8 (19 Oct 2025, 0.26 au from SPHEREx, 776 arcsec/h) | followed |
+| C/2025 K1 (ATLAS) | 12.5 (22 Nov 2025; main body, Horizons record 90004925, not the fragments K1-B, -C, -D) | followed |
+| 10P/Tempel 2 | 13.1 (25 Jun 2026) | followed (all 319 exposures) |
+| C/2025 T1 | 13.4 (11 Nov 2025) | followed |
+| 24P/Schaumasse | 14.1 (6 Jan 2026) | followed |
+| C/2025 A6 (Lemmon) | 14.4 (13 Feb 2026) | followed |
+| 29P/Schwassmann-Wachmann | 17.4 (formula; it outbursts) | followed because it is known for carbon monoxide |
+| 240P/NEAT | 14.6 (24 Dec 2025; Horizons needs record 90001213) | not followed: fainter than the threshold |
+| C/2023 A3 | 14.7 (1 May 2025) | not followed: fainter, and at the very start |
+| C/2024 E1 (Wierzchos) | 15.4 (12 Sep 2025) | not followed: no day at 14.5 or brighter in range |
+| C/2024 G3 15.0, 88P 15.4, C/2026 A1 17.2, C/2025 F2 17.1, C/2025 J1 17.1, 12P/Pons-Brooks 18.3, C/2025 L2 17.9, C/2025 R3 17.3, 13P/Olbers 20.4, 41P 22.3, C/2024 S1 22.3, C/2025 D1 20.3, C/2025 V1 19.1 | all fainter than 15 | not followed |
+| 3I/ATLAS (C/2025 N1) | 15.2 | followed: it is the proof above (Horizons' formula is far from what SPHEREx saw) |
+
+Horizons did not take "C/2025 K1" and "240P" at first: it lists several records with those designations and asks for a
+record number (`COMMANDS` in `backend/follow.py`).
+
+**The SPHEREx exposures of a comet are not at the time it was brightest.** C/2025 T1 was 13.4 on 11 November 2025, and its
+SPHEREx exposures are from May to September 2026 at r 2.6 to 4.1 au; C/2025 A6 was at 4th magnitude in October and November
+2025, at an elongation under 70 degrees, and has exposures only from 22 February 2026 (r 2.1 au) onwards.
+
+### Results (the best visit for each band, large circle 36.9 arcsec; "detected / marginal / not seen" by the rules above)
+
+| Body | Exposures containing it | Measured | Usable | Predicted mag | H2O 2.7 | CO2 4.26 | CO 4.67 |
+|---|---|---|---|---|---|---|---|
+| 10P | 319 | 313 | 178 | 13.1 to 20.1 | -5.01 +- 13.39 mJy (-0.4x), not seen, visit 2026-03-13 (1 in band) | +56.94 +- 1.48 mJy (+38.5x), marginal, visit 2026-03-13 (3 in band) | +11.22 +- 5.24 mJy (+2.1x), not seen, visit 2026-05-09 (1 in band) |
+| 24P | 823 | 786 | 520 | 14.1 to 20.7 | +3.64 +- 0.20 mJy (+18.3x), marginal, visit 2026-06-26 (3 in band) | +19.42 +- 1.32 mJy (+14.8x), marginal, visit 2025-09-18 (7 in band) | +5.30 +- 6.21 mJy (+0.9x), not seen, visit 2025-12-13 (6 in band) |
+| 29P | 178 | 173 | 150 | 17.4 to 17.8 | no usable channels in the band | +16.82 +- 0.46 mJy (+36.4x), detected, visit 2025-12-14 (6 in band) | +47.21 +- 1.08 mJy (+43.8x), detected, visit 2025-12-14 (4 in band) |
+| 3I/ATLAS | 364 | 357 | 237 | 15.2 to 25.8 | +68.72 +- 2.03 mJy (+33.9x), marginal, visit 2025-12-08 (4 in band) | +477.29 +- 12.66 mJy (+37.7x), detected, visit 2025-12-14 (2 in band) | +89.93 +- 3.95 mJy (+22.7x), detected, visit 2025-12-14 (3 in band) |
+| 4 Vesta | 320 | 312 | 34 | 6.2 to 8.0 | no usable channels in the band | +140.45 +- 31.91 mJy (+4.4x), marginal, visit 2026-07-11 (5 in band) | no usable channels in the band |
+| C/2025 A6 | 222 | 221 | 127 | 14.4 to 18.7 | +1.00 +- 28.70 mJy (+0.0x), not seen, visit 2026-02-22 (1 in band) | no usable channels in the band | +5.19 +- 0.76 mJy (+6.8x), marginal, visit 2026-05-19 (1 in band) |
+| C/2025 K1 | 434 | 423 | 285 | 12.5 to 20.8 | +2.45 +- 0.15 mJy (+16.4x), marginal, visit 2025-12-21 (3 in band) | +0.26 +- 0.44 mJy (+0.6x), not seen, visit 2025-05-25 (1 in band) | -0.10 +- 0.42 mJy (-0.2x), not seen, visit 2025-05-25 (3 in band) |
+| C/2025 R2 | 331 | 296 | 202 | 10.8 to 24.4 | -1.47 +- 0.49 mJy (-3.0x), not seen, visit 2026-09-07 (2 in band) | +0.93 +- 0.35 mJy (+2.7x), not seen, visit 2026-09-07 (3 in band) | -0.57 +- 0.66 mJy (-0.9x), not seen, visit 2026-09-07 (2 in band) |
+| C/2025 T1 | 156 | 154 | 91 | 13.4 to 27.4 | -0.81 +- 0.41 mJy (-2.0x), not seen, visit 2026-08-20 (1 in band) | no usable channels in the band | -0.41 +- 0.48 mJy (-0.9x), not seen, visit 2026-08-20 (2 in band) |
+| Chiron | 373 | 367 | 267 | 18.3 to 18.6 | +0.30 +- 0.14 mJy (+2.2x), not seen, visit 2025-12-31 (3 in band) | -0.86 +- 0.64 mJy (-1.3x), not seen, visit 2025-12-31 (1 in band) | +0.69 +- 0.37 mJy (+1.9x), not seen, visit 2025-12-31 (7 in band) |
+| Eris | 336 | 329 | 277 | 18.6 to 18.7 | -0.04 +- 0.13 mJy (-0.3x), not seen, visit 2026-07-11 (3 in band) | -0.17 +- 0.32 mJy (-0.5x), not seen, visit 2025-07-19 (2 in band) | +0.80 +- 0.55 mJy (+1.5x), not seen, visit 2026-01-03 (2 in band) |
+| Haumea | 349 | 346 | 278 | 17.2 to 17.3 | +0.33 +- 0.16 mJy (+2.1x), not seen, visit 2025-06-20 (2 in band) | +0.13 +- 0.43 mJy (+0.3x), not seen, visit 2026-01-16 (1 in band) | +0.09 +- 0.32 mJy (+0.3x), not seen, visit 2025-06-20 (3 in band) |
+| Makemake | 362 | 358 | 270 | 17.1 to 17.1 | +0.54 +- 0.89 mJy (+0.6x), not seen, visit 2026-05-30 (4 in band) | +0.41 +- 0.26 mJy (+1.6x), not seen, visit 2026-05-30 (3 in band) | +0.30 +- 0.42 mJy (+0.7x), not seen, visit 2025-05-30 (2 in band) |
+| Pluto | 229 | 224 | 175 | 14.5 to 14.6 | +0.38 +- 0.39 mJy (+1.0x), not seen, visit 2026-04-25 (3 in band) | +0.36 +- 0.47 mJy (+0.8x), not seen, visit 2025-10-03 (1 in band) | -1.33 +- 0.69 mJy (-1.9x), not seen, visit 2026-04-25 (1 in band) |
+
+Nights on which the per-sequence scan reached 5 times its error on a band:
+
+| Body | H2O | CO2 | CO |
+|---|---|---|---|
+| 10P | 2026-03-05 | 2026-03-22, 2026-03-24 | none |
+| 24P | 2025-09-19, 2026-07-07 | none | none |
+| 29P | none | 2025-12-16, 2025-12-18 | 2025-12-21 |
+| 3I/ATLAS | 2025-12-08 | 2025-12-14 | none |
+| 4 Vesta | none | none | none |
+| C/2025 A6 | none | 2026-06-16 | none |
+| C/2025 K1 | 2026-01-02, 2026-01-07 | none | none |
+| C/2025 R2 | 2026-01-07 | 2026-01-02 | none |
+| C/2025 T1 | none | 2026-05-18 | none |
+| Chiron | none | none | 2026-07-26 |
+| Eris | none | none | none |
+| Haumea | none | none | none |
+| Makemake | none | none | none |
+| Pluto | none | none | none |
+
+The first table gives, for each band, the visit with the largest excess over its error. When a band has no channel on one side of it in a
+visit the rule cannot be applied and the cell says "no usable channels": that is the case for the best carbon dioxide results of
+C/2025 R2 and C/2025 A6, which are described below from the comparison of channels taken minutes apart (second table: the nights on
+which such a comparison reached 5 times its error; these have no control windows of their own, so they are not detections by
+the rule above).
+
+### What stands out
+
+**C/2025 R2 (SWAN): a carbon dioxide band in December 2025 and January 2026.** In exposures of detector 5 on three
+separate dates the comet is bright at 4.24 to 4.29 micrometres and faint in the channels next to them (12.3 arcsec circle):
+
+| Date (UTC) | 4.17 to 4.21 | 4.215 to 4.25 | 4.25 to 4.29 | 4.33 to 4.37 | r, delta (au) |
+|---|---|---|---|---|---|
+| 22 Dec 2025 | | | 9.8 +- 0.4 mJy (at 4.293) | 2.2 (4.329), 1.4 (4.366) | 1.99, 1.51 |
+| 25 Dec 2025 | | 4.0 +- 0.2 (4.215) | 13.1 +- 0.5 (4.252), 9.9 +- 0.4 (4.288) | | 2.04, 1.59 |
+| 2 Jan 2026 | 0.8 (4.168), 1.5 (4.204) | 8.5 +- 0.3 (4.240) | 8.9 +- 0.3 (4.276) | | 2.15, 1.79 |
+
+In the large circle: 35.0, 34.9 and 25.8 mJy at the strongest channel. Every one is `ok`, 39 to 172 times the noise at
+empty places beside it, and the same sky place in 2 to 4 exposures of other days shows nothing (on 2 January one of two shows
+a source of 0.12 to 0.15 mJy). The per-sequence scan gives +7.6 +- 0.4 mJy (17.5 times its error; 8.6 times in the large
+circle) on 2 January, with 55 windows away from the gas bands, 3 of which reach 5 times (5 per cent). In September 2026
+(r = 5.1 au) the same channels are 0.0 to 0.35 mJy: the band is gone.
+
+![C/2025 R2 on 25 December 2025: three consecutive exposures of detector 5 at 4.215, 4.252 and 4.288 micrometres, the same stretch](comets/c_2025_r2_sequence_20251225T19_D5.png)
+
+The coma, a glow round the predicted place, brightens in the 4.25 micrometre exposure and fades in the next (other dates:
+`docs/comets/c_2025_r2_sequence_20251222T16_D5.png` and `..._20260102T10_D5.png`).
+
+What it is and is not: a feature 0.05 micrometre wide at the place of the carbon dioxide band, in a comet, on three
+separate dates, absent at r = 5 au, and seen as a glow in the images, not a point. Checks that tried to kill it: a star
+(the other-day check, and the glow is extended); the detector (Vesta and Pluto in detector 5 are smooth through 4.26
+micrometres); a one-day fluke (three dates); dust (it is narrow). The visit rule cannot call it "detected" (the 4.38 to
+4.52 side is missing in these exposures; the rule needs both sides), so the table says "not enough exposures" for it and
+this paragraph rests on the comparison of channels taken minutes apart, which has no control windows of its own at this
+wavelength. **What would confirm it:** the same band in the SPHEREx team's own spectra of these exposures; the shape
+across 4.1 to 4.45 micrometres from a sequence that covers the whole band (these step 0.036 micrometre and reach 3
+channels); JWST or ground-based infrared spectra of C/2025 R2 of the same weeks. **Searched for:** "comet C/2025 R2 (SWAN)
+CO2 carbon dioxide infrared spectroscopy JWST OR SPHEREx OR NEOWISE detection": no report of a carbon dioxide detection
+for it came back (one web search; only a ground-based optical spectrum of C2 and NH2 from 18 October 2025). That does not
+show it is unreported.
+
+**C/2025 A6 (Lemmon): carbon dioxide at 3.5 au, and a carbon monoxide hint.** On 11 June 2026 detector 5 gives 15.4 +- 0.5
+mJy at 4.261 micrometres, 3.5 at 4.297 and 0.6 at 4.334; on 16 June 7.9 +- 0.3 and 10.7 +- 0.4 mJy at 4.236 and 4.273
+with 0.5 at 4.20 (r 3.48 to 3.55 au, delta 3.2 to 3.3 au; large circle 40 and 31 mJy). The 16 June scan is +8.8 +- 0.25 mJy
+(34.8 times; large circle 27.9, 25.9 times), 28 windows away from the gas bands, none at 5 times. On 23 May 2026
+detector 6 reads 2.2 and 2.5 mJy at 4.645 and 4.679 micrometres against 0.6 and 0.9 at 4.58 and 4.61: by the visit rule
+the carbon monoxide band is 13.5 times its error in the small circle (1.9 +- 0.14 mJy), **marginal** (3 other places
+only). Water: not seen. **Searched for:** "comet C/2025 A6 Lemmon carbon dioxide CO2 4.3 micron detected outbound
+2026": nothing on carbon dioxide (only visual magnitudes). What would confirm: the same two features in the SPHEREx
+team's spectra; the whole spectrum of one visit.
+
+**24P/Schaumasse: carbon dioxide going in and coming out.** 5.6 +- 0.25 mJy at 4.247 micrometres on 20 September 2025
+(0.7 at 4.211, 3.3 at 4.284) and 4.2 at 4.284 on 27 September (r 1.8 au, delta 1.5 au), and **9.6 +- 0.3 mJy at 4.246
+micrometres on 1 July 2026** (0.4 at 4.210, 6.5 at 4.282, 0.7 at 4.319; r 2.35, delta 1.71). The 12.3 arcsec circle holds
+more carbon dioxide emission at 2.35 au going out than at 1.8 au coming in, although the comet is farther from the Sun and
+from SPHEREx; scaled by r^2 delta^2 as the 3I/ATLAS paper does, the later one is 3.4 times larger (that scaling is an
+assumption, and the circle is 13,300 to 13,800 km in radius in September, 15,300 in July). By the visit rule: 18 September to 3
+October, marginal (+2.9 +- 0.1 mJy, 27 times; only 3 controls); 26 June to 7 July 2026, **detected** (+5.1 +- 0.2 mJy,
+29.9 times; 6 other places, the largest 3.4; large circle +12.3 +- 1.2 mJy, detected). On 24 September 2025 the same place
+has a star in the way (3 of 3 other-day exposures, median 1.06 mJy): left out. What would confirm a rise: the same
+aperture in kilometres, the SPHEREx team's own photometry. No web search was made for 24P.
+
+**C/2025 T1: a faint carbon dioxide line.** 2.4 +- 0.15 mJy at 4.249 micrometres and 1.4 +- 0.13 at 4.288 on 18 May 2026
+against 0.1 mJy at 4.14 to 4.18 and 4.33 to 4.36; one night, r 2.67 au. Scan: +2.25 +- 0.17 mJy (13 times; large circle
+6.1, 12.5 times). Too little to say more. No web search made.
+
+**C/2025 K1 (ATLAS): water, and no carbon dioxide.** For 21 December 2025 to 5 January 2026 (r 1.8 au, delta 1.2 au) the
+water band is **detected** in the small circle (+0.57 +- 0.05 mJy, 11.8 times; 7 other places, the largest 7.5), the
+carbon dioxide band is 0.005 +- 0.133 mJy (0.0 times) and carbon monoxide -0.36 +- 0.14 mJy. The three channels in the
+carbon dioxide band are as faint as their neighbours, where C/2025 R2 at a similar distance gave 8 to 13 mJy in one
+channel. The comet was breaking up (HST imaged at least five fragments; "Sequential Fragmentation of C/2025 K1 (ATLAS)",
+arXiv:2511.19707, which I did not read beyond the search result), and the 12.3 arcsec circle may hold only one piece.
+**Searched for:** "C/2025 K1 ATLAS comet carbon dioxide OR CO2 infrared observations fragmentation 2025 2026": JWST
+program 12488 is described as aimed at the volatile content of the fragments and I found no published carbon dioxide
+abundance; a Wikipedia mirror's title calls the comet "deeply depleted" in carbon-bearing species, but I could not see
+its text, so I do not rely on it. What would confirm the absence: a deeper limit in the same channels from stacking,
+and the same band in the other fragments.
+
+**29P/Schwassmann-Wachmann: carbon monoxide and carbon dioxide, after an outburst.** 14 to 23 December 2025 (r 6.3 au): carbon
+monoxide **detected** at +13.7 +- 0.34 mJy (40 times; large circle 47.2 +- 1.1 mJy, 44 times; the largest other place
+15) and carbon dioxide **detected** at +4.3 +- 0.19 mJy (23 times; large circle 16.8 +- 0.5). The ratio of band-integrated
+excess, carbon dioxide to carbon monoxide, is **0.33 +- 0.01** in the large circle (0.29 +- 0.01 in the small): a ratio of
+fluxes, not of production rates (the errors are formal). The 14 to 23 December exposures are 2.3 times brighter at 1
+micrometre than those of 8 December (40 against 17 mJy in the large circle). Wikipedia lists outbursts of 29P on 4 and 11
+December 2025 (a secondary source, one web search): SPHEREx's 8 December visit follows the first, its 14 to 23 December visit
+the second. This is **not new**: Faggi et al., JWST NIRSpec of 20 February 2023 (Nature Astronomy 2024), reported carbon
+monoxide and carbon dioxide in 29P. It shows that the tool finds both gases in a comet 6 au away.
+
+### 10P, the dwarf planets and Chiron
+
+**10P/Tempel 2: carbon dioxide in March 2026.** On 22 March 2026 detector 5 reads 2.8, **36.1 +- 1.1** and **28.4 +- 0.9** mJy
+at 4.208, 4.244 and 4.281 micrometres (2.0 at 4.172), and on 24 March 7.4 mJy at 4.304 (r 1.94 au, delta 1.6 au). The
+scan gives +29.9 +- 0.8 mJy (36 times; large circle +81 +- 3 mJy, 26 times) with 37 windows away from the gas bands, 1
+at +5 times and 2 at -5 times. The visit rule calls it **marginal** (+16.3 +- 0.4 mJy, 41.6 times, in the 13 to 27 March
+visit: only 3 other places could be tested). A fixed source of about 1 mJy lies at that sky place in the 3 exposures of
+other days (a star), 3 per cent of the flux: it does not make the band, but it is in the number. The comet was run on all
+319 exposures (the 350 limit given is above that count). Searched: nothing made for 10P.
+
+**Makemake, Haumea, Chiron (and Eris, below): stacking was not done.** These bodies are V 17 to 19 and far from the Sun, so
+they show no gas bands and only a surface spectrum. For each, `follow_body` measured every exposure on its own, and the
+claim here is only about individual exposures, each compared with the scatter of the same measurement at 8 empty places
+beside it ("times the noise"). A stack along the body's path, with channels of similar wavelength together, was not
+built.
+
+| Body | V (Horizons) | Exposures (contain, usable) | Individual measurements at 5 times the noise or more, by wavelength |
+|---|---|---|---|
+| Makemake | 17.1 | 362, 270 | 34 of 45 at 0.75 to 1.1 micrometres (median 0.61 mJy, noise 0.07); 23 of 44 at 1.1 to 1.6; 3 of 43 at 1.6 to 2.4; 5 of 46 at 2.4 to 3.8; 3 of 90 at 3.8 to 5.0 |
+| Haumea | 17.2 | 349, 278 | 33 of 40 at 0.75 to 1.1 (median 0.55 mJy); 29 of 43 at 1.1 to 1.6; 15 of 49 at 1.6 to 2.4; 3 of 43 at 2.4 to 3.8; 0 of 83 at 3.8 to 5.0 |
+| Chiron | 18.3 to 18.6 | 373, 267 | 11 of 40 at 0.75 to 1.1 (median 0.24 mJy); 6 of 36 at 1.1 to 1.6; 7 of 53 at 1.6 to 2.4; 1 of 36 at 2.4 to 3.8; 6 of 89 at 3.8 to 5.0 |
+| Eris | 18.6 to 18.7 | 336, 277 | 7 of 42 at 0.75 to 1.1 (median 0.17 mJy, noise 0.07); 3 of 38 at 1.1 to 1.6; 2 of 48 at 1.6 to 2.4; 1 of 40 at 2.4 to 3.8; 2 of 92 at 3.8 to 5.0: **15 of 260 in all, so only the shortest wavelengths are measured at all** |
+
+![Makemake](comets/makemake_spectrum.png)
+
+![Haumea](comets/haumea_spectrum.png)
+
+**Makemake** and **Haumea** are measured, exposure by exposure, at 0.75 to about 2.4 micrometres, where most
+measurements stand 5 or more times above the noise, and fade into it beyond 2.4. Makemake's spectrum has peaks at about 0.8,
+1.2 to 1.3, 1.5 and 1.9 to 2.0 micrometres and dips between them, the pattern of a surface covered in methane ice
+(Pluto's is the same kind); Haumea's falls steadily from 0.55 mJy at 0.75 micrometre to 0.1 to 0.2 mJy near 2.0 and about
+zero at 2.7 to 3.5 micrometres, the shape of a water-ice surface. I did not run the dip test on these. Their gas-band
+"results" in the table are not gas: they have no coma at 50 au, and the arithmetic reads the surface spectrum (for
+Makemake the water window gets +0.17 +- 0.03 mJy, "detected" by the rule, in the 30 May to 13 June 2026 visit: the
+bright channels between methane bands beside it. This is a false alarm of the method and a warning that the rule is
+only meant for comets). Points that have a fixed source at the same sky place on other days are drawn as open circles.
+
+Makemake across the sky: `docs/comets/makemake_moving.png` (the same patch of sky on four days, the ring is the
+predicted place; Makemake moved 481 arcsec in 14 days, so the field loses it in the later panels).
+
+![Makemake in one patch of sky on four days](comets/makemake_moving.png)
+
+**Chiron (95P): one exposure at the carbon monoxide wavelength.** On 26 July 2026, 19:57 UTC, detector 6 at 4.685
+micrometres reads **2.05 +- 0.19 mJy** at Chiron's predicted place (14 times the noise at empty places beside it; the
+same place in 4 exposures of other days shows nothing), while the channels around it read 0.36 (4.651), 0.18 (4.719), 0.0
+(4.753) and the others about 0.2 or less. The visit rule calls the carbon monoxide band **detected** in that visit (+0.75
++- 0.14 mJy, 5.3 times, 8 other places, the largest 1.6); the January 2026 visit (7 channels in the band) gives
+-0.001 +- 0.09 mJy. The picture shows a faint star-like source at the centre in the 4.685 micrometre exposure and nothing in
+the 4.719 micrometre exposure two minutes later (`docs/comets/chiron_sequence_20260726T195_D6.png`). This is **one exposure**,
+one date, and not established: a narrow feature at the carbon monoxide wavelength in a body with known carbon monoxide
+production is the expected thing, but a single point-like brightening at the predicted place that is gone two minutes
+later could also be an instrumental or chance event; I have no second exposure that shows it. What would confirm it: the
+band in other exposures of the same visit at neighbouring wavelengths (none in this one), a repeat in the next SPHEREx
+visit, the published Chiron carbon monoxide production. Not searched in the literature.
+
+![Chiron, two consecutive exposures of detector 6: 4.685 and 4.719 micrometres](comets/chiron_sequence_20260726T195_D6.png)
+
+
 
 ## Limits (read before relying on any number)
 
@@ -266,3 +499,21 @@ Needs the project's Python environment and the network the first time; `SPHEREX_
 cutouts and answers of this feature are in its `follow/` folder: about 2 GB for everything in this document).
 Tests: `pytest tests/test_follow.py` (from saved real JPL and IRSA answers and real measured points in
 `tests/data/follow/`; no network).
+
+## What is not done, or not verified
+
+- The web endpoint (`/api/follow?name=`) and the panel "Follow a comet or asteroid" in the app were **not built**: the
+  measurements and their write-up came first, and a first run of a body takes 10 to 30 minutes, which would need the
+  background-job route of `backend/jobs.py`. `backend/app.py` and `frontend/src/App.tsx` are untouched.
+- Stacking of faint bodies along their own path (Eris, Chiron, and the longer wavelengths of Makemake and Haumea) was not
+  built. Only single exposures are claimed.
+- 3I/ATLAS's carbon dioxide absolute flux is 2.3 times lower than the paper's; the reason is not found (see above).
+- Calibration features of SPHEREx's channels were not checked beyond the other-places test; the detector boundaries at
+  1.09, 1.63, 2.42, 3.82 and 4.42 micrometres are possible places for steps.
+- None of the "stands out" results was compared with a published spectrum of the same body; the web searches were one each,
+  written beside each result. No search at all was made for 24P, C/2025 T1, 10P and Chiron, and none for the dwarf planets.
+- Most results from a single night rest on the comparison of channels taken minutes apart, which has no control windows of
+  its own at that scale.
+- The 29P and 10P runs passed `--max 250` and `--max 350`; both numbers were above the count found, so every exposure was
+  measured. Runs of other bodies: no limit.
+- Horizons' magnitude for a comet is a formula, and the SPHEREx exposures are not at the time of the comet's peak.

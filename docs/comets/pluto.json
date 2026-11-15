@@ -64,15 +64,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W18_1B_0436_4_D5_1b979416.fits",
    "status_large": "saturated",
-   "n_places": 3,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0050_1_D5_1b979416.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0355_1_D5_1b979416.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0237_2_D5_1b979416.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0574_4_D5_1b979416.fits"
-   ]
+   "n_places": 3
   },
   {
    "obs_id": "2025W18_1B_0436_4",
@@ -105,7 +98,6 @@
     "PERSIST",
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W18_1B_0436_4_D2_1b979416.fits",
    "status_large": "flagged"
   },
   {
@@ -142,15 +134,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_1A_0574_2_D6_8ae25ec6.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_2_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_8ae25ec6.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W39_1A_0574_2",
@@ -186,15 +171,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_1A_0574_2_D3_8ae25ec6.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_3_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_8ae25ec6.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W39_1A_0574_3",
@@ -230,15 +208,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_1A_0574_3_D6_8a3bbcfe.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_2_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_8ae25ec6.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W39_1A_0574_3",
@@ -271,7 +242,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_1A_0574_3_D3_8a3bbcfe.fits",
    "status_large": "flagged"
   },
   {
@@ -310,15 +280,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_1A_0574_4_D3_2ead424c.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_3_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_8ae25ec6.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W39_1A_0574_4",
@@ -350,7 +313,6 @@
    "flags": [
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_1A_0574_4_D6_2ead424c.fits",
    "status_large": "flagged"
   },
   {
@@ -387,15 +349,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_1_D6_e397feee.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_2_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_8ae25ec6.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W39_2A_0219_1",
@@ -433,15 +388,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_1_D3_e397feee.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_3_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_8ae25ec6.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W39_2A_0219_2",
@@ -477,15 +425,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_2_D6_df9ba07c.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_2_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_8ae25ec6.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W39_2A_0219_2",
@@ -521,15 +462,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_2_D3_df9ba07c.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_3_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_8ae25ec6.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W39_2A_0219_3",
@@ -567,15 +501,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_3_D6_819ce3a8.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_2_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_8ae25ec6.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W39_2A_0219_3",
@@ -613,15 +540,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_3_D3_819ce3a8.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_3_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_8ae25ec6.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W39_2A_0219_4",
@@ -659,15 +579,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_4_D6_5f7be8ef.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_2_D6_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_8ae25ec6.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W39_2A_0219_4",
@@ -703,15 +616,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W39_2A_0219_4_D3_5f7be8ef.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_1_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_3_D3_8ae25ec6.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_8ae25ec6.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W40_2B_0346_4",
@@ -747,15 +653,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0346_4_D3_4968988e.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0346_4",
@@ -788,7 +687,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0346_4_D6_4968988e.fits",
    "status_large": "ok"
   },
   {
@@ -825,15 +723,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_1_D6_994334be.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W40_2B_0362_1",
@@ -869,15 +760,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_1_D3_994334be.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W40_2B_0362_2",
@@ -915,15 +799,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_2_D6_bc58fc89.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W40_2B_0362_2",
@@ -959,15 +836,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_2_D3_bc58fc89.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0362_3",
@@ -1003,15 +873,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_3_D3_05283bd2.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W40_2B_0362_3",
@@ -1049,15 +912,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_3_D6_05283bd2.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W40_2B_0362_4",
@@ -1093,15 +949,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_4_D3_f6b7e285.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W40_2B_0362_4",
@@ -1139,15 +988,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0362_4_D6_f6b7e285.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W40_2B_0390_1",
@@ -1183,15 +1025,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0390_1_D5_6801c406.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W40_2B_0390_1",
@@ -1223,7 +1058,6 @@
    "flags": [
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0390_1_D2_6801c406.fits",
    "status_large": "ok"
   },
   {
@@ -1262,15 +1096,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0390_2_D5_5bd472a3.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W40_2B_0390_2",
@@ -1304,7 +1131,6 @@
     "SUR_ERROR",
     "NONFUNC"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0390_2_D2_5bd472a3.fits",
    "status_large": "ok"
   },
   {
@@ -1343,15 +1169,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0390_3_D5_f703c12e.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0390_3",
@@ -1384,7 +1203,6 @@
     "TRANSIENT",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0390_3_D2_f703c12e.fits",
    "status_large": "flagged"
   },
   {
@@ -1421,15 +1239,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0455_3_D2_7cb8059d.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0455_3",
@@ -1462,7 +1273,6 @@
     "TRANSIENT",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0455_3_D5_7cb8059d.fits",
    "status_large": "flagged"
   },
   {
@@ -1499,15 +1309,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0455_4_D2_b35c9a5a.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W40_2B_0455_4",
@@ -1543,15 +1346,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0455_4_D5_b35c9a5a.fits",
    "status_large": "ok",
-   "n_places": 4,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 4
   },
   {
    "obs_id": "2025W40_2B_0593_1",
@@ -1587,15 +1383,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_1_D5_83b1671f.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0593_1",
@@ -1631,15 +1420,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_1_D2_83b1671f.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W40_2B_0593_2",
@@ -1675,15 +1457,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_2_D5_e61c846c.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0593_2",
@@ -1719,15 +1494,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_2_D2_e61c846c.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0593_3",
@@ -1763,15 +1531,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_3_D2_5e2ac016.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0593_3",
@@ -1807,15 +1568,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_3_D5_5e2ac016.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0593_4",
@@ -1851,15 +1605,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_4_D2_2b0b91bc.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0593_4",
@@ -1897,15 +1644,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0593_4_D5_2b0b91bc.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W40_2B_0702_1",
@@ -1941,15 +1681,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0702_1_D6_922b327e.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W40_2B_0702_1",
@@ -1985,15 +1718,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0702_1_D3_922b327e.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W40_2B_0702_2",
@@ -2027,7 +1753,6 @@
     "SUR_ERROR",
     "NONFUNC"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0702_2_D6_ef5e7226.fits",
    "status_large": "saturated"
   },
   {
@@ -2064,15 +1789,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W40_2B_0702_2_D3_ef5e7226.fits",
    "status_large": "ok",
-   "n_places": 4,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 4
   },
   {
    "obs_id": "2025W41_1A_0019_1",
@@ -2108,15 +1826,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0019_1_D6_5ffe29cf.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0019_1",
@@ -2152,15 +1863,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0019_1_D3_5ffe29cf.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W41_1A_0019_2",
@@ -2196,15 +1900,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0019_2_D6_142e0029.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0019_2",
@@ -2240,15 +1937,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0019_2_D3_142e0029.fits",
    "status_large": "ok",
-   "n_places": 4,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 4
   },
   {
    "obs_id": "2025W41_1A_0019_3",
@@ -2284,15 +1974,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0019_3_D3_29eff113.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0019_3",
@@ -2330,15 +2013,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0019_3_D6_29eff113.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0050_3",
@@ -2376,15 +2052,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0050_3_D1_c53eaebb.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0050_3",
@@ -2420,15 +2089,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0050_3_D4_c53eaebb.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W41_1A_0050_4",
@@ -2464,15 +2126,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0050_4_D4_fb6e027a.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0050_4",
@@ -2510,15 +2165,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0050_4_D1_fb6e027a.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W41_1A_0122_1",
@@ -2554,15 +2202,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_1_D5_59dc6c1e.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0122_1",
@@ -2600,15 +2241,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_1_D2_59dc6c1e.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0122_2",
@@ -2640,7 +2274,6 @@
    "flags": [
     "PERSIST"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_2_D2_bd7f8c76.fits",
    "status_large": "ok"
   },
   {
@@ -2673,7 +2306,6 @@
    "flags": [
     "NONFUNC"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_2_D5_bd7f8c76.fits",
    "status_large": "ok"
   },
   {
@@ -2712,15 +2344,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_3_D2_ae368c2c.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0122_3",
@@ -2758,15 +2383,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_3_D5_ae368c2c.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0122_4",
@@ -2804,15 +2422,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_4_D5_acb1f0e7.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0122_4",
@@ -2850,15 +2461,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0122_4_D2_acb1f0e7.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0136_1",
@@ -2891,7 +2495,6 @@
     "PERSIST",
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0136_1_D1_6fd42d5f.fits",
    "status_large": "ok"
   },
   {
@@ -2930,15 +2533,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0136_1_D4_6fd42d5f.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W41_1A_0136_2",
@@ -2976,15 +2572,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0136_2_D1_39c89bbb.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W41_1A_0136_2",
@@ -3020,15 +2609,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0136_2_D4_39c89bbb.fits",
    "status_large": "saturated",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0136_3",
@@ -3066,15 +2648,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0136_3_D1_f8c9714c.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0136_3",
@@ -3108,7 +2683,6 @@
     "SUR_ERROR",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0136_3_D4_f8c9714c.fits",
    "status_large": "ok"
   },
   {
@@ -3145,15 +2719,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0285_1_D3_925954a8.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D3_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D3_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0285_1",
@@ -3191,15 +2758,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0285_1_D6_925954a8.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0314_3_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0103_4_D6_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0745_2_D6_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0356_1",
@@ -3235,15 +2795,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0356_1_D1_92062afd.fits",
    "status_large": "flagged",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0356_1",
@@ -3281,15 +2834,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0356_1_D4_92062afd.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W41_1A_0356_2",
@@ -3327,15 +2873,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0356_2_D4_410db2d3.fits",
    "status_large": "flagged",
-   "n_places": 3,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 3
   },
   {
    "obs_id": "2025W41_1A_0356_2",
@@ -3369,7 +2908,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0356_2_D1_410db2d3.fits",
    "status_large": "flagged"
   },
   {
@@ -3406,15 +2944,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_1_D2_213fcf99.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0526_1",
@@ -3450,15 +2981,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_1_D5_213fcf99.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0526_2",
@@ -3490,7 +3014,6 @@
    "flags": [
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_2_D5_2e3c87b5.fits",
    "status_large": "flagged"
   },
   {
@@ -3529,15 +3052,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_2_D2_2e3c87b5.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0526_3",
@@ -3573,15 +3089,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_3_D2_32dbf69e.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0526_3",
@@ -3617,15 +3126,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_3_D5_32dbf69e.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W41_1A_0526_4",
@@ -3657,7 +3159,6 @@
    "flags": [
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_4_D2_c6b483cc.fits",
    "status_large": "ok"
   },
   {
@@ -3690,7 +3191,6 @@
    "flags": [
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0526_4_D5_c6b483cc.fits",
    "status_large": "flagged"
   },
   {
@@ -3727,15 +3227,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_1_D1_32a01df6.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2025W41_1A_0657_1",
@@ -3771,15 +3264,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_1_D4_32a01df6.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0657_2",
@@ -3815,15 +3301,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_2_D1_f6891ad1.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0657_2",
@@ -3859,15 +3338,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_2_D4_f6891ad1.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0657_3",
@@ -3903,15 +3375,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_3_D1_3e526b81.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0657_3",
@@ -3947,15 +3412,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_3_D4_3e526b81.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_1A_0657_4",
@@ -3991,15 +3449,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_4_D1_01439324.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_1A_0657_4",
@@ -4035,15 +3486,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_1A_0657_4_D4_01439324.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W41_2B_0241_1",
@@ -4079,15 +3523,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0241_1_D5_2c41025f.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D5_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D5_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_2B_0241_1",
@@ -4123,15 +3560,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0241_1_D2_2c41025f.fits",
    "status_large": "ok",
-   "n_places": 4,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0387_1_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0650_4_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_1A_0327_3_D2_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D2_4968988e.fits"
-   ]
+   "n_places": 4
   },
   {
    "obs_id": "2025W41_2B_0355_1",
@@ -4167,15 +3597,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_1_D1_10258679.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_2B_0355_1",
@@ -4211,15 +3634,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_1_D4_10258679.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_2B_0355_2",
@@ -4255,15 +3671,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_2_D1_058c287f.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W41_2B_0355_2",
@@ -4298,7 +3707,6 @@
     "NONFUNC",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_2_D4_058c287f.fits",
    "status_large": "ok"
   },
   {
@@ -4335,15 +3743,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_3_D1_99e61efd.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W41_2B_0355_3",
@@ -4379,15 +3780,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_3_D4_99e61efd.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_2B_0355_4",
@@ -4423,15 +3817,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_4_D1_16f25465.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2025W41_2B_0355_4",
@@ -4467,15 +3854,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0355_4_D4_16f25465.fits",
    "status_large": "saturated",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_2B_0636_1",
@@ -4513,15 +3893,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0636_1_D1_cd30b231.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_2B_0636_1",
@@ -4557,15 +3930,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0636_1_D4_cd30b231.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_2B_0636_2",
@@ -4601,15 +3967,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0636_2_D4_51de7e6b.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_2B_0636_2",
@@ -4647,15 +4006,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0636_2_D1_51de7e6b.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2025W41_2B_0636_3",
@@ -4691,15 +4043,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0636_3_D1_427173e6.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D1_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D1_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2025W41_2B_0636_3",
@@ -4735,15 +4080,8 @@
     "star_in_the_way": true
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2025W41_2B_0636_3_D4_427173e6.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0393_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_1B_0640_2_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0471_1_D4_4968988e.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0948_1_D4_4968988e.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W17_2A_0387_1",
@@ -4781,15 +4119,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_1_D1_f3545eee.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0387_1",
@@ -4827,15 +4158,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_1_D4_f3545eee.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0387_2",
@@ -4873,15 +4197,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_2_D1_d90f35bc.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0387_2",
@@ -4919,15 +4236,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_2_D4_d90f35bc.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0387_3",
@@ -4965,15 +4275,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_3_D1_5b9c6b02.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W17_2A_0387_3",
@@ -5011,15 +4314,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_3_D4_5b9c6b02.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W17_2A_0387_4",
@@ -5057,15 +4353,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_4_D4_f620167a.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0387_4",
@@ -5103,15 +4392,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0387_4_D1_f620167a.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0553_1",
@@ -5149,15 +4431,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_1_D1_13f038cf.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W17_2A_0553_1",
@@ -5195,15 +4470,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_1_D4_13f038cf.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0553_2",
@@ -5236,7 +4504,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_2_D4_9bdba3bf.fits",
    "status_large": "ok"
   },
   {
@@ -5275,15 +4542,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_2_D1_9bdba3bf.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W17_2A_0553_3",
@@ -5321,15 +4581,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_3_D1_8aa58553.fits",
    "status_large": "saturated",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W17_2A_0553_3",
@@ -5367,15 +4620,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_3_D4_8aa58553.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0553_4",
@@ -5413,15 +4659,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_4_D4_6a6b128a.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W17_2A_0553_4",
@@ -5459,15 +4698,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0553_4_D1_6a6b128a.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0650_3",
@@ -5505,15 +4737,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0650_3_D4_7ac82592.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W17_2A_0650_3",
@@ -5549,15 +4774,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0650_3_D1_7ac82592.fits",
    "status_large": "flagged",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W17_2A_0650_4",
@@ -5593,15 +4811,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0650_4_D1_40f28b50.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W17_2A_0650_4",
@@ -5639,15 +4850,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0650_4_D4_40f28b50.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W17_2A_0666_3",
@@ -5681,7 +4885,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0666_3_D4_4111ec84.fits",
    "status_large": "flagged"
   },
   {
@@ -5714,7 +4917,6 @@
    "flags": [
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0666_3_D1_4111ec84.fits",
    "status_large": "flagged"
   },
   {
@@ -5753,15 +4955,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0666_4_D4_8f6fd3a0.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W17_2A_0666_4",
@@ -5797,15 +4992,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0666_4_D1_8f6fd3a0.fits",
    "status_large": "flagged",
-   "n_places": 2,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 2
   },
   {
    "obs_id": "2026W17_2A_0740_1",
@@ -5841,15 +5029,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0740_1_D1_3d215f14.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W17_2A_0740_1",
@@ -5885,15 +5066,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W17_2A_0740_1_D4_3d215f14.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_1A_0015_1",
@@ -5923,7 +5097,6 @@
    "sigma_noise": null,
    "other_days": null,
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0015_1_D4_36f887e3.fits",
    "status_large": "off_image"
   },
   {
@@ -5960,15 +5133,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0015_2_D4_7eba8a53.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D4_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D4_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_1A_0015_2",
@@ -6004,15 +5170,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0015_2_D1_7eba8a53.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W18_1A_0198_1",
@@ -6044,7 +5203,6 @@
    "flags": [
     "NONFUNC"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0198_1_D4_419dc6c0.fits",
    "status_large": "ok"
   },
   {
@@ -6083,15 +5241,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0198_1_D1_419dc6c0.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_1A_0212_1",
@@ -6125,7 +5276,6 @@
     "SUR_ERROR",
     "NONFUNC"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0212_1_D4_c835dd31.fits",
    "status_large": "ok"
   },
   {
@@ -6164,15 +5314,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0212_1_D1_c835dd31.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_1A_0212_2",
@@ -6210,15 +5353,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0212_2_D1_6bcae954.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_1A_0212_2",
@@ -6251,7 +5387,6 @@
     "NONFUNC",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0212_2_D4_6bcae954.fits",
    "status_large": "ok"
   },
   {
@@ -6290,15 +5425,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0212_3_D1_cd499cd8.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0627_1_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_3_D1_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W20_1A_0691_1_D1_f3545eee.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_1A_0212_3",
@@ -6331,7 +5459,6 @@
     "TRANSIENT",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0212_3_D4_cd499cd8.fits",
    "status_large": "flagged"
   },
   {
@@ -6370,15 +5497,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_1_D2_7d876986.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_1A_0621_1",
@@ -6416,15 +5536,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_1_D5_7d876986.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0636_2_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_1A_0621_2",
@@ -6462,15 +5575,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_2_D5_1b765c45.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0636_2_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_1A_0621_2",
@@ -6508,15 +5614,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_2_D2_1b765c45.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_1A_0621_3",
@@ -6548,7 +5647,6 @@
    "flags": [
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_3_D5_155e9e9a.fits",
    "status_large": "ok"
   },
   {
@@ -6587,15 +5685,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_3_D2_155e9e9a.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_1A_0621_4",
@@ -6631,15 +5722,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_4_D5_197f17b7.fits",
    "status_large": "saturated",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0636_2_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_f3545eee.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W18_1A_0621_4",
@@ -6677,15 +5761,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_1A_0621_4_D2_197f17b7.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0040_1",
@@ -6723,15 +5800,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_1_D2_438b83c1.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0040_1",
@@ -6764,7 +5834,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_1_D5_438b83c1.fits",
    "status_large": "ok"
   },
   {
@@ -6800,7 +5869,6 @@
     "NONFUNC",
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_2_D5_1536ba5e.fits",
    "status_large": "saturated"
   },
   {
@@ -6839,15 +5907,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_2_D2_1536ba5e.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0040_3",
@@ -6885,15 +5946,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_3_D2_f661d486.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0040_3",
@@ -6931,15 +5985,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_3_D5_f661d486.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0636_2_D5_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_f3545eee.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0040_4",
@@ -6972,7 +6019,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_4_D5_4bd3f9fd.fits",
    "status_large": "ok"
   },
   {
@@ -7011,15 +6057,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0040_4_D2_4bd3f9fd.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_2B_0381_4_D2_f3545eee.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_f3545eee.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0072_1",
@@ -7049,7 +6088,6 @@
    "sigma_noise": null,
    "other_days": null,
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0072_1_D5_4c5ae678.fits",
    "status_large": "off_image"
   },
   {
@@ -7088,15 +6126,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0072_2_D2_bc38ab04.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0072_2",
@@ -7134,15 +6165,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0072_2_D5_bc38ab04.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0072_3",
@@ -7180,15 +6204,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0072_3_D5_2f25c1bc.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0072_3",
@@ -7226,15 +6243,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0072_3_D2_2f25c1bc.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0072_4",
@@ -7272,15 +6282,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0072_4_D5_33b52751.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0072_4",
@@ -7318,15 +6321,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0072_4_D2_33b52751.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0103_1",
@@ -7364,15 +6360,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_1_D5_9eef0a7c.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0103_1",
@@ -7410,15 +6399,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_1_D2_9eef0a7c.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0103_2",
@@ -7456,15 +6438,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_2_D2_a9f29e7e.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0103_2",
@@ -7497,7 +6472,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_2_D5_a9f29e7e.fits",
    "status_large": "ok"
   },
   {
@@ -7532,7 +6506,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_3_D5_36e03b91.fits",
    "status_large": "ok"
   },
   {
@@ -7571,15 +6544,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_3_D2_36e03b91.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0103_4",
@@ -7617,15 +6583,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_4_D5_533cff7c.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0103_4",
@@ -7658,7 +6617,6 @@
     "PERSIST",
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0103_4_D2_533cff7c.fits",
    "status_large": "ok"
   },
   {
@@ -7697,15 +6655,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0144_1_D5_93449630.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0144_1",
@@ -7743,15 +6694,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0144_1_D2_93449630.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0161_1",
@@ -7789,15 +6733,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0161_1_D2_0146864f.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0161_1",
@@ -7835,15 +6772,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0161_1_D5_0146864f.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0729_4_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_1_D5_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D5_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0161_2",
@@ -7881,15 +6811,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0161_2_D2_0c3ec578.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0756_3_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0401_2_D2_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0364_1_D2_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0161_2",
@@ -7919,7 +6842,6 @@
    "sigma_noise": null,
    "other_days": null,
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0161_2_D5_0c3ec578.fits",
    "status_large": "off_image"
   },
   {
@@ -7958,15 +6880,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0335_1_D3_afc17537.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0335_1",
@@ -8004,15 +6919,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0335_1_D6_afc17537.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W18_2A_0335_2",
@@ -8050,15 +6958,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0335_2_D6_52089c04.fits",
    "status_large": "saturated",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W18_2A_0335_2",
@@ -8096,15 +6997,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0335_2_D3_52089c04.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0335_3",
@@ -8142,15 +7036,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0335_3_D3_9651066d.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0335_3",
@@ -8188,15 +7075,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0335_3_D6_9651066d.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W18_2A_0366_1",
@@ -8234,15 +7114,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0366_1_D3_72fb41d7.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0366_1",
@@ -8280,15 +7153,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0366_1_D6_72fb41d7.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W18_2A_0366_2",
@@ -8326,15 +7192,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0366_2_D6_f8bb80c0.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0366_2",
@@ -8372,15 +7231,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0366_2_D3_f8bb80c0.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0382_1",
@@ -8418,15 +7270,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0382_1_D6_37df2066.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0382_1",
@@ -8462,15 +7307,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0382_1_D3_37df2066.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0382_2",
@@ -8508,15 +7346,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0382_2_D6_ce5d9023.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0382_2",
@@ -8552,15 +7383,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0382_2_D3_ce5d9023.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0382_3",
@@ -8598,15 +7422,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0382_3_D6_d2c88f6e.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W18_2A_0382_3",
@@ -8642,15 +7459,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0382_3_D3_d2c88f6e.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W18_2A_0527_1",
@@ -8688,15 +7498,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0527_1_D6_30781be2.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D6_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D6_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0527_1",
@@ -8732,15 +7535,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0527_1_D3_30781be2.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W18_2A_0527_2",
@@ -8773,7 +7569,6 @@
     "OUTLIER",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0527_2_D6_339a572a.fits",
    "status_large": "ok"
   },
   {
@@ -8810,15 +7605,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W18_2A_0527_2_D3_339a572a.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0203_1_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W23_2B_0057_3_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_4_D3_4c5ae678.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W40_2A_0033_4_D3_4c5ae678.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W20_1A_0691_1",
@@ -8856,15 +7644,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W20_1A_0691_1_D1_ee6cee34.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_1A_0139_1_D1_ee6cee34.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W42_2A_0377_2_D1_ee6cee34.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W17_2A_0553_3_D1_ee6cee34.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0212_3_D1_ee6cee34.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W20_1A_0691_1",
@@ -8899,7 +7680,6 @@
     "NONFUNC",
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W20_1A_0691_1_D4_ee6cee34.fits",
    "status_large": "ok"
   },
   {
@@ -8938,15 +7718,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_1_D3_caddea77.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W40_1A_0373_1",
@@ -8984,15 +7757,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_1_D6_caddea77.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D6_caddea77.fits"
-   ]
+   "n_places": 8
   },
   {
    "obs_id": "2026W40_1A_0373_2",
@@ -9030,15 +7796,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_2_D3_ad6c4de2.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W40_1A_0373_2",
@@ -9073,7 +7832,6 @@
     "NONFUNC",
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_2_D6_ad6c4de2.fits",
    "status_large": "ok"
   },
   {
@@ -9112,15 +7870,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_3_D3_f06b4ea0.fits",
    "status_large": "ok",
-   "n_places": 3,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 3
   },
   {
    "obs_id": "2026W40_1A_0373_3",
@@ -9154,7 +7905,6 @@
     "SUR_ERROR",
     "HALO"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_3_D6_f06b4ea0.fits",
    "status_large": "flagged"
   },
   {
@@ -9189,7 +7939,6 @@
     "SUR_ERROR",
     "NONFUNC"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_4_D6_5bcdbb24.fits",
    "status_large": "ok"
   },
   {
@@ -9228,15 +7977,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_1A_0373_4_D3_5bcdbb24.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W40_2A_0033_2",
@@ -9272,15 +8014,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0033_2_D6_ada6cb35.fits",
    "status_large": "flagged",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D6_caddea77.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W40_2A_0033_2",
@@ -9316,15 +8051,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0033_2_D3_ada6cb35.fits",
    "status_large": "flagged",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W40_2A_0033_3",
@@ -9362,15 +8090,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0033_3_D3_10c9c1d0.fits",
    "status_large": "ok",
-   "n_places": 4,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 4
   },
   {
    "obs_id": "2026W40_2A_0033_3",
@@ -9406,15 +8127,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0033_3_D6_10c9c1d0.fits",
    "status_large": "ok",
-   "n_places": 5,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D6_caddea77.fits"
-   ]
+   "n_places": 5
   },
   {
    "obs_id": "2026W40_2A_0033_4",
@@ -9452,15 +8166,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0033_4_D3_0fbf4148.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W40_2A_0033_4",
@@ -9496,15 +8203,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0033_4_D6_0fbf4148.fits",
    "status_large": "ok",
-   "n_places": 6,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D6_caddea77.fits"
-   ]
+   "n_places": 6
   },
   {
    "obs_id": "2026W40_2A_0244_1",
@@ -9542,15 +8242,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0244_1_D3_488e6e57.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W40_2A_0244_1",
@@ -9586,15 +8279,8 @@
     "star_in_the_way": false
    },
    "flags": [],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0244_1_D6_488e6e57.fits",
    "status_large": "ok",
-   "n_places": 7,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D6_caddea77.fits"
-   ]
+   "n_places": 7
   },
   {
    "obs_id": "2026W40_2A_0244_2",
@@ -9632,15 +8318,8 @@
    "flags": [
     "OUTLIER"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0244_2_D6_70228401.fits",
    "status_large": "ok",
-   "n_places": 4,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D6_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D6_caddea77.fits"
-   ]
+   "n_places": 4
   },
   {
    "obs_id": "2026W40_2A_0244_2",
@@ -9678,15 +8357,8 @@
    "flags": [
     "DICHROIC"
    ],
-   "file": "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/own/2026W40_2A_0244_2_D3_70228401.fits",
    "status_large": "ok",
-   "n_places": 8,
-   "other_files": [
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W17_4B_0058_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2025W41_1A_0122_1_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_1A_0682_4_D3_caddea77.fits",
-    "/Users/tatsatshah/Desktop/NASA Hackathon/backend/cache/follow/cutouts/pluto/other/2026W18_2A_0144_1_D3_caddea77.fits"
-   ]
+   "n_places": 8
   }
  ],
  "problems": [],
@@ -9816,6 +8488,7 @@
      "err_mjy": 0.11929545880791531,
      "sigma": 3.759747019955102,
      "reduced_chi2": 1.6722375184324185,
+     "one_sided": false,
      "controls": [
       3.52,
       0.05,
@@ -9836,6 +8509,7 @@
      "err_mjy": 0.1482083171765226,
      "sigma": 2.5242124532401378,
      "reduced_chi2": 0.14999024624467724,
+     "one_sided": false,
      "controls": [
       3.65,
       4.98,
@@ -9883,6 +8557,7 @@
      "err_mjy": 0.18576586124188701,
      "sigma": 3.2033208708843066,
      "reduced_chi2": 30.72357264067068,
+     "one_sided": false,
      "controls": [
       3.71,
       2.11,
@@ -9904,6 +8579,7 @@
      "err_mjy": 0.1629287439768683,
      "sigma": 0.8374245382289417,
      "reduced_chi2": 2.1943660178381763,
+     "one_sided": false,
      "controls": [
       3.97,
       2.14,
@@ -9926,6 +8602,7 @@
      "err_mjy": 0.23808319656346977,
      "sigma": 0.8270940473452244,
      "reduced_chi2": 2.0312955887028874,
+     "one_sided": false,
      "controls": [
       -0.67,
       0.38,
@@ -10125,6 +8802,7 @@
      "err_mjy": 0.46634501494891506,
      "sigma": 0.77286227790174,
      "reduced_chi2": 0.2622711822841876,
+     "one_sided": false,
      "controls": [
       -1.85,
       3.69,
@@ -10171,6 +8849,7 @@
      "err_mjy": 0.3924522751526319,
      "sigma": 0.9567117059032392,
      "reduced_chi2": 17.206736275396622,
+     "one_sided": false,
      "controls": [
       3.79,
       2.89,
@@ -10214,6 +8893,7 @@
      "err_mjy": 0.6904377132717872,
      "sigma": -1.9294453123323243,
      "reduced_chi2": 0.8116889040047109,
+     "one_sided": false,
      "controls": [
       0.41,
       1.41,
@@ -10326,5 +9006,67 @@
     }
    }
   }
- ]
+ ],
+ "scan": {
+  "null_windows": 28,
+  "null_ge5": 7,
+  "null_le_minus5": 1,
+  "bands": {
+   "H2O": {
+    "windows_on_band": 2,
+    "nights_with_5_sigma": [],
+    "best": {
+     "time": "2026-04-25T05:37:20Z",
+     "detector": 4,
+     "centre": 2.689687728881836,
+     "excess_mjy": 0.8251407002439124,
+     "err_mjy": 0.22817105839964624,
+     "sigma": 3.616324988941681,
+     "one_sided": true,
+     "n_band": 1
+    }
+   },
+   "CO2": {
+    "windows_on_band": 0,
+    "nights_with_5_sigma": [],
+    "best": null
+   },
+   "CO": {
+    "windows_on_band": 0,
+    "nights_with_5_sigma": [],
+    "best": null
+   }
+  }
+ },
+ "scan_large": {
+  "null_windows": 23,
+  "null_ge5": 5,
+  "null_le_minus5": 0,
+  "bands": {
+   "H2O": {
+    "windows_on_band": 2,
+    "nights_with_5_sigma": [],
+    "best": {
+     "time": "2026-04-25T05:37:20Z",
+     "detector": 4,
+     "centre": 2.689687728881836,
+     "excess_mjy": 0.3874573873452132,
+     "err_mjy": 0.21298872415075598,
+     "sigma": 1.8191450692524276,
+     "one_sided": true,
+     "n_band": 1
+    }
+   },
+   "CO2": {
+    "windows_on_band": 0,
+    "nights_with_5_sigma": [],
+    "best": null
+   },
+   "CO": {
+    "windows_on_band": 0,
+    "nights_with_5_sigma": [],
+    "best": null
+   }
+  }
+ }
 }
