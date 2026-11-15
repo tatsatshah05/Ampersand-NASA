@@ -5,6 +5,20 @@
 // exposure itself shows there.
 import { useEffect, useRef, useState } from 'react'
 import { bodyVerdict, fetchSmallBodies, groupByBody, whenInWords, type SmallBodiesQuery, type SmallBodiesResponse, type SmallBodyCrossing, plainSummary } from '../smallbodies'
+import type { UiLevel } from '../address'
+import {
+  SMALLBODIES_ERROR,
+  SMALLBODIES_INTRO,
+  SMALLBODIES_LOADING,
+  SMALLBODIES_NO_PICTURE,
+  SMALLBODIES_TITLE,
+  bodyName,
+  crossingAlt,
+  crossingDate,
+  crossingWords,
+  smallBodiesResult,
+} from '../plain'
+import { PlainWords, ScienceFold } from './ScienceFold'
 import './SpectrumPanel.css'
 import './SmallBodiesPanel.css'
 
@@ -13,15 +27,17 @@ type Load = { state: 'loading' } | { state: 'error'; message: string } | { state
 interface Props {
   query: SmallBodiesQuery
   onClose: () => void
+  /** How it is written: Expert as it always was, Beginner in plain words with the rest in one closed fold. */
+  level?: UiLevel
 }
 
-export function SmallBodiesPanel({ query, onClose }: Props) {
+export function SmallBodiesPanel({ query, onClose, level = 'expert' }: Props) {
   // A different view gets a fresh panel: remounting resets what is loaded.
   const key = `${query.ra},${query.dec},${query.fov},${query.detector}`
-  return <Panel key={key} query={query} onClose={onClose} />
+  return <Panel key={key} query={query} onClose={onClose} level={level} />
 }
 
-function Panel({ query, onClose }: Props) {
+function Panel({ query, onClose, level }: Props & { level: UiLevel }) {
   // App builds `query` anew on every render: depend on its numbers, or every render would ask again.
   const { ra, dec, fov, detector } = query
   const [load, setLoad] = useState<Load>({ state: 'loading' })
@@ -51,14 +67,17 @@ function Panel({ query, onClose }: Props) {
   const data = load.state === 'done' ? load.data : null
   const groups = data ? groupByBody(data.bodies) : []
 
-  return (
-    <section className="panel smallbodies" aria-label="Known asteroids and comets" ref={section}>
-      <div className="spectrum-head">
-        <h2>Known asteroids and comets that crossed this patch</h2>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
-      </div>
+  const head = (title: string) => (
+    <div className="spectrum-head">
+      <h2>{title}</h2>
+      <button type="button" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  )
+  // Everything Expert shows under its title. Beginner keeps it in its fold.
+  const body = (
+    <>
       {load.state === 'loading' && (
         <p className="spectrum-what">
           Asking NASA/JPL which known bodies were here, and measuring this patch in each exposure they were predicted in.
@@ -91,7 +110,72 @@ function Panel({ query, onClose }: Props) {
           {data.limits} {data.observer_note} Small-body data: {data.credit}.
         </p>
       )}
+    </>
+  )
+
+  if (level === 'beginner') {
+    return (
+      <section className="panel smallbodies plain-panel" aria-label="Known asteroids and comets" ref={section}>
+        {head(SMALLBODIES_TITLE)}
+        <p className="plain-intro">{SMALLBODIES_INTRO}</p>
+        {load.state === 'loading' && <p className="plain-intro">{SMALLBODIES_LOADING}</p>}
+        {load.state === 'error' && (
+          <p className="status error">
+            {SMALLBODIES_ERROR} {load.message}
+          </p>
+        )}
+        {data && <PlainSmallBodies data={data} />}
+        {data && <ScienceFold>{body}</ScienceFold>}
+      </section>
+    )
+  }
+  return (
+    <section className="panel smallbodies" aria-label="Known asteroids and comets" ref={section}>
+      {head('Known asteroids and comets that crossed this patch')}
+      {body}
     </section>
+  )
+}
+
+/**
+ * Beginner's part of an answer: what the lookup found in plain words (plain.ts), and each known
+ * body with the photos it was predicted in, each captioned with its date and what the photo
+ * shows there. Exported for the tests.
+ */
+export function PlainSmallBodies({ data }: { data: SmallBodiesResponse }) {
+  const groups = groupByBody(data.bodies)
+  return (
+    <>
+      <PlainWords lines={smallBodiesResult(data)} />
+      {groups.map((group) =>
+        group[0] ? (
+          <article key={group[0].name} className="smallbody">
+            <h3>{bodyName(group[0])}</h3>
+            <div className="smallbody-exposures">
+              {group.map((c) => (
+                <figure key={c.id} className="smallbody-exposure">
+                  {c.picture ? (
+                    <div className="smallbody-picture">
+                      <img src={c.picture} alt={crossingAlt(c)} />
+                      <svg viewBox="0 0 100 100" aria-hidden="true">
+                        <path d="M50 22V34M50 66V78M22 50H34M66 50H78" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="smallbody-picture smallbody-nopicture">{SMALLBODIES_NO_PICTURE}</div>
+                  )}
+                  <figcaption>
+                    <b>{crossingDate(c)}</b>
+                    <br />
+                    <span className={`smallbody-verdict ${c.verdict ?? ''}`}>{crossingWords(c)}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </article>
+        ) : null,
+      )}
+    </>
   )
 }
 

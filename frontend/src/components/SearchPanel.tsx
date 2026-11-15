@@ -31,6 +31,9 @@ import {
   type SearchResult,
   type SearchStatus,
 } from '../search'
+import type { UiLevel } from '../address'
+import { SEARCH_FAILED, SEARCH_INTRO, SEARCH_LOOK, SEARCH_TITLE, SEARCH_WAITING, searchItem, searchResult } from '../plain'
+import { PlainWords, ScienceFold } from './ScienceFold'
 import './SearchPanel.css'
 
 type Phase =
@@ -45,6 +48,8 @@ interface Props {
   onLook: (ra: number, dec: number) => void
   /** The objects to mark on the picture, or an empty list when there are none. */
   onObjects: (objects: SearchObject[]) => void
+  /** How it is written: Expert as it always was, Beginner in plain words with the rest in one closed fold. */
+  level?: UiLevel
 }
 
 /** Mount with a fresh `key` for each patch: the search starts when it appears. */
@@ -52,7 +57,7 @@ export function SearchPanel(props: Props) {
   return <Panel {...props} />
 }
 
-function Panel({ query, onClose, onLook, onObjects }: Props) {
+function Panel({ query, onClose, onLook, onObjects, level = 'expert' }: Props) {
   const [phase, setPhase] = useState<Phase>({ state: 'running', status: null })
   const [attempt, setAttempt] = useState(0)
   const { ra, dec, fov, detectors } = query
@@ -77,19 +82,64 @@ function Panel({ query, onClose, onLook, onObjects }: Props) {
     }
   }, [ra, dec, fov, detectors, attempt, onObjects])
 
+  const head = (title: string) => (
+    <div className="search-head">
+      <h2>{title}</h2>
+      <button type="button" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  )
+  const patch = (
+    <p className="hint">
+      Patch: RA {ra.toFixed(4)}°, Dec {dec >= 0 ? '+' : '-'}
+      {Math.abs(dec).toFixed(4)}°, {fov}° across, all six detectors. The search is not told what to look for. Every strength
+      below is measured against the same measurement at hundreds of empty places in the same picture.
+    </p>
+  )
+  const retry = () => {
+    setPhase({ state: 'running', status: null })
+    setAttempt(attempt + 1)
+  }
+
+  if (level === 'beginner') {
+    // While it runs, one sentence that does not change: no clock, no moving bar.
+    return (
+      <section className="panel search plain-panel" aria-label="Search for things that moved or changed">
+        {head(SEARCH_TITLE)}
+        <p className="plain-intro">{SEARCH_INTRO}</p>
+        {phase.state === 'running' && (
+          <p role="status" className="plain-intro">
+            {SEARCH_WAITING}
+          </p>
+        )}
+        {phase.state === 'failed' && (
+          <div role="alert" className="search-failed">
+            <p>
+              {SEARCH_FAILED} {phase.message}
+            </p>
+            <button type="button" onClick={retry}>
+              Try again
+            </button>
+          </div>
+        )}
+        {phase.state === 'done' && (
+          <>
+            <PlainSearch result={phase.result} onLook={onLook} />
+            <ScienceFold>
+              {patch}
+              <Done result={phase.result} onLook={onLook} />
+            </ScienceFold>
+          </>
+        )}
+      </section>
+    )
+  }
+
   return (
     <section className="panel search" aria-label="Search for things that moved or changed">
-      <div className="search-head">
-        <h2>Anything that moved or changed in this patch</h2>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <p className="hint">
-        Patch: RA {ra.toFixed(4)}°, Dec {dec >= 0 ? '+' : '-'}
-        {Math.abs(dec).toFixed(4)}°, {fov}° across, all six detectors. The search is not told what to look for. Every strength
-        below is measured against the same measurement at hundreds of empty places in the same picture.
-      </p>
+      {head('Anything that moved or changed in this patch')}
+      {patch}
 
       {phase.state === 'running' && (
         <div role="status" className="search-progress">
@@ -104,13 +154,7 @@ function Panel({ query, onClose, onLook, onObjects }: Props) {
       {phase.state === 'failed' && (
         <div role="alert" className="search-failed">
           <p>The search could not finish: {phase.message}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setPhase({ state: 'running', status: null })
-              setAttempt(attempt + 1)
-            }}
-          >
+          <button type="button" onClick={retry}>
             Try again
           </button>
         </div>
@@ -118,6 +162,39 @@ function Panel({ query, onClose, onLook, onObjects }: Props) {
 
       {phase.state === 'done' && <Done result={phase.result} onLook={onLook} />}
     </section>
+  )
+}
+
+/**
+ * Beginner's part of a finished search: what it found in plain words (plain.ts), and one line
+ * per object with the number of its ring on the picture and a button that shows it. Exported
+ * for the tests.
+ */
+export function PlainSearch({ result, onLook }: { result: SearchResult; onLook: (ra: number, dec: number) => void }) {
+  return (
+    <>
+      <PlainWords lines={searchResult(result)} />
+      {result.objects.length > 0 && !noData(result.summary) && (
+        <ol className="plain-list" aria-label="What it found, by the number of its ring on the picture">
+          {result.objects.map((o, i) => (
+            <li key={o.id}>
+              <span className="plain-number">{i + 1}.</span>
+              <span>{searchItem(o)}</span>
+              <button
+                type="button"
+                aria-label={`${SEARCH_LOOK}: number ${i + 1}`}
+                onClick={(e) => {
+                  onLook(o.ra, o.dec)
+                  releaseFocusAfterPointer(e.currentTarget)
+                }}
+              >
+                {SEARCH_LOOK}
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+    </>
   )
 }
 
