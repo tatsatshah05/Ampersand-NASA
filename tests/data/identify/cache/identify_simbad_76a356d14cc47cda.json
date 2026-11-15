@@ -1,0 +1,1 @@
+{"service": "SIMBAD", "via": "SIMBAD (CfA mirror)", "query": "SELECT teff, bibcode FROM mesFe_h WHERE oidref = 14743762 AND teff IS NOT NULL", "asked": "2026-11-15", "rows": []}

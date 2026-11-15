@@ -1,0 +1,459 @@
+{
+ "query": {
+  "ra": 269.448524,
+  "dec": 4.762903,
+  "radius_arcsec": 4.0,
+  "epoch": 2026.0,
+  "neighbour_radius_arcsec": 15.0,
+  "pixel_arcsec": 6.15
+ },
+ "services": {
+  "gaia": {
+   "name": "Gaia DR3",
+   "answered": true,
+   "via": "ARI Heidelberg Gaia mirror",
+   "error": null,
+   "partial": []
+  },
+  "simbad": {
+   "name": "SIMBAD",
+   "answered": true,
+   "via": "SIMBAD (CfA mirror)",
+   "error": null,
+   "partial": []
+  }
+ },
+ "unreachable": [],
+ "nothing_catalogued": false,
+ "nearest_catalogued": null,
+ "searched_arcsec": 15.0,
+ "gaia": {
+  "source_id": "4472835876142910336",
+  "name": "Gaia DR3 4472835876142910336",
+  "separation_arcsec": 0.03,
+  "east_arcsec": -0.03,
+  "north_arcsec": -0.01,
+  "position": {
+   "ra": 269.4485157,
+   "dec": 4.762901,
+   "epoch": 2026.0
+  },
+  "resolve_position": {
+   "ra": 269.4485157,
+   "dec": 4.762901,
+   "epoch": 2026.0
+  },
+  "catalogue_position": {
+   "ra": 269.44852449165984,
+   "dec": 4.762902502432067,
+   "epoch": 2016.0
+  },
+  "possibly_spurious": false,
+  "values": [
+   {
+    "key": "parallax",
+    "label": "Parallax",
+    "value": 0.4920175377020949,
+    "error": 0.06310012936592102,
+    "lower": null,
+    "upper": null,
+    "unit": "mas",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.parallax",
+    "error_column": "parallax_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "pmra",
+    "label": "Proper motion, east (includes cos dec)",
+    "value": -3.1574157799667826,
+    "error": 0.0589614063501358,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.pmra",
+    "error_column": "pmra_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "pmdec",
+    "label": "Proper motion, north",
+    "value": -0.5352014547186038,
+    "error": 0.0546080581843853,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.pmdec",
+    "error_column": "pmdec_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "phot_g_mean_mag",
+    "label": "G magnitude (visible light)",
+    "value": 16.69598960876465,
+    "error": 0.0006671670088790766,
+    "lower": null,
+    "upper": null,
+    "unit": "mag",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.phot_g_mean_mag",
+    "error_column": "from phot_g_mean_flux_over_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "bp_rp",
+    "label": "BP-RP colour",
+    "value": 1.1070690155029297,
+    "error": 0.006962486075176507,
+    "lower": null,
+    "upper": null,
+    "unit": "mag",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.bp_rp",
+    "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "ruwe",
+    "label": "RUWE (about 1 for a well-fitted single star)",
+    "value": 0.9871129989624023,
+    "error": null,
+    "lower": null,
+    "upper": null,
+    "unit": "",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.ruwe",
+    "error_column": null,
+    "range_columns": null,
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": false
+   },
+   {
+    "key": "teff_gspphot",
+    "label": "Temperature, GSP-Phot",
+    "value": 4799.98193359375,
+    "error": null,
+    "lower": 4792.50390625,
+    "upper": 4812.9482421875,
+    "unit": "K",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.astrophysical_parameters.teff_gspphot",
+    "error_column": null,
+    "range_columns": [
+     "teff_gspphot_lower",
+     "teff_gspphot_upper"
+    ],
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": true
+   },
+   {
+    "key": "radius_flame",
+    "label": "Radius, FLAME",
+    "value": 1.1583038568496704,
+    "error": null,
+    "lower": 1.0390162467956543,
+    "upper": 1.3147250413894653,
+    "unit": "solar radii",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.astrophysical_parameters.radius_flame",
+    "error_column": null,
+    "range_columns": [
+     "radius_flame_lower",
+     "radius_flame_upper"
+    ],
+    "reference": null,
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_flame",
+     "value": "20",
+     "meaning": null,
+     "lowest_quality": false
+    },
+    "model": true
+   },
+   {
+    "key": "radius_gspphot",
+    "label": "Radius, GSP-Phot",
+    "value": 0.8916000127792358,
+    "error": null,
+    "lower": 0.8483999967575073,
+    "upper": 0.9174000024795532,
+    "unit": "solar radii",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.astrophysical_parameters.radius_gspphot",
+    "error_column": null,
+    "range_columns": [
+     "radius_gspphot_lower",
+     "radius_gspphot_upper"
+    ],
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": true
+   },
+   {
+    "key": "lum_flame",
+    "label": "Luminosity, FLAME",
+    "value": 0.6463468074798584,
+    "error": null,
+    "lower": 0.5157536268234253,
+    "upper": 0.8189913630485535,
+    "unit": "solar luminosities",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.astrophysical_parameters.lum_flame",
+    "error_column": null,
+    "range_columns": [
+     "lum_flame_lower",
+     "lum_flame_upper"
+    ],
+    "reference": null,
+    "note": null,
+    "flags": {
+     "column": "gaiadr3.astrophysical_parameters.flags_flame",
+     "value": "20",
+     "meaning": null,
+     "lowest_quality": false
+    },
+    "model": true
+   },
+   {
+    "key": "distance_gspphot",
+    "label": "Distance, GSP-Phot (model estimate)",
+    "value": 1477.9925537109375,
+    "error": null,
+    "lower": 1408.0736083984375,
+    "upper": 1519.9072265625,
+    "unit": "pc",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.astrophysical_parameters.distance_gspphot",
+    "error_column": null,
+    "range_columns": [
+     "distance_gspphot_lower",
+     "distance_gspphot_upper"
+    ],
+    "reference": null,
+    "note": null,
+    "flags": null,
+    "model": true
+   }
+  ]
+ },
+ "simbad": null,
+ "match": null,
+ "choice": {
+  "how": "light",
+  "text": "It is the only Gaia source within the radius."
+ },
+ "derived": {
+  "from": "Gaia DR3",
+  "distance": {
+   "status": "from_parallax",
+   "pc": 2032.4478771028619,
+   "pc_error": 260.6568143356165,
+   "ly": 6628.9583749395415,
+   "ly_error": 850.1488239089038,
+   "parallax_over_error": 7.797409334121312,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.parallax",
+    "parallax_error"
+   ],
+   "formula": "distance [pc] = 1000 / parallax [mas]; light-years = pc x 3.26156; error = 1000 x parallax_error / parallax^2",
+   "reference": null
+  },
+  "distance_estimate": null,
+  "motion": {
+   "mas_per_year": 3.202454528126224,
+   "mas_per_year_error": 0.05905150079420424,
+   "arcsec_per_year": 0.003202454528126224,
+   "arcsec_per_year_error": 5.9051500794204236e-05,
+   "pixels_per_year": 0.0005207243135164592,
+   "pixels_per_year_error": 9.601870047838086e-06,
+   "years_per_pixel": 1920.4019747935042,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.pmra",
+    "gaiadr3.gaia_source.pmdec"
+   ],
+   "formula": "mu = sqrt(pmra^2 + pmdec^2); pixels a year = mu [arcsec/yr] / 6.15",
+   "reference": null
+  },
+  "speed": {
+   "km_s": 30.85487800352112,
+   "km_s_error": 3.9199165770991073,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.parallax",
+    "gaiadr3.gaia_source.pmra",
+    "gaiadr3.gaia_source.pmdec"
+   ],
+   "formula": "speed across the sky [km/s] = 4.74047 x mu [mas/yr] / parallax [mas]"
+  }
+ },
+ "portrait": {
+  "temperature": {
+   "key": "teff_gspphot",
+   "label": "Temperature, GSP-Phot",
+   "value": 4799.98193359375,
+   "error": null,
+   "lower": 4792.50390625,
+   "upper": 4812.9482421875,
+   "unit": "K",
+   "catalogue": "Gaia DR3",
+   "column": "gaiadr3.astrophysical_parameters.teff_gspphot",
+   "error_column": null,
+   "range_columns": [
+    "teff_gspphot_lower",
+    "teff_gspphot_upper"
+   ],
+   "reference": null,
+   "note": null,
+   "flags": null,
+   "model": true
+  },
+  "radius": {
+   "key": "radius_flame",
+   "label": "Radius, FLAME",
+   "value": 1.1583038568496704,
+   "error": null,
+   "lower": 1.0390162467956543,
+   "upper": 1.3147250413894653,
+   "unit": "solar radii",
+   "catalogue": "Gaia DR3",
+   "column": "gaiadr3.astrophysical_parameters.radius_flame",
+   "error_column": null,
+   "range_columns": [
+    "radius_flame_lower",
+    "radius_flame_upper"
+   ],
+   "reference": null,
+   "note": null,
+   "flags": {
+    "column": "gaiadr3.astrophysical_parameters.flags_flame",
+    "value": "20",
+    "meaning": null,
+    "lowest_quality": false
+   },
+   "model": true
+  },
+  "luminosity": {
+   "key": "lum_flame",
+   "label": "Luminosity, FLAME",
+   "value": 0.6463468074798584,
+   "error": null,
+   "lower": 0.5157536268234253,
+   "upper": 0.8189913630485535,
+   "unit": "solar luminosities",
+   "catalogue": "Gaia DR3",
+   "column": "gaiadr3.astrophysical_parameters.lum_flame",
+   "error_column": null,
+   "range_columns": [
+    "lum_flame_lower",
+    "lum_flame_upper"
+   ],
+   "reference": null,
+   "note": null,
+   "flags": {
+    "column": "gaiadr3.astrophysical_parameters.flags_flame",
+    "value": "20",
+    "meaning": null,
+    "lowest_quality": false
+   },
+   "model": true
+  }
+ },
+ "neighbours": [
+  {
+   "catalogue": "Gaia DR3",
+   "name": "Gaia DR3 4472835876150421504",
+   "source_id": "4472835876150421504",
+   "display_name": "Gaia DR3 4472835876150421504",
+   "simbad_name": null,
+   "simbad_type": null,
+   "separation_arcsec": 6.2,
+   "east_arcsec": 2.2,
+   "north_arcsec": -5.8,
+   "from_object_arcsec": 6.2,
+   "g_mag": 20.72,
+   "bp_rp": 1.18,
+   "parallax": -1.599,
+   "parallax_error": 2.253,
+   "astrometric_params_solved": 31,
+   "visibility_periods_used": 10,
+   "possibly_spurious": false,
+   "same_pixel": false
+  },
+  {
+   "catalogue": "Gaia DR3",
+   "name": "Gaia DR3 4472835876150406784",
+   "source_id": "4472835876150406784",
+   "display_name": "Gaia DR3 4472835876150406784",
+   "simbad_name": null,
+   "simbad_type": null,
+   "separation_arcsec": 7.02,
+   "east_arcsec": -5.67,
+   "north_arcsec": 4.15,
+   "from_object_arcsec": 7.0,
+   "g_mag": 20.59,
+   "bp_rp": 1.12,
+   "parallax": -0.703,
+   "parallax_error": 1.4,
+   "astrometric_params_solved": 95,
+   "visibility_periods_used": 13,
+   "possibly_spurious": false,
+   "same_pixel": false
+  },
+  {
+   "catalogue": "Gaia DR3",
+   "name": "Gaia DR3 4472835979229627392",
+   "source_id": "4472835979229627392",
+   "display_name": "Gaia DR3 4472835979229627392",
+   "simbad_name": null,
+   "simbad_type": null,
+   "separation_arcsec": 11.82,
+   "east_arcsec": -2.36,
+   "north_arcsec": 11.58,
+   "from_object_arcsec": 11.82,
+   "g_mag": 20.97,
+   "bp_rp": 1.0,
+   "parallax": null,
+   "parallax_error": null,
+   "astrometric_params_solved": 3,
+   "visibility_periods_used": 4,
+   "possibly_spurious": false,
+   "same_pixel": false
+  }
+ ],
+ "notes": [
+  "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
+  "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty.",
+  "Gaia DR3 parallaxes carry a small known offset (about -0.02 mas; Lindegren et al. 2021) that is not corrected here. At this parallax (0.492 mas), correcting it would bring the distance about 4% closer."
+ ],
+ "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"
+}

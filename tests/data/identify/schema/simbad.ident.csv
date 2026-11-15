@@ -1,0 +1,3 @@
+column_name,datatype,unit,description
+"id","VARCHAR",,"Identifier"
+"oidref","BIGINT",,"Object internal identifier"
