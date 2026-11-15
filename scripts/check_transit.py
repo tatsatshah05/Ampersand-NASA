@@ -13,6 +13,7 @@ from the public S3 bucket (about 1.2 GB in all). Real data only.
 
 usage: python scripts/check_transit.py [--cache-dir DIR] [--probe-dir DIR] [--no-fetch] [--only A1,A3]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,12 +30,33 @@ from scripts.verify_plot import BLUE, GREEN, GREY, LIGHT, ORANGE, RED, Chart  # 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs" / "transits"
 
-WASP62 = dict(ra=87.13982, dec=-63.98833, period_d=4.41193868, t0_bjd_tdb=2458851.099338, t14_h=3.79, rprs=0.1109,
-              name="WASP-62 b")
-WASP100 = dict(ra=68.9598159, dec=-64.0270390, period_d=2.84938224, t0_bjd_tdb=2458853.880674, t14_h=3.75, rprs=0.087,
-               name="WASP-100 b")
-TOI4055 = dict(ra=269.179221, dec=64.766624, period_d=4.5679250, t0_bjd_tdb=2459853.406756, t14_h=3.047, rprs=0.1358,
-               name="TOI-4055.01 (TESS candidate)")
+WASP62 = dict(
+    ra=87.13982,
+    dec=-63.98833,
+    period_d=4.41193868,
+    t0_bjd_tdb=2458851.099338,
+    t14_h=3.79,
+    rprs=0.1109,
+    name="WASP-62 b",
+)
+WASP100 = dict(
+    ra=68.9598159,
+    dec=-64.0270390,
+    period_d=2.84938224,
+    t0_bjd_tdb=2458853.880674,
+    t14_h=3.75,
+    rprs=0.087,
+    name="WASP-100 b",
+)
+TOI4055 = dict(
+    ra=269.179221,
+    dec=64.766624,
+    period_d=4.5679250,
+    t0_bjd_tdb=2459853.406756,
+    t14_h=3.047,
+    rprs=0.1358,
+    name="TOI-4055.01 (TESS candidate)",
+)
 
 
 def bin_curve(h: np.ndarray, f: np.ndarray, width: float, lim: float) -> tuple[list, list, list]:
@@ -54,24 +76,47 @@ def plot_fold(res: dict, det: str, path: Path, title: str) -> None:
     h = np.array(d["folded"]["hours"])
     f = np.array(d["folded"]["flux"])
     sel = np.abs(h) < 9
-    c = Chart(title, "hours from mid-transit (published ephemeris)", "brightness / the star's own spectrum", width=1100, height=480)
+    c = Chart(
+        title,
+        "hours from mid-transit (published ephemeris)",
+        "brightness / the star's own spectrum",
+        width=1100,
+        height=480,
+    )
     c.scatter(h[sel], f[sel], color=(170, 170, 170), label=f"single readings ({int(sel.sum())})", size=2)
     bc, bm, be = bin_curve(h, f, 0.75, 9)
     c.scatter(bc, bm, yerr=be, color=BLUE, label="45-minute means")
     hh = np.linspace(-9, 9, 400)
     shape = T.trapezoid(hh / 24, res["t14_h"], res["rprs"])
-    c.line(hh, 1 - res["expected_depth"] * shape, color=GREEN, label=f"published depth {100 * res['expected_depth']:.2f}%")
-    c.line(hh, 1 - d["depth"] * shape, color=RED, label=f"fitted {100 * d['depth']:.2f}% +/- {100 * d['empirical_err']:.2f}%")
+    c.line(
+        hh, 1 - res["expected_depth"] * shape, color=GREEN, label=f"published depth {100 * res['expected_depth']:.2f}%"
+    )
+    c.line(
+        hh,
+        1 - d["depth"] * shape,
+        color=RED,
+        label=f"fitted {100 * d['depth']:.2f}% +/- {100 * d['empirical_err']:.2f}%",
+    )
     c.render().save(path)
 
 
 def plot_slide(res: dict, det: str, path: Path) -> None:
     d = res["detectors"][det]
     s = d["time_slide"]
-    c = Chart("Depth against the assumed transit time (peak must sit at zero)", "assumed time minus published mid-transit (hours)",
-              "fitted depth (fraction of the star's light)", width=900, height=420)
-    c.scatter([x["offset_h"] for x in s], [x["depth"] for x in s], yerr=[x["formal_err"] for x in s], color=BLUE,
-              label="detector " + det)
+    c = Chart(
+        "Depth against the assumed transit time (peak must sit at zero)",
+        "assumed time minus published mid-transit (hours)",
+        "fitted depth (fraction of the star's light)",
+        width=900,
+        height=420,
+    )
+    c.scatter(
+        [x["offset_h"] for x in s],
+        [x["depth"] for x in s],
+        yerr=[x["formal_err"] for x in s],
+        color=BLUE,
+        label="detector " + det,
+    )
     c.hline(0.0, color=GREY)
     c.vline(0.0, color=LIGHT)
     c.render().save(path)
@@ -84,8 +129,13 @@ def plot_depths(blocks: list[tuple[str, dict]], path: Path, title: str) -> None:
         use = T.usable_detectors(r)
         if not use:
             continue
-        c.scatter(list(use), [100 * v["depth"] for v in use.values()], yerr=[100 * v["empirical_err"] for v in use.values()],
-                  color=col, label=label)
+        c.scatter(
+            list(use),
+            [100 * v["depth"] for v in use.values()],
+            yerr=[100 * v["empirical_err"] for v in use.values()],
+            color=col,
+            label=label,
+        )
         c.hline(100 * r["expected_depth"], color=col, label=None)
     c.hline(0.0, color=GREY)
     c.render().save(path)
@@ -104,14 +154,27 @@ def summarise(res: dict) -> dict:
 
 
 def run(spec: dict, detectors, args, probe: dict, size: float, **kw) -> dict:
-    return T.transit_check(detectors=detectors, size_deg=size, cache_dir=args.cache_dir, fetch=not args.no_fetch,
-                           cutout_roots=probe.get("roots", []), exposure_seed=probe.get("seed"), **spec, **kw)
+    return T.transit_check(
+        detectors=detectors,
+        size_deg=size,
+        cache_dir=args.cache_dir,
+        fetch=not args.no_fetch,
+        cutout_roots=probe.get("roots", []),
+        exposure_seed=probe.get("seed"),
+        **spec,
+        **kw,
+    )
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--cache-dir", type=Path, default=T.CACHE)
-    ap.add_argument("--probe-dir", type=Path, default=None, help="folder holding earlier cutouts and exposure lists, reused if given")
+    ap.add_argument(
+        "--probe-dir",
+        type=Path,
+        default=None,
+        help="folder holding earlier cutouts and exposure lists, reused if given",
+    )
     ap.add_argument("--no-fetch", action="store_true", help="measure only what is already on disk")
     ap.add_argument("--only", default="A1,A2,EB,A3,A4,A5")
     args = ap.parse_args()
@@ -133,18 +196,26 @@ def main() -> int:
     d5 = w62["detectors"]["5"]
     exp = w62["expected_depth"]
     a1 = {
-        "depth": d5["depth"], "formal_err": d5["formal_err"], "empirical_err": d5["empirical_err"],
+        "depth": d5["depth"],
+        "formal_err": d5["formal_err"],
+        "empirical_err": d5["empirical_err"],
         "within_2_sigma_of_published": abs(d5["depth"] - exp) < 2 * d5["empirical_err"],
         "empirical_sigma_at_least_3.5": d5["empirical_sigma"] >= 3.5,
         "fake_share_under_1pc": d5["fake_share_as_deep"] < 0.01,
         "time_slide_peak_at_zero": abs(d5["slide_peak_h"]) <= 1.5,
-        "both_years_over_3_formal_sigma": all(y["depth"] / y["formal_err"] > 3 for y in d5["years"].values()) and len(d5["years"]) == 2,
+        "both_years_over_3_formal_sigma": all(y["depth"] / y["formal_err"] > 3 for y in d5["years"].values())
+        and len(d5["years"]) == 2,
     }
     a1["passed"] = all(v for k, v in a1.items() if isinstance(v, bool))
     results["acceptance"]["A1"] = a1
     results["wasp62"] = summarise(w62)
     results["wasp62_halo_accepted"] = summarise(w62h)
-    plot_fold(w62, "5", DOCS / "wasp62b_folded_D5.png", "WASP-62 b in SPHEREx detector 5 (3.8 to 4.4 um), deep-field exposures folded")
+    plot_fold(
+        w62,
+        "5",
+        DOCS / "wasp62b_folded_D5.png",
+        "WASP-62 b in SPHEREx detector 5 (3.8 to 4.4 um), deep-field exposures folded",
+    )
     plot_slide(w62, "5", DOCS / "wasp62b_time_slide_D5.png")
     print("A1", json.dumps(a1, indent=1))
     ok = a1["passed"]
@@ -152,9 +223,19 @@ def main() -> int:
     # ---- A2
     if ok:
         comps = d5.get("comparison", [])
-        a2 = {"stars": [{"gmag": c["gmag"], "distance_arcsec": c["distance_arcsec"], "n_in": c["n_in"], "depth": c["depth"],
-                         "empirical_err": c["empirical_err"], "within_2_sigma_of_zero": abs(c["depth"]) < 2 * c["empirical_err"]}
-                        for c in comps]}
+        a2 = {
+            "stars": [
+                {
+                    "gmag": c["gmag"],
+                    "distance_arcsec": c["distance_arcsec"],
+                    "n_in": c["n_in"],
+                    "depth": c["depth"],
+                    "empirical_err": c["empirical_err"],
+                    "within_2_sigma_of_zero": abs(c["depth"]) < 2 * c["empirical_err"],
+                }
+                for c in comps
+            ]
+        }
         a2["passed"] = bool(comps) and all(s["within_2_sigma_of_zero"] for s in a2["stars"])
         results["acceptance"]["A2"] = a2
         print("A2", json.dumps(a2, indent=1))
@@ -164,24 +245,50 @@ def main() -> int:
     if ok and "EB" in wanted:
         eb_in = json.loads((DOCS / "eb_tic233532554_rows.json").read_text())
         eb: dict = {"expected_primary_depth_tess": 0.817, "assumed_flat_part": {}}
-        keys = ("n_ok", "n_overflow", "n_in", "depth", "formal_err", "empirical_err", "empirical_sigma",
-                "fake_share_as_deep", "overflow_affected", "status", "wl_min", "wl_max")
+        keys = (
+            "n_ok",
+            "n_overflow",
+            "n_in",
+            "depth",
+            "formal_err",
+            "empirical_err",
+            "empirical_sigma",
+            "fake_share_as_deep",
+            "overflow_affected",
+            "status",
+            "wl_min",
+            "wl_max",
+        )
         for k in (0.5, 0.8):
             r = T.eclipse_by_detector(eb_in, rprs=k)
             clean = {"detectors": {d: v for d, v in r["detectors"].items() if not v.get("overflow_affected")}}
             eb["assumed_flat_part"][str(k)] = {
                 "detectors": {d: {key: v.get(key) for key in keys} for d, v in r["detectors"].items()},
                 "colour_all_six": T.colour_test(r, min_in_transit=6),
-                "colour_without_overflow_detectors": T.colour_test(clean, min_in_transit=6)}
+                "colour_without_overflow_detectors": T.colour_test(clean, min_in_transit=6),
+            }
         results["eclipsing_binary"] = eb
-        ch = Chart("Eclipsing binary TIC 233532554: primary-eclipse depth by detector", "wavelength (micrometres)",
-                   "depth (fraction of the light)", width=900, height=420)
+        ch = Chart(
+            "Eclipsing binary TIC 233532554: primary-eclipse depth by detector",
+            "wavelength (micrometres)",
+            "depth (fraction of the light)",
+            width=900,
+            height=420,
+        )
         for k, col in ((0.5, BLUE), (0.8, ORANGE)):
             dd = eb["assumed_flat_part"][str(k)]["detectors"]
-            good = [(0.5 * (v["wl_min"] + v["wl_max"]), v["depth"], v["empirical_err"])
-                    for v in dd.values() if v.get("depth") is not None]
-            ch.scatter([g[0] for g in good], [g[1] for g in good], yerr=[g[2] for g in good], color=col,
-                       label=f"SPHEREx, eclipse flat part {k}")
+            good = [
+                (0.5 * (v["wl_min"] + v["wl_max"]), v["depth"], v["empirical_err"])
+                for v in dd.values()
+                if v.get("depth") is not None
+            ]
+            ch.scatter(
+                [g[0] for g in good],
+                [g[1] for g in good],
+                yerr=[g[2] for g in good],
+                color=col,
+                label=f"SPHEREx, eclipse flat part {k}",
+            )
         ch.hline(0.817, color=GREEN, label="TESS depth 0.817")
         ch.render().save(DOCS / "eb_depths.png")
         print("EB", json.dumps(eb, indent=1, default=float)[:3000])
@@ -189,14 +296,35 @@ def main() -> int:
     if ok and "A3" in wanted:
         w100 = run(WASP100, (2, 3, 5, 6), args, probe("cutouts_w100", "WASP-100"), 0.05)
         comb = T.combine_detectors(w100)
-        a3 = {"per_detector": {d: {k: r.get(k) for k in ("n", "n_in", "depth", "formal_err", "empirical_err", "empirical_sigma",
-                                                          "fake_share_as_deep", "scatter", "photon", "excluded")}
-                               for d, r in w100["detectors"].items()}, "combined": comb, "expected": w100["expected_depth"]}
+        a3 = {
+            "per_detector": {
+                d: {
+                    k: r.get(k)
+                    for k in (
+                        "n",
+                        "n_in",
+                        "depth",
+                        "formal_err",
+                        "empirical_err",
+                        "empirical_sigma",
+                        "fake_share_as_deep",
+                        "scatter",
+                        "photon",
+                        "excluded",
+                    )
+                }
+                for d, r in w100["detectors"].items()
+            },
+            "combined": comb,
+            "expected": w100["expected_depth"],
+        }
         if comb:
             a3["passed"] = abs(comb["depth"] - w100["expected_depth"]) < 2 * comb["error"]
         results["acceptance"]["A3"] = a3
         results["wasp100"] = summarise(w100)
-        plot_depths([("WASP-100 b", w100)], DOCS / "wasp100b_depths.png", "WASP-100 b: depth by detector (line = published)")
+        plot_depths(
+            [("WASP-100 b", w100)], DOCS / "wasp100b_depths.png", "WASP-100 b: depth by detector (line = published)"
+        )
         print("A3", json.dumps(a3, indent=1, default=float))
 
     # ---- A4: has any planet been measured at 3 sigma or more in two detectors with the same depth?
@@ -208,19 +336,35 @@ def main() -> int:
             ct = T.colour_test(r)
             sig = ct.get("n_sigma_each", {})
             a4[key] = {**ct, "two_detectors_at_3_sigma": sum(v >= 3 for v in sig.values()) >= 2}
-        a4["validated"] = any(v["two_detectors_at_3_sigma"] and v.get("tested") and v["p_value"] > 0.01 for v in a4.values())
+        a4["validated"] = any(
+            v["two_detectors_at_3_sigma"] and v.get("tested") and v["p_value"] > 0.01 for v in a4.values()
+        )
         results["acceptance"]["A4"] = a4
         print("A4", json.dumps(a4, indent=1, default=float))
 
     # ---- A5
     if ok and "A5" in wanted:
-        toi = run(TOI4055, (1, 2, 3, 4, 5, 6), args, probe("cutouts_toi4055", "TOI-4055.01"), 0.05, comparison_stars=False)
+        toi = run(
+            TOI4055, (1, 2, 3, 4, 5, 6), args, probe("cutouts_toi4055", "TOI-4055.01"), 0.05, comparison_stars=False
+        )
+        for det in ("1", "2"):
+            plot_fold(
+                toi,
+                det,
+                DOCS / f"toi4055_folded_D{det}.png",
+                f"TESS candidate TOI-4055.01 in SPHEREx detector {det}, deep-field exposures folded",
+            )
         results["toi4055"] = summarise(toi)
         results["toi4055"]["colour_test_validated"] = results["acceptance"].get("A4", {}).get("validated", False)
         results["toi4055"]["limits"] = T.detection_limits(toi)
         results["toi4055"]["colour_measurement"] = T.colour_test(toi)
-        plot_depths([("TOI-4055.01", toi)], DOCS / "toi4055_depths.png", "TOI-4055.01: measured depth by detector (line = TESS)")
-        print("A5", json.dumps({k: results["toi4055"][k] for k in ("limits", "colour_measurement")}, indent=1, default=float))
+        plot_depths(
+            [("TOI-4055.01", toi)], DOCS / "toi4055_depths.png", "TOI-4055.01: measured depth by detector (line = TESS)"
+        )
+        print(
+            "A5",
+            json.dumps({k: results["toi4055"][k] for k in ("limits", "colour_measurement")}, indent=1, default=float),
+        )
 
     (DOCS / "results.json").write_text(json.dumps(results, indent=1, default=float))
     print("wrote", DOCS / "results.json")
