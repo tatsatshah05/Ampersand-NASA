@@ -198,6 +198,14 @@ reversed.
 | WISE 0855-0714 | 0.5 | 3 | D5, densest days | 556 to 661 | 4 | 4 | 0 | 0 | 0 |
 | WISE 0855-0714 | 0.5 | 3 | D6, every exposure | 255 to 494 | 58 | 39 | 19 | 0 | 0 |
 | WISE 0855-0714 | 0.5 | 3 | D6, densest days | 255 to 482 | 53 | 43 | 10 | 0 | 0 |
+| Epsilon Indi B | 0.5 | 4 | D5, every exposure | 488 to 626 | 17 | 9 | 7 | 0 | 0 |
+| Epsilon Indi B | 0.5 | 4 | D5, densest days | 475 to 604 | 15 | 3 | 12 | 0 | 0 |
+| Epsilon Indi B | 0.5 | 4 | D6, every exposure | 358 to 483 | 98 | 22 | 72 | 0 | 0 |
+| Epsilon Indi B | 0.5 | 4 | D6, densest days | 337 to 440 | 79 | 13 | 61 | 0 | 0 |
+| NGC 1333 | 0.5 | 3 | D5, every exposure | 576 to 591 | 1 | 0 | 1 | 0 | 0 |
+| NGC 1333 | 0.5 | 3 | D5, densest days | 532 to 591 | 5 | 2 | 3 | 0 | 0 |
+| NGC 1333 | 0.5 | 3 | D6, every exposure | 474 to 482 | 10 | 4 | 6 | 0 | 0 |
+| NGC 1333 | 0.5 | 3 | D6, densest days | 412 to 482 | 16 | 13 | 3 | 0 | 0 |
 
 The limits, at 0.2 degrees (an object at 500 AU does not fit in a picture this small):
 
@@ -218,6 +226,8 @@ And at 0.5 degrees, which holds the jump of an object from about 500 AU:
 | Field | 500 AU | 700 AU | 1,000 AU | 2,000 AU | 10,000 AU | 30,000 AU |
 |---|---|---|---|---|---|---|
 | WISE 0855-0714 | 0.23 mJy, 26% | 0.23 mJy, 37% | 0.22 mJy, 46% | 0.22 mJy, 56% | 0.21 mJy, 65% | 0.20 mJy, 64% |
+| Epsilon Indi B | 0.23 mJy, 23% | 0.22 mJy, 34% | 0.20 mJy, 43% | 0.18 mJy, 55% | 0.17 mJy, 64% | 0.16 mJy, 64% |
+| NGC 1333 | 0.28 mJy, 22% | 0.28 mJy, 31% | 0.27 mJy, 38% | 0.27 mJy, 47% | 0.27 mJy, 53% | 0.27 mJy, 54% |
 
 "Share of the picture" is where an object at that distance would stay in view in every visit,
 clear of the glow of bright stars, with no catalogued source at any of its three places. A limit

@@ -3084,5 +3084,681 @@
     }
    }
   }
+ },
+ "epsindib@0.5": {
+  "name": "Epsilon Indi B",
+  "ra": 331.096653,
+  "dec": -56.800663,
+  "fov": 0.5,
+  "status": "nothing_found",
+  "answer": "Nothing here moves the way a distant world must. An object between 500 and 30,000 times the Earth-Sun distance, brighter than about 0.162 mJy, would have been found over up to 64% of this picture. The table gives the figure for every distance.",
+  "candidates": [],
+  "limit": [
+   {
+    "distance_au": 500,
+    "jump_arcsec": 788.7,
+    "share_of_picture": 0.23,
+    "faintest_mjy": 0.235,
+    "smear_arcsec": 10.4,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 700,
+    "jump_arcsec": 563.3,
+    "share_of_picture": 0.34,
+    "faintest_mjy": 0.221,
+    "smear_arcsec": 7.4,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 1000,
+    "jump_arcsec": 394.3,
+    "share_of_picture": 0.43,
+    "faintest_mjy": 0.205,
+    "smear_arcsec": 5.2,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 1500,
+    "jump_arcsec": 262.9,
+    "share_of_picture": 0.51,
+    "faintest_mjy": 0.189,
+    "smear_arcsec": 3.5,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 2000,
+    "jump_arcsec": 197.2,
+    "share_of_picture": 0.55,
+    "faintest_mjy": 0.183,
+    "smear_arcsec": 2.6,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 3000,
+    "jump_arcsec": 131.4,
+    "share_of_picture": 0.59,
+    "faintest_mjy": 0.179,
+    "smear_arcsec": 1.7,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 5000,
+    "jump_arcsec": 78.9,
+    "share_of_picture": 0.62,
+    "faintest_mjy": 0.177,
+    "smear_arcsec": 1.0,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 10000,
+    "jump_arcsec": 39.4,
+    "share_of_picture": 0.64,
+    "faintest_mjy": 0.175,
+    "smear_arcsec": 0.5,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 20000,
+    "jump_arcsec": 19.9,
+    "share_of_picture": 0.63,
+    "faintest_mjy": 0.168,
+    "smear_arcsec": 2.4,
+    "detector": 5,
+    "exposures": "all"
+   },
+   {
+    "distance_au": 30000,
+    "jump_arcsec": 13.3,
+    "share_of_picture": 0.64,
+    "faintest_mjy": 0.162,
+    "smear_arcsec": 1.6,
+    "detector": 5,
+    "exposures": "all"
+   }
+  ],
+  "chance_links": 0,
+  "per_detector": [
+   {
+    "detector": 5,
+    "come_and_go": 17,
+    "set_aside_catalogued": 9,
+    "set_aside_not_point_like": 1,
+    "linked_from": 7,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.82,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-05-15",
+      "date_start": "2025-04-24",
+      "date_end": "2025-06-07",
+      "n_exposures": 31,
+      "sources": 613,
+      "come_and_go": 2,
+      "faintest_mjy": 0.155,
+      "smear_per_arcsec_of_parallax": 0.2348
+     },
+     {
+      "epoch": 2,
+      "date": "2025-10-11",
+      "date_start": "2025-10-02",
+      "date_end": "2025-11-08",
+      "n_exposures": 24,
+      "sources": 626,
+      "come_and_go": 6,
+      "faintest_mjy": 0.158,
+      "smear_per_arcsec_of_parallax": 0.1483
+     },
+     {
+      "epoch": 3,
+      "date": "2026-04-25",
+      "date_start": "2026-04-24",
+      "date_end": "2026-04-30",
+      "n_exposures": 7,
+      "sources": 488,
+      "come_and_go": 2,
+      "faintest_mjy": 0.21,
+      "smear_per_arcsec_of_parallax": 0.0199
+     },
+     {
+      "epoch": 4,
+      "date": "2026-09-30",
+      "date_start": "2026-09-28",
+      "date_end": "2026-10-02",
+      "n_exposures": 24,
+      "sources": 607,
+      "come_and_go": 7,
+      "faintest_mjy": 0.156,
+      "smear_per_arcsec_of_parallax": 0.0143
+     }
+    ]
+   },
+   {
+    "detector": 5,
+    "come_and_go": 15,
+    "set_aside_catalogued": 3,
+    "set_aside_not_point_like": 0,
+    "linked_from": 12,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.83,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-04-26",
+      "date_start": "2025-04-24",
+      "date_end": "2025-04-27",
+      "n_exposures": 16,
+      "sources": 549,
+      "come_and_go": 0,
+      "faintest_mjy": 0.175,
+      "smear_per_arcsec_of_parallax": 0.0125
+     },
+     {
+      "epoch": 2,
+      "date": "2025-10-03",
+      "date_start": "2025-10-02",
+      "date_end": "2025-10-06",
+      "n_exposures": 13,
+      "sources": 579,
+      "come_and_go": 3,
+      "faintest_mjy": 0.174,
+      "smear_per_arcsec_of_parallax": 0.0251
+     },
+     {
+      "epoch": 3,
+      "date": "2026-04-25",
+      "date_start": "2026-04-24",
+      "date_end": "2026-04-25",
+      "n_exposures": 6,
+      "sources": 475,
+      "come_and_go": 6,
+      "faintest_mjy": 0.22,
+      "smear_per_arcsec_of_parallax": 0.0011
+     },
+     {
+      "epoch": 4,
+      "date": "2026-10-01",
+      "date_start": "2026-09-29",
+      "date_end": "2026-10-02",
+      "n_exposures": 23,
+      "sources": 604,
+      "come_and_go": 6,
+      "faintest_mjy": 0.156,
+      "smear_per_arcsec_of_parallax": 0.0117
+     }
+    ]
+   },
+   {
+    "detector": 6,
+    "come_and_go": 98,
+    "set_aside_catalogued": 22,
+    "set_aside_not_point_like": 4,
+    "linked_from": 72,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.84,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-05-07",
+      "date_start": "2025-04-29",
+      "date_end": "2025-06-10",
+      "n_exposures": 26,
+      "sources": 466,
+      "come_and_go": 17,
+      "faintest_mjy": 0.181,
+      "smear_per_arcsec_of_parallax": 0.1669
+     },
+     {
+      "epoch": 2,
+      "date": "2025-10-06",
+      "date_start": "2025-09-28",
+      "date_end": "2025-11-04",
+      "n_exposures": 22,
+      "sources": 428,
+      "come_and_go": 8,
+      "faintest_mjy": 0.189,
+      "smear_per_arcsec_of_parallax": 0.1518
+     },
+     {
+      "epoch": 3,
+      "date": "2026-04-30",
+      "date_start": "2026-04-29",
+      "date_end": "2026-05-04",
+      "n_exposures": 11,
+      "sources": 358,
+      "come_and_go": 31,
+      "faintest_mjy": 0.253,
+      "smear_per_arcsec_of_parallax": 0.0171
+     },
+     {
+      "epoch": 4,
+      "date": "2026-09-25",
+      "date_start": "2026-09-22",
+      "date_end": "2026-09-28",
+      "n_exposures": 36,
+      "sources": 483,
+      "come_and_go": 42,
+      "faintest_mjy": 0.177,
+      "smear_per_arcsec_of_parallax": 0.0282
+     }
+    ]
+   },
+   {
+    "detector": 6,
+    "come_and_go": 79,
+    "set_aside_catalogued": 13,
+    "set_aside_not_point_like": 5,
+    "linked_from": 61,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.84,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-04-29",
+      "date_start": "2025-04-29",
+      "date_end": "2025-05-01",
+      "n_exposures": 19,
+      "sources": 423,
+      "come_and_go": 11,
+      "faintest_mjy": 0.2,
+      "smear_per_arcsec_of_parallax": 0.0116
+     },
+     {
+      "epoch": 2,
+      "date": "2025-09-29",
+      "date_start": "2025-09-28",
+      "date_end": "2025-10-01",
+      "n_exposures": 17,
+      "sources": 403,
+      "come_and_go": 8,
+      "faintest_mjy": 0.202,
+      "smear_per_arcsec_of_parallax": 0.0121
+     },
+     {
+      "epoch": 3,
+      "date": "2026-04-29",
+      "date_start": "2026-04-29",
+      "date_end": "2026-05-01",
+      "n_exposures": 10,
+      "sources": 337,
+      "come_and_go": 29,
+      "faintest_mjy": 0.266,
+      "smear_per_arcsec_of_parallax": 0.008
+     },
+     {
+      "epoch": 4,
+      "date": "2026-09-26",
+      "date_start": "2026-09-25",
+      "date_end": "2026-09-27",
+      "n_exposures": 24,
+      "sources": 440,
+      "come_and_go": 31,
+      "faintest_mjy": 0.192,
+      "smear_per_arcsec_of_parallax": 0.0132
+     }
+    ]
+   }
+  ],
+  "catalogue_answered": true,
+  "failures": 0,
+  "recovery": {
+   "detector": 5,
+   "seeds": 0,
+   "levels": {
+    "easy": {
+     "flux_mjy": null,
+     "planted": 0,
+     "found": 0,
+     "bright_enough": 0,
+     "bright_enough_and_found": 0,
+     "other_links": 0
+    },
+    "medium": {
+     "flux_mjy": null,
+     "planted": 0,
+     "found": 0,
+     "bright_enough": 0,
+     "bright_enough_and_found": 0,
+     "other_links": 0
+    },
+    "hard": {
+     "flux_mjy": null,
+     "planted": 0,
+     "found": 0,
+     "bright_enough": 0,
+     "bright_enough_and_found": 0,
+     "other_links": 0
+    }
+   }
+  }
+ },
+ "ngc1333@0.5": {
+  "name": "NGC 1333",
+  "ra": 52.265,
+  "dec": 31.31,
+  "fov": 0.5,
+  "status": "nothing_found",
+  "answer": "Nothing here moves the way a distant world must. An object between 500 and 30,000 times the Earth-Sun distance, brighter than about 0.266 mJy, would have been found over up to 54% of this picture. The table gives the figure for every distance.",
+  "candidates": [],
+  "limit": [
+   {
+    "distance_au": 500,
+    "jump_arcsec": 816.8,
+    "share_of_picture": 0.22,
+    "faintest_mjy": 0.282,
+    "smear_arcsec": 2.6,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 700,
+    "jump_arcsec": 583.4,
+    "share_of_picture": 0.31,
+    "faintest_mjy": 0.275,
+    "smear_arcsec": 1.8,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 1000,
+    "jump_arcsec": 408.4,
+    "share_of_picture": 0.38,
+    "faintest_mjy": 0.271,
+    "smear_arcsec": 1.3,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 1500,
+    "jump_arcsec": 272.3,
+    "share_of_picture": 0.44,
+    "faintest_mjy": 0.269,
+    "smear_arcsec": 0.9,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 2000,
+    "jump_arcsec": 204.2,
+    "share_of_picture": 0.47,
+    "faintest_mjy": 0.269,
+    "smear_arcsec": 0.6,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 3000,
+    "jump_arcsec": 136.1,
+    "share_of_picture": 0.49,
+    "faintest_mjy": 0.268,
+    "smear_arcsec": 0.4,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 5000,
+    "jump_arcsec": 81.7,
+    "share_of_picture": 0.52,
+    "faintest_mjy": 0.268,
+    "smear_arcsec": 0.3,
+    "detector": 5,
+    "exposures": "densest_days"
+   },
+   {
+    "distance_au": 10000,
+    "jump_arcsec": 40.9,
+    "share_of_picture": 0.53,
+    "faintest_mjy": 0.267,
+    "smear_arcsec": 0.4,
+    "detector": 5,
+    "exposures": "all"
+   },
+   {
+    "distance_au": 20000,
+    "jump_arcsec": 20.5,
+    "share_of_picture": 0.54,
+    "faintest_mjy": 0.266,
+    "smear_arcsec": 0.2,
+    "detector": 5,
+    "exposures": "all"
+   },
+   {
+    "distance_au": 30000,
+    "jump_arcsec": 13.6,
+    "share_of_picture": 0.54,
+    "faintest_mjy": 0.266,
+    "smear_arcsec": 0.1,
+    "detector": 5,
+    "exposures": "all"
+   }
+  ],
+  "chance_links": 0,
+  "per_detector": [
+   {
+    "detector": 5,
+    "come_and_go": 1,
+    "set_aside_catalogued": 0,
+    "set_aside_not_point_like": 0,
+    "linked_from": 1,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.67,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-08-20",
+      "date_start": "2025-08-19",
+      "date_end": "2025-08-21",
+      "n_exposures": 18,
+      "sources": 591,
+      "come_and_go": 1,
+      "faintest_mjy": 0.262,
+      "smear_per_arcsec_of_parallax": 0.0025
+     },
+     {
+      "epoch": 2,
+      "date": "2026-02-07",
+      "date_start": "2026-02-04",
+      "date_end": "2026-02-12",
+      "n_exposures": 19,
+      "sources": 576,
+      "come_and_go": 0,
+      "faintest_mjy": 0.269,
+      "smear_per_arcsec_of_parallax": 0.0116
+     },
+     {
+      "epoch": 3,
+      "date": "2026-08-19",
+      "date_start": "2026-08-16",
+      "date_end": "2026-09-05",
+      "n_exposures": 20,
+      "sources": 584,
+      "come_and_go": 0,
+      "faintest_mjy": 0.265,
+      "smear_per_arcsec_of_parallax": 0.0195
+     }
+    ]
+   },
+   {
+    "detector": 5,
+    "come_and_go": 5,
+    "set_aside_catalogued": 2,
+    "set_aside_not_point_like": 0,
+    "linked_from": 3,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.67,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-08-20",
+      "date_start": "2025-08-19",
+      "date_end": "2025-08-21",
+      "n_exposures": 18,
+      "sources": 591,
+      "come_and_go": 3,
+      "faintest_mjy": 0.262,
+      "smear_per_arcsec_of_parallax": 0.0025
+     },
+     {
+      "epoch": 2,
+      "date": "2026-02-05",
+      "date_start": "2026-02-04",
+      "date_end": "2026-02-07",
+      "n_exposures": 10,
+      "sources": 532,
+      "come_and_go": 0,
+      "faintest_mjy": 0.301,
+      "smear_per_arcsec_of_parallax": 0.0063
+     },
+     {
+      "epoch": 3,
+      "date": "2026-08-18",
+      "date_start": "2026-08-16",
+      "date_end": "2026-08-19",
+      "n_exposures": 18,
+      "sources": 590,
+      "come_and_go": 2,
+      "faintest_mjy": 0.268,
+      "smear_per_arcsec_of_parallax": 0.0034
+     }
+    ]
+   },
+   {
+    "detector": 6,
+    "come_and_go": 10,
+    "set_aside_catalogued": 4,
+    "set_aside_not_point_like": 0,
+    "linked_from": 6,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.67,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-08-23",
+      "date_start": "2025-08-21",
+      "date_end": "2025-08-26",
+      "n_exposures": 25,
+      "sources": 479,
+      "come_and_go": 1,
+      "faintest_mjy": 0.282,
+      "smear_per_arcsec_of_parallax": 0.006
+     },
+     {
+      "epoch": 2,
+      "date": "2026-02-05",
+      "date_start": "2026-02-01",
+      "date_end": "2026-02-10",
+      "n_exposures": 18,
+      "sources": 474,
+      "come_and_go": 6,
+      "faintest_mjy": 0.302,
+      "smear_per_arcsec_of_parallax": 0.0134
+     },
+     {
+      "epoch": 3,
+      "date": "2026-08-20",
+      "date_start": "2026-08-19",
+      "date_end": "2026-08-21",
+      "n_exposures": 18,
+      "sources": 482,
+      "come_and_go": 3,
+      "faintest_mjy": 0.298,
+      "smear_per_arcsec_of_parallax": 0.0023
+     }
+    ]
+   },
+   {
+    "detector": 6,
+    "come_and_go": 16,
+    "set_aside_catalogued": 13,
+    "set_aside_not_point_like": 0,
+    "linked_from": 3,
+    "links": 0,
+    "chance_links": 0,
+    "clear_share": 0.68,
+    "visits": [
+     {
+      "epoch": 1,
+      "date": "2025-08-22",
+      "date_start": "2025-08-21",
+      "date_end": "2025-08-23",
+      "n_exposures": 18,
+      "sources": 458,
+      "come_and_go": 8,
+      "faintest_mjy": 0.306,
+      "smear_per_arcsec_of_parallax": 0.0035
+     },
+     {
+      "epoch": 2,
+      "date": "2026-02-02",
+      "date_start": "2026-02-01",
+      "date_end": "2026-02-03",
+      "n_exposures": 9,
+      "sources": 412,
+      "come_and_go": 1,
+      "faintest_mjy": 0.35,
+      "smear_per_arcsec_of_parallax": 0.0065
+     },
+     {
+      "epoch": 3,
+      "date": "2026-08-20",
+      "date_start": "2026-08-19",
+      "date_end": "2026-08-21",
+      "n_exposures": 18,
+      "sources": 482,
+      "come_and_go": 7,
+      "faintest_mjy": 0.298,
+      "smear_per_arcsec_of_parallax": 0.0023
+     }
+    ]
+   }
+  ],
+  "catalogue_answered": true,
+  "failures": 0,
+  "recovery": {
+   "detector": 5,
+   "seeds": 0,
+   "levels": {
+    "easy": {
+     "flux_mjy": null,
+     "planted": 0,
+     "found": 0,
+     "bright_enough": 0,
+     "bright_enough_and_found": 0,
+     "other_links": 0
+    },
+    "medium": {
+     "flux_mjy": null,
+     "planted": 0,
+     "found": 0,
+     "bright_enough": 0,
+     "bright_enough_and_found": 0,
+     "other_links": 0
+    },
+    "hard": {
+     "flux_mjy": null,
+     "planted": 0,
+     "found": 0,
+     "bright_enough": 0,
+     "bright_enough_and_found": 0,
+     "other_links": 0
+    }
+   }
+  }
  }
 }
