@@ -1,0 +1,300 @@
+{
+ "fixture": true,
+ "fixture_note": "Screen builder's stand-in, made from docs/reflex/results.json on agent/invent-P3-final (09fc1b3) and docs/reflex.md. Stand-ins: stops[].snr is the results file's candidate.profile interpolated linearly in 1/d (the no-bend stop is candidate.snr_at_infinity, the straight track with free drift); every picture, mark and track is null. jpl.helio_distance_au is one JPL Horizons call (target 136199, centre 500@399, quantity 19) at visit.mjd_t0, made for this fixture.",
+ "final": false,
+ "pixel_arcsec": 6.15,
+ "visit": {
+  "n_used": 57,
+  "duration_days": 15.35,
+  "mjd_first": 60866.085821,
+  "mjd_last": 60881.439791,
+  "mjd_t0": 60877.296038909,
+  "distance_leverage_arcsec_per_inv_au": [
+   1580,
+   604
+  ]
+ },
+ "field": {
+  "ra": 27.37815,
+  "dec": -0.11998,
+  "size_deg": 0.13,
+  "centred_on_known": true
+ },
+ "n_trials": 24439,
+ "candidate": {
+  "separation_arcsec": 1.24,
+  "distance_au": 111.1,
+  "range_95_au": [
+   76.5,
+   null
+  ],
+  "range_68_au": [
+   100.0,
+   142.9
+  ],
+  "interval_2sigma_au_statistical_only": [
+   81.9,
+   156.2
+  ],
+  "snr": 14.8,
+  "snr_at_infinity": 13.08,
+  "delta_s2_infinite": 47.8,
+  "leave_one_epoch_out_min_delta_s2": 17.2,
+  "n_epochs": 14,
+  "n_bootstrap": 40,
+  "reversed_earth_snr_mirror_distance": 8.71,
+  "reversed_best_away": 6.404559431890559,
+  "drift_arcsec_day": [
+   4.109,
+   -3.326
+  ],
+  "mean_flux_mjy": 0.0698,
+  "profile": {
+   "inv_d": [
+    -0.012,
+    -0.011,
+    -0.01,
+    -0.009,
+    -0.008,
+    -0.007,
+    -0.006,
+    -0.005,
+    -0.004,
+    -0.003,
+    -0.002,
+    -0.001,
+    0.0,
+    0.001,
+    0.002,
+    0.003,
+    0.004,
+    0.005,
+    0.006,
+    0.007,
+    0.008,
+    0.009,
+    0.01,
+    0.011,
+    0.012,
+    0.013,
+    0.014,
+    0.015,
+    0.016,
+    0.017,
+    0.018,
+    0.019,
+    0.02
+   ],
+   "snr": [
+    9.09,
+    8.84,
+    8.69,
+    8.71,
+    8.67,
+    8.65,
+    8.63,
+    8.5,
+    8.39,
+    8.38,
+    8.23,
+    7.7,
+    8.37,
+    9.78,
+    9.93,
+    10.78,
+    11.45,
+    14.32,
+    14.59,
+    14.7,
+    14.75,
+    14.8,
+    14.79,
+    14.77,
+    14.7,
+    14.5,
+    14.48,
+    14.32,
+    14.1,
+    13.89,
+    13.67,
+    13.43,
+    13.21
+   ]
+  }
+ },
+ "jpl": {
+  "observer_distance_au": 95.5061410823939,
+  "helio_distance_au": 95.56502030688,
+  "linear_drift": [
+   3.914,
+   -3.606
+  ],
+  "positions": null,
+  "why": {
+   "positions": "the export asks JPL Horizons for Eris's place at all 57 exposure times"
+  }
+ },
+ "shifted": {
+  "distance_au": 117.6,
+  "range_95_au": [
+   52.6,
+   null
+  ],
+  "range_68_au": [
+   90.9,
+   138.1
+  ],
+  "separation_arcsec": 1.14,
+  "snr": 15.63,
+  "edge_reversed_peak": 8.352847462770582
+ },
+ "still_there": [
+  {
+   "mjd_first": 61035.5,
+   "mjd_last": 61060.2,
+   "flux_mjy": -0.0005,
+   "error_mjy": 0.0039
+  },
+  {
+   "mjd_first": 61232.7,
+   "mjd_last": 61243.4,
+   "flux_mjy": -0.0018,
+   "error_mjy": 0.004
+  }
+ ],
+ "limit": {
+  "faintest_mean_flux_mjy": 0.0333,
+  "searched_area_deg2": 0.0169,
+  "distance_range_au": [
+   50,
+   null
+  ],
+  "min_visit_days": 8,
+  "injection_tested": false,
+  "ranging_limit_au": 200,
+  "ranging_limit_at_threshold_au": 120,
+  "v_eris_coloured": 19.3,
+  "v_sedna_coloured": 20.7
+ },
+ "null_runs": {
+  "n_field_visits": 6,
+  "area_deg2": 0.1014,
+  "vetted_false": 0
+ },
+ "sedna": {
+  "found_blind": false,
+  "forced_snr": 7.51,
+  "threshold": 8.0
+ },
+ "demo": {
+  "crop_px": null,
+  "uses_difference_images": false,
+  "single": null,
+  "plain_mean": null,
+  "slid": null,
+  "marks": null,
+  "why": {
+   "single": "the export makes this picture: the one taken nearest the middle of the visit",
+   "plain_mean": "the export makes this picture: all 57 pictures added as taken",
+   "slid": "the export makes this picture: all 57 pictures slid along the best path and added"
+  }
+ },
+ "stops": [
+  {
+   "inv_d": 0.0,
+   "distance_au": null,
+   "snr": 13.08,
+   "track_east": null,
+   "track_north": null,
+   "linear_east": null,
+   "linear_north": null,
+   "why": {
+    "track_east": "the export works out the path for each step from the Earth's real path"
+   }
+  },
+  {
+   "inv_d": 0.002,
+   "distance_au": 500,
+   "snr": 9.93,
+   "track_east": null,
+   "track_north": null,
+   "linear_east": null,
+   "linear_north": null,
+   "why": {
+    "track_east": "the export works out the path for each step from the Earth's real path"
+   }
+  },
+  {
+   "inv_d": 0.005,
+   "distance_au": 200,
+   "snr": 14.32,
+   "track_east": null,
+   "track_north": null,
+   "linear_east": null,
+   "linear_north": null,
+   "why": {
+    "track_east": "the export works out the path for each step from the Earth's real path"
+   }
+  },
+  {
+   "inv_d": 0.007142857142857143,
+   "distance_au": 140,
+   "snr": 14.707,
+   "track_east": null,
+   "track_north": null,
+   "linear_east": null,
+   "linear_north": null,
+   "why": {
+    "track_east": "the export works out the path for each step from the Earth's real path"
+   }
+  },
+  {
+   "inv_d": 0.009000900090009001,
+   "distance_au": 111.1,
+   "snr": 14.8,
+   "track_east": null,
+   "track_north": null,
+   "linear_east": null,
+   "linear_north": null,
+   "why": {
+    "track_east": "the export works out the path for each step from the Earth's real path"
+   }
+  },
+  {
+   "inv_d": 0.014285714285714285,
+   "distance_au": 70,
+   "snr": 14.434,
+   "track_east": null,
+   "track_north": null,
+   "linear_east": null,
+   "linear_north": null,
+   "why": {
+    "track_east": "the export works out the path for each step from the Earth's real path"
+   }
+  },
+  {
+   "inv_d": 0.02,
+   "distance_au": 50,
+   "snr": 13.21,
+   "track_east": null,
+   "track_north": null,
+   "linear_east": null,
+   "linear_north": null,
+   "why": {
+    "track_east": "the export works out the path for each step from the Earth's real path"
+   }
+  }
+ ],
+ "wrong_way": {
+  "inv_d": -0.009000900090009001,
+  "snr": 8.71,
+  "track_east": null,
+  "track_north": null,
+  "linear_east": null,
+  "linear_north": null,
+  "why": {
+   "track_east": "the export works out the path for each step from the Earth's real path"
+  }
+ },
+ "sketch_exaggeration": 5
+}

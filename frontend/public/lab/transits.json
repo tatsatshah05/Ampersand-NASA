@@ -1,0 +1,117 @@
+{
+ "fixture": true,
+ "fixture_note": "Screen builder's stand-in, made from docs/transits/results.json (71963ab) and docs/transits.md. Every value is the results file's; readings, stops and the picture are null, so the screen shows the module's own folded picture docs/transits/wasp62b_folded_D5.png in place of the dial.",
+ "final": false,
+ "development_object": true,
+ "planet": {
+  "period_d": 4.41193868,
+  "t0_bjd_tdb": 2458851.099338,
+  "t14_h": 3.79,
+  "rprs": 0.1109,
+  "expected_depth": 0.01229881
+ },
+ "coverage": {
+  "exposures": 8326
+ },
+ "d5": {
+  "n": 484,
+  "n_in": 65,
+  "n_transits": 29,
+  "n_cutouts": 757,
+  "depth": 0.011754789954147414,
+  "formal_err": 0.0018492978007760461,
+  "empirical_err": 0.002630204107407344,
+  "empirical_sigma": 4.469155044295933,
+  "noise_factor": 1.4222717975999297,
+  "n_fake": 598,
+  "fake_share_as_deep": 0.0,
+  "scatter": 0.013601954397642323,
+  "slide_peak_h": -0.5,
+  "jackknife_min": 0.011167048984807987,
+  "jackknife_max": 0.012766151671616176,
+  "wl_min": 3.8057503700256348,
+  "wl_max": 4.4256720542907715,
+  "years": {
+   "2025": {
+    "n": 237,
+    "n_in": 30,
+    "depth": 0.013264912158303678,
+    "formal_err": 0.0028020581298648247
+   },
+   "2026": {
+    "n": 247,
+    "n_in": 35,
+    "depth": 0.010978428290339407,
+    "formal_err": 0.0024604390719570857
+   }
+  }
+ },
+ "halo": {
+  "depth": 0.01046733855876906,
+  "empirical_err": 0.002499960793862417,
+  "empirical_sigma": 4.187001085963878,
+  "n_in": 78
+ },
+ "acceptance": {
+  "A1": {
+   "passed": true
+  },
+  "A2": {
+   "passed": true
+  },
+  "A3": {
+   "passed": true
+  },
+  "A4": {
+   "validated": false
+  }
+ },
+ "comparison": {
+  "gmag": 12.417845726013184,
+  "distance_arcsec": 108.85909579664546,
+  "depth": -0.003194924305912436,
+  "err": 0.004178262904755583
+ },
+ "wasp100": {
+  "expected_depth": 0.007568999999999999,
+  "combined": {
+   "detectors": [
+    3,
+    5,
+    6
+   ],
+   "depth": 0.006608588931202927,
+   "error": 0.0021299440347377174
+  },
+  "per_detector": {
+   "3": {
+    "depth": 0.0012428891725532697,
+    "empirical_err": 0.0033984872733230503,
+    "empirical_sigma": 0.36571835425411764
+   },
+   "5": {
+    "depth": 0.0123013836005581,
+    "empirical_err": 0.0034361127962689295,
+    "empirical_sigma": 3.580029041513259
+   },
+   "6": {
+    "depth": 0.006250784475381528,
+    "empirical_err": 0.00451074433995987,
+    "empirical_sigma": 1.3857545460971834
+   }
+  }
+ },
+ "readings": null,
+ "stops": null,
+ "picture": {
+  "png": null,
+  "why": {
+   "png": "the export makes one picture of WASP-62"
+  }
+ },
+ "fallback_png": "wasp62b_folded_D5.png",
+ "why": {
+  "readings": "the export writes every single reading; the results file keeps only the 45-minute averages",
+  "stops": "the export measures the dip on each timetable of the dial"
+ }
+}

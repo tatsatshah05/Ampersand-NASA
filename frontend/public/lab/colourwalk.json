@@ -1,0 +1,144 @@
+{
+ "fixture": true,
+ "fixture_note": "Screen builder's stand-in, made from docs/colourwalk/results.json and docs/colourwalk.md. The Redder group's offset from the Bluer group is the results file's walk.all (median at 2.9-5.02 um minus median at 0.75-1.65 um) and its ring is walk.all's error; the Middle group and every picture are null. rule_sigma, sigma_guessed_floor and detector_fixed_arcsec are from docs/colourwalk.md; known is Gauza et al. 2015.",
+ "final": false,
+ "pixel_arcsec": 6.15,
+ "development_object_note": "VHS 1256 was seen by the inventor's probe first: a calibration object, not a blind test",
+ "verdict": "nothing_found",
+ "rule_sigma": 4,
+ "known": {
+  "sep_arcsec": 8.06,
+  "pa_deg": 218.1,
+  "ref": "Gauza et al. 2015"
+ },
+ "host": {
+  "gaia_id": "3526198184723289472",
+  "ra": 194.00764786266586,
+  "dec": -12.956935593723335,
+  "gmag": 15.11142635345459
+ },
+ "n_exposures": 404,
+ "n_clean_fits": 351,
+ "walk": {
+  "all": {
+   "east": -0.11325758751914916,
+   "north": -0.1426990730091563,
+   "pa": 218.43837430488728,
+   "size": 0.18218206983216062,
+   "sigma": 2.0478116584660517,
+   "p_false": 0.1228530572512254,
+   "pa_error_deg": 27.024418816793442,
+   "err_east": 0.0754797480591614,
+   "err_north": 0.10239857805460886
+  },
+  "sigma_guessed_floor": 2.7,
+  "detector_fixed_arcsec": 0.03,
+  "per_detector": {
+   "D4": {
+    "pa": 223.2165742925898,
+    "size": 0.16529686918592018,
+    "sigma": 1.7943379629362135
+   },
+   "D5": {
+    "pa": 205.11331096022425,
+    "size": 0.2093560272516157,
+    "sigma": 2.1370983691852907
+   },
+   "D6": {
+    "pa": 225.27357762472212,
+    "size": 0.21321054621733682,
+    "sigma": 2.349695575786238
+   }
+  }
+ },
+ "visit_walks": [
+  {
+   "sky_angle": 194.20413738895218,
+   "detector_angle": 354.6363585792113,
+   "size": 0.24335253939409007
+  },
+  {
+   "sky_angle": 234.00237727066155,
+   "detector_angle": 159.4395975180899,
+   "size": 0.22330494339358442
+  },
+  {
+   "sky_angle": 217.307158653553,
+   "detector_angle": 353.79643426864953,
+   "size": 0.1620770583317522
+  }
+ ],
+ "acceptance": {
+  "checks": {
+   "pa_within_15_of_218": true,
+   "along_walk_at_least_0p15": true,
+   "ratio_2p0_2p43_in_0p010_0p030": true,
+   "ratio_3p4_5p0_in_0p04_0p10": true,
+   "ratio_0p75_1p4_consistent_with_0_within_0p01": false,
+   "every_individual_control_at_most_0p02": false,
+   "control_median_at_most_0p02": true
+  },
+  "passed": false
+ },
+ "null": {
+  "acceptance": {
+   "checks": {
+    "at_least_10_isolated_stars_within_0p06": false,
+    "90_percent_walk_below_3sigma": true,
+    "blended_median_cos_at_least_0p9_at_calibrated_width": false
+   },
+   "passed": false
+  },
+  "scatter_east": 0.04901758775676231,
+  "scatter_north": 0.06645159625015443,
+  "n_within": 2,
+  "n_isolated": 19
+ },
+ "picture": {
+  "crop_px": 9,
+  "host_px": null
+ },
+ "groups": [
+  {
+   "name": "Bluer",
+   "lo_um": 0.75,
+   "hi_um": 1.65,
+   "east": 0.0,
+   "north": 0.0,
+   "err_east": null,
+   "err_north": null,
+   "png": null,
+   "why": {
+    "png": "the export makes the centre and the picture for each colour group"
+   }
+  },
+  {
+   "name": "Middle",
+   "lo_um": 1.65,
+   "hi_um": 2.9,
+   "east": null,
+   "north": null,
+   "err_east": null,
+   "err_north": null,
+   "png": null,
+   "why": {
+    "east": "the export makes the centre and the picture for each colour group",
+    "png": "the export makes the centre and the picture for each colour group"
+   }
+  },
+  {
+   "name": "Redder",
+   "lo_um": 2.9,
+   "hi_um": 5.02,
+   "east": -0.11325758751914916,
+   "north": -0.1426990730091563,
+   "err_east": 0.0754797480591614,
+   "err_north": 0.10239857805460886,
+   "png": null,
+   "why": {
+    "png": "the export makes the centre and the picture for each colour group"
+   }
+  }
+ ],
+ "lone_star": null
+}
