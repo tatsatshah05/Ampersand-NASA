@@ -1,0 +1,323 @@
+{
+ "query": {
+  "ra": 76.956587,
+  "dec": 30.401291,
+  "radius_arcsec": 4.0,
+  "epoch": 2026.0,
+  "neighbour_radius_arcsec": 15.0,
+  "pixel_arcsec": 6.15
+ },
+ "services": {
+  "gaia": {
+   "name": "Gaia DR3",
+   "answered": true,
+   "via": "ARI Heidelberg Gaia mirror",
+   "error": null,
+   "partial": []
+  },
+  "simbad": {
+   "name": "SIMBAD",
+   "answered": true,
+   "via": "SIMBAD (CfA mirror)",
+   "error": null,
+   "partial": []
+  }
+ },
+ "unreachable": [],
+ "nothing_catalogued": false,
+ "nearest_catalogued": null,
+ "searched_arcsec": 15.0,
+ "gaia": {
+  "source_id": "156430817820015232",
+  "name": "Gaia DR3 156430817820015232",
+  "separation_arcsec": 0.18,
+  "east_arcsec": -0.08,
+  "north_arcsec": -0.16,
+  "position": {
+   "ra": 76.9565601,
+   "dec": 30.4012479,
+   "epoch": 2026.0
+  },
+  "catalogue_position": {
+   "ra": 76.9565443110343,
+   "dec": 30.401316149887936,
+   "epoch": 2016.0
+  },
+  "spectral_class": {
+   "text": "B",
+   "class": "B",
+   "luminosity_class": null,
+   "label": "B-type star",
+   "plain": "a very hot, blue-white star",
+   "pair": false,
+   "parts": [
+    "B"
+   ]
+  },
+  "spectral_class_column": "gaiadr3.astrophysical_parameters.spectraltype_esphs",
+  "values": [
+   {
+    "key": "parallax",
+    "label": "Parallax",
+    "value": 5.454096456582266,
+    "error": 0.3324495553970337,
+    "lower": null,
+    "upper": null,
+    "unit": "mas",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.parallax",
+    "error_column": "parallax_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "pmra",
+    "label": "Proper motion, east (includes cos dec)",
+    "value": 4.90603392110511,
+    "error": 0.32915833592414856,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.pmra",
+    "error_column": "pmra_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "pmdec",
+    "label": "Proper motion, north",
+    "value": -24.577534567492915,
+    "error": 0.2546490728855133,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.pmdec",
+    "error_column": "pmdec_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "phot_g_mean_mag",
+    "label": "G magnitude (visible light)",
+    "value": 13.035076141357422,
+    "error": 0.062203159068828534,
+    "lower": null,
+    "upper": null,
+    "unit": "mag",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.phot_g_mean_mag",
+    "error_column": "from phot_g_mean_flux_over_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "bp_rp",
+    "label": "BP-RP colour",
+    "value": 1.228703498840332,
+    "error": 0.255794319191582,
+    "lower": null,
+    "upper": null,
+    "unit": "mag",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.bp_rp",
+    "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "ruwe",
+    "label": "RUWE (about 1 for a well-fitted single star)",
+    "value": 16.42213249206543,
+    "error": null,
+    "lower": null,
+    "upper": null,
+    "unit": "",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.ruwe",
+    "error_column": null,
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   }
+  ]
+ },
+ "simbad": {
+  "oid": 14743763,
+  "main_id": "V* RW Aur B",
+  "display_name": "RW Aur B",
+  "separation_arcsec": 0.18,
+  "east_arcsec": -0.08,
+  "north_arcsec": -0.16,
+  "position": {
+   "ra": 76.9565601,
+   "dec": 30.4012479,
+   "epoch": 2026.0
+  },
+  "type": {
+   "code": "Or*",
+   "label": "Orion variable",
+   "plain": "a young star whose brightness changes unevenly",
+   "candidate": false
+  },
+  "spectral_type": {
+   "text": "K2",
+   "class": "K",
+   "luminosity_class": null,
+   "label": "K-type star",
+   "plain": "an orange star a little cooler than the Sun",
+   "pair": false,
+   "parts": [
+    "K2"
+   ]
+  },
+  "spectral_type_reference": "2021ApJS..254...20L",
+  "references": 28,
+  "gaia_dr3_ids": [
+   "156430817820015232"
+  ],
+  "parents": [
+   {
+    "oid": 718127,
+    "name": "NAME Taurus Complex",
+    "display_name": "Taurus Complex",
+    "type": {
+     "code": "SFR",
+     "label": "star-forming region",
+     "plain": "a place where stars are being born",
+     "candidate": false
+    },
+    "references": 5104
+   },
+   {
+    "oid": 756681,
+    "name": "V* RW Aur",
+    "display_name": "RW Aur",
+    "type": {
+     "code": "TT*",
+     "label": "T Tauri star",
+     "plain": "a very young star, still forming",
+     "candidate": false
+    },
+    "references": 828
+   }
+  ],
+  "children": [],
+  "planets": [],
+  "temperatures": {
+   "n": 0,
+   "median": null,
+   "min": null,
+   "max": null,
+   "column": "mesFe_h.teff",
+   "references": []
+  }
+ },
+ "match": {
+  "same": true,
+  "how": "identifier",
+  "text": "SIMBAD lists Gaia DR3 156430817820015232 among the names of V* RW Aur B."
+ },
+ "derived": {
+  "from": "Gaia DR3",
+  "distance": {
+   "status": "from_parallax",
+   "pc": 183.34842589612654,
+   "pc_error": 11.175838776806176,
+   "ly": 598.0025845034737,
+   "ly_error": 36.450710933894214,
+   "parallax_over_error": 16.40578658638486,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.parallax",
+    "parallax_error"
+   ],
+   "formula": "distance [pc] = 1000 / parallax [mas]; light-years = pc x 3.26156; error = 1000 x parallax_error / parallax^2",
+   "reference": null
+  },
+  "distance_estimate": null,
+  "motion": {
+   "mas_per_year": 25.06240958589862,
+   "mas_per_year_error": 0.2613966936471767,
+   "arcsec_per_year": 0.025062409585898622,
+   "arcsec_per_year_error": 0.0002613966936471767,
+   "pixels_per_year": 0.004075188550552621,
+   "pixels_per_year_error": 4.250352742230515e-05,
+   "years_per_pixel": 245.38741891203873,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.pmra",
+    "gaiadr3.gaia_source.pmdec"
+   ],
+   "formula": "mu = sqrt(pmra^2 + pmdec^2); pixels a year = mu [arcsec/yr] / 6.15",
+   "reference": null
+  },
+  "speed": {
+   "km_s": 21.783188715620295,
+   "km_s_error": 1.4294329628008617,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.parallax",
+    "gaiadr3.gaia_source.pmra",
+    "gaiadr3.gaia_source.pmdec"
+   ],
+   "formula": "speed across the sky [km/s] = 4.74047 x mu [mas/yr] / parallax [mas]"
+  }
+ },
+ "portrait": {
+  "temperature": null,
+  "radius": null,
+  "luminosity": null
+ },
+ "neighbours": [
+  {
+   "catalogue": "Gaia DR3",
+   "name": "Gaia DR3 156430822114424576",
+   "source_id": "156430822114424576",
+   "simbad_name": "V* RW Aur A",
+   "simbad_type": {
+    "code": "Or*",
+    "label": "Orion variable",
+    "plain": "a young star whose brightness changes unevenly",
+    "candidate": false
+   },
+   "separation_arcsec": 1.65,
+   "east_arcsec": -1.54,
+   "north_arcsec": -0.59,
+   "from_object_arcsec": 1.52,
+   "g_mag": 12.18,
+   "bp_rp": 1.77,
+   "parallax": 6.406,
+   "parallax_error": 0.044,
+   "same_pixel": true
+  },
+  {
+   "catalogue": "Gaia DR3",
+   "name": "Gaia DR3 156430856474162688",
+   "source_id": "156430856474162688",
+   "simbad_name": null,
+   "simbad_type": null,
+   "separation_arcsec": 6.66,
+   "east_arcsec": -2.53,
+   "north_arcsec": 6.16,
+   "from_object_arcsec": 6.77,
+   "g_mag": 18.83,
+   "bp_rp": 1.09,
+   "parallax": -0.103,
+   "parallax_error": 0.283,
+   "same_pixel": false
+  }
+ ],
+ "notes": [
+  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
+  "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
+  "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty."
+ ],
+ "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"
+}

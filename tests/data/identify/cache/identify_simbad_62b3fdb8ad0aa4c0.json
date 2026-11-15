@@ -1,0 +1,1 @@
+{"service": "SIMBAD", "via": "SIMBAD (CfA mirror)", "query": "SELECT oidref, id FROM ident WHERE oidref IN (2669393, 13596720, 27556610, 27556611, 27556612) AND id LIKE 'Gaia DR3 %'", "asked": "2026-11-15", "rows": [{"oidref": 2669393, "id": "Gaia DR3 4472832130942575872"}]}

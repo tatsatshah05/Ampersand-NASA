@@ -1,0 +1,280 @@
+{
+ "query": {
+  "ra": 331.096653,
+  "dec": -56.800663,
+  "radius_arcsec": 4.0,
+  "epoch": 2026.0,
+  "neighbour_radius_arcsec": 15.0,
+  "pixel_arcsec": 6.15
+ },
+ "services": {
+  "gaia": {
+   "name": "Gaia DR3",
+   "answered": true,
+   "via": "ARI Heidelberg Gaia mirror",
+   "error": null,
+   "partial": []
+  },
+  "simbad": {
+   "name": "SIMBAD",
+   "answered": true,
+   "via": "SIMBAD (CfA mirror)",
+   "error": null,
+   "partial": []
+  }
+ },
+ "unreachable": [],
+ "nothing_catalogued": false,
+ "nearest_catalogued": null,
+ "searched_arcsec": 15.0,
+ "gaia": {
+  "source_id": "6412596012146801152",
+  "name": "Gaia DR3 6412596012146801152",
+  "separation_arcsec": 0.0,
+  "east_arcsec": 0.0,
+  "north_arcsec": 0.0,
+  "position": {
+   "ra": 331.0966534,
+   "dec": -56.8006627,
+   "epoch": 2026.0
+  },
+  "catalogue_position": {
+   "ra": 331.07645259656397,
+   "dec": -56.79381206688221,
+   "epoch": 2016.0
+  },
+  "spectral_class": null,
+  "spectral_class_column": null,
+  "values": [
+   {
+    "key": "parallax",
+    "label": "Parallax",
+    "value": 270.6580324694526,
+    "error": 0.6895573139190674,
+    "lower": null,
+    "upper": null,
+    "unit": "mas",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.parallax",
+    "error_column": "parallax_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "pmra",
+    "label": "Proper motion, east (includes cos dec)",
+    "value": 3981.97666296105,
+    "error": 0.6016567945480347,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.pmra",
+    "error_column": "pmra_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "pmdec",
+    "label": "Proper motion, north",
+    "value": -2466.8318147663504,
+    "error": 0.6256827116012573,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.pmdec",
+    "error_column": "pmdec_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "phot_g_mean_mag",
+    "label": "G magnitude (visible light)",
+    "value": 18.030664443969727,
+    "error": 0.005309970339683706,
+    "lower": null,
+    "upper": null,
+    "unit": "mag",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.phot_g_mean_mag",
+    "error_column": "from phot_g_mean_flux_over_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "bp_rp",
+    "label": "BP-RP colour",
+    "value": 5.081964492797852,
+    "error": 0.1829862456076236,
+    "lower": null,
+    "upper": null,
+    "unit": "mag",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.bp_rp",
+    "error_column": "from phot_bp_mean_flux_over_error and phot_rp_mean_flux_over_error",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "ruwe",
+    "label": "RUWE (about 1 for a well-fitted single star)",
+    "value": 4.295541286468506,
+    "error": null,
+    "lower": null,
+    "upper": null,
+    "unit": "",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.gaia_source.ruwe",
+    "error_column": null,
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   },
+   {
+    "key": "teff_espucd",
+    "label": "Temperature, ESP-UCD (ultracool dwarfs)",
+    "value": 1416.964599609375,
+    "error": 98.1231918334961,
+    "lower": null,
+    "upper": null,
+    "unit": "K",
+    "catalogue": "Gaia DR3",
+    "column": "gaiadr3.astrophysical_parameters.teff_espucd",
+    "error_column": "teff_espucd_uncertainty",
+    "range_columns": null,
+    "reference": null,
+    "note": null
+   }
+  ]
+ },
+ "simbad": {
+  "oid": 3387843,
+  "main_id": "* eps Ind B",
+  "display_name": "eps Ind B",
+  "separation_arcsec": 0.06,
+  "east_arcsec": 0.03,
+  "north_arcsec": 0.05,
+  "position": {
+   "ra": 331.0966688,
+   "dec": -56.8006492,
+   "epoch": 2026.0
+  },
+  "type": {
+   "code": "BD*",
+   "label": "brown dwarf",
+   "plain": "bigger than a planet, too small to shine like a star",
+   "candidate": false
+  },
+  "spectral_type": {
+   "text": "T1V+T6V",
+   "class": "T",
+   "luminosity_class": "V",
+   "label": "T dwarf",
+   "plain": "a cool brown dwarf",
+   "pair": true,
+   "parts": [
+    "T1V",
+    "T6V"
+   ]
+  },
+  "spectral_type_reference": "2005AJ....129.2849B",
+  "references": 179,
+  "gaia_dr3_ids": [
+   "6412596012146801152"
+  ],
+  "parents": [],
+  "children": [],
+  "planets": [],
+  "temperatures": {
+   "n": 0,
+   "median": null,
+   "min": null,
+   "max": null,
+   "column": "mesFe_h.teff",
+   "references": []
+  }
+ },
+ "match": {
+  "same": true,
+  "how": "identifier",
+  "text": "SIMBAD lists Gaia DR3 6412596012146801152 among the names of * eps Ind B."
+ },
+ "derived": {
+  "from": "Gaia DR3",
+  "distance": {
+   "status": "from_parallax",
+   "pc": 3.6946991407427134,
+   "pc_error": 0.009413010181093275,
+   "ly": 12.050496884978074,
+   "ly_error": 0.030701133040762087,
+   "parallax_over_error": 392.50984219307327,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.parallax",
+    "parallax_error"
+   ],
+   "formula": "distance [pc] = 1000 / parallax [mas]; light-years = pc x 3.26156; error = 1000 x parallax_error / parallax^2",
+   "reference": null
+  },
+  "distance_estimate": null,
+  "motion": {
+   "mas_per_year": 4684.164530277503,
+   "mas_per_year_error": 0.6270988637363765,
+   "arcsec_per_year": 4.684164530277503,
+   "arcsec_per_year_error": 0.0006270988637363765,
+   "pixels_per_year": 0.7616527691508134,
+   "pixels_per_year_error": 0.00010196729491648397,
+   "years_per_pixel": 1.312934240513464,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.pmra",
+    "gaiadr3.gaia_source.pmdec"
+   ],
+   "formula": "mu = sqrt(pmra^2 + pmdec^2); pixels a year = mu [arcsec/yr] / 6.15",
+   "reference": null
+  },
+  "speed": {
+   "km_s": 82.04132498678831,
+   "km_s_error": 0.21075517695450355,
+   "catalogue": "Gaia DR3",
+   "inputs": [
+    "gaiadr3.gaia_source.parallax",
+    "gaiadr3.gaia_source.pmra",
+    "gaiadr3.gaia_source.pmdec"
+   ],
+   "formula": "speed across the sky [km/s] = 4.74047 x mu [mas/yr] / parallax [mas]"
+  }
+ },
+ "portrait": {
+  "temperature": {
+   "key": "teff_espucd",
+   "label": "Temperature, ESP-UCD (ultracool dwarfs)",
+   "value": 1416.964599609375,
+   "error": 98.1231918334961,
+   "lower": null,
+   "upper": null,
+   "unit": "K",
+   "catalogue": "Gaia DR3",
+   "column": "gaiadr3.astrophysical_parameters.teff_espucd",
+   "error_column": "teff_espucd_uncertainty",
+   "range_columns": null,
+   "reference": null,
+   "note": null
+  },
+  "radius": null,
+  "luminosity": null
+ },
+ "neighbours": [],
+ "notes": [
+  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
+  "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift.",
+  "Gaia's ranges for temperature, radius, luminosity and distance are the 16th to 84th percentiles of its own fit; they are known to understate the real uncertainty."
+ ],
+ "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"
+}

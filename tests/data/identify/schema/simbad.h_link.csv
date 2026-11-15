@@ -1,0 +1,5 @@
+column_name,datatype,unit,description
+"link_bibcode","CHAR",,"link reference"
+"membership","SMALLINT","percent","membership probability"
+"child","BIGINT",,"child oid"
+"parent","BIGINT",,"parent oid"

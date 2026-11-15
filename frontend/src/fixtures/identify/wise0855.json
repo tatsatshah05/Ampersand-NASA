@@ -1,0 +1,197 @@
+{
+ "query": {
+  "ra": 133.759765,
+  "dec": -7.242182,
+  "radius_arcsec": 4.0,
+  "epoch": 2026.0,
+  "neighbour_radius_arcsec": 15.0,
+  "pixel_arcsec": 6.15
+ },
+ "services": {
+  "gaia": {
+   "name": "Gaia DR3",
+   "answered": true,
+   "via": "ARI Heidelberg Gaia mirror",
+   "error": null,
+   "partial": []
+  },
+  "simbad": {
+   "name": "SIMBAD",
+   "answered": true,
+   "via": "SIMBAD (CfA mirror)",
+   "error": null,
+   "partial": []
+  }
+ },
+ "unreachable": [],
+ "nothing_catalogued": false,
+ "nearest_catalogued": null,
+ "searched_arcsec": 15.0,
+ "gaia": null,
+ "simbad": {
+  "oid": 8596164,
+  "main_id": "WISEA J085510.74-071442.5",
+  "display_name": "WISEA J085510.74-071442.5",
+  "separation_arcsec": 0.0,
+  "east_arcsec": 0.0,
+  "north_arcsec": -0.0,
+  "position": {
+   "ra": 133.7597653,
+   "dec": -7.2421822,
+   "epoch": 2026.0
+  },
+  "type": {
+   "code": "BD*",
+   "label": "brown dwarf",
+   "plain": "bigger than a planet, too small to shine like a star",
+   "candidate": false
+  },
+  "spectral_type": {
+   "text": "Y2",
+   "class": "Y",
+   "luminosity_class": null,
+   "label": "Y dwarf",
+   "plain": "the coldest kind of brown dwarf known",
+   "pair": false,
+   "parts": [
+    "Y2"
+   ]
+  },
+  "spectral_type_reference": "2015ApJ...799...37L",
+  "references": 145,
+  "gaia_dr3_ids": [],
+  "parents": [],
+  "children": [],
+  "planets": [],
+  "temperatures": {
+   "n": 0,
+   "median": null,
+   "min": null,
+   "max": null,
+   "column": "mesFe_h.teff",
+   "references": []
+  },
+  "values": [
+   {
+    "key": "plx_value",
+    "label": "Parallax",
+    "value": 439,
+    "error": 2.4,
+    "lower": null,
+    "upper": null,
+    "unit": "mas",
+    "catalogue": "SIMBAD",
+    "column": "basic.plx_value",
+    "error_column": "plx_err",
+    "range_columns": null,
+    "reference": "2021ApJS..253....7K",
+    "note": null
+   },
+   {
+    "key": "pmra",
+    "label": "Proper motion, east (includes cos dec)",
+    "value": -8123.7,
+    "error": 1.3,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "SIMBAD",
+    "column": "basic.pmra",
+    "error_column": "pm_err_maj/min/angle",
+    "range_columns": null,
+    "reference": "2021ApJS..253....7K",
+    "note": null
+   },
+   {
+    "key": "pmdec",
+    "label": "Proper motion, north",
+    "value": 673.2,
+    "error": 1.3,
+    "lower": null,
+    "upper": null,
+    "unit": "mas/yr",
+    "catalogue": "SIMBAD",
+    "column": "basic.pmdec",
+    "error_column": "pm_err_maj/min/angle",
+    "range_columns": null,
+    "reference": "2021ApJS..253....7K",
+    "note": null
+   }
+  ]
+ },
+ "match": null,
+ "derived": {
+  "from": "SIMBAD",
+  "distance": {
+   "status": "from_parallax",
+   "pc": 2.277904328018223,
+   "pc_error": 0.012453235506249967,
+   "ly": 7.42953024411716,
+   "ly_error": 0.04061702183572024,
+   "parallax_over_error": 182.91666666666669,
+   "catalogue": "SIMBAD",
+   "inputs": [
+    "basic.plx_value",
+    "plx_err"
+   ],
+   "formula": "distance [pc] = 1000 / parallax [mas]; light-years = pc x 3.26156; error = 1000 x parallax_error / parallax^2",
+   "reference": "2021ApJS..253....7K"
+  },
+  "distance_estimate": null,
+  "motion": {
+   "mas_per_year": 8151.5458613688725,
+   "mas_per_year_error": 1.3,
+   "arcsec_per_year": 8.151545861368872,
+   "arcsec_per_year_error": 0.0013,
+   "pixels_per_year": 1.3254546116046946,
+   "pixels_per_year_error": 0.0002113821138211382,
+   "years_per_pixel": 0.7544581242124354,
+   "catalogue": "SIMBAD",
+   "inputs": [
+    "basic.pmra",
+    "basic.pmdec"
+   ],
+   "formula": "mu = sqrt(pmra^2 + pmdec^2); pixels a year = mu [arcsec/yr] / 6.15",
+   "reference": "2021ApJS..253....7K"
+  },
+  "speed": {
+   "km_s": 88.02314894750943,
+   "km_s_error": 0.48142465657365296,
+   "catalogue": "SIMBAD",
+   "inputs": [
+    "basic.plx_value",
+    "basic.pmra",
+    "basic.pmdec"
+   ],
+   "formula": "speed across the sky [km/s] = 4.74047 x mu [mas/yr] / parallax [mas]"
+  }
+ },
+ "portrait": {
+  "temperature": null,
+  "radius": null,
+  "luminosity": null
+ },
+ "neighbours": [
+  {
+   "catalogue": "Gaia DR3",
+   "name": "Gaia DR3 5756956644387831296",
+   "source_id": "5756956644387831296",
+   "simbad_name": null,
+   "simbad_type": null,
+   "separation_arcsec": 6.81,
+   "east_arcsec": -5.71,
+   "north_arcsec": 3.71,
+   "from_object_arcsec": 6.82,
+   "g_mag": 16.31,
+   "bp_rp": 0.72,
+   "parallax": 0.286,
+   "parallax_error": 0.05,
+   "same_pixel": false
+  }
+ ],
+ "notes": [
+  "Gaia DR3 was read from the ARI Heidelberg Gaia mirror: the same tables as ESA's archive.",
+  "Positions are moved to the date asked for with each catalogue's own proper motion (and Gaia's radial velocity), without the yearly parallax shift."
+ ],
+ "credit": "ESA Gaia DR3; SIMBAD (CDS, Strasbourg)"
+}
