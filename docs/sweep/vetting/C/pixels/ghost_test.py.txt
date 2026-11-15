@@ -1,0 +1,107 @@
+"""Ghost test with the 0.34 deg cutouts centred on V345 Nor (the 607 Jy Mira 7.7' north of the candidate).
+
+Hypothesis: the candidate is an optical ghost of V345 Nor at a fixed offset in detector pixels, V0 = (candidate - star)
+measured in the Feb-Mar 2026 exposures of each detector. Then in EVERY exposure a ghost of comparable brightness must
+sit at star + V0 (detector pixels). With the spacecraft turned by ~175 deg in Jul-Aug 2025 and Jul-Sep 2026, that place
+is ~7.7' NORTH of the star. Measure, in every D5 and D6 exposure: (a) the candidate's sky position, (b) the predicted
+ghost position star + V0, (c) a control: star - V0 (the other side). Aperture photometry as in measure.py.
+"""
+import glob
+import json
+import os
+import sys
+import warnings
+
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from measure import ap_sum, gfit, sky_level, PHOT_BAD
+
+STAR = (241.715125, -52.076250)
+POS = json.load(open(os.path.join(HERE, "position.json")))
+CAND = (POS["ra"], POS["dec"])
+R = {(r["obs_id"], r["det"]): r for r in json.load(open(os.path.join(HERE, "measurements.json")))}
+GEO = {(g["obs_id"], g["det"]): g for g in json.load(open(os.path.join(HERE, "geometry.json")))}
+
+
+def det_offset(hd):
+    return (float(hd["CRVAL1A"]) + 1.0 - float(hd["CRPIX1A"]), float(hd["CRVAL2A"]) + 1.0 - float(hd["CRPIX2A"]))
+
+
+def measure_at(data, fl, w, to_mjy, x, y):
+    ny, nx = data.shape
+    if not (20.5 <= x < nx - 20.5 and 20.5 <= y < ny - 20.5):
+        return None
+    sky, _, _ = sky_level(data, fl, x, y, 14.0, 20.0)
+    if sky is None:
+        return None
+    v, bits, nbad, _ = ap_sum(data, fl, x, y, sky, to_mjy)
+    return {"flux": v, "nbad": nbad}
+
+
+def main():
+    files = sorted(glob.glob(os.path.join(HERE, "downloads", "big", "*", "*.fits")))
+    # V0 per detector, from the bright epoch (median candidate - star vector, detector pixels)
+    v0 = {}
+    for d in (5, 6):
+        vs = [-np.array(g["stars"][0]["vec"]) for k, g in GEO.items() if k[1] == d and g["ep"] == 1]
+        v0[d] = np.median(vs, axis=0)
+    print("V0 (candidate minus star, detector px):", {d: np.round(v, 2).tolist() for d, v in v0.items()})
+    rows = []
+    for p in files:
+        base = os.path.basename(p)[:-5]
+        oid, dd = base.rsplit("_D", 1)
+        d = int(dd)
+        with fits.open(p) as h:
+            hd = h["IMAGE"].header
+            img = h["IMAGE"].data.astype(float)
+            fl = h["FLAGS"].data.astype(np.int64)
+            var = h["VARIANCE"].data.astype(float)
+            zod = h["ZODI"].data.astype(float)
+        w = WCS(hd)
+        data = img - zod
+        with np.errstate(invalid="ignore"):
+            data[img < -10.0 * np.sqrt(var)] = np.nan
+        to_mjy = float(proj_plane_pixel_area(w)) * (np.pi / 180.0) ** 2 * 1e9
+        ox, oy = det_offset(hd)
+        sx, sy = (float(t) for t in w.all_world2pix(STAR[0], STAR[1], 0))
+        cx, cy = (float(t) for t in w.all_world2pix(CAND[0], CAND[1], 0))
+        gx, gy = sx + v0[d][0], sy + v0[d][1]          # predicted ghost (same detector offset as in Feb-Mar)
+        hx, hy = sx - v0[d][0], sy - v0[d][1]          # control: the other side of the star
+        gra, gde = (float(t) for t in w.all_pix2world(gx, gy, 0))
+        rec = {"obs_id": oid, "det": d, "ep": R[(oid, d)]["ep"], "mjd": R[(oid, d)]["mjd"],
+               "wave_cand": R[(oid, d)].get("wave_um"), "ghost_ra": gra, "ghost_dec": gde,
+               "ghost_from_cand_arcsec": float(np.hypot((gra - CAND[0]) * np.cos(np.radians(CAND[1])), gde - CAND[1]) * 3600),
+               "cand": measure_at(data, fl, w, to_mjy, cx, cy), "ghost": measure_at(data, fl, w, to_mjy, gx, gy),
+               "other": measure_at(data, fl, w, to_mjy, hx, hy)}
+        # what is found near the predicted ghost: brightest pixel within 3 px and a Gaussian fit there
+        ny_, nx_ = data.shape
+        g = gfit(data, fl, gx, gy, half=4) if (5 <= gx < nx_ - 5 and 5 <= gy < ny_ - 5) else None
+        if g is not None:
+            fra, fde = (float(t) for t in w.all_pix2world(g["x"], g["y"], 0))
+            rec["ghost_fit"] = {"dist_px": float(np.hypot(g["x"] - gx, g["y"] - gy)), "amp": g["amp"],
+                                "fwhm_arcsec": 2.3548 * g["sigma_px"] * 6.15}
+        rows.append(rec)
+    json.dump(rows, open(os.path.join(HERE, "ghost_test.json"), "w"), indent=0)
+    names = {0: "Jul-Aug 2025", 1: "Feb-Mar 2026", 2: "Apr 2026", 3: "Jul-Sep 2026"}
+    for d in (5, 6):
+        for ep in (0, 1, 2, 3):
+            rr = [r for r in rows if r["det"] == d and r["ep"] == ep]
+            if not rr:
+                continue
+            def med(key):
+                v = [r[key]["flux"] for r in rr if r[key] and r[key]["nbad"] == 0]
+                return (np.median(v) if v else float("nan")), len(v)
+            c, nc = med("cand"); g, ng = med("ghost"); o, no = med("other")
+            sep = np.median([r["ghost_from_cand_arcsec"] for r in rr])
+            print(f"D{d} {names[ep]:13s}: candidate place {c:7.1f} mJy (n={nc:2d})   predicted ghost place {g:7.1f} (n={ng:2d}, "
+                  f"{sep/60:5.1f}' from candidate)   other side {o:7.1f} (n={no:2d})")
+
+
+if __name__ == "__main__":
+    main()

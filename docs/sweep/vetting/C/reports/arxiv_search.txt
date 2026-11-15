@@ -1,0 +1,72 @@
+== 2026-11-15T05:01Z HTTP 200 query [all:SPHEREx AND all:transient] total 5 returned, 4 since 2025
+   2026-11-09 2611.13181v1 Dust Reverberation Mapping of Low-Mass Active Galactic Nuclei
+   2026-07-02 2607.02809v1 Tracing the Boundary of the South Atlantic Anomaly Region with SPHEREx Transient Flagging Rates
+   2026-03-11 2603.10952v1 Gaia-GIC-1: An Evolving Catastrophic Planetesimal Collision Candidate
+   2026-02-06 2602.07129v1 SPHEREx as a frontier for infrared transients: Classification of new Galactic FU Ori outbursts and classical novae
+== 2026-11-15T05:02Z HTTP 200 query [all:SPHEREx AND all:nova] total 2 returned, 2 since 2025
+   2026-03-13 2603.12991v1 Detection of a molecular hydrogen envelope around nova GK Persei
+   2026-02-06 2602.07129v1 SPHEREx as a frontier for infrared transients: Classification of new Galactic FU Ori outbursts and classical novae
+== 2026-11-15T05:02Z HTTP 200 query [all:SPHEREx AND all:outburst] total 1 returned, 1 since 2025
+   2026-02-06 2602.07129v1 SPHEREx as a frontier for infrared transients: Classification of new Galactic FU Ori outbursts and classical novae
+== 2026-11-15T05:02Z HTTP 200 query [all:SPHEREx AND all:eruptive] total 1 returned, 1 since 2025
+   2026-03-13 2603.12991v1 Detection of a molecular hydrogen envelope around nova GK Persei
+== 2026-11-15T05:03Z HTTP 200 query [all:SPHEREx AND all:variability] total 16 returned, 10 since 2025
+   2026-11-09 2611.12846v1 Forward modeling linear variable filter data: High resolution PAH and Paschen-$α$ maps from SPHEREx
+   2026-09-24 2609.30551v2 Breaking the AGB Color Degeneracy with Variability and H$_2$O: A Consistent Picture of AGB Chemistry, Dust, and the J-Region Across Environments
+   2026-06-03 2606.04624v1 Blue Straggler Stars in Berkeley 18: A Multiwavelength Study of Their Physical Properties and Dynamical Evolution
+   2026-04-20 2605.00851v1 Observations of Atmospheric Helium and Oxygen with SPHEREx
+   2026-03-25 2603.24668v1 A Probabilistic Autoencoder for Galaxy SED Reconstruction and Redshift Estimation: Application to Mock SPHEREx Spectrophotometry
+   2026-03-11 2603.10952v1 Gaia-GIC-1: An Evolving Catastrophic Planetesimal Collision Candidate
+   2026-02-25 2602.21502v1 A Decade-Long Increasing Mid-Infrared Luminosity in Galaxy NGC6447: a Turning-On Candidate of Active Galactic Nucleus
+   2026-02-09 2602.09139v3 Spectral response of SPHEREx
+   2025-12-08 2512.07318v3 SPHEREx Pre-Perihelion Mapping of $\mathrm{H_2O}$, $\mathrm{CO_2}$, and $\mathrm{CO}$ in Interstellar Object 3I/ATLAS
+   2025-09-02 2509.02414v1 Disentangling Target Lines from Interlopers and Continuum with Neural Networks: A SPHEREx Intensity Mapping Case Study
+== 2026-11-15T05:03Z HTTP 200 query [all:SPHEREx AND abs:"young stellar"] total 3 returned, 2 since 2025
+   2026-10-27 2610.38043v1 Evolutionary Demographics of Molecular Ice Mantles in Young Stars with SPHEREx
+   2025-02-04 2502.01978v1 Resolved Stellar Mass Estimation of Nearby Late-type Galaxies for the SPHEREx Era: Dependence on Stellar Population Synthesis Models
+== 2026-11-15T05:03Z HTTP 200 query [all:SPHEREx AND all:variable] total 16 returned, 10 since 2025
+   2026-11-09 2611.12846v1 Forward modeling linear variable filter data: High resolution PAH and Paschen-$α$ maps from SPHEREx
+   2026-09-24 2609.30551v2 Breaking the AGB Color Degeneracy with Variability and H$_2$O: A Consistent Picture of AGB Chemistry, Dust, and the J-Region Across Environments
+   2026-06-03 2606.04624v1 Blue Straggler Stars in Berkeley 18: A Multiwavelength Study of Their Physical Properties and Dynamical Evolution
+   2026-04-20 2605.00851v1 Observations of Atmospheric Helium and Oxygen with SPHEREx
+   2026-03-25 2603.24668v1 A Probabilistic Autoencoder for Galaxy SED Reconstruction and Redshift Estimation: Application to Mock SPHEREx Spectrophotometry
+   2026-03-11 2603.10952v1 Gaia-GIC-1: An Evolving Catastrophic Planetesimal Collision Candidate
+   2026-02-25 2602.21502v1 A Decade-Long Increasing Mid-Infrared Luminosity in Galaxy NGC6447: a Turning-On Candidate of Active Galactic Nucleus
+   2026-02-09 2602.09139v3 Spectral response of SPHEREx
+   2025-12-08 2512.07318v3 SPHEREx Pre-Perihelion Mapping of $\mathrm{H_2O}$, $\mathrm{CO_2}$, and $\mathrm{CO}$ in Interstellar Object 3I/ATLAS
+   2025-09-02 2509.02414v1 Disentangling Target Lines from Interlopers and Continuum with Neural Networks: A SPHEREx Intensity Mapping Case Study
+== 2026-11-15T05:03Z HTTP 200 query [abs:"infrared transient" AND abs:Galactic] total 9 returned, 3 since 2025
+   2026-09-09 2609.10675v1 A data processing pipeline for the WINTER near-infrared surveyor using the $\texttt{mirar}$ framework
+   2025-12-18 2512.16753v2 The WINTER Observatory: A One-Degree InGaAs Survey Camera to study the Transient Infrared Sky
+   2025-09-04 2509.04560v2 Multi-color characterization of optically invisible FU Orionis-type outbursts: Demonstration and prospects for the WINTER survey
+== 2026-11-15T05:03Z HTTP 200 query [abs:WINTER AND abs:transient] total 33 returned, 8 since 2025
+   2026-09-09 2609.10675v1 A data processing pipeline for the WINTER near-infrared surveyor using the $\texttt{mirar}$ framework
+   2025-12-18 2512.16753v2 The WINTER Observatory: A One-Degree InGaAs Survey Camera to study the Transient Infrared Sky
+   2025-12-12 2512.11454v1 Optimizing infectious disease mitigation under dynamic conditions
+   2025-11-22 2511.18018v2 A Unified Blister and Subglacial Hydrology Framework for Supraglacial Lake Drainage Events
+   2025-09-16 2509.12807v2 Constraining Atmospheric River Uncertainty Using Instantaneous Poleward Latent Heat Transport
+   2025-09-04 2509.04560v2 Multi-color characterization of optically invisible FU Orionis-type outbursts: Demonstration and prospects for the WINTER survey
+   2025-05-14 2505.09691v1 The slow brightening of WNTR23bzdiq / WTP19aalzlk : Possible onset of common-envelope evolution in an asymptotic giant branch star?
+   2025-04-16 2504.12384v2 WINTER on S250206dm: A near-infrared search for an electromagnetic counterpart to a gravitational-wave event
+== 2026-11-15T05:03Z HTTP 200 query [abs:PRIME AND abs:"infrared" AND abs:transient] total 15 returned, 4 since 2025
+   2026-05-24 2605.25209v1 Inverse Compton scattering occurring in a reverse-shock scenario involving a kilonova: A channel of TeV gamma-ray photons
+   2026-04-06 2604.05019v2 The neighboring stars of N6946-BH1 and the observational characteristics of failed supernovae
+   2025-09-29 2509.25440v1 A Near-Infrared Extinction and Reddening Map Towards the Galactic Bulge Using UKIRT
+   2025-08-20 2508.14474v2 The Prime Focus Infrared Microlensing Experiment (PRIME): First Results
+== 2026-11-15T05:03Z HTTP 200 query [abs:VVVX AND abs:eruptive] total 1 returned, 1 since 2025
+   2026-10-13 2610.19018v1 SPICY 30021: an embedded bona fide FUor with a mid-infrared precursor
+== 2026-11-15T05:03Z HTTP 200 query [abs:"eruptive young" AND abs:2025] total 0 returned, 0 since 2025
+== 2026-11-15T05:03Z HTTP 200 query [abs:"FU Orionis" AND abs:outburst AND abs:2026] total 0 returned, 0 since 2025
+== 2026-11-15T05:03Z HTTP 200 query [abs:"episodic accretion" AND abs:outburst AND abs:NEOWISE] total 1 returned, 0 since 2025
+== 2026-11-15T05:03Z HTTP 200 query [all:Norma AND all:nova] total 5 returned, 0 since 2025
+== 2026-11-15T05:04Z HTTP 200 query [abs:G330.4] total 0 returned, 0 since 2025
+== ti:"embedded FUor" 200
+   2026-04-21 2604.19551v1 Characterizing and spectrally modeling embedded FUor eruptions in the near-infrared
+== abs:IGRINS AND abs:FUor AND abs:NEOWISE 200
+== au:Li_Jiaxun AND abs:FUor 200
+   2026-04-21 2604.19551v1 Characterizing and spectrally modeling embedded FUor eruptions in the near-infrared
+   2024-06-26 2406.18303v1 A population of mid-infrared large-amplitude variable young stellar objects from unTimely
+== abs:FUor AND abs:candidates AND abs:"four" 200
+   2026-04-21 2604.19551v1 Characterizing and spectrally modeling embedded FUor eruptions in the near-infrared
+   2023-11-30 2311.18187v1 New Eruptive YSOs from SPICY and WISE
+   2025-01-07 2501.03929v1 Eruptive YSOs in Cygnus-X: a mid-infrared variability study with NEOWISE and SPICY

@@ -1,0 +1,27 @@
+"""Control for sb_ident: at (2) Pallas's geocentric position from Horizons (2026-03-03 00:10 UTC), with fields of
+0.02 and 0.05 degrees, sb_ident must list Pallas. Same parameters otherwise as the queries at C."""
+import json, sys, time, math, requests
+S = requests.Session(); S.headers["User-Agent"] = "generic-client/1.0"
+def hms(deg):
+    t = (deg % 360) / 15; h = int(t); m = int((t - h) * 60); return f"{h:02d}-{m:02d}-{(t - h - m / 60) * 3600:05.2f}"
+def dms(deg):
+    s = "M" if deg < 0 else ""; a = abs(deg); d = int(a); m = int((a - d) * 60); return f"{s}{d:02d}-{m:02d}-{(a - d - m / 60) * 3600:05.2f}"
+ra, dec = 340.98224, -1.68352
+out = []
+for half in (0.02, 0.05):
+    p = {"mpc-code": "500", "obs-time": "2026-03-03_00:10:00", "fov-ra-center": hms(ra), "fov-dec-center": dms(dec),
+         "fov-ra-hwidth": f"{half / math.cos(math.radians(dec)):.4f}", "fov-dec-hwidth": f"{half:.4f}",
+         "two-pass": "true", "suppress-first-pass": "true"}
+    for k in range(4):
+        try:
+            r = S.get("https://ssd-api.jpl.nasa.gov/sb_ident.api", params=p, timeout=240)
+            if r.status_code == 200:
+                rep = r.json(); break
+            rep = {"error": f"HTTP {r.status_code}"}
+        except Exception as e:
+            rep = {"error": type(e).__name__}
+        time.sleep(15 * (k + 1))
+    names = [row[0] for row in rep.get("data_second_pass", [])]
+    print(f"half-width {half} deg: n_second_pass={rep.get('n_second_pass')} error={rep.get('error')} warning={rep.get('warning')} names={names[:8]}", flush=True)
+    out.append({"params": p, "reply": rep})
+json.dump(out, open(sys.argv[1], "w"), indent=1)

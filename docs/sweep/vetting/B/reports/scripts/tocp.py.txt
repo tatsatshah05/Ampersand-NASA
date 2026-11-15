@@ -1,0 +1,19 @@
+import re, sys
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+txt = open(sys.argv[1], errors="replace").read()
+names = sorted(set(re.findall(r"\b((?:TCP|PNV|PSN|XOT|MOT|TOCP)\s?J(\d{2})(\d{2})(\d{2})(\d{2})([+-])(\d{2})(\d{2})(\d{2})(\d))", txt)))
+print("designations parsed:", len(names))
+ras, decs, nm = [], [], []
+for n in names:
+    full, hh, mm, ss, cs, sg, dd, dm, ds, dcs = n
+    ras.append((int(hh) + int(mm) / 60 + (int(ss) + int(cs) / 100) / 3600) * 15)
+    d = int(dd) + int(dm) / 60 + (int(ds) + int(dcs) / 10) / 3600
+    decs.append(-d if sg == "-" else d); nm.append(full)
+cat = SkyCoord(ras, decs, unit="deg")
+for tag, (r, d) in {"B": (253.18044, -44.67687), "V7994Sgr": (270.96983, -31.45739), "V462Lup": (227.01362, -40.14308)}.items():
+    s = SkyCoord(r, d, unit="deg").separation(cat).arcsec
+    idx = s.argsort()[:4]
+    print(tag, [(nm[i], round(float(s[i]), 1)) for i in idx])
+    near = [nm[i] for i in range(len(nm)) if s[i] < 3600]
+    print("   within 1 deg:", near)

@@ -1,0 +1,37 @@
+VSX API target 0.016666666666666666 deg: 200 349 bytes
+   rows: 1
+    Gaia DR3 4069172520146611584 270.81659 -23.46476 L 15.14 G 15.66 G None Gaia collaboration
+VizieR B/vsx target 60 arcsec: 200 637
+   no table / could not parse: ValueError('1:61: syntax error') b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">\n<HTML><HEAD><TITLE>VOTable Error</TITLE>\n<BODY bgcolor=\'#ffe0e0\'><FONT SIZE=\'+1\'>\nThe database is not currently reachable.\n<PRE>\n****\n**** -- no connection\n**** Report from: stdb_pg,     Status: STDB_ERR\n****Postgres connect error\n****\n*'
+SIMBAD target 0.016666666666666666 deg: 200 853
+   rows: 1
+    ['2MASS J18031598-2327530', 270.81658819719166, -23.464762619733893, 'LP?', 43.90362628178974]
+
+VSX API v7994sgr 0.016666666666666666 deg: 200 2016 bytes
+   rows: 7
+    OGLE-BLG-ECL-279826 270.95279 -31.45761 E 16.586 Ic (0.241) Ic 2457000.2345 I. Soszynski et al. (OGLE)
+    OGLE-BLG-ECL-279910 270.95475 -31.45431 EC 16.427 Ic (0.541) Ic 2457000.0462 I. Soszynski et al. (OGLE)
+    OGLE-BLG-ECL-280162 270.96029 -31.44408 E 18.394 Ic (0.303) Ic 2457000.1179 I. Soszynski et al. (OGLE)
+    OGLE-BLG-ECL-280254 270.96217 -31.45111 E 18.375 Ic (0.292) Ic 2457000.0465 I. Soszynski et al. (OGLE)
+    V7994 Sgr 270.96983 -31.45739 NA 6.6 V <23 V 2460944.6 John Seach
+    OGLE-BLG-LPV-195903 270.97671 -31.44256 SR 13.584 Ic (0.084) Ic None I. Soszynski et al. (OGLE)
+    OGLE-BLG-ECL-281337 270.98667 -31.45458 EC 15.565 Ic (0.504) Ic 2457000.6218 I. Soszynski et al. (OGLE)
+VizieR B/vsx v7994sgr 60 arcsec: 200 2296
+   no table / could not parse: IndexError('No table found in VOTABLE file.') b'<?xml version="1.0" encoding="UTF-8"?>\n<VOTABLE version="1.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xmlns="http://www.ivoa.net/xml/VOTable/v1.3"\n  xsi:schemaLocation="http://www.ivoa.net/xml/VOTable/v1.3 http://www.ivoa.net/xml/VOTable/v1.3">\n <DESCRIPTION>\n   VizieR Astronomical S'
+SIMBAD v7994sgr 0.016666666666666666 deg: 200 1269
+   rows: 6
+    ['OGLE BLG-ECL-280254', 270.96217138351994, -31.451084011089996, 'EB*', 32.68845512231753]
+    ['OGLE BLG-ECL-279910', 270.95474190645996, -31.454293446220003, 'EB*', 47.65695622597114]
+    ['OGLE BLG-ECL-279826', 270.95279798848, -31.45761747153, 'EB*', 52.3099952508748]
+    ['OGLE BLG-ECL-281337', 270.98666977256994, -31.45456984217, 'EB*', 52.70124019092503]
+    ['OGLE BLG-ECL-280162', 270.96028246331, -31.444081891069995, 'EB*', 56.169824231314095]
+    ['OGLE BLG-LPV-195903', 270.97668412378835, -31.44254789464028, 'LP*', 57.42853613343491]
+
+VSX API v462lup 0.016666666666666666 deg: 200 307 bytes
+   rows: 1
+    V0462 Lup 227.01362 -40.14308 NA 5.2 V 18.5 V 2460847.3 ASAS-SN
+VizieR B/vsx v462lup 60 arcsec: 200 637
+   no table / could not parse: ValueError('1:61: syntax error') b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">\n<HTML><HEAD><TITLE>VOTable Error</TITLE>\n<BODY bgcolor=\'#ffe0e0\'><FONT SIZE=\'+1\'>\nThe database is not currently reachable.\n<PRE>\n****\n**** -- no connection\n**** Report from: stdb_pg,     Status: STDB_ERR\n****Postgres connect error\n****\n*'
+SIMBAD v462lup 0.016666666666666666 deg: 200 763
+   rows: 0
+

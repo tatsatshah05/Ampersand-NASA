@@ -1,0 +1,31 @@
+"""Control for each VizieR table: take its first row (no position), then cone-search that row's own position (5").
+If the cone finds it, the same request style would have found an object at our position."""
+import sys, requests, time
+UA = {"User-Agent": "generic-astro-client/1.0"}
+URL = "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv"
+def get(p):
+    for t in range(4):
+        try:
+            r = requests.get(URL, params=p, headers=UA, timeout=120)
+            if r.status_code == 200: return r.text
+        except Exception: pass
+        time.sleep(3)
+    return ""
+def rows(text):
+    hdr = None; out = []; skip = 0
+    for line in text.splitlines():
+        if line.startswith("#") or not line.strip(): 
+            if line.startswith("#Name:"): hdr = None
+            continue
+        parts = [x.strip() for x in line.split("\t")]
+        if hdr is None: hdr = parts; skip = 2; continue
+        if skip: skip -= 1; continue
+        out.append(dict(zip(hdr, parts)))
+    return out
+for tab in sys.argv[1].split(";"):
+    first = rows(get({"-source": tab, "-out.max": "1", "-out.add": "_RAJ,_DEJ", "-out": "_RAJ,_DEJ"}))
+    if not first:
+        print(tab, "CONTROL: could not fetch a first row"); continue
+    ra, de = first[0].get("_RAJ2000"), first[0].get("_DEJ2000")
+    hit = rows(get({"-source": tab, "-c": f"{ra} {de}", "-c.rs": "5", "-out.max": "5", "-out.add": "_r"}))
+    print(tab, f"CONTROL at its own row {ra} {de}: cone(5\") returned {len(hit)} rows; nearest _r={hit[0].get('_r') if hit else None}")

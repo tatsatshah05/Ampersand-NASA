@@ -114,7 +114,8 @@ describe('the page while a view loads', () => {
     expect(onPlate).toContain('class="plate busy"')
     expect(onPlate).toContain('class="stage"')
     for (const n of [1, 2, 3]) expect(onPlate).toContain(`src="/frames/visit${n}.png"`)
-    expect(onPlate).toContain("Loading Barnard&#x27;s Star…")
+    // An address with no position opens on Candidate B (address.ts, LANDING).
+    expect(onPlate).toContain('Loading Candidate B…')
   })
 
   it('keeps the player, the strip and the readout in place, with nothing to press', () => {

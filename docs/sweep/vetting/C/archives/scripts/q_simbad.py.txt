@@ -1,0 +1,21 @@
+"""SIMBAD (Harvard mirror TAP) within 2 and 10 arcmin of candidate C, with object types."""
+import sys, warnings
+warnings.filterwarnings("ignore")
+sys.path.insert(0, __file__.rsplit("/", 1)[0])
+from qlib import *
+
+adql = f"""SELECT b.main_id, b.otype, d.description AS otype_txt, b.ra, b.dec,
+ DISTANCE(POINT('ICRS',b.ra,b.dec),POINT('ICRS',{RA},{DEC}))*3600.0 AS sep_arcsec, b.nbref
+ FROM basic AS b LEFT JOIN otypedef AS d ON b.otype = d.otype
+ WHERE CONTAINS(POINT('ICRS',b.ra,b.dec),CIRCLE('ICRS',{RA},{DEC},{600/3600.0}))=1
+ ORDER BY sep_arcsec"""
+t = simbad_tap(adql, "simbad_10arcmin")
+print(f"SIMBAD within 10 arcmin: {len(t)} rows")
+t.pprint(max_lines=400, max_width=220)
+# K / other fluxes for those within 60"
+ids = [str(x) for x in t["main_id"][t["sep_arcsec"] < 60]]
+if ids:
+    q2 = f"""SELECT b.main_id, f.filter, f.flux FROM basic b JOIN flux f ON f.oidref=b.oid
+     WHERE CONTAINS(POINT('ICRS',b.ra,b.dec),CIRCLE('ICRS',{RA},{DEC},{60/3600.0}))=1"""
+    t2 = simbad_tap(q2, "simbad_fluxes_60")
+    t2.pprint(max_lines=100)

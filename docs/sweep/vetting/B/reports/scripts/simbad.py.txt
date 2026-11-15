@@ -1,0 +1,23 @@
+"""SIMBAD TAP cone search (tries CDS then the CfA mirror). usage: python -I simbad.py OUTDIR TAG RA DEC RADIUS_ARCSEC"""
+import sys, urllib.parse, urllib.request, datetime
+
+out, tag, ra, dec, rad = sys.argv[1:6]
+r = float(rad) / 3600
+q = (f"SELECT b.main_id, b.otype, b.ra, b.dec, DISTANCE(POINT('ICRS', b.ra, b.dec), POINT('ICRS', {ra}, {dec}))*3600 AS sep_arcsec "
+     f"FROM basic AS b WHERE CONTAINS(POINT('ICRS', b.ra, b.dec), CIRCLE('ICRS', {ra}, {dec}, {r})) = 1 ORDER BY sep_arcsec")
+for base in ("https://simbad.cds.unistra.fr/simbad/sim-tap/sync", "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync"):
+    url = base + "?" + urllib.parse.urlencode({"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv", "QUERY": q})
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; generic-research-client/1.0)"})
+        txt = urllib.request.urlopen(req, timeout=120).read().decode("utf-8", "replace")
+    except Exception as e:
+        print("UTC", datetime.datetime.now(datetime.UTC).isoformat(), base, "FAILED", repr(e)[:200])
+        continue
+    print("UTC", datetime.datetime.now(datetime.UTC).isoformat(), "endpoint", base)
+    print("ADQL:", q)
+    open(f"{out}/simbad_{tag}.csv", "w").write(txt)
+    lines = txt.strip().splitlines()
+    print(f"-- {tag}: {len(lines) - 1} rows")
+    for l in lines[:60]:
+        print("  ", l)
+    break

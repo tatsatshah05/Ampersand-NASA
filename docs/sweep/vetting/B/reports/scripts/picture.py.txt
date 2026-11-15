@@ -1,0 +1,32 @@
+"""Picture for the position check: one Aug 2025 and one Aug 2026 D6 exposure, with catalogued positions circled."""
+import sys
+src = open(sys.argv[1]).read().split("# picture:")[0]
+sys.argv = ["x", sys.argv[2], "unused"]
+exec(src)
+import numpy as np
+from PIL import Image, ImageDraw
+S = 26; N = 13
+panels = []
+cols = [(255,80,80),(80,200,255),(255,220,60),(120,255,120),(255,140,255),(200,200,200)]
+for name, sel in (("Aug 2025 D6", faint), ("Aug 2026 D6", bright)):
+    sel6 = sorted([r for r in sel if r[1] == 6], key=lambda r: r[0])
+    r = sel6[len(sel6)//2]
+    x0, y0 = float(r[5][0]), float(r[5][1]); ix, iy = int(round(x0)), int(round(y0))
+    st = r[6][iy-6:iy+7, ix-6:ix+7]
+    lo, hi = np.nanpercentile(st, 5), np.nanmax(st)
+    a = np.nan_to_num(np.clip((st - lo) / (hi - lo + 1e-9), 0, 1) ** 0.5)
+    img = Image.fromarray((a[::-1] * 255).astype(np.uint8)).resize((N*S, N*S), Image.NEAREST).convert("RGB")
+    d = ImageDraw.Draw(img)
+    for (k, v), c in zip(REF.items(), cols):
+        px, py = [float(t) for t in r[7].world_to_pixel(v)]
+        X = (px - (ix - 6) + 0.5) * S; Y = (N - (py - (iy - 6) + 0.5)) * S
+        d.ellipse([X-9, Y-9, X+9, Y+9], outline=c, width=2)
+    d.text((4, 4), f"{name}  {r[0]}  (13x13 px, 6.15 arcsec/px)", fill=(255,255,0))
+    panels.append(img)
+W = Image.new("RGB", (2*N*S + 10, N*S + 130), (20,20,20))
+W.paste(panels[0], (0, 0)); W.paste(panels[1], (N*S + 10, 0))
+d = ImageDraw.Draw(W)
+for i, ((k, v), c) in enumerate(zip(REF.items(), cols)):
+    d.text((6, N*S + 6 + 19*i), "o " + k, fill=c)
+W.save(sys.argv[0] if False else "B_position_check.png")
+print("saved B_position_check.png")

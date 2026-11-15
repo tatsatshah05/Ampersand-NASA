@@ -1,0 +1,48 @@
+== glimpse_s07_ar: 42 rows within 30" of sweep position; nearest to X:
+    3.79"  designation=SSTGLMA G341.0882-00.4146  mag3_6=14.238  mag4_5=--  mag5_8=--  mag8_0=--
+    4.36"  designation=SSTGLMA G341.0893-00.4165  mag3_6=12.695  mag4_5=12.472  mag5_8=--  mag8_0=--
+    6.64"  designation=SSTGLMA G341.0899-00.4143  mag3_6=14.524  mag4_5=--  mag5_8=--  mag8_0=--
+    9.33"  designation=SSTGLMA G341.0861-00.4164  mag3_6=12.533  mag4_5=12.072  mag5_8=--  mag8_0=--
+   10.22"  designation=SSTGLMA G341.0873-00.4181  mag3_6=14.151  mag4_5=--  mag5_8=--  mag8_0=--
+   10.28"  designation=SSTGLMA G341.0912-00.4166  mag3_6=9.122  mag4_5=9.098  mag5_8=8.659  mag8_0=8.699
+== deepglimpsec: 14 rows within 30" of sweep position; nearest to X:
+   10.29"  designation=SSTGLMDPC G341.0912-00.4166  mag3_6=9.151  mag4_5=9.026
+   15.24"  designation=SSTGLMDPC G341.0852-00.4182  mag3_6=14.663  mag4_5=14.323
+   21.26"  designation=SSTGLMDPC G341.0831-00.4180  mag3_6=14.868  mag4_5=14.736
+   22.93"  designation=SSTGLMDPC G341.0831-00.4190  mag3_6=15.704  mag4_5=--
+   24.80"  designation=SSTGLMDPC G341.0818-00.4170  mag3_6=14.866  mag4_5=14.572
+   25.22"  designation=SSTGLMDPC G341.0817-00.4140  mag3_6=14.254  mag4_5=14.198
+== deepglimpsea: 87 rows within 30" of sweep position; nearest to X:
+    2.47"  designation=SSTGLMDPA G341.0878-00.4157  mag3_6=15.46  mag4_5=14.846
+    3.76"  designation=SSTGLMDPA G341.0882-00.4146  mag3_6=14.66  mag4_5=13.912
+    3.93"  designation=SSTGLMDPA G341.0892-00.4164  mag3_6=--  mag4_5=12.722
+    4.92"  designation=SSTGLMDPA G341.0871-00.4153  mag3_6=16.32  mag4_5=15.437
+    6.71"  designation=SSTGLMDPA G341.0899-00.4143  mag3_6=14.556  mag4_5=14.259
+    8.14"  designation=SSTGLMDPA G341.0862-00.4153  mag3_6=14.551  mag4_5=15.388
+== apoglimpsec: 1 rows within 30" of sweep position; nearest to X:
+   10.37"  designation=SSTAPOGLC G341.0912-00.4166  mag3_6=9.115  mag4_5=--
+== apoglimpsea: 84 rows within 30" of sweep position; nearest to X:
+    2.57"  designation=SSTAPOGLA G341.0878-00.4157  mag3_6=15.61  mag4_5=--
+    3.79"  designation=SSTAPOGLA G341.0882-00.4145  mag3_6=14.65  mag4_5=--
+    5.54"  designation=SSTAPOGLA G341.0886-00.4140  mag3_6=15.371  mag4_5=--
+    6.18"  designation=SSTAPOGLA G341.0878-00.4140  mag3_6=15.464  mag4_5=--
+    7.15"  designation=SSTAPOGLA G341.0899-00.4142  mag3_6=14.539  mag4_5=--
+    7.89"  designation=SSTAPOGLA G341.0863-00.4153  mag3_6=15.259  mag4_5=--
+== unwise_2019: 44 rows within 30" of sweep position; nearest to X:
+    3.73"  unwise_objid=2534m455o0156651  flux_1=5982.1  flux_2=8835.5  fracflux_1=0.16  fracflux_2=0.11
+    3.75"  unwise_objid=2538m440o0176248  flux_1=5782.1  flux_2=--  fracflux_1=0.15  fracflux_2=--
+    5.66"  unwise_objid=2534m455o0234468  flux_1=--  flux_2=2247.2  fracflux_1=--  fracflux_2=0.16
+    9.58"  unwise_objid=2538m440o0059302  flux_1=6904.4  flux_2=10281.0  fracflux_1=0.6  fracflux_2=0.6
+    9.58"  unwise_objid=2534m455o0070389  flux_1=6950.1  flux_2=10213.0  fracflux_1=0.6  fracflux_2=0.59
+   10.25"  unwise_objid=2538m440o0000919  flux_1=171850.0  flux_2=237580.0  fracflux_1=0.98  fracflux_2=0.98
+== glimpsepropc: 0 rows within 30"
+== mipsgalc: 0 rows within 30"
+== msxc6: 0 rows within 30"
+== akari_irc: 0 rows within 30"
+== iraspsc: 0 rows within 30"
+== higal70: 0 rows within 30"
+== higal360clump: 0 rows within 30"
+== glimpse2_v2arc: 0 rows within 30"
+== glimpse3d_v2arc: 0 rows within 30"
+== glimpsepropa: 0 rows within 30"
+== redmsx: 0 rows within 30"

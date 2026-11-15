@@ -1,0 +1,56 @@
+import json, os, sys
+import numpy as np
+sys.path.insert(0, os.path.dirname(__file__))
+from common import W
+
+S = json.load(open(f"{W}/out/shape.json"))
+E = {r["file"]: r["epoch"] for r in json.load(open(f"{W}/out/pass1_epochs.json"))}
+for s in S:
+    s["ep"] = E[s["file"]]
+
+
+def conc(x):
+    return x["ap15"] / x["ap25"] if (x.get("ap15") is not None and x.get("ap25") not in (None, 0)) else None
+
+
+print("Per detector and visit: target vs comparison stars of similar brightness (fitted flux within x2.5), same model")
+print("FWHM arcsec (round fit), axis ratio q (elliptical fit), concentration r1.5/r2.5; comparison = median over all comp-star fits in those exposures")
+summary = {}
+for det in range(1, 7):
+    for ep in range(3):
+        ss = [s for s in S if s["det"] == det and s["ep"] == ep and s["target"]]
+        if not ss:
+            continue
+        tF = [s["target"]["F_mjy"] for s in ss]
+        tf = [s["target"]["sigma"] * 2.3548 * s["pixscale"] for s in ss]
+        tq = [s["target"].get("q") for s in ss if s["target"].get("q")]
+        tc = [conc(s["target"]) for s in ss if conc(s["target"])]
+        cf, cq, cc, cF, nexp = [], [], [], [], 0
+        for s in ss:
+            F = s["target"]["F_mjy"]
+            if F is None or F <= 0:
+                continue
+            m = [c for c in s["comps"] if F / 2.5 <= c["F_mjy"] <= F * 2.5 and c["nsat_box"] == 0]
+            nexp += bool(m)
+            cf += [c["sigma"] * 2.3548 * s["pixscale"] for c in m]
+            cq += [c["q"] for c in m if c.get("q")]
+            cc += [conc(c) for c in m if conc(c)]
+            cF += [c["F_mjy"] for c in m]
+        def md(a):
+            return f"{np.median(a):.2f}" if len(a) else "-"
+        def sd(a):
+            return f"{1.4826*np.median(np.abs(np.array(a)-np.median(a))):.2f}" if len(a) > 2 else "-"
+        print(f"D{det} ep{ep}: target F {np.median(tF):7.1f} mJy | FWHM {md(tf)} (sd {sd(tf)}) vs comps {md(cf)} (sd {sd(cf)}, n={len(cf)}, F~{md(cF)}) | "
+              f"q {md(tq)} vs {md(cq)} | conc {md(tc)} vs {md(cc)} (n_exp with comps {nexp}/{len(ss)})")
+        summary[f"D{det}_ep{ep}"] = dict(target_F=float(np.median(tF)), fwhm_t=tf, fwhm_c=cf, q_t=tq, q_c=cq, c_t=tc, c_c=cc)
+json.dump(summary, open(f"{W}/out/shape_summary.json", "w"))
+
+# FWHM vs flux for comparison stars, D6 and D5, by visit, to see if brightness changes the fitted width
+print("\nComparison-star FWHM by flux bin (all exposures):")
+for det in (4, 5, 6):
+    allc = [(c["F_mjy"], c["sigma"] * 2.3548 * s["pixscale"], conc(c), c["nov"]) for s in S if s["det"] == det for c in s["comps"] if c["nsat_box"] == 0]
+    allc = np.array([(a, b, cc if cc else np.nan, n) for a, b, cc, n in allc])
+    for lo, hi in [(10, 30), (30, 100), (100, 300), (300, 1000), (1000, 3000)]:
+        k = (allc[:, 0] >= lo) & (allc[:, 0] < hi)
+        if k.sum():
+            print(f"  D{det} {lo}-{hi} mJy: n={k.sum()}, FWHM {np.median(allc[k,1]):.2f}, conc {np.nanmedian(allc[k,2]):.3f}, with overflow {int((allc[k,3]>0).sum())}")

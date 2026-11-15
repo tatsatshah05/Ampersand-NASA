@@ -1,0 +1,16 @@
+"""Fetch D5/D6 (and optionally D3/D4) cutouts centred on the 607 Jy star 7.7' north of the candidate, 0.34 deg
+wide, so the candidate (7.7' south of the star) and the point mirrored through the star (7.7' north of it) are
+both inside. Reads only the needed rows from the public S3 copy (backend/s3fetch.py); writes to downloads/big."""
+import json, os, sys
+from pathlib import Path
+sys.path.insert(0, "<repository>/.claude/worktrees/agent-afd7766a5a5ec349f")
+from backend import s3fetch
+HERE = os.path.dirname(os.path.abspath(__file__))
+LIST = "<repository>/backend/cache/sweep/queries/sia_467099e13fb36aac.json"
+STAR = (241.715125, -52.076250)
+dets = [int(d) for d in sys.argv[1:]] or [6, 5]
+exps = [e for e in json.load(open(LIST)) if e["detector"] in dets]
+res = s3fetch.fetch_cutouts(exps, STAR[0], STAR[1], 0.34, Path(HERE) / "downloads" / "big", max_concurrent=8)
+bad = [(e["obs_id"], e["detector"], err) for e, p, err in res if p is None]
+print("fetched", len(res) - len(bad), "failed", len(bad))
+for b in bad[:10]: print(b)

@@ -1,0 +1,55 @@
+import json, numpy as np, collections
+FS = json.load(open("fieldstars.json")); R = {(r["obs_id"], r["det"]): r for r in json.load(open("measurements.json"))}
+stars = {s["name"]: s for s in FS["stars"]}
+# per star, per detector, per epoch: median flux of clean measurements
+by = collections.defaultdict(list)
+for ex in FS["exposures"]:
+    r = R[(ex["obs_id"], ex["det"])]
+    for s in ex["stars"]:
+        if s["ok"] and s["flux"] is not None:
+            by[(s["name"], ex["det"], r["ep"])].append(s["flux"])
+med = {k: np.median(v) for k, v in by.items() if len(v) >= 3}
+spikes = [("2026W09_2A_0120_2", 5), ("2026W09_2A_0120_3", 5), ("2026W10_1A_0205_2", 6), ("2026W10_1A_0205_3", 6),
+          ("2026W10_1A_0205_1", 3), ("2026W10_1A_0205_2", 3), ("2026W08_2A_0617_3", 4), ("2026W08_2A_0578_2", 4),
+          ("2026W09_2A_0120_2", 2), ("2026W09_1A_0384_3", 5), ("2026W09_2A_0389_1", 6), ("2026W09_2A_0389_2", 6), ("2026W10_1A_0327_1", 6)]
+print("Spike exposures: candidate flux vs comparison stars' flux / their own median (same detector, same epoch)")
+for oid, d in spikes:
+    r = R[(oid, d)]
+    ex = [e for e in FS["exposures"] if e["obs_id"] == oid and e["det"] == d][0]
+    rat = [s["flux"] / med[(s["name"], d, r["ep"])] for s in ex["stars"] if s["ok"] and (s["name"], d, r["ep"]) in med
+           and med[(s["name"], d, r["ep"])] > 15]
+    print(f"  {oid} D{d} {r['wave_um']:.3f}um  candidate {r['flux']:6.1f} mJy ({r['status']})  stars: n={len(rat)} median ratio {np.median(rat):.3f}  range {min(rat):.2f}-{max(rat):.2f}")
+# all exposures: distribution of the median star ratio (calibration stability)
+allr = []
+for ex in FS["exposures"]:
+    r = R[(ex["obs_id"], ex["det"])]
+    rat = [s["flux"] / med[(s["name"], ex["det"], r["ep"])] for s in ex["stars"] if s["ok"] and (s["name"], ex["det"], r["ep"]) in med
+           and med[(s["name"], ex["det"], r["ep"])] > 15]
+    if len(rat) >= 3: allr.append(np.median(rat))
+allr = np.array(allr)
+print(f"all exposures: median star ratio per exposure: 5-95% {np.percentile(allr,5):.3f}-{np.percentile(allr,95):.3f}, n={len(allr)}")
+# FWHM: comparison stars of similar brightness (30-400 mJy in that exposure) vs candidate, bright epoch, per detector
+print("\nFWHM (Gaussian fit, same fitter, arcsec): candidate vs comparison stars 30-400 mJy, Feb-Apr 2026 exposures")
+for d in range(1, 7):
+    cand = [R[k]["g_fwhm_arcsec"] for k in R if k[1] == d and R[k].get("ep") in (1, 2) and R[k].get("flux") and R[k]["flux"] > 30
+            and R[k].get("g_fwhm_arcsec") and R[k]["n_bad_ap"] == 0]
+    comp = [s["fwhm"] for ex in FS["exposures"] if ex["det"] == d and R[(ex["obs_id"], d)].get("ep") in (1, 2)
+            for s in ex["stars"] if s["ok"] and s.get("fwhm") and s["flux"] and 30 < s["flux"] < 400]
+    if cand and comp:
+        print(f"  D{d}: candidate median {np.median(cand):.2f} (n={len(cand)}, range {min(cand):.2f}-{max(cand):.2f})  stars median {np.median(comp):.2f} (n={len(comp)}, 16-84% {np.percentile(comp,16):.2f}-{np.percentile(comp,84):.2f})")
+    elif comp:
+        print(f"  D{d}: candidate: no clean bright fit; stars median {np.median(comp):.2f} (n={len(comp)})")
+# astrometric scatter of comparison stars in the bright epoch, D4-D6, flux 50-400 mJy
+print("\nComparison-star centroid offsets from AllWISE (D4-D6, Feb-Mar 2026, 50-400 mJy):")
+for d in (3, 4, 5, 6):
+    oe = []; on = []; per_star_sd = []
+    for name in stars:
+        e_ = [s["off_e"] for ex in FS["exposures"] if ex["det"] == d and R[(ex["obs_id"], d)].get("ep") == 1 for s in ex["stars"]
+              if s["name"] == name and s["ok"] and s.get("off_e") is not None and s["flux"] and 50 < s["flux"] < 400]
+        n_ = [s["off_n"] for ex in FS["exposures"] if ex["det"] == d and R[(ex["obs_id"], d)].get("ep") == 1 for s in ex["stars"]
+              if s["name"] == name and s["ok"] and s.get("off_n") is not None and s["flux"] and 50 < s["flux"] < 400]
+        if len(e_) >= 5:
+            per_star_sd.append((np.std(e_, ddof=1), np.std(n_, ddof=1)))
+    if per_star_sd:
+        a = np.array(per_star_sd)
+        print(f"  D{d}: {len(a)} stars, per-star sd of centroid over exposures: median E {np.median(a[:,0]):.2f} N {np.median(a[:,1]):.2f} arcsec")

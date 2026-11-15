@@ -1,0 +1,48 @@
+import sys, os, glob, numpy as np, warnings
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.stats import sigma_clipped_stats
+from scipy.optimize import least_squares
+warnings.filterwarnings("ignore")
+sys.path.insert(0, "<repository>/.claude/worktrees/agent-afd7766a5a5ec349f")
+from backend import photometry
+STARS = {"16523695-4440310": (253.153979, -44.675282), "16523648-4440071": (253.152015, -44.668659),
+         "16525070-4441274": (253.211265, -44.690960), "16523352-4440399": (253.139687, -44.677769),
+         "16525276-4440079": (253.219850, -44.668888), "16524962-4438501": (253.206791, -44.647263),
+         "16523230-4440192": (253.134612, -44.672005), "16524412-4440318(R)": (253.183849, -44.675522)}
+D = "<repository>/backend/cache/sweep/cutouts/b464db86a4"
+def fit(img, flg, x, y):
+    bad = (flg & photometry.PHOTOMETRY_BAD) != 0
+    yy, xx = np.mgrid[0:img.shape[0], 0:img.shape[1]]
+    ix, iy = int(round(x)), int(round(y))
+    ring = (np.hypot(xx-x, yy-y) > 8) & (np.hypot(xx-x, yy-y) < 14) & ~bad & np.isfinite(img)
+    sky = sigma_clipped_stats(img[ring])[1]
+    box = (np.abs(xx-ix) <= 2) & (np.abs(yy-iy) <= 2) & ~bad & np.isfinite(img)
+    if box.sum() < 20: return None
+    z = img[box] - sky
+    f = lambda p: p[0]*np.exp(-((xx[box]-p[1])**2+(yy[box]-p[2])**2)/(2*p[3]**2)) + p[4] - z
+    try:
+        r = least_squares(f, [max(z.max(), 1e-3), x, y, 0.6, 0], bounds=([0, x-1.5, y-1.5, 0.3, -np.inf], [np.inf, x+1.5, y+1.5, 2, np.inf]))
+    except Exception: return None
+    return r.x
+out = {k: [] for k in STARS}
+for f in sorted(glob.glob(D + "/*_D[56].fits")):
+    with fits.open(f) as h:
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float); flg = h["FLAGS"].data; w = WCS(h["IMAGE"].header)
+    for name, (ra, dec) in STARS.items():
+        x, y = [float(v) for v in w.all_world2pix(ra, dec, 0)]
+        if not (5 < x < img.shape[1]-5 and 5 < y < img.shape[0]-5): continue
+        p = fit(img, flg, x, y)
+        if p is None or p[0] <= 0: continue
+        fra, fdec = [float(v) for v in w.all_pix2world(p[1], p[2], 0)]
+        dra = (fra-ra)*np.cos(np.radians(dec))*3600; ddec = (fdec-dec)*3600
+        out[name].append((dra, ddec))
+allo = []
+print("SPHEREx D5+D6 Gaussian centroids vs 2MASS positions (all epochs, all cached exposures)")
+for name, L in out.items():
+    a = np.array(L)
+    if len(a) == 0: print(name, "no fits"); continue
+    md = np.median(a, axis=0); tot = np.hypot(*md)
+    print(f"  {name:22s} n={len(a):3d}  median dRA*cosDec={md[0]:+.2f}\"  dDec={md[1]:+.2f}\"  |offset|={tot:.2f}\"  per-exposure scatter {1.4826*np.median(np.abs(a-md), axis=0)}")
+    allo.append(tot)
+print("median |offset| over control stars:", np.median(allo), " max:", np.max(allo))

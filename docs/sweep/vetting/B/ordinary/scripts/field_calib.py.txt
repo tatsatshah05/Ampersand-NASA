@@ -1,0 +1,63 @@
+"""Per-exposure calibration check: forced PSF fluxes of ~20 field stars in the same cutouts as the target.
+For each star, detector and epoch, log flux is fitted with a quadratic in wavelength; the median residual over
+stars in an exposure is that exposure's calibration offset. Writes out/field_calib.json."""
+import sys, os, glob, json, math
+import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fitlib as L
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+from fitlib2 import fit_at, neighbours_of, ep
+A = json.load(open(os.path.join(L.HERE, "out/astro_points.json")))
+corr = {p["file"]: (p.get("corr_e"), p.get("corr_n"), p.get("corr_scatter"), p["n_ref"], p["sigma_px"]) for p in A["points"]}
+refnames = {r[3] for r in L.refs}
+field = [(ra, de, k, nm) for ra, de, k, nm in L.stars if 8.5 < k < 11.0 and 40 < L.sep(ra, de, L.RA0, L.DEC0) < 240]
+# keep reasonably isolated ones: no 2MASS star with K < k+2 within 12"
+iso = []
+for ra, de, k, nm in field:
+    d = L.sep(L.S[:, 0], L.S[:, 1], ra, de)
+    if not ((d > 0.01) & (d < 12) & (L.S[:, 2] < k + 2)).any():
+        iso.append((ra, de, k, nm))
+iso = sorted(iso, key=lambda c: c[2])[:24]
+print("field stars", len(iso))
+rows = []
+for path in sorted(glob.glob(os.path.join(L.CUT, "*.fits"))):
+    fn = os.path.basename(path)
+    ce, cn, cs, nref, s = corr[fn]
+    if ce is None or nref < 3 or cs > 0.6:
+        continue
+    with fits.open(path) as h:
+        hd = h["IMAGE"].header; img = (h["IMAGE"].data - h["ZODI"].data).astype(float); flg = h["FLAGS"].data; wave = h["WAVE"].data
+        det = int(hd["DETECTOR"]); mjd = float(hd["MJD-AVG"]); wcs = WCS(hd)
+    if det < 2 or ep(mjd) == 0:
+        continue
+    ok = ((flg & L.BAD) == 0) & np.isfinite(img)
+    to_mjy = proj_plane_pixel_area(wcs) * (math.pi / 180) ** 2 * 1e9
+    for ra, de, k, nm in iso:
+        x, y = map(float, wcs.world_to_pixel_values(ra, de))
+        if not (6 <= x < 82 and 6 <= y < 82):
+            continue
+        fr = fit_at(img, ok, wcs, ra, de, s, ce, cn, neighbours_of(ra, de, kmax=12.5, rmax=22), free=False)
+        if fr and fr["amp"] > 0:
+            rows.append({"file": fn, "det": det, "mjd": mjd, "ep": ep(mjd), "star": nm, "wave": float(wave[int(round(y)), int(round(x))]), "flux": fr["amp"] * to_mjy})
+json.dump(rows, open(os.path.join(L.HERE, "out/field_calib_raw.json"), "w"))
+# residuals
+import collections
+grp = collections.defaultdict(list)
+for r in rows:
+    grp[(r["star"], r["det"], r["ep"])].append(r)
+resid = collections.defaultdict(list)
+for key, g in grp.items():
+    if len(g) < 6:
+        continue
+    w = np.array([r["wave"] for r in g]); f = np.log(np.array([r["flux"] for r in g]))
+    if np.median(np.exp(f)) < 15:
+        continue
+    c = np.polyfit(w - w.mean(), f, 2)
+    res = f - np.polyval(c, w - w.mean())
+    for r, x in zip(g, res):
+        resid[r["file"]].append(float(x))
+calib = {fn: {"median_resid": float(np.median(v)), "n": len(v), "mad": float(np.median(np.abs(np.array(v) - np.median(v))))} for fn, v in resid.items()}
+json.dump(calib, open(os.path.join(L.HERE, "out/field_calib.json"), "w"), indent=1)
+print("exposures with calibration", len(calib))

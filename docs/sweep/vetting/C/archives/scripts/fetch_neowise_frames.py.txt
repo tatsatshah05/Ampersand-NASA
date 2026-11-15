@@ -1,0 +1,30 @@
+"""Fetch 2'-cutouts of every NEOWISE single exposure (W1, W2) of the March 2022 visit from IRSA IBE."""
+import requests, time, gzip
+import numpy as np
+from pathlib import Path
+from astropy.table import Table
+UA = {"User-Agent": "Mozilla/5.0 (generic research client)"}
+A = Path(__file__).resolve().parent.parent
+out = A / "img" / "raw" / "neowise"
+t = Table.read(A / "data" / "neowise_2022mar_visit.csv", format="csv")
+frames = sorted({(str(s), int(f), round(float(m), 5)) for s, f, m in zip(t["scan_id"], t["frame_num"], t["mjd"])}, key=lambda x: x[2])
+print(len(frames), "frames")
+for scan, fr, mjd in frames:
+    for band in (2, 1):
+        fn = out / f"{mjd:.5f}_{scan}{fr:03d}-w{band}.fits"
+        if fn.exists():
+            continue
+        url = f"https://irsa.ipac.caltech.edu/ibe/data/wise/neowiser/p1bm_frm/{scan[-2:]}/{scan}/{fr:03d}/{scan}{fr:03d}-w{band}-int-1b.fits"
+        for i in range(4):
+            try:
+                r = requests.get(url, params={"center": "241.70912,-52.20566", "size": "120arcsec"}, headers=UA, timeout=90)
+                if r.status_code == 200:
+                    c = r.content
+                    if c[:2] == b"\x1f\x8b":
+                        c = gzip.decompress(c)
+                    if c[:6] == b"SIMPLE":
+                        fn.write_bytes(c); print("ok", fn.name); break
+                print(scan, fr, band, r.status_code)
+            except Exception as e:
+                print(scan, fr, band, repr(e)[:80])
+            time.sleep(4)

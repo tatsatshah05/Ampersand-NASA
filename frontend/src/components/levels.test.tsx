@@ -104,7 +104,24 @@ describe('the same frame at both levels', () => {
     for (const name of ['Young star in Serpens South', 'Nova V462 Lupi', 'Nova V572 Velorum']) {
       expect(html).toMatch(new RegExp(`class="target"[^>]*title="[^"]+"[^>]*aria-label="${name}"`))
     }
-    // The address's target is the one marked as on screen.
-    expect(html).toMatch(/aria-current="true">Barnard&#x27;s Star</)
+    // The address names no target, so the page opens on Candidate B, which is marked as on screen.
+    expect(html).toMatch(/aria-current="true">Candidate B</)
+    // Barnard's Star is still the first of the test stars, and an address that names it marks it.
+    expect(html.indexOf('>Barnard&#x27;s Star<')).toBeLessThan(html.indexOf('>Epsilon Indi B<'))
+    expect(viewerAt('?ra=269.446267&dec=4.768222&name=Barnard%27s+Star')).toMatch(/aria-current="true">Barnard&#x27;s Star</)
+  })
+
+  it('the three candidates come first, in their own named group, each described by the referee’s sentence', () => {
+    const html = viewerAt('')
+    const row = html.slice(html.indexOf('class="target-list"'))
+    const groups = [...row.matchAll(/role="group" aria-label="([^"]+)"/g)].map((m) => m[1])
+    expect(groups.slice(0, 3)).toEqual(['Candidates our search found', 'The challenge&#x27;s test targets', 'What we turned this tool on ourselves'])
+    const first = html.slice(html.indexOf('aria-label="Candidates our search found"'), html.indexOf('aria-label="The challenge&#x27;s test targets"'))
+    const buttons = [...first.matchAll(/class="target"[^>]*title="([^"]+)"[^>]*>([^<]+)<\/button>/g)].map((m) => [m[2], m[1]])
+    expect(buttons.map(([name]) => name)).toEqual(['Candidate A', 'Candidate B', 'Candidate C'])
+    for (const [name, title] of buttons) {
+      expect(title).toMatch(new RegExp(`^${name}, an infrared source in \\w+, was too faint to detect in SPHEREx images`))
+      expect(title).toMatch(/it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet\.$/)
+    }
   })
 })

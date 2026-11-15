@@ -1,0 +1,17 @@
+== ASAS-SN transients page: 9598 entries with positions
+  target: within 60 arcsec: 0; within 1 deg: 4
+        1008.4 arcsec  > ASASSN-21nk --- ------- 18:2:36.01 -23:13:31.4 2021-07-18.32 16.67 SDSS DSS VIZIER ------- CV candidate, matches to PS1 g=19.4, g>17.8 on 2021-07-16.79, g=16.7 on 2021-07-18.97 g=15.8 on 2021-07-19.18
+        2219.4 arcsec  > --- AT2025qzs ------- 18:1:9.66 -23:51:58.5 2025-07-14.82 15.79 SDSS DSS VIZIER ------- known SN candidate, z unknown, discovered 2025/07/12.644, Type unknown
+        3141.5 arcsec  > ASASSN-21ig --- ------- 18:3:56.17 -22:36:38.6 2021-05-17.54 15.49 SDSS DSS VIZIER ------- CV candidate, matches to PS1 g=18.9, g>18.6 on 2021-05-17.12, g=15.8 on 2021-05-17.54.
+  V7994 Sgr: within 60 arcsec: 2; within 1 deg: 3
+           1.2 arcsec  > --- TCP J18035290-3127298 ------- 18:3:52.67 -31:27:26 2026-02-7.37 15.76 SDSS DSS VIZIER ------- known nova, z unknown, discovered 2025-09-21.381
+           1.4 arcsec  > --- TCP J18035278-3127240 ------- 18:3:52.64 -31:27:26.2 2025-09-22.03 9.65 SDSS DSS VIZIER ------- known Nova candidate, z unknown, discovered 2025-09-21.095
+        2161.8 arcsec  > ASASSN-21sq --- ------- 18:5:9.15 -31:59:36.2 2021-10-3.01 16.19 SDSS DSS VIZIER ------- CV candidate, matches to GAIA DR2 G=19.5, g>16.9 on 2021-09-23.87, g=16.6 on 2021-09-25.85, g=17.0 on 2021-09-27.10, g=16.7 on 2021-10-04.0
+  V462 Lup: within 60 arcsec: 1; within 1 deg: 3
+           5.5 arcsec  > ASASSN-25cm AT 2025nlr TNS 15:8:3.27 -40:8:29.5 2025-06-12.87 -8.4 SDSS DSS VIZIER ------- bright transient, possibe Galactic Nova, posted to TNS
+        1308.5 arcsec  > ASASSN-20ij --- ------- 15:8:30.23 -39:47:23.8 2020-07-16.83 14.21 SDSS DSS VIZIER ------- CV candidate, matches to Guide Star j=22.2; g>17.3 on 2020-07-07.93, g=14.1 on 2020-07-15.92, g=14.6 on 2020-07-16.83
+        3302.8 arcsec  > ASASSN-15ld --- ------- 15:11:55.04 -39:36:8.4 2015-06-13.06 16.15 SDSS DSS VIZIER ------- CV candidate, Matches to USNO B=19.2 source, previous outbursts in CRTS, V>16.7 on 2015-06-08.95, V=16.0 on 2015-06-13.07.
+  V0691 Ser: within 60 arcsec: 1; within 1 deg: 1
+           1.8 arcsec  > --- TCP J18385851-0351482 ------- 18:38:58.54 -3:51:49.1 2025-07-18.74 13.28 SDSS DSS VIZIER ------- known Nova, z unknown, discovered 2025-07-17.9085
+        6168.9 arcsec  > ASASSN-19vw --- ------- 18:34:35.53 -5:11:1.4 2019-08-31.91 16.85 SDSS DSS VIZIER ------- CV candidate, matches to GAIA, DR2 G=20.3, g>18.9 on 2019-08-23.36, g=17.5 on 2019-08-28.17, g=17.4 on 2019-08-31.91, g=17.7 on 2019-09-01
+        9267.4 arcsec  > --- AT2026stb (ZTF26abfokua) ------- 18:31:15.56 -5:34:31.5 2026-07-11.28 -1.29 SDSS DSS VIZIER ------- known SN candidate, z=0, discovered 2026/07/08.275, Type Nova

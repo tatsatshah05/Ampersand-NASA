@@ -1,0 +1,13 @@
+import json, sys, numpy as np, collections
+d=json.load(open('out/astro_points.json'))
+print('neighbours fitted:', d['neighbours'])
+P=d['points']
+def ep(m): return 0 if m<61000 else (1 if m<61200 else 2)
+print(collections.Counter((p['det'],ep(p['mjd']),p['n_ref']) for p in P if p['det']>=3))
+for det in (2,3,4,5,6):
+  for e in (0,1,2):
+    q=[p for p in P if p['det']==det and ep(p['mjd'])==e and 'e' in p and p['flux_mjy']>0]
+    if not q: continue
+    E=np.array([p['e'] for p in q]); N=np.array([p['n'] for p in q]); F=np.array([p['flux_mjy'] for p in q]); C=np.array([p['corr_scatter'] for p in q])
+    nb=np.array([p['neigh_mjy'] for p in q])
+    print(f"D{det} ep{e} n={len(q):2d} E {np.median(E):+.2f} (sd {np.std(E):.2f}) N {np.median(N):+.2f} (sd {np.std(N):.2f}) | PSF flux med {np.median(F):7.1f} | refscat {np.median(C):.2f} | neigh med {np.round(np.median(nb,axis=0),1)}")

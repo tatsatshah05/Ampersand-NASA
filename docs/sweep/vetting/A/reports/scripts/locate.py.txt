@@ -1,0 +1,87 @@
+"""Where exactly is the change? Read the cached SPHEREx cutouts that cover the target (read-only), and for detectors
+5 and 6 measure the centroid of the source in each clean exposure, by epoch, and of the epoch-median difference.
+Compare with the target position and with the bright catalogued mid-IR source 17 arcsec away
+(AllWISE J180312.46-232746.7 = MIPSGAL MG006.7158-00.6311)."""
+import sys, glob, os, json, warnings
+import numpy as np
+warnings.filterwarnings("ignore")
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+
+CUT = "<repository>/backend/cache/sweep/cutouts"
+T = SkyCoord(270.80362, -23.46745, unit="deg")
+NB = SkyCoord(270.80192, -23.46297, unit="deg")  # AllWISE J180312.46-232746.7 (from the name; VizieR row 17.0")
+
+dirs = []
+for d in sorted(os.listdir(CUT)):
+    fs = sorted(glob.glob(os.path.join(CUT, d, "*.fits")))
+    if not fs:
+        continue
+    try:
+        h = fits.getheader(fs[0], "IMAGE")
+        w = WCS(h)
+        x, y = w.world_to_pixel(T)
+        if 0 <= x < h["NAXIS1"] and 0 <= y < h["NAXIS2"]:
+            cx, cy = (h["NAXIS1"] - 1) / 2, (h["NAXIS2"] - 1) / 2
+            c = w.pixel_to_world(cx, cy)
+            dirs.append((d, len(fs), c.separation(T).arcsec))
+    except Exception as e:
+        pass
+dirs.sort(key=lambda x: x[2])
+print("cutout folders covering the target (folder, files, centre offset arcsec):", dirs[:5])
+d0 = dirs[0][0]
+files = sorted(glob.glob(os.path.join(CUT, d0, "*.fits")))
+
+def centroid(img, x0, y0, r=2.5):
+    ny, nx = img.shape
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    # local background from a ring 6-10 px
+    rr = np.hypot(xx - x0, yy - y0)
+    ring = (rr > 6) & (rr < 10) & np.isfinite(img)
+    bg = np.nanmedian(img[ring])
+    m = (rr <= r) & np.isfinite(img)
+    v = np.clip(img[m] - bg, 0, None)
+    if v.sum() <= 0:
+        return None
+    return float((xx[m] * v).sum() / v.sum()), float((yy[m] * v).sum() / v.sum())
+
+rows = []
+for f in files:
+    det = int(os.path.basename(f).split("_D")[-1][0])
+    if det not in (5, 6):
+        continue
+    with fits.open(f) as h:
+        hd = h["IMAGE"].header
+        img = h["IMAGE"].data.astype(float) - h["ZODI"].data.astype(float)
+        flg = h["FLAGS"].data
+    w = WCS(hd)
+    mjd = hd["MJD-AVG"]
+    x, y = (float(v) for v in w.world_to_pixel(T))
+    if not (8 <= x < img.shape[1] - 8 and 8 <= y < img.shape[0] - 8):
+        continue
+    # iterate the centroid twice starting at the target
+    c = (x, y)
+    for _ in range(3):
+        c2 = centroid(img, *c)
+        if c2 is None:
+            break
+        c = c2
+    s = w.pixel_to_world(*c)
+    xn, yn = (float(v) for v in w.world_to_pixel(NB))
+    rows.append(dict(file=os.path.basename(f), det=det, mjd=mjd, epoch=("2025" if mjd < 60950 else ("2026a" if mjd < 61150 else "2026b")),
+                     cen_ra=s.ra.deg, cen_dec=s.dec.deg, off_target=s.separation(T).arcsec, off_neighbour=s.separation(NB).arcsec,
+                     px_target=[round(x, 2), round(y, 2)], px_neighbour=[round(xn, 2), round(yn, 2)],
+                     peak_target=float(np.nanmax(img[int(round(y))-1:int(round(y))+2, int(round(x))-1:int(round(x))+2])),
+                     peak_neighbour=float(np.nanmax(img[int(round(yn))-1:int(round(yn))+2, int(round(xn))-1:int(round(xn))+2]))))
+print(f"D5/D6 cutouts used: {len(rows)}")
+for ep in ("2025", "2026a", "2026b"):
+    r = [q for q in rows if q["epoch"] == ep]
+    if not r:
+        continue
+    ot = np.array([q["off_target"] for q in r]); on = np.array([q["off_neighbour"] for q in r])
+    pt = np.array([q["peak_target"] for q in r]); pn = np.array([q["peak_neighbour"] for q in r])
+    print(f"epoch {ep}: n={len(r)}  centroid offset from target: median {np.median(ot):.1f}\" (range {ot.min():.1f}-{ot.max():.1f});"
+          f" from the 17\" neighbour: median {np.median(on):.1f}\";  peak pixel (MJy/sr) at target median {np.median(pt):.1f}, at neighbour median {np.median(pn):.1f}")
+json.dump(rows, open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "notes", "locate_rows.json"), "w"), indent=1, default=str)

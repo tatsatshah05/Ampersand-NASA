@@ -1,0 +1,31 @@
+"""C's SPHEREx spectrum per visit (own 1.5-px photometry at the refined position), with line wavelengths marked. PIL only."""
+import json, math, sys
+from PIL import Image, ImageDraw
+recs = [json.loads(l) for l in open(sys.argv[1])]
+recs = [r for r in recs if r.get("status") == "measured" and r.get("f1.5") is not None]
+W_, H_, ml, mr, mt, mb = 1300, 620, 70, 20, 40, 60
+img = Image.new("RGB", (W_, H_), (255, 255, 255)); dr = ImageDraw.Draw(img)
+x0, x1 = 0.7, 5.05
+ylo, yhi = math.log10(0.5), math.log10(700)
+def X(l): return ml + (l - x0) / (x1 - x0) * (W_ - ml - mr)
+def Y(f): return H_ - mb - (math.log10(max(f, 0.5)) - ylo) / (yhi - ylo) * (H_ - mt - mb)
+lines = {"HeI 1.083": 1.083, "Pab": 1.2822, "Paa": 1.8756, "Brg": 2.1661, "Brb": 2.6259, "Pfd": 3.297, "Pfg": 3.7406,
+         "Bra": 4.0523, "[MgIV]": 4.4867, "Pfb": 4.6538}
+for n, l in lines.items():
+    dr.line([(X(l), mt), (X(l), H_ - mb)], fill=(220, 220, 220)); dr.text((X(l) + 2, mt - 14 + (8 if n in ('Pfb','Brg','Pfd') else 0)), n, fill=(120, 120, 120))
+for v in (1, 10, 100):
+    dr.line([(ml, Y(v)), (W_ - mr, Y(v))], fill=(235, 235, 235)); dr.text((8, Y(v) - 6), f"{v} mJy", fill=(0, 0, 0))
+for l in (1, 2, 3, 4, 5):
+    dr.text((X(l) - 6, H_ - mb + 6), f"{l} um", fill=(0, 0, 0))
+cols = {"Jul-Aug 2025": ((60860, 60920), (40, 90, 220)), "Feb-Apr 2026": ((61080, 61150), (220, 40, 40)), "Jul-Sep 2026": ((61240, 61300), (20, 150, 60))}
+for k, (lab, ((a, b), c)) in enumerate(cols.items()):
+    for r in recs:
+        if a < r["mjd"] < b:
+            x, y = X(r["um"]), Y(r["f1.5"])
+            if r["badshare1.5"] <= 0.15:
+                dr.ellipse([x - 3, y - 3, x + 3, y + 3], fill=c)
+            else:
+                dr.ellipse([x - 3, y - 3, x + 3, y + 3], outline=c)
+    dr.rectangle([ml + 10 + k * 180, H_ - 22, ml + 20 + k * 180, H_ - 12], fill=c); dr.text((ml + 24 + k * 180, H_ - 24), lab, fill=(0, 0, 0))
+dr.text((ml, 8), "Candidate C, RA 241.70905 Dec -52.20561: SPHEREx, every exposure, 9.2-arcsec-radius aperture (filled: clean, open: partly flagged; floor 0.5 mJy)", fill=(0, 0, 0))
+img.save(sys.argv[2]); print("saved")

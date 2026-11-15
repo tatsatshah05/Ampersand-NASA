@@ -1,0 +1,15 @@
+import sys, os, re
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from irsa_cones import cone
+tables = sys.argv[1].split(",")
+rad = float(sys.argv[2]) if len(sys.argv) > 2 else 30
+pat = re.compile(r"(desig|name|^ra$|^dec$|mag|flux|^f\d|fnu|_m$|snr|date|mjd|qual|flg|flag|class|^id$|^sname$|dist|close)", re.I)
+for t in tables:
+    try:
+        rows = cone(t, rad)
+    except Exception as e:
+        print("==", t, "ERROR", type(e).__name__, e); continue
+    if not rows: continue
+    keys = [k for k in rows[0].keys() if pat.search(k) and not k.startswith("_")][:40]
+    for r in rows[:30]:
+        print("  %6.2f\"  " % r["_sep"] + "  ".join(f"{k}={r[k]}" for k in keys if r[k] not in ("", None)))

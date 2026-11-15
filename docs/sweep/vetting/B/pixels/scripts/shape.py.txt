@@ -1,0 +1,145 @@
+"""Is candidate B star-shaped? Same fit for the target and for isolated catalogued field stars of the same exposure.
+
+For every exposure: the target and every isolated CatWISE star (W2 < 10.5, no CatWISE neighbour within 15 arcsec
+brighter than W2+2.5, > 40 arcsec from the target) are fitted with the same model: pixel-integrated round Gaussian,
+free position and width, catalogued neighbours within 32 arcsec at fixed places, constant sky (fit_multi), plus an
+elliptical fit (free sigma_x, sigma_y, angle) of the target/star alone on 5x5 pixels after subtracting the fitted
+neighbours, and a concentration index (aperture 1.5 px / 2.5 px, same sky ring).
+"""
+import json, os, sys
+from concurrent.futures import ProcessPoolExecutor
+import numpy as np
+from scipy.optimize import least_squares
+from scipy.special import erf
+sys.path.insert(0, os.path.dirname(__file__))
+from common import CUT, PHOT_BAD, RA0, DEC0, W, Cut, aperture, pix_gauss, saturated, sep_arcsec
+import measure as M
+
+CWR, CWD, CWW = M.CW_RA, M.CW_DE, M.CW_W2
+TMR, TMD, TMK = M.TM_RA, M.TM_DE, M.TM_K
+
+
+def comparison_stars(det):
+    out = []
+    if det >= 4:
+        R_, D_, MAG, lim = CWR, CWD, CWW, 10.5
+    else:
+        R_, D_, MAG, lim = TMR, TMD, TMK, 11.5
+    for i in np.where(MAG < lim)[0]:
+        if sep_arcsec(RA0, DEC0, R_[i], D_[i]) < 40:
+            continue
+        s = sep_arcsec(R_[i], D_[i], R_, D_)
+        if np.any((s > 1.0) & (s < 15) & (MAG < MAG[i] + 2.5)):
+            continue
+        out.append((R_[i], D_[i], MAG[i]))
+    return out
+
+
+COMP = {d: comparison_stars(d) for d in range(1, 7)}
+
+
+def neigh_for(det, ra, dec, excl):
+    if det >= 4:
+        s = sep_arcsec(ra, dec, CWR, CWD)
+        idx = np.where((s < 32) & (s > excl) & (CWW < 13.5))[0]
+        return [(CWR[i], CWD[i], "cw", CWW[i]) for i in idx]
+    s = sep_arcsec(ra, dec, TMR, TMD)
+    idx = np.where((s < 32) & (s > excl) & (TMK < 14))[0]
+    return [(TMR[i], TMD[i], "tm", TMK[i]) for i in idx]
+
+
+def ellip_fit(c, f, half=2):
+    """Elliptical pixel-sampled Gaussian on the residual image (neighbours subtracted), 5x5 pixels."""
+    xi, yi = int(round(f["x"])), int(round(f["y"]))
+    ys, xs = slice(yi - half, yi + half + 1), slice(xi - half, xi + half + 1)
+    yy, xx = np.mgrid[ys, xs]
+    d = c.data[ys, xs].copy(); v = c.var[ys, xs]; fl = c.flags[ys, xs]
+    good = np.isfinite(d) & np.isfinite(v) & ((fl & PHOT_BAD) == 0) & ~saturated(fl, d)
+    if good.sum() < 20:
+        return None
+    # subtract the fitted neighbours
+    for nb in f.get("_nxy", []):
+        d = d - nb[2] * pix_gauss(xx, yy, nb[0], nb[1], f["_sn"])
+    d = d - f["b"]
+    sub = 5
+    o = (np.arange(sub) + 0.5) / sub - 0.5
+    X, Y, D = xx[good], yy[good], d[good]
+    E = np.sqrt(v[good] + (0.03 * np.abs(D)) ** 2)
+
+    def model(p):
+        xc, yc, sa, sb, th, F = p
+        ct, st = np.cos(th), np.sin(th)
+        tot = np.zeros_like(X, dtype=float)
+        for dy in o:
+            for dx in o:
+                u = (X + dx - xc) * ct + (Y + dy - yc) * st
+                w = -(X + dx - xc) * st + (Y + dy - yc) * ct
+                tot += np.exp(-0.5 * (u / sa) ** 2 - 0.5 * (w / sb) ** 2)
+        return F * tot / sub ** 2 / (2 * np.pi * sa * sb)
+    p0 = [f["x"], f["y"], f["sigma"] * 1.05, f["sigma"] * 0.95, 0.3, f["F"]]
+    try:
+        r = least_squares(lambda p: (model(p) - D) / E, p0,
+                          bounds=([f["x"] - 1, f["y"] - 1, 0.2, 0.2, -np.pi, 0], [f["x"] + 1, f["y"] + 1, 3, 3, np.pi, np.inf]))
+    except Exception:
+        return None
+    xc, yc, sa, sb, th, F = r.x
+    if sb > sa:
+        sa, sb = sb, sa; th = th + np.pi / 2
+    return {"sa": float(sa), "sb": float(sb), "q": float(sb / sa), "theta_det_deg": float(np.degrees(th) % 180)}
+
+
+def fit_star(c, ra, dec, excl, sigma_n):
+    x, y = c.sky2pix(ra, dec)
+    x, y = float(x[0]), float(y[0])
+    if not (22 <= x < c.nx - 22 and 22 <= y < c.ny - 22):
+        return None
+    nb = neigh_for(c.det, ra, dec, excl)
+    f = M.fit_multi(c, x, y, nb, sigma_n, free_pos=True, free_sigma=True)
+    if f.get("status") != "ok":
+        return None
+    # neighbour pixel positions for the residual image
+    nxy = []
+    for (nra, nde, _, _), q in zip([n for n in nb], f["neigh"]):
+        pass
+    nxy = []
+    for n in nb:
+        px, py = c.sky2pix(n[0], n[1])
+        nxy.append((float(px[0]), float(py[0])))
+    # fit_multi only kept neighbours inside the box; rebuild the same list with fluxes by name order
+    kept = [(p, n) for p, n in zip(nxy, nb) if int(round(x)) - 6.5 <= p[0] <= int(round(x)) + 6.5 and int(round(y)) - 6.5 <= p[1] <= int(round(y)) + 6.5]
+    f["_nxy"] = [(p[0], p[1], q["F"]) for (p, n), q in zip(kept, f["neigh"])]
+    f["_sn"] = sigma_n
+    a25 = aperture(c, f["x"], f["y"], 2.5)
+    a15 = aperture(c, f["x"], f["y"], 1.5, sky=(a25.get("sky"), a25.get("sky_sd"), 1000, "x") if a25.get("sky") is not None else None)
+    out = {"F_mjy": f["F"] * a25.get("to_mjy", np.nan) if a25.get("to_mjy") else None, "sigma": f["sigma"], "chi2r": f["chi2r"],
+           "ap25": a25.get("flux"), "ap15": a15.get("flux"), "st25": a25["status"], "nov": a25.get("n_overflow", 0),
+           "nsat_box": f["n_sat_box"]}
+    e = ellip_fit(c, f)
+    if e:
+        out.update(e)
+    return out
+
+
+def one(fn):
+    c = Cut(os.path.join(CUT, fn))
+    res = {"file": fn, "det": c.det, "obs": c.obs, "mjd": c.mjd}
+    px = float(np.sqrt(c.pixel_area_arcsec2(c.nx / 2, c.ny / 2)))
+    res["pixscale"] = px
+    sig_n = c.psf_fwhm_hdr / px / 2.3548
+    res["target"] = fit_star(c, RA0, DEC0, 6.0, sig_n)
+    comps = []
+    for ra, dec, mag in COMP[c.det]:
+        r = fit_star(c, ra, dec, 2.0, sig_n)
+        if r and r["F_mjy"] and r["F_mjy"] > 0:
+            r["mag"] = float(mag)
+            comps.append(r)
+    res["comps"] = comps
+    return res
+
+
+if __name__ == "__main__":
+    files = sorted(f for f in os.listdir(CUT) if f.endswith(".fits"))
+    with ProcessPoolExecutor(int(os.environ.get("NPROC", "6"))) as ex:
+        out = list(ex.map(one, files, chunksize=4))
+    json.dump(out, open(f"{W}/out/shape.json", "w"), default=float)
+    print(len(out), {d: len(v) for d, v in COMP.items()})

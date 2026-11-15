@@ -1,0 +1,35 @@
+"""Fetch every ATel in a number range (politely, one at a time, 1 s apart), keep its text, and extract every
+sky position it gives (sexagesimal 'HH:MM:SS.s +-DD:MM:SS', 'HH MM SS.s -DD MM SS', 'RA = 270.8, Dec = -23.4' style
+decimal, and J-names like J180312.87-232802.8). Writes ../downloads/atel_pages/<n>.txt and ../notes/atel_positions.tsv"""
+import sys, os, re, html, time, json
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fetch import UA
+import requests
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PAGES = os.path.join(ROOT, "downloads", "atel_pages")
+os.makedirs(PAGES, exist_ok=True)
+lo, hi = int(sys.argv[1]), int(sys.argv[2])
+s = requests.Session()
+s.headers["User-Agent"] = UA
+log = open(os.path.join(ROOT, "notes", "atel_scan.log"), "a")
+for n in range(lo, hi + 1):
+    p = os.path.join(PAGES, f"{n}.txt")
+    if os.path.exists(p) and os.path.getsize(p) > 500:
+        continue
+    for attempt in range(3):
+        try:
+            r = s.get(f"https://www.astronomerstelegram.org/?read={n}", timeout=60)
+            t = r.text
+            t = re.sub(r"<script.*?</script>", " ", t, flags=re.S)
+            txt = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", t)).split())
+            i = txt.find(f"ATel #{n}")
+            open(p, "w").write(txt[i if i >= 0 else 0:])
+            log.write(json.dumps({"n": n, "status": r.status_code, "chars": len(txt), "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}) + "\n")
+            log.flush()
+            break
+        except Exception as e:
+            log.write(json.dumps({"n": n, "error": repr(e)}) + "\n")
+            time.sleep(5)
+    time.sleep(1.0)
+print("done", lo, hi)

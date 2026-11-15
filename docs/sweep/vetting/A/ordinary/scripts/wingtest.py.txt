@@ -1,0 +1,77 @@
+"""Model-free test of the neighbour's wing: aperture photometry (the project's own
+photometry.measure, unchanged) at
+  (a) the sweep's position of A,
+  (b) the fitted 2026 position of A (dE +1.5, dN -2.6 arcsec from the sweep's position),
+  (c) 12 control spots on a circle around the bright neighbour 2MASS J18031245-2327467
+      (K 7.40, AllWISE W2 6.49) at the same distance as (a) from it, at other position angles,
+in every exposure of each detector, and the per-epoch medians. If A were absent in 2025, (a)
+in 2025 should equal the controls' typical value (the neighbour's wing plus field). Read-only.
+Usage: wingtest.py OUT.csv
+"""
+import csv, json, math, sys
+from pathlib import Path
+import numpy as np
+sys.path.insert(0, ".")
+from backend import photometry  # noqa: E402
+
+RA0, DEC0 = 270.80362, -23.46745
+NB = (270.806875, -23.462975)  # 2MASS J18031245-2327467 (sweep cache row; same as AllWISE J180312.46-232746.7 within 0.3")
+CACHE = Path("<repository>/backend/cache/sweep")
+CUT = CACHE / "cutouts" / "250d2b7784"
+pts = json.load(open(CACHE / "photometry" / "2c3c31c3c37a6a21.json"))["points"]
+COS = math.cos(math.radians(DEC0))
+
+
+def off2sky(de, dn):
+    return RA0 + de / 3600 / COS, DEC0 + dn / 3600
+
+
+def main():
+    # neighbour position: read from the cached 2MASS row
+    rows2 = json.load(open(CACHE / "search2/catalogues/sweep_2MASS_7a07a3f53d4daca5.json"))
+    nb = [r for r in rows2 if r["name"] == "2MASS J18031245-2327467"][0]
+    nra, ndec = nb["ra"], nb["dec"]
+    dE = (RA0 - nra) * COS * 3600; dN = (DEC0 - ndec) * 3600
+    rad = math.hypot(dE, dN); pa0 = math.atan2(dE, dN)
+    spots = {"sweep_pos": (RA0, DEC0), "fit_pos": off2sky(1.5, -2.6)}
+    for k in range(12):
+        pa = pa0 + math.radians(30 * k)
+        if abs((math.degrees(pa - pa0) + 180) % 360 - 180) < 40:
+            continue  # skip the candidate's own direction
+        spots[f"ctl{k:02d}"] = (nra + rad * math.sin(pa) / 3600 / COS, ndec + rad * math.cos(pa) / 3600)
+    print(f"neighbour at {rad:.1f} arcsec from the sweep position; {len(spots)-2} control spots")
+    out = []
+    for p in pts:
+        if p["status"] == "off_image":
+            continue
+        f = CUT / f"{p['obs_id']}_D{p['detector']}.fits"
+        if not f.exists():
+            continue
+        for name, (ra, dec) in spots.items():
+            m = photometry.measure(f, ra, dec)
+            out.append({"obs_id": p["obs_id"], "det": p["detector"], "epoch": p["epoch"], "date": p["date"][:10],
+                        "spot": name, "status": m["status"],
+                        "flux": None if m["flux_mjy"] is None else round(m["flux_mjy"], 2)})
+    with open(sys.argv[1], "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(out[0].keys())); w.writeheader(); w.writerows(out)
+    # summary
+    for det in range(1, 7):
+        for ep in (1, 2, 3):
+            line = []
+            for name in ["sweep_pos", "fit_pos"]:
+                v = [r["flux"] for r in out if r["det"] == det and r["epoch"] == ep and r["spot"] == name and r["status"] == "ok"]
+                line.append(f"{name} med {np.median(v):8.1f} (n={len(v)})" if v else f"{name}   none")
+            ctl_meds = []
+            for name in spots:
+                if not name.startswith("ctl"):
+                    continue
+                v = [r["flux"] for r in out if r["det"] == det and r["epoch"] == ep and r["spot"] == name and r["status"] == "ok"]
+                if v:
+                    ctl_meds.append(np.median(v))
+            if ctl_meds:
+                line.append(f"controls: median of spot medians {np.median(ctl_meds):7.1f}, range {min(ctl_meds):7.1f}..{max(ctl_meds):7.1f} (spots={len(ctl_meds)})")
+            print(f"D{det} ep{ep}: " + " | ".join(line))
+
+
+if __name__ == "__main__":
+    main()

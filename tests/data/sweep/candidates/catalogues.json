@@ -1,0 +1,3223 @@
+{
+ "about": "Real catalogue answers within 30 arcsec of the fixed follow-up's positions of A, B and C (backend/sweep.py ask_catalogues, 2026-11-15; Gaia DR3 from IRSA because ESA's service did not answer; SIMBAD from whichever copy answered, which lacks the 2025 novae).",
+ "A": {
+  "asked_at": [
+   270.804077,
+   -23.468223
+  ],
+  "answers": {
+   "Gaia DR3": 29,
+   "SIMBAD": 0,
+   "AAVSO VSX": 0,
+   "CatWISE2020": 8,
+   "AllWISE": 9,
+   "2MASS": 32,
+   "GLIMPSE": 0,
+   "GLIMPSE II": 56
+  },
+  "rows": [
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515836834944",
+    "ra": 270.80667673828,
+    "dec": -23.46685469728,
+    "gmag": 19.299408,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520130344832",
+    "ra": 270.80771282697,
+    "dec": -23.46680479084,
+    "gmag": 20.659163,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520128967680",
+    "ra": 270.80851646827,
+    "dec": -23.46817166628,
+    "gmag": 19.630453,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515841228160",
+    "ra": 270.80753606489,
+    "dec": -23.46560267831,
+    "gmag": 18.670149,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515836830464",
+    "ra": 270.80883437102,
+    "dec": -23.46816794282,
+    "gmag": 19.414959,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173241683479808",
+    "ra": 270.79922460278,
+    "dec": -23.4688144722,
+    "gmag": 19.581884,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515841229312",
+    "ra": 270.80848948611,
+    "dec": -23.47038953382,
+    "gmag": 18.062723,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173271751087872",
+    "ra": 270.80620664389,
+    "dec": -23.46400514655,
+    "gmag": 18.417114,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173271755463808",
+    "ra": 270.80011719058,
+    "dec": -23.46513382866,
+    "gmag": 18.587852,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173276044591104",
+    "ra": 270.80133604836,
+    "dec": -23.46407594532,
+    "gmag": 20.715469,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173276044590976",
+    "ra": 270.80264720673,
+    "dec": -23.46310190384,
+    "gmag": 20.56925,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520152050176",
+    "ra": 270.81005984633,
+    "dec": -23.46937405279,
+    "gmag": 20.957268,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173276061250560",
+    "ra": 270.80180389963,
+    "dec": -23.46299353941,
+    "gmag": 20.39761,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515841229056",
+    "ra": 270.80834969683,
+    "dec": -23.47239217537,
+    "gmag": 19.927195,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173237391330688",
+    "ra": 270.79803074273,
+    "dec": -23.46972154725,
+    "gmag": 17.516773,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520146611200",
+    "ra": 270.81007334369,
+    "dec": -23.47127997716,
+    "gmag": 15.589525,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173276043221888",
+    "ra": 270.79799816022,
+    "dec": -23.46523602058,
+    "gmag": 18.660812,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515841232000",
+    "ra": 270.8108896277,
+    "dec": -23.46999334548,
+    "gmag": 19.318035,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515841232640",
+    "ra": 270.81138604487,
+    "dec": -23.46776684986,
+    "gmag": 19.725523,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520128969344",
+    "ra": 270.81030364211,
+    "dec": -23.46450582407,
+    "gmag": 19.44515,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173271751089664",
+    "ra": 270.79783489152,
+    "dec": -23.46430983404,
+    "gmag": 16.148483,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172515841233152",
+    "ra": 270.81160465244,
+    "dec": -23.46597303144,
+    "gmag": 18.35273,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520146610816",
+    "ra": 270.80887025079,
+    "dec": -23.47424002827,
+    "gmag": 18.793436,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520131356800",
+    "ra": 270.81219796572,
+    "dec": -23.467056507,
+    "gmag": 20.734011,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173276043220096",
+    "ra": 270.80549402359,
+    "dec": -23.46068620547,
+    "gmag": 19.361744,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173271751110784",
+    "ra": 270.80600116491,
+    "dec": -23.46032806466,
+    "gmag": 16.406204,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520128963200",
+    "ra": 270.81295303713,
+    "dec": -23.46798015308,
+    "gmag": 19.055698,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069173276045602176",
+    "ra": 270.79993906403,
+    "dec": -23.46099876773,
+    "gmag": 20.670465,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 4069172520129318528",
+    "ra": 270.81132095879,
+    "dec": -23.47323504612,
+    "gmag": 20.454506,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180313.16-232814.5",
+    "ra": 270.8048562,
+    "dec": -23.4707083,
+    "w2": 11.546,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180312.68-232820.4",
+    "ra": 270.8028299,
+    "dec": -23.4723441,
+    "w2": 12.907,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180311.99-232813.9",
+    "ra": 270.7999763,
+    "dec": -23.4705476,
+    "w2": 11.293,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180312.28-232748.8",
+    "ra": 270.8012457,
+    "dec": -23.4635531,
+    "w2": 10.501,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180312.48-232746.6",
+    "ra": 270.8020231,
+    "dec": -23.4629508,
+    "w2": 6.638,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180312.22-232823.7",
+    "ra": 270.8009526,
+    "dec": -23.4732676,
+    "w2": 10.94,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180314.14-232826.3",
+    "ra": 270.8089227,
+    "dec": -23.4739924,
+    "w2": 11.012,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J180311.05-232815.9",
+    "ra": 270.7960791,
+    "dec": -23.4710686,
+    "w2": 13.129,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180313.15-232814.5",
+    "ra": 270.8047939,
+    "dec": -23.4707126,
+    "w2": 11.637,
+    "type": "var_flg 00nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180313.66-232806.6",
+    "ra": 270.8069389,
+    "dec": -23.4685051,
+    "w2": 11.655,
+    "type": "var_flg 42nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180312.26-232822.4",
+    "ra": 270.8011212,
+    "dec": -23.472897,
+    "w2": 10.652,
+    "type": "var_flg 10nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180312.46-232746.7",
+    "ra": 270.8019175,
+    "dec": -23.4629914,
+    "w2": 6.487,
+    "type": "var_flg 5441",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180314.42-232815.1",
+    "ra": 270.8101096,
+    "dec": -23.4708703,
+    "w2": 11.285,
+    "type": "var_flg 41nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180314.70-232758.7",
+    "ra": 270.8112555,
+    "dec": -23.4663228,
+    "w2": 10.875,
+    "type": "var_flg 53nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180314.14-232826.4",
+    "ra": 270.8089386,
+    "dec": -23.4740149,
+    "w2": 11.142,
+    "type": "var_flg 43nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180311.06-232811.4",
+    "ra": 270.7960846,
+    "dec": -23.4698578,
+    "w2": 12.454,
+    "type": "var_flg 44nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J180314.34-232743.3",
+    "ra": 270.8097512,
+    "dec": -23.4620362,
+    "w2": 12.159,
+    "type": "var_flg 10nn",
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031321-2328143",
+    "ra": 270.805055,
+    "dec": -23.470659,
+    "k": 12.338,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031367-2328067",
+    "ra": 270.806971,
+    "dec": -23.468538,
+    "k": 12.23,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031361-2328008",
+    "ra": 270.806722,
+    "dec": -23.466913,
+    "k": 14.643,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031258-2328153",
+    "ra": 270.80243,
+    "dec": -23.470942,
+    "k": 12.663,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031235-2328160",
+    "ra": 270.801461,
+    "dec": -23.47113,
+    "k": 12.511,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031380-2327561",
+    "ra": 270.807503,
+    "dec": -23.465597,
+    "k": 14.619,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031197-2327599",
+    "ra": 270.799909,
+    "dec": -23.466656,
+    "k": 13.75,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031409-2328052",
+    "ra": 270.808712,
+    "dec": -23.468138,
+    "k": 14.471,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031197-2328141",
+    "ra": 270.799886,
+    "dec": -23.4706,
+    "k": 12.095,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031180-2328035",
+    "ra": 270.799173,
+    "dec": -23.467642,
+    "k": 13.625,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031348-2327505",
+    "ra": 270.806185,
+    "dec": -23.464033,
+    "k": 14.425,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031404-2328132",
+    "ra": 270.808535,
+    "dec": -23.470358,
+    "k": 13.485,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031202-2327544",
+    "ra": 270.800093,
+    "dec": -23.465128,
+    "k": 13.114,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031279-2328230",
+    "ra": 270.803312,
+    "dec": -23.473063,
+    "k": 13.298,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031245-2327467",
+    "ra": 270.801899,
+    "dec": -23.462976,
+    "k": 7.404,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031401-2328206",
+    "ra": 270.808375,
+    "dec": -23.472391,
+    "k": 13.727,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031152-2328109",
+    "ra": 270.798002,
+    "dec": -23.469715,
+    "k": 13.461,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031222-2328240",
+    "ra": 270.800923,
+    "dec": -23.473351,
+    "k": 11.856,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031447-2327596",
+    "ra": 270.810332,
+    "dec": -23.466564,
+    "k": 12.329,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031442-2328164",
+    "ra": 270.810101,
+    "dec": -23.471228,
+    "k": 12.011,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031461-2328119",
+    "ra": 270.810909,
+    "dec": -23.469988,
+    "k": 13.352,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031468-2328044",
+    "ra": 270.811171,
+    "dec": -23.467896,
+    "k": 13.63,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031148-2327515",
+    "ra": 270.797836,
+    "dec": -23.464329,
+    "k": 11.088,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031479-2327574",
+    "ra": 270.811627,
+    "dec": -23.46596,
+    "k": 11.61,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031412-2328271",
+    "ra": 270.80887,
+    "dec": -23.474222,
+    "k": 11.355,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031106-2328107",
+    "ra": 270.796106,
+    "dec": -23.469664,
+    "k": 12.575,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031445-2327479",
+    "ra": 270.810218,
+    "dec": -23.463324,
+    "k": 13.452,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031420-2327443",
+    "ra": 270.809188,
+    "dec": -23.462313,
+    "k": 13.274,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031343-2327370",
+    "ra": 270.805968,
+    "dec": -23.460287,
+    "k": 12.919,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031102-2328173",
+    "ra": 270.795953,
+    "dec": -23.471478,
+    "k": 13.741,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031393-2327393",
+    "ra": 270.808058,
+    "dec": -23.460936,
+    "k": 13.02,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J18031151-2328274",
+    "ra": 270.797974,
+    "dec": -23.4743,
+    "k": 13.554,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7111-00.6353",
+    "ra": 270.803594,
+    "dec": -23.469244,
+    "irac2": 13.44,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7128-00.6368",
+    "ra": 270.805964,
+    "dec": -23.468505,
+    "irac2": 13.764,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7126-00.6334",
+    "ra": 270.802667,
+    "dec": -23.466996,
+    "irac2": 13.058,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7105-00.6342",
+    "ra": 270.802237,
+    "dec": -23.469229,
+    "irac2": 13.272,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7118-00.6331",
+    "ra": 270.801878,
+    "dec": -23.46753,
+    "irac2": 12.892,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7144-00.6365",
+    "ra": 270.806494,
+    "dec": -23.466945,
+    "irac2": 13.269,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7105-00.6372",
+    "ra": 270.805085,
+    "dec": -23.470669,
+    "irac2": 11.276,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7138-00.6330",
+    "ra": 270.802921,
+    "dec": -23.465777,
+    "irac2": 13.569,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7132-00.6377",
+    "ra": 270.807008,
+    "dec": -23.468555,
+    "irac2": 11.404,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7110-00.6327",
+    "ra": 270.801075,
+    "dec": -23.468004,
+    "irac2": 13.532,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7121-00.6321",
+    "ra": 270.801112,
+    "dec": -23.466798,
+    "irac2": 13.637,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7091-00.6352",
+    "ra": 270.802458,
+    "dec": -23.470963,
+    "irac2": 11.785,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7085-00.6346",
+    "ra": 270.801506,
+    "dec": -23.471135,
+    "irac2": 11.619,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7092-00.6378",
+    "ra": 270.804992,
+    "dec": -23.472147,
+    "irac2": 13.228,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7116-00.6311",
+    "ra": 270.799966,
+    "dec": -23.466705,
+    "irac2": 12.671,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7161-00.6366",
+    "ra": 270.807578,
+    "dec": -23.465548,
+    "irac2": 13.829,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7098-00.6317",
+    "ra": 270.79948,
+    "dec": -23.468587,
+    "irac2": 13.639,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7079-00.6357",
+    "ra": 270.802226,
+    "dec": -23.472214,
+    "irac2": 13.016,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7082-00.6330",
+    "ra": 270.799932,
+    "dec": -23.470625,
+    "irac2": 11.357,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7105-00.6310",
+    "ra": 270.799199,
+    "dec": -23.467657,
+    "irac2": 12.802,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7130-00.6304",
+    "ra": 270.800034,
+    "dec": -23.465173,
+    "irac2": 13.292,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7076-00.6370",
+    "ra": 270.803332,
+    "dec": -23.473072,
+    "irac2": 12.431,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7072-00.6357",
+    "ra": 270.801929,
+    "dec": -23.47283,
+    "irac2": 13.197,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7178-00.6356",
+    "ra": 270.807535,
+    "dec": -23.463531,
+    "irac2": 14.086,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7081-00.6311",
+    "ra": 270.797997,
+    "dec": -23.469736,
+    "irac2": 13.043,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7082-00.6394",
+    "ra": 270.805897,
+    "dec": -23.473777,
+    "irac2": 13.69,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7063-00.6352",
+    "ra": 270.800961,
+    "dec": -23.473367,
+    "irac2": 10.895001,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7110-00.6293",
+    "ra": 270.797902,
+    "dec": -23.466339,
+    "irac2": 13.232,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7164-00.6394",
+    "ra": 270.810374,
+    "dec": -23.4666,
+    "irac2": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7184-00.6339",
+    "ra": 270.806177,
+    "dec": -23.462195,
+    "irac2": 13.194,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7124-00.6415",
+    "ra": 270.810229,
+    "dec": -23.471129,
+    "irac2": 11.447,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7103-00.6413",
+    "ra": 270.808946,
+    "dec": -23.472877,
+    "irac2": 12.938,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7157-00.6407",
+    "ra": 270.811184,
+    "dec": -23.46791,
+    "irac2": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7139-00.6416",
+    "ra": 270.81111,
+    "dec": -23.469931,
+    "irac2": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7128-00.6283",
+    "ra": 270.797882,
+    "dec": -23.464331,
+    "irac2": 10.721,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7068-00.6395",
+    "ra": 270.805286,
+    "dec": -23.475028,
+    "irac2": 13.856,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7190-00.6366",
+    "ra": 270.809115,
+    "dec": -23.462988,
+    "irac2": 14.098,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7053-00.6341",
+    "ra": 270.799339,
+    "dec": -23.473726,
+    "irac2": 13.803,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7059-00.6318",
+    "ra": 270.797483,
+    "dec": -23.472017,
+    "irac2": 13.994,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7112-00.6424",
+    "ra": 270.810416,
+    "dec": -23.472615,
+    "irac2": 13.814,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7176-00.6401",
+    "ra": 270.811663,
+    "dec": -23.465965,
+    "irac2": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7073-00.6296",
+    "ra": 270.796146,
+    "dec": -23.469679,
+    "irac2": 11.678,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7106-00.6279",
+    "ra": 270.796345,
+    "dec": -23.466039,
+    "irac2": 13.868,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7192-00.6377",
+    "ra": 270.810238,
+    "dec": -23.46335,
+    "irac2": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7091-00.6420",
+    "ra": 270.808932,
+    "dec": -23.474232,
+    "irac2": 11.048,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7097-00.6422",
+    "ra": 270.809472,
+    "dec": -23.473841,
+    "irac2": 12.577,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7196-00.6364",
+    "ra": 270.809203,
+    "dec": -23.462322,
+    "irac2": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7044-00.6348",
+    "ra": 270.799522,
+    "dec": -23.474839,
+    "irac2": 13.518,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7112-00.6272",
+    "ra": 270.795969,
+    "dec": -23.465157,
+    "irac2": 13.514,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7122-00.6271",
+    "ra": 270.796444,
+    "dec": -23.464197,
+    "irac2": 14.032,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7203-00.6348",
+    "ra": 270.808054,
+    "dec": -23.460986,
+    "irac2": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7199-00.6328",
+    "ra": 270.805979,
+    "dec": -23.460304,
+    "irac2": 12.209,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7057-00.6303",
+    "ra": 270.796,
+    "dec": -23.471524,
+    "irac2": 12.839,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7044-00.6325",
+    "ra": 270.797406,
+    "dec": -23.473671,
+    "irac2": 13.315,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7084-00.6279",
+    "ra": 270.795146,
+    "dec": -23.467954,
+    "irac2": 13.725,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE II",
+    "name": "GLIMPSE SSTGLMC G006.7041-00.6334",
+    "ra": 270.798051,
+    "dec": -23.474335,
+    "irac2": 12.552,
+    "type": null,
+    "variable": false
+   }
+  ]
+ },
+ "B": {
+  "asked_at": [
+   253.180459,
+   -44.676955
+  ],
+  "answers": {
+   "Gaia DR3": 30,
+   "SIMBAD": 0,
+   "AAVSO VSX": 0,
+   "CatWISE2020": 20,
+   "AllWISE": 5,
+   "2MASS": 25,
+   "GLIMPSE": 28,
+   "GLIMPSE II": 0
+  },
+  "rows": [
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607636528768",
+    "ra": 253.18229057158,
+    "dec": -44.67682248399,
+    "gmag": 19.352818,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332573273012096",
+    "ra": 253.17809865765,
+    "dec": -44.67852794534,
+    "gmag": 18.345711,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607629792768",
+    "ra": 253.18395335911,
+    "dec": -44.6756003488,
+    "gmag": 18.046392,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332577566705280",
+    "ra": 253.17680453754,
+    "dec": -44.67937602623,
+    "gmag": 18.64521,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607632752384",
+    "ra": 253.17545390731,
+    "dec": -44.67623010409,
+    "gmag": 19.175529,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611942790272",
+    "ra": 253.18363009405,
+    "dec": -44.68053733379,
+    "gmag": 17.237221,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332573270046464",
+    "ra": 253.1752530453,
+    "dec": -44.67925246009,
+    "gmag": 15.562561,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332577567370240",
+    "ra": 253.17431821389,
+    "dec": -44.6770548035,
+    "gmag": 20.788565,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611927108352",
+    "ra": 253.18573558355,
+    "dec": -44.67455054148,
+    "gmag": 20.672783,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607632751104",
+    "ra": 253.18687203719,
+    "dec": -44.67815208528,
+    "gmag": 19.103746,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611928383104",
+    "ra": 253.17394341001,
+    "dec": -44.67517592747,
+    "gmag": 20.78669,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611927105152",
+    "ra": 253.18750823231,
+    "dec": -44.67548554694,
+    "gmag": 20.406448,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611924934400",
+    "ra": 253.18435741026,
+    "dec": -44.6818513842,
+    "gmag": 18.858162,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607629184384",
+    "ra": 253.17390182049,
+    "dec": -44.67354767654,
+    "gmag": 17.964561,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332577583664512",
+    "ra": 253.17217377847,
+    "dec": -44.67668501018,
+    "gmag": 16.798426,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332573276791040",
+    "ra": 253.18344175773,
+    "dec": -44.6825327944,
+    "gmag": 19.623064,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611924982528",
+    "ra": 253.177873967,
+    "dec": -44.67083488503,
+    "gmag": 19.490835,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611949085696",
+    "ra": 253.18794039295,
+    "dec": -44.67301558307,
+    "gmag": 19.846342,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607632754944",
+    "ra": 253.18410219534,
+    "dec": -44.67083851197,
+    "gmag": 19.057657,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332577566707456",
+    "ra": 253.17134233561,
+    "dec": -44.67899999683,
+    "gmag": 20.219889,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607629775744",
+    "ra": 253.1873512641,
+    "dec": -44.68170386665,
+    "gmag": 17.492271,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611942805760",
+    "ra": 253.17191223639,
+    "dec": -44.6738002072,
+    "gmag": 16.47719,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607629807232",
+    "ra": 253.17792906809,
+    "dec": -44.66994930078,
+    "gmag": 19.202459,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332577567365760",
+    "ra": 253.17062690155,
+    "dec": -44.67999267248,
+    "gmag": 20.425623,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611926447232",
+    "ra": 253.17114859564,
+    "dec": -44.67305484039,
+    "gmag": 20.392082,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607629806464",
+    "ra": 253.17443673647,
+    "dec": -44.67050261141,
+    "gmag": 17.999369,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332573270029952",
+    "ra": 253.17896141015,
+    "dec": -44.68490639909,
+    "gmag": 18.742331,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332577589349120",
+    "ra": 253.16944798398,
+    "dec": -44.67895447717,
+    "gmag": null,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332611942804224",
+    "ra": 253.1825950082,
+    "dec": -44.6690104019,
+    "gmag": 16.37891,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5964332607629803264",
+    "ra": 253.18908580467,
+    "dec": -44.67153977148,
+    "gmag": 18.629133,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165243.63-444036.8",
+    "ra": 253.1817884,
+    "dec": -44.6768976,
+    "w2": 13.542,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165242.75-444036.4",
+    "ra": 253.1781044,
+    "dec": -44.6768278,
+    "w2": 14.675,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165242.95-444045.8",
+    "ra": 253.1789667,
+    "dec": -44.6793895,
+    "w2": 12.694,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165244.11-444031.9",
+    "ra": 253.183828,
+    "dec": -44.6755315,
+    "w2": 9.023,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165241.86-444037.6",
+    "ra": 253.1744515,
+    "dec": -44.6771147,
+    "w2": 11.387,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165242.03-444045.4",
+    "ra": 253.1751082,
+    "dec": -44.6792845,
+    "w2": 12.394,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165244.10-444022.1",
+    "ra": 253.1837436,
+    "dec": -44.6728473,
+    "w2": 12.81,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165243.75-444055.5",
+    "ra": 253.1823029,
+    "dec": -44.6820945,
+    "w2": 12.292,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165241.66-444025.0",
+    "ra": 253.1736109,
+    "dec": -44.6736329,
+    "w2": 13.023,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165241.64-444049.4",
+    "ra": 253.1734957,
+    "dec": -44.6803809,
+    "w2": 13.482,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165245.31-444031.7",
+    "ra": 253.1888096,
+    "dec": -44.67549,
+    "w2": 12.363,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165243.58-444015.2",
+    "ra": 253.1816044,
+    "dec": -44.6708866,
+    "w2": 11.03,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165244.23-444058.5",
+    "ra": 253.1843064,
+    "dec": -44.6829062,
+    "w2": 13.717,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165241.15-444045.7",
+    "ra": 253.1714799,
+    "dec": -44.6793648,
+    "w2": 14.177,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165241.81-444056.3",
+    "ra": 253.1738014,
+    "dec": -44.6822082,
+    "w2": 14.563,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165241.02-444029.6",
+    "ra": 253.1709097,
+    "dec": -44.6748862,
+    "w2": 11.453,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165242.68-444011.3",
+    "ra": 253.177729,
+    "dec": -44.6697199,
+    "w2": 14.379,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165241.95-444059.8",
+    "ra": 253.1741652,
+    "dec": -44.6833709,
+    "w2": 15.344,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165243.43-444008.2",
+    "ra": 253.1809287,
+    "dec": -44.6689705,
+    "w2": 13.012,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J165244.72-444011.2",
+    "ra": 253.1863546,
+    "dec": -44.6697915,
+    "w2": 10.553,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J165244.11-444031.8",
+    "ra": 253.1838169,
+    "dec": -44.6755127,
+    "w2": 9.066,
+    "type": "var_flg 00nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J165241.86-444037.5",
+    "ra": 253.1744396,
+    "dec": -44.6771068,
+    "w2": 11.287,
+    "type": "var_flg 11nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J165241.63-444025.2",
+    "ra": 253.1734861,
+    "dec": -44.6736923,
+    "w2": 12.642,
+    "type": "var_flg 10nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J165243.59-444015.1",
+    "ra": 253.1816307,
+    "dec": -44.6708666,
+    "w2": 10.971,
+    "type": "var_flg 10nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J165240.99-444029.7",
+    "ra": 253.1708193,
+    "dec": -44.6749265,
+    "w2": 11.532,
+    "type": "var_flg 10nn",
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524373-4440366",
+    "ra": 253.182237,
+    "dec": -44.676834,
+    "k": 13.774,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524275-4440429",
+    "ra": 253.178141,
+    "dec": -44.678589,
+    "k": 14.526,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524298-4440456",
+    "ra": 253.179122,
+    "dec": -44.679344,
+    "k": 14.415,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524412-4440318",
+    "ra": 253.183849,
+    "dec": -44.675522,
+    "k": 10.661,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524406-4440499",
+    "ra": 253.183624,
+    "dec": -44.680531,
+    "k": 14.323,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524403-4440238",
+    "ra": 253.183464,
+    "dec": -44.673283,
+    "k": 13.999,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524206-4440452",
+    "ra": 253.175251,
+    "dec": -44.679245,
+    "k": 12.993,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524183-4440373",
+    "ra": 253.174316,
+    "dec": -44.677036,
+    "k": 11.86,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524370-4440551",
+    "ra": 253.182094,
+    "dec": -44.681992,
+    "k": 13.958,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524173-4440247",
+    "ra": 253.173883,
+    "dec": -44.673534,
+    "k": 12.344,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524132-4440359",
+    "ra": 253.172179,
+    "dec": -44.676666,
+    "k": 14.19,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524403-4440571",
+    "ra": 253.183465,
+    "dec": -44.682533,
+    "k": 13.623,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524359-4440153",
+    "ra": 253.181638,
+    "dec": -44.670925,
+    "k": 12.974,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524541-4440319",
+    "ra": 253.189216,
+    "dec": -44.675552,
+    "k": 14.313,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524267-4440147",
+    "ra": 253.17783,
+    "dec": -44.67075,
+    "k": 14.333,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524425-4440587",
+    "ra": 253.184411,
+    "dec": -44.682991,
+    "k": 14.306,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524419-4440149",
+    "ra": 253.184157,
+    "dec": -44.670822,
+    "k": 15.41,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524496-4440540",
+    "ra": 253.187371,
+    "dec": -44.68169,
+    "k": 15.767,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524124-4440256",
+    "ra": 253.171872,
+    "dec": -44.673786,
+    "k": 13.69,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524099-4440308",
+    "ra": 253.170826,
+    "dec": -44.675224,
+    "k": 13.563,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524329-4440095",
+    "ra": 253.180383,
+    "dec": -44.669327,
+    "k": 14.694,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524185-4440137",
+    "ra": 253.174412,
+    "dec": -44.67049,
+    "k": 15.475,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524294-4441057",
+    "ra": 253.178951,
+    "dec": -44.684921,
+    "k": 14.374,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524382-4440084",
+    "ra": 253.182593,
+    "dec": -44.66901,
+    "k": 13.999,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16524537-4440175",
+    "ra": 253.189072,
+    "dec": -44.671551,
+    "k": 15.164,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0893-00.4165",
+    "ra": 253.182102,
+    "dec": -44.676973,
+    "irac2": 12.472,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0861-00.4164",
+    "ra": 253.179174,
+    "dec": -44.67941,
+    "irac2": 12.072,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0912-00.4166",
+    "ra": 253.183878,
+    "dec": -44.675543,
+    "irac2": 9.098,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0862-00.4134",
+    "ra": 253.176008,
+    "dec": -44.677439,
+    "irac2": 12.857,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0914-00.4182",
+    "ra": 253.185938,
+    "dec": -44.676381,
+    "irac2": 12.808,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0927-00.4150",
+    "ra": 253.183528,
+    "dec": -44.673331,
+    "irac2": 12.305,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0872-00.4196",
+    "ra": 253.183653,
+    "dec": -44.680561,
+    "irac2": 14.53,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0844-00.4143",
+    "ra": 253.175374,
+    "dec": -44.679324,
+    "irac2": 12.074,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0857-00.4123",
+    "ra": 253.174381,
+    "dec": -44.677061,
+    "irac2": 11.262999,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0854-00.4198",
+    "ra": 253.182155,
+    "dec": -44.682057,
+    "irac2": 12.270001,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0938-00.4151",
+    "ra": 253.184633,
+    "dec": -44.672553,
+    "irac2": 13.082,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0882-00.4098",
+    "ra": 253.173929,
+    "dec": -44.673565,
+    "irac2": 11.97,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0850-00.4109",
+    "ra": 253.172258,
+    "dec": -44.676699,
+    "irac2": 14.17,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0937-00.4125",
+    "ra": 253.181698,
+    "dec": -44.670967,
+    "irac2": 10.848,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0827-00.4140",
+    "ra": 253.17353,
+    "dec": -44.68052,
+    "irac2": 13.176,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0939-00.4186",
+    "ra": 253.188499,
+    "dec": -44.674668,
+    "irac2": 13.733,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0821-00.4153",
+    "ra": 253.174472,
+    "dec": -44.681762,
+    "irac2": 13.719,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0936-00.4196",
+    "ra": 253.189297,
+    "dec": -44.675614,
+    "irac2": 12.291,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0829-00.4122",
+    "ra": 253.171807,
+    "dec": -44.679184,
+    "irac2": 13.072,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0909-00.4218",
+    "ra": 253.189311,
+    "dec": -44.679075,
+    "irac2": 13.845,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0856-00.4217",
+    "ra": 253.184507,
+    "dec": -44.683044,
+    "irac2": 12.822,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0871-00.4089",
+    "ra": 253.171955,
+    "dec": -44.673796,
+    "irac2": 13.685,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0855-00.4092",
+    "ra": 253.170881,
+    "dec": -44.675239,
+    "irac2": 11.531,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0865-00.4089",
+    "ra": 253.171302,
+    "dec": -44.674278,
+    "irac2": 13.073,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0944-00.4108",
+    "ra": 253.180495,
+    "dec": -44.669382,
+    "irac2": 12.866,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0962-00.4149",
+    "ra": 253.186566,
+    "dec": -44.670631,
+    "irac2": 12.97,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0956-00.4118",
+    "ra": 253.182638,
+    "dec": -44.669056,
+    "irac2": 13.832,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G341.0909-00.4235",
+    "ra": 253.191171,
+    "dec": -44.680141,
+    "irac2": 13.474,
+    "type": null,
+    "variable": false
+   }
+  ]
+ },
+ "C": {
+  "asked_at": [
+   241.709,
+   -52.205674
+  ],
+  "answers": {
+   "Gaia DR3": 33,
+   "SIMBAD": 1,
+   "AAVSO VSX": 1,
+   "CatWISE2020": 16,
+   "AllWISE": 7,
+   "2MASS": 26,
+   "GLIMPSE": 26,
+   "GLIMPSE II": 0
+  },
+  "rows": [
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857351296",
+    "ra": 241.70552297149,
+    "dec": -52.20588207037,
+    "gmag": 20.089195,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857693312",
+    "ra": 241.70825661353,
+    "dec": -52.20896983552,
+    "gmag": 20.86805,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095879173504",
+    "ra": 241.71378123681,
+    "dec": -52.20726459133,
+    "gmag": 17.383255,
+    "type": "variable (flag)",
+    "variable": true
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348713569309184",
+    "ra": 241.71303409288,
+    "dec": -52.2089968977,
+    "gmag": 18.667341,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095814561920",
+    "ra": 241.71580717448,
+    "dec": -52.20456035551,
+    "gmag": 20.051825,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095879173760",
+    "ra": 241.71347186977,
+    "dec": -52.20220199367,
+    "gmag": 16.56916,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857576960",
+    "ra": 241.70249142906,
+    "dec": -52.20842159255,
+    "gmag": 20.964575,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857346432",
+    "ra": 241.70363189462,
+    "dec": -52.20930114349,
+    "gmag": 19.532557,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348713564671872",
+    "ra": 241.70107099736,
+    "dec": -52.20456374941,
+    "gmag": 19.223761,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349091542564608",
+    "ra": 241.71438430115,
+    "dec": -52.20167905738,
+    "gmag": 19.041971,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095814610048",
+    "ra": 241.71744478115,
+    "dec": -52.20528303155,
+    "gmag": 20.845129,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095879150848",
+    "ra": 241.70692716783,
+    "dec": -52.20052206853,
+    "gmag": 16.634453,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348713585442944",
+    "ra": 241.7132336515,
+    "dec": -52.21039617307,
+    "gmag": 17.820448,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095879173632",
+    "ra": 241.71655218188,
+    "dec": -52.20284724816,
+    "gmag": 15.33194,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095879173248",
+    "ra": 241.71545262365,
+    "dec": -52.20951305581,
+    "gmag": 18.364689,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717922025216",
+    "ra": 241.70433880772,
+    "dec": -52.21042273568,
+    "gmag": 16.871828,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717922024704",
+    "ra": 241.70640249333,
+    "dec": -52.21105407371,
+    "gmag": 18.655659,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095814562560",
+    "ra": 241.7164594601,
+    "dec": -52.20231286082,
+    "gmag": 20.155014,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717922024832",
+    "ra": 241.71338034147,
+    "dec": -52.21068551452,
+    "gmag": 20.328087,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857344512",
+    "ra": 241.70333919113,
+    "dec": -52.21027450641,
+    "gmag": 20.251993,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095814562176",
+    "ra": 241.71789746714,
+    "dec": -52.20303828884,
+    "gmag": 19.822018,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857489792",
+    "ra": 241.70473471496,
+    "dec": -52.21127249442,
+    "gmag": 20.613678,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717922023808",
+    "ra": 241.71341719103,
+    "dec": -52.21159133487,
+    "gmag": 18.613422,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857340800",
+    "ra": 241.71169883324,
+    "dec": -52.21204533878,
+    "gmag": 19.88669,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095879173376",
+    "ra": 241.7185119846,
+    "dec": -52.20914823682,
+    "gmag": 17.812252,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857580160",
+    "ra": 241.70460285135,
+    "dec": -52.21197768095,
+    "gmag": 20.942339,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348713564670976",
+    "ra": 241.69897031088,
+    "dec": -52.20884219835,
+    "gmag": 18.992496,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349095881399296",
+    "ra": 241.7099864368,
+    "dec": -52.19862058864,
+    "gmag": 20.285744,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717857354368",
+    "ra": 241.69726346832,
+    "dec": -52.20442004637,
+    "gmag": 19.734852,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933349027094992896",
+    "ra": 241.7212085912,
+    "dec": -52.20790993004,
+    "gmag": 19.314659,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348717922054912",
+    "ra": 241.69605082764,
+    "dec": -52.20593455321,
+    "gmag": 20.562628,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348713564425984",
+    "ra": 241.71184410658,
+    "dec": -52.21368480765,
+    "gmag": 18.413195,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "Gaia DR3",
+    "name": "Gaia DR3 5933348713564427008",
+    "ra": 241.6981923191,
+    "dec": -52.21056141724,
+    "gmag": 19.000694,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "SIMBAD",
+    "name": "HIGALBM G330.4120-00.0823",
+    "ra": 241.709,
+    "dec": -52.206654,
+    "type": "smm",
+    "variable": false
+   },
+   {
+    "catalogue": "AAVSO VSX",
+    "name": "Gaia DR3 5933349095879173504",
+    "ra": 241.7138,
+    "dec": -52.20726,
+    "type": "RS, 17.32 G to 17.42 G",
+    "variable": true
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160650.21-521229.5",
+    "ra": 241.7093,
+    "dec": -52.2081668,
+    "w2": 14.004,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160651.05-521225.5",
+    "ra": 241.7127335,
+    "dec": -52.2070982,
+    "w2": 13.305,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160649.05-521216.1",
+    "ra": 241.7043984,
+    "dec": -52.2044828,
+    "w2": 11.461,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160648.77-521227.5",
+    "ra": 241.7032425,
+    "dec": -52.2076554,
+    "w2": 11.269,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160650.95-521207.8",
+    "ra": 241.7123127,
+    "dec": -52.2021648,
+    "w2": 12.921,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160649.40-521204.2",
+    "ra": 241.7058369,
+    "dec": -52.2011826,
+    "w2": 10.827,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160649.41-521238.3",
+    "ra": 241.7058982,
+    "dec": -52.2106648,
+    "w2": 11.327,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160651.92-521209.5",
+    "ra": 241.7163578,
+    "dec": -52.2026655,
+    "w2": 12.551,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160648.80-521236.9",
+    "ra": 241.703366,
+    "dec": -52.2102494,
+    "w2": 9.225,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160651.24-521239.3",
+    "ra": 241.7135288,
+    "dec": -52.210929,
+    "w2": 12.075,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160650.90-521158.6",
+    "ra": 241.7120852,
+    "dec": -52.1996342,
+    "w2": 9.622,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160652.84-521217.7",
+    "ra": 241.7201666,
+    "dec": -52.2049295,
+    "w2": 11.168,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160651.89-521201.4",
+    "ra": 241.7161966,
+    "dec": -52.2003835,
+    "w2": 12.357,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160647.29-521213.9",
+    "ra": 241.6970304,
+    "dec": -52.2039021,
+    "w2": 13.949,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160650.97-521247.8",
+    "ra": 241.7123768,
+    "dec": -52.213276,
+    "w2": 11.938,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "CatWISE2020",
+    "name": "CWISE J160647.05-521221.2",
+    "ra": 241.6960784,
+    "dec": -52.2059126,
+    "w2": 9.448,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J160649.04-521216.2",
+    "ra": 241.7043487,
+    "dec": -52.2045159,
+    "w2": 11.309,
+    "type": "var_flg 11nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J160648.75-521226.6",
+    "ra": 241.7031644,
+    "dec": -52.2074142,
+    "w2": 11.274,
+    "type": "var_flg nnnn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J160648.82-521237.1",
+    "ra": 241.7034486,
+    "dec": -52.2103065,
+    "w2": 9.114,
+    "type": "var_flg nnnn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J160650.90-521158.6",
+    "ra": 241.7121127,
+    "dec": -52.1996203,
+    "w2": 9.712,
+    "type": "var_flg 00nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J160652.83-521217.8",
+    "ra": 241.7201646,
+    "dec": -52.2049587,
+    "w2": 11.162,
+    "type": "var_flg 12nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J160650.98-521247.3",
+    "ra": 241.7124319,
+    "dec": -52.2131413,
+    "w2": 11.812,
+    "type": "var_flg 00nn",
+    "variable": false
+   },
+   {
+    "catalogue": "AllWISE",
+    "name": "WISEA J160647.06-521221.3",
+    "ra": 241.6960842,
+    "dec": -52.2059227,
+    "w2": 9.371,
+    "type": "var_flg 00nn",
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065096-5212255",
+    "ra": 241.71237,
+    "dec": -52.207108,
+    "k": 14.034,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064920-5212163",
+    "ra": 241.705036,
+    "dec": -52.204536,
+    "k": 12.958,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065130-5212261",
+    "ra": 241.713771,
+    "dec": -52.207253,
+    "k": 14.062,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064875-5212160",
+    "ra": 241.703159,
+    "dec": -52.20446,
+    "k": 12.888,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064878-5212271",
+    "ra": 241.703291,
+    "dec": -52.207539,
+    "k": 11.69,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065079-5212071",
+    "ra": 241.711648,
+    "dec": -52.201988,
+    "k": 14.353,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065115-5212323",
+    "ra": 241.713128,
+    "dec": -52.208996,
+    "k": 14.895,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065129-5212075",
+    "ra": 241.713747,
+    "dec": -52.202084,
+    "k": 13.541,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064940-5212047",
+    "ra": 241.705865,
+    "dec": -52.201317,
+    "k": 11.835,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064966-5212018",
+    "ra": 241.706921,
+    "dec": -52.200512,
+    "k": 12.188,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065197-5212102",
+    "ra": 241.716552,
+    "dec": -52.202854,
+    "k": 12.62,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064953-5212393",
+    "ra": 241.706406,
+    "dec": -52.210934,
+    "k": 12.995,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065172-5212341",
+    "ra": 241.715517,
+    "dec": -52.209499,
+    "k": 14.943,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065121-5212380",
+    "ra": 241.713387,
+    "dec": -52.210571,
+    "k": 13.08,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064881-5212370",
+    "ra": 241.703378,
+    "dec": -52.210278,
+    "k": 9.673,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064926-5211594",
+    "ra": 241.705284,
+    "dec": -52.199856,
+    "k": 13.58,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065091-5211584",
+    "ra": 241.712141,
+    "dec": -52.199581,
+    "k": 11.075,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065243-5212328",
+    "ra": 241.718473,
+    "dec": -52.209133,
+    "k": 14.676,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065184-5212010",
+    "ra": 241.716003,
+    "dec": -52.200287,
+    "k": 13.647,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064775-5212317",
+    "ra": 241.698981,
+    "dec": -52.208817,
+    "k": 15.133,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065287-5212177",
+    "ra": 241.720302,
+    "dec": -52.204929,
+    "k": 11.617,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065040-5211548",
+    "ra": 241.710002,
+    "dec": -52.19857,
+    "k": 13.817,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064742-5212134",
+    "ra": 241.697603,
+    "dec": -52.203732,
+    "k": 14.161,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064705-5212213",
+    "ra": 241.69608,
+    "dec": -52.205921,
+    "k": 9.879,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16065090-5212488",
+    "ra": 241.712096,
+    "dec": -52.213558,
+    "k": 12.93,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "2MASS",
+    "name": "2MASS J16064758-5212382",
+    "ra": 241.698255,
+    "dec": -52.210613,
+    "k": 15.586,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4144-00.0815",
+    "ra": 241.711093,
+    "dec": -52.204495,
+    "irac2": 13.802,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4112-00.0834",
+    "ra": 241.709278,
+    "dec": -52.207946,
+    "irac2": 13.037,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4132-00.0838",
+    "ra": 241.712229,
+    "dec": -52.206968,
+    "irac2": 12.506,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4116-00.0790",
+    "ra": 241.705001,
+    "dec": -52.204475,
+    "irac2": 11.519,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4108-00.0782",
+    "ra": 241.703098,
+    "dec": -52.204393,
+    "irac2": 11.926,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4088-00.0805",
+    "ra": 241.703245,
+    "dec": -52.207482,
+    "irac2": 11.201,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4090-00.0833",
+    "ra": 241.706529,
+    "dec": -52.209385,
+    "irac2": 13.604,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4163-00.0799",
+    "ra": 241.711595,
+    "dec": -52.201967,
+    "irac2": 12.429,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4172-00.0808",
+    "ra": 241.713636,
+    "dec": -52.202059,
+    "irac2": 13.497,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4142-00.0770",
+    "ra": 241.705834,
+    "dec": -52.201218,
+    "irac2": 10.802,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4152-00.0768",
+    "ra": 241.706959,
+    "dec": -52.200432,
+    "irac2": 13.622,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4080-00.0843",
+    "ra": 241.70641,
+    "dec": -52.210861,
+    "irac2": 11.518,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4180-00.0825",
+    "ra": 241.716536,
+    "dec": -52.202796,
+    "irac2": 12.205,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4113-00.0871",
+    "ra": 241.713442,
+    "dec": -52.210635,
+    "irac2": 11.641,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4070-00.0826",
+    "ra": 241.703359,
+    "dec": -52.210225,
+    "irac2": 9.106,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4069-00.0804",
+    "ra": 241.700757,
+    "dec": -52.208637,
+    "irac2": 13.365,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4149-00.0757",
+    "ra": 241.70525,
+    "dec": -52.199794,
+    "irac2": 12.68,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4182-00.0783",
+    "ra": 241.712081,
+    "dec": -52.199528,
+    "irac2": 9.65,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4077-00.0774",
+    "ra": 241.698456,
+    "dec": -52.205898,
+    "irac2": 13.295,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4195-00.0804",
+    "ra": 241.715973,
+    "dec": -52.20023,
+    "irac2": 11.802,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4183-00.0856",
+    "ra": 241.720262,
+    "dec": -52.204889,
+    "irac2": 10.82,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4112-00.0885",
+    "ra": 241.714853,
+    "dec": -52.211737,
+    "irac2": 13.506,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4088-00.0754",
+    "ra": 241.697563,
+    "dec": -52.203653,
+    "irac2": 13.208,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4058-00.0851",
+    "ra": 241.704542,
+    "dec": -52.212902,
+    "irac2": 13.386,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4066-00.0764",
+    "ra": 241.696046,
+    "dec": -52.205869,
+    "irac2": 9.401,
+    "type": null,
+    "variable": false
+   },
+   {
+    "catalogue": "GLIMPSE",
+    "name": "GLIMPSE SSTGLMC G330.4090-00.0886",
+    "ra": 241.712307,
+    "dec": -52.213367,
+    "irac2": 11.334,
+    "type": null,
+    "variable": false
+   }
+  ]
+ }
+}

@@ -1,0 +1,19 @@
+import re, html, sys, json
+t = open(sys.argv[1], errors="replace").read()
+t = re.sub(r"(?s)<script.*?</script>", "", t)
+items = re.findall(r'\?read=(\d+)"?[^>]*>\s*(?:<[^>]+>\s*)*([^<]+)', t)
+# fall back: split text lines
+s = html.unescape(re.sub(r"<[^>]+>", "\n", t))
+lines = [l.strip() for l in s.splitlines() if l.strip()]
+recs = []
+for i, l in enumerate(lines):
+    if re.fullmatch(r"\d{5}", l) and i + 3 < len(lines) and re.search(r"\d{4}; \d\d:\d\d UT", lines[i + 3]):
+        recs.append({"n": int(l), "title": lines[i + 1], "authors": lines[i + 2], "date": lines[i + 3]})
+json.dump(recs, open(sys.argv[2], "w"))
+print("records:", len(recs), "range", min(r["n"] for r in recs), max(r["n"] for r in recs))
+recent = [r for r in recs if r["n"] >= 16940]
+print("2025-2026 (n>=16940):", len(recent))
+pat = re.compile(r"Sco\b|Scorpi|\bAra\b|Arae|\bNor\b|Norma|SPHEREx|infrared transient|infra-red transient|WINTER|PGIR|Gattini|PRIME|VVV|NEOWISE|WISE|J165|J1652|-44|YSO|young stellar|FU Ori|FUor|EXor|protostar|embedded|dust-obscured|obscured|reddened|Galactic plane|Galactic Plane|outburst of a|eruptive", re.I)
+for r in recent:
+    if pat.search(r["title"]):
+        print(r["n"], r["date"][:11], "|", r["title"][:150])

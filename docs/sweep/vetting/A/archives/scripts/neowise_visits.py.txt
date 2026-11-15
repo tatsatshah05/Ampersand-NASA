@@ -1,0 +1,54 @@
+"""NEOWISE-R single-exposure detections within 25 arcsec of P, grouped by visit.
+Control: W (CatWISE J180312.48-232746.6, 20 arcsec from P) must be detected in each visit.
+Also lists every detection within 10 arcsec of P, any quality."""
+import sys, numpy as np, warnings
+warnings.filterwarnings("ignore")
+from astropy.io import ascii
+from astropy.time import Time
+from astropy.coordinates import SkyCoord
+T = "docs/sweep/vetting/A/archives/tables/"
+t = ascii.read(open(T + "gator_P_neowiser_p1bs_psd_r25.tbl").read(), format="ipac")
+P = SkyCoord(270.80409, -23.46819, unit="deg")
+C = SkyCoord(270.80362, -23.46745, unit="deg")
+W = SkyCoord(270.8020277, -23.4629541, unit="deg")
+c = SkyCoord(np.array(t["ra"]), np.array(t["dec"]), unit="deg")
+t["dP"] = np.round(c.separation(P).arcsec, 2)
+t["dC"] = np.round(c.separation(C).arcsec, 2)
+t["dW"] = np.round(c.separation(W).arcsec, 2)
+t["date"] = [Time(m, format="mjd").isot[:10] for m in t["mjd"]]
+t.sort("mjd")
+mjd = np.array(t["mjd"])
+# visits: gaps > 20 days
+starts = [0] + list(np.where(np.diff(mjd) > 20)[0] + 1)
+ends = starts[1:] + [len(t)]
+print(f"{len(t)} detections within 25\" of P, {len(starts)} visits, {Time(mjd.min(),format='mjd').isot[:10]} to {Time(mjd.max(),format='mjd').isot[:10]}")
+print("visit  dates                    nframes(distinct mjd)  W detected(W2 median, n)   n det within 3\"/6\"/10\" of P   brightest W2 within 6\" of P")
+rows = []
+for s, e in zip(starts, ends):
+    v = t[s:e]
+    nfr = len(np.unique(np.round(v["mjd"], 5)))
+    w = v[v["dW"] < 3]
+    w2W = np.nanmedian(np.array(w["w2mpro"], float)) if len(w) else np.nan
+    n3, n6, n10 = (v["dP"] < 3).sum(), (v["dP"] < 6).sum(), (v["dP"] < 10).sum()
+    near = v[v["dP"] < 6]
+    best = ""
+    if len(near):
+        i = np.nanargmin(np.array(near["w2mpro"], float))
+        best = f"W2 {near['w2mpro'][i]} (snr {near['w2snr'][i]}) at {near['dP'][i]}\" {near['date'][i]} q={near['ph_qual'][i]} cc={near['cc_flags'][i]}"
+    print(f"{v['date'][0]}..{v['date'][-1]}  {nfr:3d}   W: {len(w):3d} det, W2 med {w2W:6.3f}     {n3:3d} {n6:3d} {n10:3d}    {best}")
+print("\nEvery detection within 10 arcsec of P (any quality):")
+near = t[t["dP"] < 10]
+near["date", "mjd", "ra", "dec", "dP", "dC", "w1mpro", "w1snr", "w2mpro", "w2snr", "cc_flags", "ph_qual", "qual_frame", "qi_fact", "nb", "na", "source_id"].pprint(max_lines=-1, max_width=-1)
+# group near detections by approx position: cluster on 2" grid
+print("\nDistinct positions of detections within 10\" (rounded cluster centres):")
+used = np.zeros(len(near), bool)
+cc = SkyCoord(np.array(near["ra"]), np.array(near["dec"]), unit="deg")
+for i in range(len(near)):
+    if used[i]:
+        continue
+    grp = cc.separation(cc[i]).arcsec < 2.5
+    grp &= ~used
+    used |= grp
+    g = near[grp]
+    gc = SkyCoord(np.mean(g["ra"]), np.mean(g["dec"]), unit="deg")
+    print(f"  centre {gc.ra.deg:.5f} {gc.dec.deg:.5f}  dP {gc.separation(P).arcsec:5.2f}  n={len(g):3d}  W2 median {np.nanmedian(np.array(g['w2mpro'],float)):6.2f} range {np.nanmin(np.array(g['w2mpro'],float)):6.2f}-{np.nanmax(np.array(g['w2mpro'],float)):6.2f}  dates {g['date'][0]}..{g['date'][-1]}  visits {len(set(d[:7] for d in g['date']))}")

@@ -1,0 +1,34 @@
+import glob, os, sys, numpy as np, warnings
+from astropy.io import fits
+from astropy.wcs import WCS
+from PIL import Image, ImageDraw
+warnings.filterwarnings("ignore")
+B = "docs/sweep/vetting/B/archives/"
+sys.path.insert(0, B + "scripts"); import panel
+RA0, DEC0 = 253.18044, -44.67687
+# common north-up grid, 1"/px, 81x81
+n = 81; scale = 1/3600
+out = WCS(naxis=2); out.wcs.ctype = ["RA---TAN", "DEC--TAN"]; out.wcs.crval = [RA0, DEC0]; out.wcs.crpix = [41, 41]; out.wcs.cdelt = [-scale, scale]
+yy, xx = np.mgrid[0:n, 0:n]; ra, dec = out.all_pix2world(xx, yy, 0)
+def resample(img, w, sub_zodi=None):
+    x, y = w.all_world2pix(ra, dec, 0); xi, yi = np.round(x).astype(int), np.round(y).astype(int)
+    ok = (xi >= 0) & (xi < img.shape[1]) & (yi >= 0) & (yi < img.shape[0])
+    o = np.full((n, n), np.nan); o[ok] = img[yi[ok], xi[ok]]; return o
+def stack(pattern):
+    L = []
+    for f in sorted(glob.glob(pattern)):
+        h = fits.open(f)[0]; a = h.data.astype(float); a = a - np.nanmedian(a); L.append(resample(a, WCS(h.header)))
+    return np.nanmedian(np.array(L), axis=0), len(L)
+tiles = []
+for tag in ["2014-03", "2023-08", "2024-03"]:
+    for band in ["W1", "W2"]:
+        s, k = stack(B + f"img/neowise_l1b/{tag}_{band}_*.fits")
+        tiles.append(panel.tile(f"NEOWISE {band} {tag} median of {k}", s, out, half_arcsec=30, size=260))
+D = "<repository>/backend/cache/sweep/cutouts/b464db86a4/"
+for f, lab in [("2025W32_2D_0344_2_D6.fits", "SPHEREx D6 2025-08-09"), ("2026W10_2B_0633_1_D6.fits", "SPHEREx D6 2026-03-08"), ("2026W32_2A_0493_1_D6.fits", "SPHEREx D6 2026-08-08"),
+               ("2025W31_2A_0390_1_D5.fits", "SPHEREx D5 2025-08-02"), ("2026W10_1A_0488_1_D5.fits", "SPHEREx D5 2026-03-04"), ("2026W33_1A_0217_1_D5.fits", "SPHEREx D5 2026-08-11")]:
+    h = fits.open(D + f); a = h["IMAGE"].data - h["ZODI"].data
+    r = resample(a.astype(float), WCS(h["IMAGE"].header))
+    tiles.append(panel.tile(lab, r, out, half_arcsec=30, size=260, lo=np.nanpercentile(r, 5), hi=max(np.nanpercentile(r, 99.7), 1)))
+panel.save(tiles, B + "img/neowise_vs_spherex_northup.png", ncol=6, caption="North up, east left, 60\" wide, nearest-pixel resampling to 1\"/px. X=SPHEREx 2026 centroid, R=red 2MASS star (W2 9.07), c=CatWISE J165243.63")
+print("ok")

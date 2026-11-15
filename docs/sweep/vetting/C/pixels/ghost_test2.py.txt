@@ -1,0 +1,54 @@
+"""Follow-up of ghost_test: the faint-epoch predicted ghost places are fixed SKY points; measure them in every epoch
+(if a field star sits there it is bright in every epoch; a ghost of V345 Nor would be there only in the faint epochs),
+fit centroids, and list catalogue sources there."""
+import glob, json, os, sys, warnings
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+from measure import ap_sum, gfit, sky_level
+G = json.load(open("ghost_test.json"))
+names = {0: "Jul-Aug 2025", 1: "Feb-Mar 2026", 2: "Apr 2026", 3: "Jul-Sep 2026"}
+pts = {}
+for ep in (0, 3):
+    rr = [g for g in G if g["ep"] == ep and g["det"] in (5, 6)]
+    pts[ep] = (float(np.median([g["ghost_ra"] for g in rr])), float(np.median([g["ghost_dec"] for g in rr])))
+    sd = np.std([(g["ghost_ra"] - pts[ep][0]) * np.cos(np.radians(pts[ep][1])) * 3600 for g in rr]), np.std([(g["ghost_dec"] - pts[ep][1]) * 3600 for g in rr])
+    print(f"predicted ghost sky place in {names[ep]}: RA {pts[ep][0]:.5f} Dec {pts[ep][1]:.5f}  (spread of predictions over exposures sd E {sd[0]:.1f}\" N {sd[1]:.1f}\")")
+d03 = np.hypot((pts[0][0]-pts[3][0])*np.cos(np.radians(pts[0][1])), pts[0][1]-pts[3][1])*3600
+print(f"the two predicted places are {d03:.1f}\" apart")
+json.dump(pts, open("ghost_places.json", "w"))
+files = sorted(glob.glob(os.path.join(HERE, "downloads", "big", "*", "*.fits")))
+R = {(r["obs_id"], r["det"]): r for r in json.load(open("measurements.json"))}
+out = []
+for p in files:
+    oid, dd = os.path.basename(p)[:-5].rsplit("_D", 1); d = int(dd)
+    with fits.open(p) as h:
+        hd = h["IMAGE"].header; img = h["IMAGE"].data.astype(float); fl = h["FLAGS"].data.astype(np.int64)
+        var = h["VARIANCE"].data.astype(float); zod = h["ZODI"].data.astype(float)
+    w = WCS(hd); data = img - zod
+    with np.errstate(invalid="ignore"): data[img < -10 * np.sqrt(var)] = np.nan
+    to_mjy = float(proj_plane_pixel_area(w)) * (np.pi / 180) ** 2 * 1e9
+    ny, nx = data.shape
+    for ep_place, (ra, de) in pts.items():
+        x, y = (float(t) for t in w.all_world2pix(ra, de, 0))
+        if not (21 <= x < nx - 21 and 21 <= y < ny - 21): continue
+        sky, _, _ = sky_level(data, fl, x, y, 14, 20)
+        v, bits, nbad, _ = ap_sum(data, fl, x, y, sky, to_mjy)
+        g = gfit(data, fl, x, y, half=4)
+        rec = {"obs_id": oid, "det": d, "ep": R[(oid, d)]["ep"], "place": ep_place, "flux": v, "nbad": nbad}
+        if g:
+            gra, gde = (float(t) for t in w.all_pix2world(g["x"], g["y"], 0))
+            rec.update(off_e=(gra - ra) * np.cos(np.radians(de)) * 3600, off_n=(gde - de) * 3600, fwhm=2.3548 * g["sigma_px"] * 6.15)
+        out.append(rec)
+json.dump(out, open("ghost_test2.json", "w"), indent=0)
+for place in (0, 3):
+    print(f"\nSky place predicted for {names[place]}:")
+    for d in (5, 6):
+        for ep in (0, 1, 2, 3):
+            rr = [r for r in out if r["place"] == place and r["det"] == d and r["ep"] == ep and r["nbad"] == 0]
+            if not rr: continue
+            f = np.array([r["flux"] for r in rr]); oe = np.array([r.get("off_e", np.nan) for r in rr]); on = np.array([r.get("off_n", np.nan) for r in rr])
+            print(f"   D{d} {names[ep]:13s} n={len(rr):2d} flux median {np.median(f):6.1f} mJy (MAD {1.4826*np.median(np.abs(f-np.median(f))):5.1f})  fitted centroid offset median E {np.nanmedian(oe):+5.1f}\" N {np.nanmedian(on):+5.1f}\"")

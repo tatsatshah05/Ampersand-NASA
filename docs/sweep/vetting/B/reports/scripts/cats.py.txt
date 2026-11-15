@@ -1,0 +1,80 @@
+"""Position searches in VizieR (B/vsx and others) and SIMBAD for source B and control novae.
+Writes raw results to ../dl/. Run with python -I."""
+import sys, json, datetime, warnings
+warnings.filterwarnings("ignore")
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+from astroquery.vizier import Vizier
+from astroquery.simbad import Simbad
+from astroquery.vizier import conf as vconf
+vconf.server = "vizier.cfa.harvard.edu"
+
+OUT = sys.argv[1]
+TARGETS = {"B": (253.18044, -44.67687), "V7994Sgr": (270.96983, -31.45739), "V462Lup": (227.01362, -40.14308)}
+print("UTC", datetime.datetime.utcnow().isoformat())
+
+def viz(cat, ra, dec, rad_arcsec, cols=("**",), extra=None):
+    v = Vizier(columns=list(cols), row_limit=-1, column_filters=extra or {})
+    c = SkyCoord(ra, dec, unit="deg")
+    res = v.query_region(c, radius=rad_arcsec * u.arcsec, catalog=cat)
+    return res
+
+def sep(t, ra, dec):
+    c0 = SkyCoord(ra, dec, unit="deg")
+    racol = [k for k in t.colnames if k in ("RAJ2000", "RA_ICRS", "_RAJ2000", "RAdeg", "ra")][0]
+    deccol = [k for k in t.colnames if k in ("DEJ2000", "DE_ICRS", "_DEJ2000", "DEdeg", "dec")][0]
+    cc = SkyCoord(t[racol], t[deccol], unit=("deg", "deg"))
+    return c0.separation(cc).arcsec
+
+mode = sys.argv[2]
+if mode == "vsx":
+    for n, (ra, dec) in TARGETS.items():
+        r = viz("B/vsx/vsx", ra, dec, 60)
+        print(f"== VizieR B/vsx/vsx within 60 arcsec of {n} ({ra},{dec}): {len(r)} tables")
+        for t in r:
+            t["sep"] = sep(t, ra, dec)
+            t.sort("sep")
+            t.write(f"{OUT}/vizier_vsx_1am_{n}.csv", overwrite=True)
+            for row in t:
+                print("   ", row["Name"], row["Type"], row["max"], row["min"], f"{row['sep']:.1f}\"")
+    # novae within 1 degree of B
+    ra, dec = TARGETS["B"]
+    for extra in ({"Type": "N*"},):
+        r = viz("B/vsx/vsx", ra, dec, 3600, extra=extra)
+        print(f"== VizieR B/vsx/vsx within 1 deg of B with Type {extra}: {len(r)} tables")
+        for t in r:
+            t["sep"] = sep(t, ra, dec)
+            t.sort("sep")
+            t.write(f"{OUT}/vizier_vsx_1deg_novae_B.csv", overwrite=True)
+            for row in t:
+                print("   ", row["Name"], row["Type"], row["max"], row["min"], f"{row['sep']/60:.1f}'")
+    # control: novae within 1 deg of V7994 Sgr (should include V7994 Sgr itself)
+    ra, dec = TARGETS["V7994Sgr"]
+    r = viz("B/vsx/vsx", ra, dec, 3600, extra={"Type": "N*"})
+    print(f"== control: VizieR B/vsx/vsx novae within 1 deg of V7994 Sgr: {sum(len(t) for t in r)} rows")
+    for t in r:
+        t["sep"] = sep(t, ra, dec)
+        t.sort("sep")
+        for row in t[:10]:
+            print("   ", row["Name"], row["Type"], row["max"], f"{row['sep']/60:.1f}'")
+
+if mode == "simbad":
+    s = Simbad()
+    s.add_votable_fields("otype", "otypes", "ids")
+    for n, (ra, dec) in TARGETS.items():
+        try:
+            t = s.query_region(SkyCoord(ra, dec, unit="deg"), radius=60 * u.arcsec)
+        except Exception as e:
+            print(n, "SIMBAD error", repr(e)); continue
+        print(f"== SIMBAD within 60 arcsec of {n}: {0 if t is None else len(t)} rows")
+        if t is None:
+            continue
+        c0 = SkyCoord(ra, dec, unit="deg")
+        rc = [k for k in t.colnames if k.lower() in ("ra",)][0]
+        dc = [k for k in t.colnames if k.lower() in ("dec",)][0]
+        t["sep"] = c0.separation(SkyCoord(t[rc], t[dc], unit="deg")).arcsec
+        t.sort("sep")
+        keep = [k for k in t.colnames if k.lower() in ("main_id", "otype", "sep")]
+        t.write(f"{OUT}/simbad_1am_{n}.csv", overwrite=True)
+        for row in t:
+            print("   ", row[keep[0]], row["otype"], f"{row['sep']:.1f}\"")

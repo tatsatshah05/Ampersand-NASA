@@ -1,0 +1,40 @@
+"""Montage of 21x21-pixel stamps (zodi-subtracted, each scaled to its own 99th percentile) around C."""
+import glob, sys
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.time import Time
+from PIL import Image, ImageDraw
+CUT = "<repository>/backend/cache/sweep/cutouts/4ae14c5ec1"
+RA, DEC = 241.709051, -52.205612
+want = sys.argv[2:]
+tiles = []
+for f in sorted(glob.glob(CUT + "/*.fits")):
+    h = fits.open(f)
+    hd = h["IMAGE"].header
+    t = Time(hd["MJD-AVG"], format="mjd").isot[:16]
+    key = f"{t}_D{hd['DETECTOR']}"
+    if not any(key.startswith(wn) for wn in want):
+        continue
+    d = h["IMAGE"].data - h["ZODI"].data
+    w = WCS(hd)
+    x, y = (float(v) for v in w.all_world2pix(RA, DEC, 0))
+    xi, yi = int(round(x)), int(round(y))
+    s = d[yi-10:yi+11, xi-10:xi+11]
+    s = s - np.nanmedian(s)
+    hi = np.nanpercentile(s, 99.5)
+    a = np.clip(s / hi, 0, 1)
+    a = np.nan_to_num(a, nan=0)
+    im = Image.fromarray((a[::-1] * 255).astype(np.uint8)).resize((168, 168), Image.NEAREST).convert("RGB")
+    dr = ImageDraw.Draw(im)
+    cx, cy = (x - (xi - 10) + 0.5) * 8, (20 - (y - (yi - 10)) + 0.5) * 8
+    dr.ellipse([cx-12, cy-12, cx+12, cy+12], outline=(0, 255, 0))
+    wave = h["WAVE"].data[yi, xi]
+    lab = Image.new("RGB", (168, 30), (0, 0, 0)); ImageDraw.Draw(lab).text((2, 2), f"{key}\n{wave:.3f}um max{hi:.2f}", fill=(255, 255, 255))
+    col = Image.new("RGB", (168, 198)); col.paste(lab, (0, 0)); col.paste(im, (0, 30))
+    tiles.append(col)
+out = Image.new("RGB", (172 * len(tiles), 198))
+for k, t in enumerate(tiles):
+    out.paste(t, (k * 172, 0))
+out.save(sys.argv[1])
+print(len(tiles))

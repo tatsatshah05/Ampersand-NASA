@@ -1,0 +1,63 @@
+"""Decline rates and luminosities of C from own photometry (2.5 px minus Jul-Aug 2025 median, continuum channels)."""
+import json, math, sys
+import numpy as np
+H, C, K = 6.62607e-34, 2.99792e8, 1.380649e-23
+LAW = np.array([[1.235, 2.50], [1.662, 1.55], [2.159, 1.00], [3.545, 0.56], [4.442, 0.43], [5.675, 0.43]])
+def a_over_ak(lam):
+    lam = np.atleast_1d(lam).astype(float)
+    out = np.interp(np.log(lam), np.log(LAW[:, 0]), LAW[:, 1]); lo = lam < 1.235
+    out[lo] = 2.50 * (lam[lo] / 1.235) ** -1.61
+    return out
+def bnu(lam_um, t):
+    nu = C / (lam_um * 1e-6)
+    return 2 * H * nu ** 3 / C ** 2 / np.expm1(H * nu / (K * t))
+LINES = [1.0830, 1.0941, 1.2822, 1.8756, 2.1661, 2.6259, 3.0392, 3.2970, 3.7406, 4.0523, 4.2954, 4.3765, 4.4867,
+         4.5295, 4.6538, 4.6725, 4.7635]
+recs = [json.loads(l) for l in open(sys.argv[2])]
+recs = [r for r in recs if r.get("status") == "measured" and r.get("f2.5") is not None and r["badshare2.5"] < 0.15]
+def cont(r): return all(abs(r["um"] - L) > 0.8 * r["bw_um"] for L in LINES) and not (4.72 < r["um"] < 4.79)
+q = {d: np.median([r["f2.5"] for r in recs if 60850 < r["mjd"] < 60920 and r["det"] == d]) for d in range(1, 7)}
+print("decline per detector (continuum, 2.5 px minus Jul-Aug 2025 median):")
+for d in (3, 4, 5, 6):
+    a = [(r["mjd"], r["f2.5"] - q[d]) for r in recs if 61080 < r["mjd"] < 61110 and r["det"] == d and cont(r)]
+    b = [(r["mjd"], r["f2.5"] - q[d]) for r in recs if 61240 < r["mjd"] < 61300 and r["det"] == d and cont(r)]
+    fa, fb = np.median([x[1] for x in a]), np.median([x[1] for x in b])
+    ta, tb = np.median([x[0] for x in a]), np.median([x[0] for x in b])
+    months = (tb - ta) / 30.44
+    lim = max(fb, 1.0)
+    print(f"  D{d}: {fa:6.1f} mJy (n={len(a)}, MJD {ta:.0f}) -> {fb:5.1f} mJy (n={len(b)}, MJD {tb:.0f}); factor {fa/lim:5.1f} "
+          f"= {2.5*math.log10(fa/lim):.1f} mag in {months:.1f} months = {2.5*math.log10(fa/lim)/months:.2f} mag/month"
+          + ("  (late value floored at 1 mJy: a lower limit on the fade)" if fb < 1 else ""))
+# D3 2.2-2.4 um Feb 28 vs Apr 9 (same channel 2.285)
+feb = [r for r in recs if r["det"] == 3 and 61099 < r["mjd"] < 61100 and 2.2 < r["um"] < 2.4]
+apr = [r for r in recs if r["det"] == 3 and 61139 < r["mjd"] < 61141 and 2.2 < r["um"] < 2.4]
+for r in feb + apr:
+    print(f"  D3 {r['um']:.3f} MJD {r['mjd']:.2f}: r2.5 {r['f2.5']:.1f}  r1.5 {r['f1.5']:.1f}  minus quiescent(2.5) {r['f2.5']-q[3]:.1f}")
+# luminosities
+data = np.loadtxt(sys.argv[3])
+lam, f = data[:, 0], data[:, 1]
+o = np.argsort(lam); lam, f = lam[o], f[o]
+nu = 2.99792e8 / (lam * 1e-6)
+LSUN, KPC = 3.828e26, 3.0857e19
+print("\nflare (Feb-Mar 2026) luminosity, continuum channels only, lines excluded:")
+for ak in (0.0, 1.0, 2.0):
+    fd = f * 10 ** (0.4 * ak * a_over_ak(lam))
+    F = -np.trapezoid(fd * 1e-29, nu)   # W/m^2 over 1.14-4.99 um
+    out = [f"{d} kpc: {4*math.pi*(d*KPC)**2*F/LSUN:7.0f} Lsun" for d in (3, 8, 12)]
+    print(f"  A_K={ak:.0f}: F(1.1-5.0um) = {F:.2e} W/m2 ->", "; ".join(out))
+# blackbody totals (fits from sed_fit.py): T=1150 K A_K=0, T=1450 K A_K=1, T=2070 K A_K=2, scaled to 4 um
+for t, ak in ((1150, 0.0), (1450, 1.0), (2070, 2.0)):
+    f4 = np.median(f[(lam > 3.85) & (lam < 4.4)]) * 10 ** (0.4 * ak * a_over_ak(np.array([4.1]))[0])
+    lamg = np.geomspace(0.1, 200, 4000); nug = 2.99792e8 / (lamg * 1e-6)
+    fg = f4 * bnu(lamg, t) / bnu(np.array([4.1]), t)[0]
+    F = -np.trapezoid(fg * 1e-29, nug)
+    print(f"  blackbody {t} K (A_K={ak:.0f}), all wavelengths: F = {F:.2e} W/m2 ->",
+          "; ".join(f"{d} kpc: {4*math.pi*(d*KPC)**2*F/LSUN:7.0f} Lsun" for d in (2.74, 3, 8, 12)))
+# Ks magnitude of the flare continuum (2.0-2.4 um) and M_K
+fk = np.median(f[(lam > 1.95) & (lam < 2.45)])
+ks = -2.5 * math.log10(fk / 666.7e3)
+print(f"\nflare continuum 1.95-2.45 um: {fk:.1f} mJy -> Ks ~ {ks:.2f} (2MASS zero point 666.7 Jy)")
+for ak in (0.0, 1.0, 2.0):
+    print(f"  A_K={ak:.0f}: M_K at 2.74 / 3 / 8 / 12 kpc =", " / ".join(f"{ks-ak-5*math.log10(d*100):.1f}" for d in (2.74, 3, 8, 12)))
+f45 = np.median(f[(lam > 4.4) & (lam < 5.0)])
+print(f"flare continuum 4.4-5.0 um: {f45:.1f} mJy -> [4.5] ~ {-2.5*math.log10(f45/179.7e3):.2f} (IRAC zero point 179.7 Jy)")

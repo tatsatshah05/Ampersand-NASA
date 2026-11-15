@@ -1,0 +1,100 @@
+"""Field-star controls in the same cutouts.
+
+1. Reference stars: GLIMPSE/2MASS-independent: stars are found in the bright-epoch D6 cutouts themselves? No --
+   to stay neutral, comparison stars are taken from AllWISE (W2 8 to 11, i.e. ~6 to 100 mJy at 4.6 um) within
+   4 arcmin, with no other AllWISE source within 12 arcsec. Each is measured in every exposure exactly as the
+   candidate is (aperture 2.5 px, sky ring 14-20 px, own code from measure.py), plus a Gaussian fit (FWHM).
+2. Output: fieldstars.json with per exposure, per star: flux, status, fwhm, centroid offset from catalogue.
+"""
+import json
+import os
+import sys
+import warnings
+
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+
+warnings.simplefilter("ignore")
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from measure import CUT, LIST, PHOT_BAD, ap_sum, gfit, mask, sky_level  # own code
+from readcat import tsv
+
+RA0, DEC0 = 241.70931, -52.20484
+
+
+def comparison_stars():
+    # AllWISE within 4 arcmin, from VizieR (fetched by catalogues_wide in this script if absent)
+    path = os.path.join(HERE, "downloads", "allwise_4arcmin.tsv")
+    if not os.path.exists(path):
+        import catalogues
+        catalogues.vizier("allwise_4arcmin", "II/328/allwise", radius_arcsec=240,
+                          out="RAJ2000,DEJ2000,AllWISE,W1mag,W2mag,ccf,qph,ex")
+    rows = tsv("allwise_4arcmin")
+    ra = np.array([float(r["RAJ2000"]) for r in rows])
+    de = np.array([float(r["DEJ2000"]) for r in rows])
+    w2 = np.array([float(r["W2mag"]) if r["W2mag"] else 99 for r in rows])
+    stars = []
+    for i, r in enumerate(rows):
+        if not (8.0 <= w2[i] <= 11.0):
+            continue
+        d = np.hypot((ra - ra[i]) * np.cos(np.radians(de[i])), de - de[i]) * 3600
+        d[i] = 1e9
+        if (d < 12.0).any():
+            continue
+        # not within 20 arcsec of the candidate
+        if np.hypot((ra[i] - RA0) * np.cos(np.radians(DEC0)), de[i] - DEC0) * 3600 < 20:
+            continue
+        if r.get("ex", "0") not in ("0", ""):
+            continue
+        stars.append({"name": r["AllWISE"], "ra": ra[i], "dec": de[i], "w2": w2[i],
+                      "w2_mjy": 171787.0 * 10 ** (-0.4 * w2[i])})
+    return stars
+
+
+def main():
+    stars = comparison_stars()
+    print("comparison stars:", len(stars))
+    exps = json.load(open(LIST))
+    out = []
+    for e in exps:
+        p = os.path.join(CUT, f"{e['obs_id']}_D{e['detector']}.fits")
+        with fits.open(p) as h:
+            hd = h["IMAGE"].header
+            img = h["IMAGE"].data.astype(float)
+            fl = h["FLAGS"].data.astype(np.int64)
+            var = h["VARIANCE"].data.astype(float)
+            zod = h["ZODI"].data.astype(float)
+        w = WCS(hd)
+        ny, nx = img.shape
+        data = img - zod
+        with np.errstate(invalid="ignore"):
+            data[img < -10.0 * np.sqrt(var)] = np.nan
+        to_mjy = float(proj_plane_pixel_area(w)) * (np.pi / 180.0) ** 2 * 1e9
+        pix = np.sqrt(float(proj_plane_pixel_area(w))) * 3600
+        res = []
+        for s in stars:
+            x, y = (float(v) for v in w.all_world2pix(s["ra"], s["dec"], 0))
+            if not (20.5 <= x < nx - 20.5 and 20.5 <= y < ny - 20.5):
+                continue
+            sky, _, _ = sky_level(data, fl, x, y, 14.0, 20.0)
+            if sky is None:
+                continue
+            v, bits, nbad, _ = ap_sum(data, fl, x, y, sky, to_mjy)
+            g = gfit(data, fl, x, y)
+            item = {"name": s["name"], "w2": s["w2"], "flux": v, "ok": nbad == 0}
+            if g is not None:
+                gra, gde = (float(t) for t in w.all_pix2world(g["x"], g["y"], 0))
+                item.update(fwhm=2.3548 * g["sigma_px"] * pix,
+                            off_e=(gra - s["ra"]) * np.cos(np.radians(s["dec"])) * 3600,
+                            off_n=(gde - s["dec"]) * 3600, peak=g["amp"])
+            res.append(item)
+        out.append({"obs_id": e["obs_id"], "det": e["detector"], "stars": res})
+    json.dump({"stars": stars, "exposures": out}, open(os.path.join(HERE, "fieldstars.json"), "w"))
+    print("done")
+
+
+if __name__ == "__main__":
+    main()

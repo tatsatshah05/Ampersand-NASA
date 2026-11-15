@@ -2,6 +2,11 @@
 // (frame after frame, round and round), blinking (first and last frame in turn, which
 // shows a small shift best) and paused. One timer drives both playing and blinking.
 //
+// A before-and-after pair (one of our sweep's candidates: wording.ts, beforeAfter) changes
+// blinking to flip between those two frames, holding each long enough to see what appeared,
+// and a new set of frames with a pair opens blinking on its "before" frame (still, on it, for
+// people who ask for less motion).
+//
 // Resting: when nobody can see the picture (scrolled out of the window, or the tab hidden)
 // the timer rests. The state does not change, so Play or Pause keeps its label and nothing
 // on the page changes; when the picture is back in sight the visits carry on by themselves.
@@ -23,32 +28,54 @@ const prefersStillness = () =>
 /** Whether the timer runs: something to flip between, not paused, and someone can see it. */
 export const ticks = (playback: Playback, count: number, resting: boolean): boolean => count >= 2 && playback !== 'paused' && !resting
 
-/** The frame after `index`: the next one round and round, or for a blink the other end. */
-export const nextIndex = (playback: Playback, index: number, count: number): number =>
-  playback === 'blinking' ? (index === 0 ? count - 1 : 0) : (index + 1) % count
+/** A blink between a before-and-after pair holds each frame this many times the playing speed (1.2 s at Normal). */
+export const PAIR_HOLD = 2.4
+
+/** The two frames a blink flips between: [before, after] indices. */
+export type Pair = readonly [number, number]
+
+/** The frame after `index`: the next one round and round, or for a blink the other end (or the other of the pair). */
+export const nextIndex = (playback: Playback, index: number, count: number, pair: Pair | null = null): number => {
+  if (playback !== 'blinking') return (index + 1) % count
+  if (pair) return index === pair[0] ? pair[1] : pair[0]
+  return index === 0 ? count - 1 : 0
+}
 
 /**
  * `framesKey` names the set of frames being played and `count` is how many there are.
  * A new set starts again from its first frame; playing or paused carries over. While
  * `resting` the timer stops and nothing else changes (useResting says when).
  */
-export function usePlayer(framesKey: string, count: number, resting = false) {
+export function usePlayer(framesKey: string, count: number, resting = false, pair: Pair | null = null) {
   // People who ask their system for less motion start paused; play is one key away.
   const [playback, setPlayback] = useState<Playback>(() => (prefersStillness() ? 'paused' : 'playing'))
   const [speedMs, setSpeedMs] = useState<number>(SPEEDS[1].ms)
   const [at, setAt] = useState({ key: framesKey, index: 0 })
+  // A set of frames with a before-and-after pair opens on "before", blinking (once per set).
+  const [pairedFor, setPairedFor] = useState<string | null>(null)
+  const before = pair && pair[0] < count && pair[1] < count ? pair[0] : null
+  const after = before !== null && pair ? pair[1] : null
+  if (before !== null && framesKey && pairedFor !== framesKey) {
+    setPairedFor(framesKey)
+    setAt({ key: framesKey, index: before })
+    if (!prefersStillness()) setPlayback('blinking')
+  }
   const current = at.key === framesKey && at.index < count ? at.index : 0
 
   useEffect(() => {
     if (!ticks(playback, count, resting)) return
-    const timer = window.setInterval(() => {
-      setAt((was) => {
-        const index = was.key === framesKey && was.index < count ? was.index : 0
-        return { key: framesKey, index: nextIndex(playback, index, count) }
-      })
-    }, speedMs)
+    const flip: Pair | null = before !== null && after !== null ? [before, after] : null
+    const timer = window.setInterval(
+      () => {
+        setAt((was) => {
+          const index = was.key === framesKey && was.index < count ? was.index : 0
+          return { key: framesKey, index: nextIndex(playback, index, count, flip) }
+        })
+      },
+      playback === 'blinking' && flip ? speedMs * PAIR_HOLD : speedMs,
+    )
     return () => window.clearInterval(timer)
-  }, [playback, speedMs, framesKey, count, resting])
+  }, [playback, speedMs, framesKey, count, resting, before, after])
 
   /** Show one frame and stop there. */
   const show = useCallback(
@@ -78,11 +105,12 @@ export function usePlayer(framesKey: string, count: number, resting = false) {
 
   const togglePlay = useCallback(() => setPlayback((was) => (was === 'paused' ? 'playing' : 'paused')), [])
 
-  /** Blink starts on the first frame, so the first flip goes to the last. */
+  /** Blink starts on the first frame (or the pair's "before"), so the first flip goes to the last (or "after"). */
   const toggleBlink = useCallback(() => {
     setPlayback((was) => (was === 'blinking' ? 'paused' : 'blinking'))
-    setAt((was) => (was.key === framesKey && (was.index === 0 || was.index === count - 1) ? was : { key: framesKey, index: 0 }))
-  }, [framesKey, count])
+    const ends = before !== null && after !== null ? [before, after] : [0, count - 1]
+    setAt((was) => (was.key === framesKey && ends.includes(was.index) ? was : { key: framesKey, index: ends[0] }))
+  }, [framesKey, count, before, after])
 
   return { current, playback, speedMs, setSpeedMs, show, step, pause, togglePlay, toggleBlink }
 }

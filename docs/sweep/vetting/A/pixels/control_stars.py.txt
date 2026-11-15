@@ -1,0 +1,49 @@
+"""Control stars measured exactly like A' (r=2.5 px aperture above a 14-20 px sky ring, Gaussian width and
+centroid), in the same exposures: AllWISE J180315.97-232753.1 (W2 6.20, 43" E of A') and the neighbour
+J180312.46-232746.7 (W2 6.49, 20" NNW of A'). Is the flux scale steady between visits, and how wide is a
+bright star?"""
+import json, math, warnings, logging, sys
+from pathlib import Path
+from collections import defaultdict
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area
+warnings.simplefilter("ignore"); logging.getLogger("astropy").setLevel(logging.ERROR)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from measure import CUT, LIST, PHOT_BAD, SKY_BAD, OVF, SUR, SPILL, mask, clipped_median, frac_disk, gauss_fit
+D = Path(__file__).resolve().parent
+STARS = {"E43 (W2 6.20)": (270.81658, -23.46476), "neighbour (W2 6.49)": (270.801899, -23.462976)}
+L = json.load(open(LIST)); L.sort(key=lambda e: e["mjd"])
+ep, cur = [], 0
+for i, e in enumerate(L):
+    if i and e["mjd"] - L[i - 1]["mjd"] > 30: cur += 1
+    ep.append(cur + 1)
+res = defaultdict(list)
+for e, k in zip(L, ep):
+    if e["detector"] not in (5, 6, 2): continue
+    with fits.open(CUT / f"{e['obs_id']}_D{e['detector']}.fits") as h:
+        hd = h["IMAGE"].header; img = h["IMAGE"].data.astype(float); flg = h["FLAGS"].data.astype(np.int64)
+        var = h["VARIANCE"].data.astype(float); zod = h["ZODI"].data.astype(float); wav = h["WAVE"].data
+    w = WCS(hd); ny, nx = img.shape
+    d = img - zod; d[img < -10 * np.sqrt(var)] = np.nan
+    to_mjy = float(proj_plane_pixel_area(w)) * (math.pi / 180) ** 2 * 1e9
+    sat = (((flg & OVF) != 0) & ((flg & SUR) != 0)) | ((flg & SPILL) != 0)
+    good = np.isfinite(d) & ((flg & PHOT_BAD) == 0)
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    for name, (ra, de) in STARS.items():
+        x, y = (float(v) for v in w.all_world2pix(ra, de, 0))
+        if not (21 <= x < nx - 21 and 21 <= y < ny - 21): continue
+        r = np.hypot(xx - x, yy - y)
+        ring = (r >= 14) & (r < 20) & np.isfinite(d)
+        ok = ring & ((flg & SKY_BAD) == 0)
+        if ok.sum() < 100: ok = ring & ((flg & (SKY_BAD & ~mask("SOURCE", "OUTLIER"))) == 0)
+        sky, _, _ = clipped_median(d[ok])
+        wt = frac_disk(nx, ny, x, y, 2.5); u = wt > 0
+        if sat[u].any() or (~good[u]).any(): continue
+        f = float(np.sum(wt[u] * (d[u] - sky)) * to_mjy)
+        g = gauss_fit(d - sky, good, round(x), round(y))
+        res[(name, e["detector"], k)].append((f, g["fwhm_px"] * 6.15 if g else np.nan, float(wav[int(round(y)), int(round(x))])))
+for key in sorted(res):
+    v = np.array(res[key])
+    print(f"{key[0]:20s} D{key[1]} visit {key[2]}: n={len(v):2d} flux median {np.median(v[:,0]):7.1f} mJy (MAD {1.4826*np.median(np.abs(v[:,0]-np.median(v[:,0]))):5.1f}) FWHM {np.nanmedian(v[:,1]):.2f}\"")

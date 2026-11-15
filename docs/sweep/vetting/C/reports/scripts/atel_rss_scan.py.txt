@@ -1,0 +1,21 @@
+"""Read the official per-telegram RSS XML (title, date, opening of the text) for a range of ATel numbers, one request per second."""
+import re, sys, time, os, requests
+lo, hi, outdir, summ = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3], sys.argv[4]
+s = requests.Session(); s.headers['User-Agent'] = 'Mozilla/5.0 (generic research client)'
+out = open(summ, 'a')
+for n in range(lo, hi + 1):
+    f = os.path.join(outdir, f'{n}.xml')
+    if not os.path.exists(f):
+        try:
+            r = s.get(f'https://www.astronomerstelegram.org/?rss+{n}', timeout=60)
+            open(f, 'wb').write(r.content)
+        except Exception as e:
+            out.write(f'{n}\tERR\t{e}\n'); out.flush(); continue
+        time.sleep(1.0)
+    t = open(f, encoding='utf-8', errors='replace').read()
+    items = re.findall(r'<item[^>]*>(.*?)</item>', t, re.S)
+    if not items:
+        out.write(f'{n}\tNOITEM\t{len(t)}\n'); out.flush(); continue
+    it = items[0]
+    g = lambda tag: re.sub(r'\s+', ' ', (re.search(rf'<{tag}>(.*?)</{tag}>', it, re.S) or [None, ''])[1]).strip()
+    out.write(f"{n}\t{g('dc:date')[:10]}\t{g('title')}\t{g('description')}\n"); out.flush()

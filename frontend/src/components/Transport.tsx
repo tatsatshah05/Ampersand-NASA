@@ -20,9 +20,11 @@ interface TransportProps {
   onSpeed: (ms: number) => void
   /** A small button at the end of the row (Beginner's "i"). */
   info?: ReactNode
+  /** Blink flips between a before-and-after pair rather than the first and the last frame (one of our candidates). */
+  beforeAfter?: boolean
 }
 
-export function Transport({ several, disabled, playback, speedMs, onTogglePlay, onToggleBlink, onStep, onSpeed, info }: TransportProps) {
+export function Transport({ several, disabled, playback, speedMs, onTogglePlay, onToggleBlink, onStep, onSpeed, info, beforeAfter = false }: TransportProps) {
   const off = disabled || !several
   const moving = playback !== 'paused' && several
   return (
@@ -46,14 +48,18 @@ export function Transport({ several, disabled, playback, speedMs, onTogglePlay, 
         type="button"
         className="toggle blink-button"
         aria-pressed={playback === 'blinking'}
-        title="Flip between the first and the last frame, which shows a small shift best"
+        title={
+          beforeAfter
+            ? 'Flip between the picture where nothing is seen at this place and the first one where it clearly is'
+            : 'Flip between the first and the last frame, which shows a small shift best'
+        }
         disabled={off}
         onClick={(e) => {
           onToggleBlink()
           releaseFocusAfterPointer(e.currentTarget)
         }}
       >
-        Blink first and last
+        {beforeAfter ? 'Blink before and after' : 'Blink first and last'}
       </button>
       <span className="transport-steps">
         <button

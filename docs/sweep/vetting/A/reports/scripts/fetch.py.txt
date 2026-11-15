@@ -1,0 +1,51 @@
+"""Fetch a URL with a generic User-Agent, save the raw answer, log the request.
+
+usage: python -I fetch.py <label> <url> [post-data-json]
+Saves to ../downloads/<label>/answer.<ext> and appends a line to ../notes/requests.log
+"""
+import sys, os, json, time, datetime, urllib.parse
+import requests
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+
+
+def fetch(label, url, data=None, timeout=90, headers=None):
+    d = os.path.join(ROOT, "downloads", label)
+    os.makedirs(d, exist_ok=True)
+    h = {"User-Agent": UA}
+    if headers:
+        h.update(headers)
+    t0 = time.time()
+    err = None
+    try:
+        if data is None:
+            r = requests.get(url, headers=h, timeout=timeout)
+        else:
+            r = requests.post(url, headers=h, data=data, timeout=timeout)
+        status = r.status_code
+        body = r.content
+        ctype = r.headers.get("content-type", "")
+    except Exception as e:  # report, never fill in
+        status, body, ctype, err = None, b"", "", repr(e)
+    ext = "json" if "json" in ctype else ("xml" if "xml" in ctype else ("html" if "html" in ctype else "txt"))
+    p = os.path.join(d, "answer." + ext)
+    with open(p, "wb") as f:
+        f.write(body)
+    line = {
+        "utc": datetime.datetime.utcnow().isoformat(timespec="seconds"),
+        "label": label, "url": url, "post": data, "status": status,
+        "bytes": len(body), "ctype": ctype, "secs": round(time.time() - t0, 1), "error": err, "saved": p,
+    }
+    with open(os.path.join(ROOT, "notes", "requests.log"), "a") as f:
+        f.write(json.dumps(line) + "\n")
+    return line, body
+
+
+if __name__ == "__main__":
+    label, url = sys.argv[1], sys.argv[2]
+    data = json.loads(sys.argv[3]) if len(sys.argv) > 3 else None
+    line, body = fetch(label, url, data)
+    print(json.dumps(line))
+    print(body[:3000].decode("utf-8", "replace"))

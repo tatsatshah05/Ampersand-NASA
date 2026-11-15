@@ -56,6 +56,18 @@ TARGETS: list[dict] = [
     # Two novae that erupted in June 2025, after SPHEREx began (docs/novae.md). Positions from AAVSO VSX.
     {"slug": "v462_lup", "name": "Nova V462 Lupi", "position": {"ra": 227.01362, "dec": -40.14308}},
     {"slug": "v572_vel", "name": "Nova V572 Velorum", "position": {"ra": 156.30783, "dec": -53.522}},
+    # The three candidates of our blind sweep of the Milky Way's plane, at the reviewers'
+    # corrected positions (frontend/src/finds.ts, docs/sweep.md). The page asks for them with a
+    # motion of zero, so that its detection measure is made at this one place in every visit
+    # (without a motion it measures the brightest spot near the centre, a neighbouring star in
+    # 2025); both are warmed. Candidates: found in no catalogue or report we checked, confirmed
+    # by nobody.
+    {"slug": "candidate_a", "name": "Candidate A",
+     "position": {"ra": 270.80408, "dec": -23.46818, "pmra": 0.0, "pmdec": 0.0}},
+    {"slug": "candidate_b", "name": "Candidate B",
+     "position": {"ra": 253.18038, "dec": -44.67697, "pmra": 0.0, "pmdec": 0.0}},
+    {"slug": "candidate_c", "name": "Candidate C",
+     "position": {"ra": 241.70906, "dec": -52.20564, "pmra": 0.0, "pmdec": 0.0}},
 ]
 DETECTORS = [1, 2, 3, 4, 5, 6]
 # (label, mode, options). A mode or option the backend does not have is skipped.
@@ -90,8 +102,11 @@ def motion_options(pos: dict) -> dict:
     """The motion parameters a name search hands to /api/frames, or {} if none are known."""
     if pos.get("pmra") is None or pos.get("pmdec") is None or "pmra" not in _PARAMS:
         return {}
+    # A fixed position's motion has no date of its own ("any date"): the page then sends none,
+    # and the backend takes its default.
+    epoch = pos.get("epoch")
     return {"pmra": pos["pmra"], "pmdec": pos["pmdec"], "parallax": pos.get("parallax"),
-            "pm_epoch": pos.get("epoch", _PARAMS["pm_epoch"].default)}
+            "pm_epoch": epoch if isinstance(epoch, (int, float)) else _PARAMS["pm_epoch"].default}
 
 
 def cache_megabytes() -> dict[str, float]:

@@ -1,0 +1,295 @@
+942
+17216 Dramatic changes in the timing behavior of SXP31.0 as seen by NuSTAR and SRG/ART-XC during the ongoing type II outburst
+17218 Optical Reconnaissance of the nova V1405 Cas on Day +1546
+17224 Spectroscopic Classification of PNV J06302516-6955014 as a Classical Nova
+17228 Spectroscopic Classification of ASASSN-25cm (=AT 2025nlr) as a Classical Nova
+17238 Einstein Probe detection of a new outburst from GRS 1739-278
+17240 Bright nova V462 Lup Has Orbital Period of 1.797 Hours, at the Bottom of the Period Gap
+17246 S-CUBED Detects a new outburst of the Be/X-ray binary SXP 8.80
+17248 Historical NIR light maximum of the blazar Ton 599 (4C +29.45)
+17249 Fermi-LAT Gamma-ray Observations of the Classical Nova V462 Lup 2025
+17252 Fermi-LAT Gamma-ray Observations of the Probable Nova V572 Velorum
+17253 OGLE Pre-Eruption Observations of V572 Velorum Reveal Dwarf Nova Outbursts
+17254 Bright nova V572 Vel Has Orbital Period of 0.12317997 +- 0.00000010 days
+17256 Optical spectroscopy of V572 Vel: Not obviously a classical nova
+17260 MAXI/GSC detection of a new X-ray outburst from the Be/X-ray binary pulsar XTE J1858+034
+17262 Swift XRT/WT upper limits on the X-ray emission from Nova Vel 2025 (V572 Vel)
+17265 Independent Discovery of a Probable Nova in M31
+17266 Nova V462 Lup 2025: Upper limits from a neutrino search with IceCube
+17279 Einstein Probe detects significant pulsations from AMXP MAXI J1957+032 during its 2025 outburst
+17281 NuSTAR upper limit on X-ray emission of nova V462 Lupi
+17285 Follow-up observations of AT 2025qmf, a possible nova in M31
+17287 X-ray emission of the progenitor of the Type Ia supernova SN2025rbs
+17289 Recent NIR Flare of the blazar PKS 1335-127
+17291 Recent Historical NIR light maximum of the blazar PKS 1550-242
+17292 Spectroscopic confirmation of TCP J18385851-0351482 as a classical nova
+17294 Visual identification of possible supernova in NGC 7331 (12 Mpc)
+17296 Retraction of ATEL 17294: Visual identification of possible supernova in NGC 7331
+17314 Photometric Follow-up of the Nova Candidate AT 2025qmf in M31
+17315 H-alpha emission detected from the nova candidates AT2025qea and AT2025qlt in M31
+17317 Einstein Probe detection of a new outburst from IGR J20155+3827
+17320 Multi-band optical photometry of novae AT2025qdc and AT2025qsm in M31
+17321 XB-NEWS detects a new outburst of Aql X-1
+17323 XB-NEWS detects a new outburst of SAX J1808.4-3658
+17324 Einstein Probe confirms a new outburst of the Accreting Millisecond Pulsar SAX J1808.4-3658
+17327 XB-NEWS detects a new outburst of GX 339-4
+17329 The MeerKAT radio detection of SAX J1808.4-3658 2025 outburst
+17330 EP/FXT follow-up observation confirms the new outburst of GX 339-4
+17334 Independent Discovery of a Probable Nova in M31
+17339 EP250815a: EP-FXT localization and potential association with the outburst of MAXI J1816-195
+17347 Spectroscopic and photometric confirmation of TCP J22135399+3015357 as a WZ Sge-type dwarf nova
+17348 XRISM/Xtend Transient Search (XTS) detected an X-ray burst and possible outburst on KS 1741-293
+17350 FAN-SHAPED DUST EMISSION FROM THE NUCLEUS OF COMET 3i
+17353 Swift-X-ray detection of nova V462 Lup
+17355 AT2025usz is a dwarf nova in its early phase
+17360 Apparent Outburst of Cometary Centaur C/2023 RS61 (PANSTARRS)
+17361 Discovery, photometry and spectroscopic classification of SN 2025umq as Type Ia supernova
+17366 Optical photometry and spectroscopy of Nova AT 2025qmf in M31
+17367 The detection of the X-ray emission from V572 Vel (Nova Vel 2025) with Swift XRT.
+17368 EP250828a: Early near-infrared follow-up with MIRAGE on the MDM 1.3m telescope
+17371 M31N 2006-11d (= AT 2025wkx): Variable Star or Recurrent Nova in M31?
+17372 Follow-up observations of the dust fan ejected from interstellar comet 3I/ATLAS
+17373 A not so recent Fast NIR Flare of the FSRQ S4 0954+658
+17375 XRISM/Xtend Transient Search (XTS) detected an X-ray flare possibly from a YSO
+17377 Einstein Probe detection of a new bright outburst from GRS 1739-278
+17379 WINTER near-IR identification and spectroscopic observations of a likely extremely slow nova WNTR25fhdoi / AT2025sqe
+17390 SRG/ART-XC and Swift/XRT detection of the on-going outburst from RX J1718.4-4029
+17392 Discovery of a Probable Nova in M31
+17406 The symbiotic star AG Dra is undergoing a hot-type outburst, the first of a new train ?
+17414 Fermi-LAT Gamma-ray Detection of the Nova in Centaurus PNV J14372177-5847400
+17415 Slow NIR Flare and Historical NIR light maximum of the FSRQ PKS 1725+123
+17418 Early Swift-XRT detection of heavily-absorbed shock-powered X-rays from nova V1935 Cen = PNV J14372177-5847400
+17419 Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr
+17424 Strong X-ray outburst of IGR J06074+2205
+17426 PRIME discovery and SOAR confirmation of a very bright symbiotic nova PRIME25aaghjd near the Galactic center
+17428 EP250630b: A new Be white dwarf binary in outburst in the LMC
+17430 NuSTAR follow up of the outburst of GRS 1739-278
+17435 M33N 2011-10a (= M33N 2021-08a = M33N 2025-10a) is the First Confirmed Recurrent Nova in M33
+17441 Potential optical outburst precursor in the black hole system GRO J0422+32
+17442 Mini-HaWKS discovery of an eclipsing nova-like and a Green Pea galaxy at redshift z=0.31
+17447 ULL-ASTRO-MASTER discovery of a bright nova in M31 with the Las Cumbres Observatory 40-cm telescope at McDonald Observatory
+17455 XMM-Newton detection of a bright outburst from the accreting pulsar 1A 0538-66
+17457 Independent Discovery of a Probable Nova in M31
+17460 Spectroscopic observations of the WZ Sge-type Dwarf Novae TCP J03173646+7459318 and TCP J20522886+1637203
+17467 MAXI observation of a bright outburst from a Be/X-ray binary 1A 0538-66 around September 30, 2025.
+17468 Spectroscopic Follow-up Observation of WNTR23bzdiq = TCP J00384865+4046079 = AT 2025abao: a Luminous Red Nova in M31?
+17471 Extragalactic X-ray Binary IC 10 X-2 is in X-ray Outburst
+17476 Photometric and spectroscopic follow-up observations of AT 2025abao: A luminous symbiotic nova in M31?
+17477 Nova V1935 Cen: Upper limits from a neutrino search with IceCube
+17482 Apparent Outbursts of Comet C/2025 K1 (ATLAS)
+17485 Spectroscopic confirmation of TCP J05384230+7051377 as a WZ Sge-type dwarf nova
+17493 AT 2025abrs is a nova in M31
+17503 Gemini pre-perihelion detection of CN/C3/C2 gas emission and dust fans in interstellar comet 3I/ATLAS
+17506 AT 2025aeum (M31N 2025-11d) is the seventh reported eruption of the recurrent nova M31N 1963-09c
+17511 Recurrent Nova M31N 2008-12a: discovery of the 2025 eruption
+17514 ULL-ASTRO-MASTER independent discovery of the 2025 eruption of the recurrent nova M31N 2008-12a
+17516 Liverpool Telescope SPRAT spectrum of the M31 Recurrent Nova AT 2025aeum (M31N 1963-09c)
+17519 FUor-like absorption-dominated spectrum of TCP J21220926+4926242
+17520 Spectroscopic confirmation of the 2025 eruption of the Recurrent Nova M31N 2008-12a
+17521 Optical spectroscopy of the 2025 outburst of recurrent nova M31N 2008-12a
+17522 Spectroscopic observation of AT 2025aeum (2025 outburst of nova M31N 1963-09c) with HCT
+17524 Optical imaging of M31N 2008-12a during its 2025 eruption from IAO
+17526 Recurrent nova M31N 2008-12a: Swift/XRT detection of the SSS following the 2025 eruption
+17527 Pre-discovery measurements of probable symbiotic nova AT 2025abao in M31
+17530 Optical Photometric and Spectroscopic Observations of M31N 2008-12a during its 2025 eruption
+17542 Photometry of M31 Nova AT 2025agmm
+17543 Independent Discovery of an Apparent Nova in M31, AT 2025agwf
+17545 Discovery of a Probable Nova in M31, M31N 2025-12d
+17546 Swift X-ray non-detection of IRAS 21204+4913 close to its optical-outburst maximum
+17550 Strong H-alpha emission detected from recent M31 nova candidates AT 2025agmm, AT 2025ahwf and AT 2025ahch
+17551 Post-perihelion Sunward Tail Detected on Interstellar Comet 3I/ATLAS: A Geometric Projection of the Dust Tail
+17556 Evidence for an EXor - FUor accretion state transition in TCP J21220926+4926242
+17558 Independent Discovery of a Probable Nova in M31, AT 2025ahzx
+17567 AT 2025ajgh is Likely Not a Nova in M31
+17568 Follow-up Photometry of the M31 Nova AT2025ahzx
+17569 NuSTAR observation of recent MAXI transient confirms a new outburst of the black hole X-ray binary MAXI J1543-564
+17575 The Blazar PKS0754+100 at a maximun NIR light, a slow flare.
+17576 Independent Discovery and Photometry of a Possible Very Slowly Evolving Nova in M31
+17579 Spectroscopic classification of PNV J12312434-5907133 as a 2025 Galactic nova
+17581 MAXI detection of X-ray brightening from the black hole X-ray binary V4641 Sgr
+17583 Swift Observations of the Stellar-mass Black Hole GS 1354-645 in Outburst
+17586 Optical confirmation of the ongoing outburst in GS 1354-64
+17587 Another NIR flare of the Blazar PKS0336-01 (CTA026)
+17590 Independent Discovery of a Probable Nova in M31, AT 2026gs
+17592 Yet, a new NIR Flare of the Blazar PKS0454-234
+17598 JWST NIRCam detection of secondary fragmentation in C/2025 K1-C (ATLAS)
+17601 Detection of Nova V572 Vel by SPHEREx that precedes the optical discovery
+17603 Detection of an 11-Minute Period in the X-ray SSS light curve of the Nova V572 Vel
+17604 AT 2026xf (M31N 2026-01b) is a Recurrence of the Newly-Identified Recurrent Nova M31N 2008-01a
+17609 Independent Discovery of an Apparent Nova in M31, AT 2026aoj
+17611 ALMA and VLT HAWK-I observations of BW Cir in Outburst
+17613 MAXI/GSC observation of the onset of the outburst of the Be/X-ray binary pulsar 1A 1118-61
+17614 M31N 2026-01c is the sixth reported eruption of the recurrent nova M31N 1926-07c
+17620 SALT optical spectroscopic observation of the outbursting Be X-ray binary, 1A 1118-616
+17621 Apparent Outburst of Comet 40P/VÃ¤isÃ¤lÃ¤
+17623 Yet, another NIR Flare of the FSRQ S4 0954+658
+17626 Continued rise of the 2026 outburst of 1A 1118-61 observed with NuSTAR
+17630 The prototypical symbiotic star AX Persei is in outburst
+17634 Historical NIR light maximum of the FSRQ GB6 J0742+5444
+17635 A Recent NIR flare of the Blazar PKS0716+714
+17636 A New Large NIR brightening of the Blazar PKS2345-16
+17639 Important NIR brightening of the Quasar OJ49
+17652 LFBOT ATeL#17646: infrared J band photometric observation
+17657 MAXI/GSC observation of the onset of the X-ray outburst of the low mass X-ray binary Aql X-1
+17660 AT 2026cex / ZTF26aaedxli is likely an outburst of Gaia star 866940901044573184
+17663 Determination of MAXI J1744-294 as a repeat outburst of the 2016 transient Swift J174540.2-290037
+17670 NIR flare of the blazar FSRQ PKS 0202-17
+17674 Fast NIR flare of the blazar BZU0742+5444
+17683 Additional Photometry of a Possible Very Slowly Evolving Nova, M31N 2025-12f
+17688 Fermi-LAT detection of a new gamma-ray transient in the Galactic plane, Fermi J1820-1648
+17689 No bright optical counterpart to the Galactic plane gamma-ray transient Fermi J1820-1648
+17690 Fermi/GBM detects outburst from Be/X-ray binary A 1118-616.
+17692 Discovery of a Probable Nova in M31, M31N 2026-02a
+17694 Independent Discovery of a Probable Nova in M81, M81N 2026-02a
+17698 Possible optical counterpart to the Galactic plane gamma-ray transient Fermi J1820-1648
+17700 SOAR spectroscopic classification of the Galactic plane gamma-ray transient Fermi J1820-1648
+17702 Rapid decline in brightness of the red nova remnant V838 Mon
+17703 AT 2026epw: Discovery of a possible nova from Vera C. Rubin Observatory
+17705 MAXI/GSC observation of a bright outburst from a Be/X-ray binary 1A 0538-66
+17706 MAXI/GSC observation of an outburst onset of a Be/X-ray binary pulsar GS 1843+00
+17712 SVOM/ECLAIRs detection of a possible X-ray outburst of the High-Mass X-ray Binary LS V +44 17 / RX J0440.9+4431
+17714 MAXI/GSC detection of an X-ray outburst from the Be/X-ray binary pulsar IGR J06074+2205
+17718 Another Fast NIR flare of the FSRQ GB6 J0742+5444
+17721 Independent Discovery of a Probable Nova in M31, AT 2026fkb
+17722 NuSTAR confirms ongoing X-ray outburst from Be/X-ray binary pulsar GS 1843+00
+17725 AX Per returning to lower state after outburst
+17727 Einstein Probe detection of a new outburst from XTE 1739-285
+17729 A fast NIR flare and Historical NIR light maximum of the FSRQ PKS0748+126
+17734 Einstein Probe detection of the onset of a new X-ray outburst of MAXI J1816-195
+17736 Discovery of a Probable Nova in M81, M81N 2026-04a
+17738 Important brightening and a historical NIR maximum light of the Blazar 3C345
+17743 PRIME discovery and IRTF confirmation of a bright nova PRIME26aaabsh at the Galactic center
+17747 XRISM/Xtend Transient Search (XTS) detected an X-ray flare or outburst from RX J0101.0-7206
+17748 Discovery of an Apparent Nova in M31, M31N 2026-04a
+17751 Einstein Probe detection of a new outburst from XRB IGR J17331-2406
+17762 Discovery of a Probable Nova in M31, M31N 2026-04b
+17764 Discovery of an Apparent Nova in M31, M31N 2026-04c
+17765 Addendum to ATel #17764: M31N 2026-04c is likely the third recurrence of the known recurrent nova M31N 1960-12a
+17770 SVOM/ECLAIRs detection of the ongoing outburst from the HMXB XTE J1859+083
+17778 LEDA 735555: WISE detection of long-term infrared brightening and a flare in 2021
+17788 Confirmation that M31N 2026-04c is the fourth reported eruption of the recurrent nova 1960-12a
+17791 Spectroscopic and photometric confirmation of TCP J07151825+4753167 and TCP J15030519+2202041 as hydrogen-rich and helium-rich WZ Sge-type dwarf novae
+17792 An Ongoing Giant NIR flare of the FSRQ HB891420+326
+17797 Discovery of a Probable Nova in M31, M31N 2026-05a
+17798 Apparent Outburst of Comet 63P/Wild 1
+17799 Two Apparent Outbursts of Comet 24P/Schaumasse
+17801 Discovery of a likely new Galactic recurrent nova with ZTF, ASAS-SN, and NEOWISE.
+17804 Identification and spectroscopic classification of a reddened classical nova AT2026ldc with strong CO emission
+17805 Spectroscopy of the Nova AT2026clk obtained in France
+17807 Discovery of a Probable Nova in M81, M81N 2026-05a
+17810 Discovery of a Possible Symbiotic Nova in M31, M31N 2022-10c
+17811 XRISM/Xtend Transient Search (XTS) detected a flare or outburst from a new X-ray transient source candidate XRISM J2326+5843
+17813 ASASSN-26no is a new Galactic classical nova in Musca
+17815 MAXI/GSC Observation of an X-ray Outburst from the Be/X-ray Binary Pulsar 1A 0535-66 (1A 0538-66)
+17816 MAXI/GSC detection of an X-ray outburst from the Be/X-ray binary pulsar LS V +44 17 (RX J0440.9+4431)
+17817 ATLAS-Teide Detects Centaur (60558) 174P/Echeclus in Ongoing Outburst
+17818 Einstein Probe catches the onset of a new outburst from the NS LMXB MXB 1730-335 (Rapid Burster)
+17823 Infrared Spectroscopy Confirms the Transition of IRAS 21204+4913 to an FU Ori Outburst
+17826 Discovery of a Probable Nova in M31, M31N 2026-06a
+17827 A fast recent NIR flare of the Blazar CGRaBSJ1257+3229
+17829 Large Apparent Outburst of Comet 220P/McNaught
+17838 TRAPPIST production rates of comet 220P/McNaught in outburst
+17840 A candidate NIR counterpart of the new X-ray transient EP260531a and indications of a black-hole accretor from archival X-ray data
+17846 Discovery of a Bright Probable Nova in M81, M81N 2026-06a
+17857 Discovery of an Apparent Nova Positionally Coincident with G170 in M31, M31N 2026-06c
+17858 MAXI/GSC detection of the onset of an X-ray outburst from the Be/X-ray binary pulsar 4U 0115+63
+17867 Spectroscopy and photometry of AT 2026rdg, a highly reddened FeII-type nova
+17868 Spectroscopic Classification of AT 2026rdg=ZTF26abemjfk as a Classical Nova
+17870 Einstein Probe discovery of a new magnetar candidate in outburst: EP J223759.5+531421 (EP260628c)
+17871 AT2026rdg is a heavily reddened Nova in its early phase
+17877 GTC/EMIR near-infrared observations of the magnetar candidate EP J223759.5+531421
+17878 ASASSN-26dt: an SMC Nova with a Luminous Progenitor and CSM
+17883 Near-infrared observations of GRS 1915+105 during its unprecedented low-luminosity state
+17886 AT2026stb is a Galactic nova in Scutum
+17887 Spectroscopic confirmation of TCP J02191736+2857158 as a WZ Sge-type dwarf nova
+17889 Detection of superhumps during the superoutburst of Gaia19ati/ASASSN-15pa
+17891 Einstein Probe detection of a new X-ray outburst from LMXB GRS 1747-312 in Terzan 6
+17900 Evolution of Nova Aql 2026 (V2104 Aql) from discovery to the t2 phase
+17903 Chandra detection of new outburst by XMMU J174445.5-295044
+17905 Photometric observations of Gaia16adj/ASASSN-14eg in superoutburst
+17906 Gaia24amv: SU UMa-type dwarf nova near the period gap
+17910 Independent Discovery of a Probable Nova in M31
+17914 Independent Discovery of a Probable Nova in M31, AT 2026vdo
+17923 MAXI/GSC detection of a onset of the X-ray outburst from the Be/X-ray binary pulsar XTE J1858+034
+17931 MAXI/GSC detection of a recurrent X-ray outburst from the Be/X-ray binary pulsar LS V +44 17 (RX J0440.9+4431)
+17932 The detection of superhumps confirms Gaia20eud as an SU UMa-type dwarf nova
+17939 Multi-band photometric observations of TCP J00560713+4301406 / ASASSN-26dq in superoutburst
+17941 M31N 2026-08a is the third reported eruption of the recurrent nova M31N 2006-11c
+17944 Photometric Follow-up Observations of a Reddened Galactic Nova AT 2026rdg with BHTOM.space Global Telescope Network
+17945 PRIME discovery and IRTF confirmation of a bright nova PRIME26ahygn at the Galactic center
+17947 Photometric follow up observations of the possible Galactic Nova in Taurus TCP J05210763+2338194
+17950 Spectroscopic classification and BVRI photometry of TCP J05210763+2338194 as a FeII-type nova
+17951 Detection of Superhumps during a Superoutburst in Gaia20ffw
+17956 Magnitudes and colors of comet 220P/McNaught during outburst
+17958 MAXI/GSC detection of an X-ray outburst from GK Per
+17960 Liverpool Telescope spectroscopic observation of the Fe II-type nova TCP J05210763+2338194
+17962 Detection of superhumps in the ER UMa-type dwarf nova Gaia24aeg
+17963 MAXI/GSC detection of a new X-ray nova MAXI J1750-327
+17965 Independent Discovery of a Probable Nova in M31, AT 2026yvz
+17970 Daily photometric and spectroscopic monitoring of Nova Tau 2026 (=TCP J05210763+2338194) through its passage at maximum brightness and early decline
+17972 Optical spectro-photometric follow up of nova Tauri 2026 (TCP J05210763+2338194)
+17973 Spectroscopic and multicolor photometric observations of the SU UMa-type Dwarf Nova TCP J22571796+4707418, a WZ Sge-type star candidate.
+17975 Spectroscopic classification as a high velocity nova of transient AT 2026yvz in M31
+17978 Archival Chandra Upper Limit on the Pre-outburst X-ray Emission of MAXI J1750-327 / EP J175003.0-324244
+17980 Detection of the dwarf nova GK Persei with SVOM/ECLAIRs
+17981 Gaia22dbc: a new SU UMa-type dwarf nova during its ongoing superoutburst
+17984 Post-outburst morphology and polarization behavior of the short-periodical comet 220P/McNaught
+17985 Small Apparent Outburst of Comet 10P/Tempel 2
+17987 Galactic Nova candidate TCP J18251276-2225293
+17988 PRIME early detection and pre-outburst upper limit for the NIR counterpart to MAXI J1750-327
+17989 Spectroscopic Classification of TCP J18251276-2225293 as a Classical Nova
+17995 Liverpool Telescope spectroscopy identifies TCP J18251276-2225293 as an Fe II-type nova
+17996 Erratum to ATel #17984: Post-outburst morphology and polarization behavior of the short-periodical comet 220P/McNaught
+18005 Gaia16amd: a new SU UMa-type dwarf nova
+18008 Spectroscopic Observation of PNV J19450648+1822422: Likely a Classical Nova?
+18009 Discovery and follow up observations of the likely Galactic Nova NMW-TTU-26bp (PNV J19450648+1822422)
+18012 Spectroscopic Classification of PNV J19450648+1822422 as an Fe II-type Nova with Concurrent Photometry
+18014 Spectroscopic observations of Nova Sge 2026 (PNV J19450648+1822422)
+18020 MAXI/GSC observation of a major X-ray outburst from the Be/X-ray Binary Pulsar 1A 0535-66 (1A 0538-66)
+18021 The Fast Nova Sge 2026 (V0488 Sge) from photospheric to nebular regime in four days
+18022 Follow-up spectroscopic observations of Nova Sge 2026 (V488 Sge) with WHUT
+18023 SRG/ART-XC detection of the new outburst of XTE J1637-498
+18027 AT 2026aabo (ZTF26abramlb, ATLAS26kqn): a bright nova candidate in M31
+18028 NuSTAR detection of shock-powered X-rays from Nova Sagittae 2026 = V488 Sge
+18029 Spectroscopic classification of AT 2026aabo as a bright nova in M31
+18030 SVOM/ECLAIRs detection of a possible new outburst onset from the black hole 4U 1630-472
+18031 MAXI/GSC observation of an X-ray outburst from the Be/X-ray binary pulsar GS 0834-430
+18033 Follow-up Imaging & Spectroscopy of Nova Sagittae 2026 (V488 Sge)
+18045 Detection of superhumps in Gaia16ahk during its ongoing superoutburst
+18048 MDM/MIRAGE discovery of a pronounced infrared brightening in the luminous nova AT2026aabo in M31
+18053 Continuing optical spectroscopic monitoring of V488 Sge (Nova Sge 2026) by the ARAS group
+18055 Independent Discovery of a Probable Nova in M31, AT 2026abyx
+18056 MGAB-V233: superhumps detected during the current superoutburst
+18059 Gaia20cnt: photometric observations of a new outburst
+18068 A new superoutburst of the period-gap SU UMa-type dwarf nova Gaia22cax
+18070 MeerKAT detection of 4U 1630-47 during its 2026 outburst
+18071 MAXI/GSC observation of a series of X-ray outbursts with a &sim;60 day interval from the Be/X-ray binary pulsar LS V +44 17 (RX J0440.9+4431)
+18075 Swift/XRT observation of the Be/X-ray binary pulsar GS 0834-430 during its 2026 outburst
+18082 SRG/ART-XC detection of the possible new outburst of AX J1820.5-1434
+18087 S-CUBED Detects Supersoft X-ray Counterpart to the SMC Nova ASASSN-26dt
+18088 VLA radio detection of Nova Sagittae 2026 (V488 Sge)
+18089 Detection of 205.7 s X-ray pulsations from the Be/X-ray binary pulsar LS V +44 17 during its September 2026 outburst
+18095 A recent NIR flare of the Blazar CGRaBSJ1751+0939
+18096 Dust formation in the M31 nova AT2026aabo
+18101 MAXI/GSC detection of XTE J1810-189 in outburst
+18102 Gaia20dsz: superhumps detected during a new superoutburst
+18106 Superhumps in Gaia19bnd: a newly identified SU UMa-type dwarf nova
+18107 Independent Discovery of a Probable Nova in M81, M81N 2026-10a
+18109 uGMRT Radio Detection of the X-ray Binary 4U 1630-47 during 2026 outburst
+18115 Detection of a thermonuclear X-ray burst from XTE J1810-189 with NuSTAR during its October 2026 outburst
+18117 Radio detection of XTE J1810-189 during its ongoing outburst with the Very Large Array
+18119 Radio observation of XTE J1810-189 with MeerKAT during its October 2026 outburst
+18120 Nova Tau 2026 (V1452 Tau) is likely undergoing dust formation
+18122 Fermi-LAT Detection of Galactic Nova V8056 Sgr
+18126 Four-band near-infrared imaging of 3I/ATLAS: Keck/MOSFIRE observations on 2025 July 11
+18127 Detection of dust in the nova V572 Velorum from SPHEREx observations
+18128 Coma and tail morphology of 3I/ATLAS from 2025 September Gemini South/GMOS multiband imaging
+18129 Nova V488 Sge Is Forming Dust
+18130 Neutral nickel and molecular coma maps of 3I/ATLAS from 2026 January Keck/KCWI spectroscopy
+18132 3I/ATLAS in February 2026: dust imaging and spectroscopic gas constraints from Gemini North/GMOS
+18133 Keck/MOSFIRE near-infrared imaging and colors of 3I/ATLAS on 2026 February 6
+18135 XMM-Newton Observations during the supersoft phase of nova V488 Sge
+18138 Detection of optical coronal lines in V488 Sge (Nova Sge 2026)
+18141 GX 339-4 doesn't sleep for long: new outburst detected with LCO / XB-NEWS
+18148 X-ray upper limit on the progenitor of the Type Ia supernova 2026ahvu in NGC 1433
+18149 Spectroscopic and photometric classification of ASASSN-17lp as a WZ Sge-type dwarf nova candidate

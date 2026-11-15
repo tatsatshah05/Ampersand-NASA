@@ -1,0 +1,34 @@
+"""Pan-STARRS (MAST), SkyMapper (its cone service), DECaPS (NOIRLab Data Lab TAP), UKIDSS GPS (WSA)
+cone searches at P, each at 30 arcsec and, as control, at 3 arcmin."""
+import sys, os, time, requests
+sys.path.insert(0, sys.argv[1])
+from qlib import UA, TAB, log
+RA, DEC = 270.80409, -23.46819
+jobs = []
+for rad in (30, 180):
+    d = rad / 3600
+    jobs += [
+        (f"ps1_dr2_mean_r{rad}", "https://catalogs.mast.stsci.edu/api/v0.1/panstarrs/dr2/mean.csv",
+         {"ra": RA, "dec": DEC, "radius": d, "nDetections.gte": 1, "pagesize": 5000,
+          "columns": "[objName,raMean,decMean,nDetections,gMeanPSFMag,rMeanPSFMag,iMeanPSFMag,zMeanPSFMag,yMeanPSFMag]"}),
+        (f"skymapper_r{rad}", "https://skymapper.anu.edu.au/sm-cone/public/query",
+         {"RA": RA, "DEC": DEC, "SR": d, "RESPONSEFORMAT": "CSV"}),
+        (f"decaps_dr2_r{rad}", "https://datalab.noirlab.edu/tap/sync",
+         {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv",
+          "QUERY": f"SELECT ra, dec, mean_mag_g, mean_mag_r, mean_mag_i, mean_mag_z, mean_mag_y, nmag_ok_z, nmag_ok_y FROM decaps_dr2.object WHERE q3c_radial_query(ra, dec, {RA}, {DEC}, {d})"}),
+        (f"ukidss_gps_r{rad}", "http://wsa.roe.ac.uk:8080/wsa/WSASQL",
+         {"database": "UKIDSSDR11PLUS", "programmeID": "102", "format": "CSV", "rows": "1000",
+          "sqlstmt": f"SELECT ra,dec,jAperMag3,hAperMag3,k_1AperMag3,k_2AperMag3,mergedClass FROM gpsSource WHERE dbo.fGreatCircleDist(ra,dec,{RA},{DEC}) < {rad/60:.4f}"}),
+    ]
+for name, url, params in jobs:
+    t0 = time.time()
+    try:
+        r = requests.get(url, params=params, headers=UA, timeout=180)
+        txt, st = r.text, f"HTTP {r.status_code}"
+    except Exception as e:
+        txt, st = "", f"network error {type(e).__name__}: {e}"
+    open(os.path.join(TAB, name + ".csv"), "w").write(txt)
+    nl = len([l for l in txt.splitlines() if l.strip()])
+    log(f"{name} {st} lines={nl} {time.time()-t0:.0f}s {url}")
+    print(f"=== {name}: {st}, {nl} non-empty lines ({time.time()-t0:.0f}s)")
+    print("   ", txt[:600].replace("\n", "\n    "))

@@ -1,0 +1,34 @@
+objects within 1 deg: 7729 | OID range 19989 10851045
+
+-- nova types within 1 deg --
+
+-- YSO/eruptive types within 1 deg --
+ 12.43' Gaia DR3 5981380367934968064 | YSO | 17.34 G - 17.57 G | OID 10336857 | Gaia collaboration
+ 17.92' Gaia DR3 5933447811380744320 | YSO | 17.70 G - 17.82 G | OID 5767288 | Gaia collaboration
+ 21.48' Gaia DR3 5981396409619427200 | YSO | 16.59 G - 16.69 G | OID 5748544 | Gaia collaboration
+ 28.88' Gaia DR3 5933307486233800448 | YSO | 17.91 G - 18.09 G | OID 10475580 | Gaia collaboration
+ 32.11' Gaia DR3 5981410913743144448 | YSO | 18.17 G - 18.82 G | OID 5748591 | Gaia collaboration
+ 36.51' Gaia DR3 5933295318532925568 | YSO | 17.71 G - 17.85 G | OID 5767869 | Gaia collaboration
+ 37.75' Gaia DR3 5981500485264448128 | YSO | 17.79 G - 18.04 G | OID 5764369 | Gaia collaboration
+ 37.78' Gaia DR3 5933295700842363904 | YSO | 15.93 G - 16.03 G | OID 5764070 | Gaia collaboration
+ 38.17' Gaia22cvh | YSO | 18.3 G - 20.1 G | OID 2345884 | Gaia
+ 39.48' Gaia DR3 5980985505819379072 | YSO | 17.36 G - 17.44 G | OID 10338416 | Gaia collaboration
+ 43.18' Gaia DR3 5933366443181410304 | YSO | 18.54 G - 18.68 G | OID 5792845 | Gaia collaboration
+ 46.49' Gaia DR3 5981513924242643584 | YSO | 17.71 G - 17.85 G | OID 5760675 | Gaia collaboration
+ 47.81' Gaia DR3 5981037870055463424 | YSO | 18.27 G - 18.40 G | OID 5733149 | Gaia collaboration
+ 47.97' Gaia DR3 5933284980603506560 | YSO | 18.07 G - 18.23 G | OID 10437765 | Gaia collaboration
+ 51.39' Gaia DR3 5981516909219800192 | YSO | 18.10 G - 18.25 G | OID 5754462 | Gaia collaboration
+ 53.32' Gaia DR3 5981565395132304768 | YSO | 17.13 G - 17.26 G | OID 5754894 | Gaia collaboration
+ 53.67' Gaia DR3 5981539144291160448 | YSO | 17.58 G - 18.07 G | OID 10433601 | Gaia collaboration
+ 55.10' Gaia DR3 5981565528251858048 | YSO | 15.93 G - 16.03 G | OID 10338238 | Gaia collaboration
+ 55.12' Gaia DR3 5981444551930507136 | YSO | 18.62 G - 18.75 G | OID 5729161 | Gaia collaboration
+ 56.45' Gaia DR3 5932909428673682304 | YSO | 17.33 G - 17.49 G | OID 10526695 | Gaia collaboration
+ 56.67' Gaia DR3 5933251131900983552 | YSO | 17.90 G - 18.05 G | OID 5784990 | Gaia collaboration
+ 57.08' Gaia DR3 5981438642052953728 | YSO | 17.42 G - 17.53 G | OID 5727374 | Gaia collaboration
+ 57.38' Gaia DR3 5981438813851678848 | YSO | 16.69 G - 16.78 G | OID 5727672 | Gaia collaboration
+ 58.42' Gaia DR3 5933255912261978240 | YSO | 17.68 G - 17.85 G | OID 10419499 | Gaia collaboration
+
+-- non-Gaia entries with OID > 10,700,000 (recent additions) --
+
+-- all within 1.5 arcmin --
+  13.2" Gaia DR3 5933349095879173504 | RS | 17.32 G - 17.42 G | OID 5763624 | 241.71380 -52.20726

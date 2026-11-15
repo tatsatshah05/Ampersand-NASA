@@ -16,6 +16,13 @@ describe('the timer', () => {
     expect(nextIndex('blinking', 0, 3)).toBe(2)
     expect(nextIndex('blinking', 2, 3)).toBe(0)
   })
+  it('with a before-and-after pair (one of our candidates), blinks between the pair, never the first and the last', () => {
+    // Candidate C in detector 6: visit 1 (without it) and visit 2 (with it), not visits 1 and 4 (both without it).
+    expect(nextIndex('blinking', 0, 4, [0, 1])).toBe(1)
+    expect(nextIndex('blinking', 1, 4, [0, 1])).toBe(0)
+    expect(nextIndex('blinking', 3, 4, [0, 1])).toBe(0)
+    expect(nextIndex('playing', 3, 4, [0, 1])).toBe(0)
+  })
 })
 
 /** A page whose picture can be scrolled away and whose tab can be hidden, by hand. */

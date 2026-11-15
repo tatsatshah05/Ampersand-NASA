@@ -1,0 +1,106 @@
+"""Small query helpers: IRSA TAP, VizieR (CfA mirror; CDS Strasbourg answered 404 'page unavailable'),
+SIMBAD TAP (Harvard mirror). Every raw answer is saved in ../data/ so that it can be inspected."""
+import io, time, json, math, sys
+from pathlib import Path
+import requests
+from astropy.table import Table
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+
+UA = {"User-Agent": "Mozilla/5.0 (generic research client)"}
+RA, DEC = 241.70931, -52.20484
+C0 = SkyCoord(RA * u.deg, DEC * u.deg)
+DATA = Path(__file__).resolve().parent.parent / "data"
+DATA.mkdir(exist_ok=True)
+LOG = DATA / "query_log.txt"
+
+
+def log(msg):
+    with open(LOG, "a") as f:
+        f.write(time.strftime("%Y-%m-%dT%H:%M:%S ") + msg + "\n")
+
+
+def get(url, params, tries=8, timeout=120):
+    last = None
+    for i in range(tries):
+        try:
+            r = requests.get(url, params=params, headers=UA, timeout=timeout)
+            last = f"HTTP {r.status_code}"
+            if r.status_code == 200:
+                return r
+        except Exception as e:  # network error
+            last = repr(e)
+        time.sleep(3 + 3 * i)
+    raise RuntimeError(f"failed after {tries} tries: {last}")
+
+
+def irsa_tap(adql, name):
+    r = get("https://irsa.ipac.caltech.edu/TAP/sync", {"QUERY": adql, "FORMAT": "votable", "LANG": "ADQL"})
+    (DATA / f"{name}.xml").write_bytes(r.content)
+    log(f"IRSA TAP {name}: {adql}")
+    t = Table.read(io.BytesIO(r.content), format="votable")
+    return t
+
+
+def irsa_cone(table, radius_arcsec, name=None, cols=None, ra=RA, dec=DEC, racol="ra", deccol="dec"):
+    """IRSA Gator cone search (IRSA TAP answered 502 'Proxy Error' on most tries in this session)."""
+    p = {"catalog": table, "spatial": "cone", "objstr": f"{ra} {dec}", "radius": str(radius_arcsec),
+         "radunits": "arcsec", "outfmt": "1"}
+    if cols:
+        p["selcols"] = ",".join(cols)
+    r = get("https://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query", p, timeout=300)
+    fn = DATA / f"{name or 'gator_' + table}_{int(radius_arcsec)}.tbl"
+    fn.write_bytes(r.content)
+    log(f"IRSA Gator {table} r={radius_arcsec}\" at {ra},{dec} -> {fn.name} ({len(r.content)} bytes)")
+    txt = r.text
+    if "ERROR" in txt[:2000] and "|" not in txt[:4000]:
+        raise RuntimeError("Gator error: " + txt[:500])
+    if "|" not in txt:
+        return Table()
+    t = Table.read(txt, format="ipac")
+    add_sep(t, racol, deccol, ra, dec)  # always from ra/dec (some tables have their own 'dist' column)
+    return t
+
+
+def add_sep(t, racol, deccol, ra=RA, dec=DEC):
+    if len(t) == 0:
+        return t
+    import numpy as _np
+    c = SkyCoord(_np.asarray(t[racol], float) * u.deg, _np.asarray(t[deccol], float) * u.deg)
+    t["sep_arcsec"] = c.separation(SkyCoord(ra * u.deg, dec * u.deg)).arcsec
+    t.sort("sep_arcsec")
+    return t
+
+
+def vizier(source, radius_arcsec, name=None, ra=RA, dec=DEC, extra=None, maxrows=2000):
+    p = {"-source": source, "-c": f"{ra} {dec}", "-c.rs": str(radius_arcsec), "-out.add": "_r",
+         "-sort": "_r", "-out.max": str(maxrows), "-out.form": "mini", "-out.all": ""}
+    if extra:
+        p.update(extra)
+    r = get("https://vizier.cfa.harvard.edu/viz-bin/votable", p)
+    fn = DATA / f"{name or 'viz_' + source.replace('/', '_')}_{int(radius_arcsec)}.xml"
+    fn.write_bytes(r.content)
+    log(f"VizieR(CfA) {source} r={radius_arcsec}\" at {ra},{dec} -> {fn.name}")
+    from astropy.io.votable import parse
+    vt = parse(io.BytesIO(r.content))
+    out = []
+    for res in vt.resources:
+        for tab in res.tables:
+            try:
+                out.append((tab.name, tab.to_table(use_names_over_ids=True)))
+            except Exception as e:
+                out.append((tab.name, None))
+    # INFO messages (errors) if no tables
+    infos = [f"{i.name}={i.value}: {i.content}" for i in vt.infos] if hasattr(vt, "infos") else []
+    for res in vt.resources:
+        for i in getattr(res, "infos", []):
+            infos.append(f"{i.name}={i.value}: {i.content}")
+    return out, infos
+
+
+def simbad_tap(adql, name):
+    r = get("https://simbad.harvard.edu/simbad/sim-tap/sync",
+            {"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "votable", "QUERY": adql})
+    (DATA / f"{name}.xml").write_bytes(r.content)
+    log(f"SIMBAD(Harvard) TAP {name}: {adql}")
+    return Table.read(io.BytesIO(r.content), format="votable")

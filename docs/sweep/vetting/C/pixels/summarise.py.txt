@@ -1,0 +1,30 @@
+import json, numpy as np, collections
+from astropy.time import Time
+R = json.load(open("measurements.json"))
+# epochs: gap > 30 d over all detectors
+mj = sorted(r["mjd"] for r in R if "mjd" in r)
+ep = []
+for m in mj:
+    if ep and m - ep[-1][1] <= 30: ep[-1][1] = m
+    else: ep.append([m, m])
+def epoch(m):
+    for k, (a, b) in enumerate(ep):
+        if a - 0.01 <= m <= b + 0.01: return k
+for r in R:
+    r["ep"] = epoch(r["mjd"]) if "mjd" in r else None
+json.dump(R, open("measurements.json", "w"), indent=0)
+print("epochs:", [(Time(a, format="mjd").iso[:10], Time(b, format="mjd").iso[:10]) for a, b in ep])
+c = collections.Counter((r["ep"], r["det"], r["status"]) for r in R)
+for e in range(len(ep)):
+    print("epoch", e, {d: {s: c[(e, d, s)] for s in ("ok", "flagged", "saturated", "edge") if c[(e, d, s)]} for d in range(1, 7)})
+print()
+print("per epoch & detector, clean ('ok') exposures: median flux (sky ring 14-20), MAD scatter, n; median with inner sky ring; median grid noise")
+for d in range(1, 7):
+    for e in range(len(ep)):
+        ok = [r for r in R if r["ep"] == e and r["det"] == d and r["status"] == "ok"]
+        if not ok: 
+            print(f"D{d} ep{e}: none clean"); continue
+        f = np.array([r["flux"] for r in ok]); f2 = np.array([r["flux_sky_inner"] for r in ok if r["flux_sky_inner"] is not None])
+        gm = np.array([r["grid_mad"] for r in ok if r["grid_mad"] is not None])
+        er = np.array([r["err"] for r in ok])
+        print(f"D{d} ep{e}: med {np.median(f):7.1f}  mad {1.4826*np.median(np.abs(f-np.median(f))):6.1f}  n {len(f):2d}  range {f.min():7.1f}..{f.max():7.1f}  inner-sky med {np.median(f2):7.1f}  grid-noise {np.median(gm):5.1f}  stat-err {np.median(er):4.1f}  wl {min(r['wave_um'] for r in ok):.2f}-{max(r['wave_um'] for r in ok):.2f}")

@@ -1,0 +1,30 @@
+=== visit 1: 81 points D2-D6, error floor 10%
+  bb: T = 444 +/- 32 K, F(4.6um) = 247 mJy; chi2/dof = 726.7/79 = 9.20
+  bb_time: T = 771 +/- 14 K, F(4.6um) = 173 mJy, rate +10.80 +/- 0.61 %/day; chi2/dof = 203.5/78 = 2.61
+  bb_ext_time: T = 771 +/- 115 K, F(4.6um) = 173 mJy, rate +10.80 +/- 0.66 %/day, A_K 0.00 +/- 1.12; chi2/dof = 203.5/77 = 2.64
+     residual (data/model - 1) 2.4-2.8: median +1.21 (n=6)
+     residual (data/model - 1) water ice 2.85-3.25: median -0.25 (n=4)
+     residual (data/model - 1) 3.3-3.8: median -0.26 (n=5)
+     residual (data/model - 1) 3.8-4.15: median +0.11 (n=9)
+     residual (data/model - 1) CO2 ice 4.18-4.36: median +0.08 (n=7)
+     residual (data/model - 1) 4.36-4.55: median +0.14 (n=5)
+     residual (data/model - 1) CO 4.58-4.76: median +0.19 (n=5)
+     residual (data/model - 1) 4.76-5.0: median +0.04 (n=6)
+     residual (data/model - 1) 1.6-2.0: median +0.26 (n=8)
+     residual (data/model - 1) 2.0-2.45: median +0.12 (n=8)
+     residual (data/model - 1) 1.1-1.65: median +1.46 (n=19)
+=== visit 2: 95 points D2-D6, error floor 10%
+  bb: T = 560 +/- 6 K, F(4.6um) = 972 mJy; chi2/dof = 59.3/93 = 0.64
+  bb_time: T = 567 +/- 6 K, F(4.6um) = 993 mJy, rate -1.63 +/- 0.36 %/day; chi2/dof = 38.7/92 = 0.42
+  bb_ext_time: T = 654 +/- 78 K, F(4.6um) = 1794 mJy, rate -1.90 +/- 0.41 %/day, A_K 1.50 +/- 1.16; chi2/dof = 37.1/91 = 0.41
+     residual (data/model - 1) 2.4-2.8: median +0.11 (n=5)
+     residual (data/model - 1) water ice 2.85-3.25: median -0.05 (n=5)
+     residual (data/model - 1) 3.3-3.8: median +0.05 (n=1)
+     residual (data/model - 1) 3.8-4.15: median +0.09 (n=16)
+     residual (data/model - 1) CO2 ice 4.18-4.36: median +0.04 (n=8)
+     residual (data/model - 1) 4.36-4.55: median +0.05 (n=9)
+     residual (data/model - 1) CO 4.58-4.76: median -0.00 (n=5)
+     residual (data/model - 1) 4.76-5.0: median -0.05 (n=6)
+     residual (data/model - 1) 1.6-2.0: median -0.08 (n=10)
+     residual (data/model - 1) 2.0-2.45: median +0.06 (n=5)
+     residual (data/model - 1) 1.1-1.65: median +3.22 (n=24)

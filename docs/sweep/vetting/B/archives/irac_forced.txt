@@ -1,0 +1,6 @@
+2004-09-05 GLIMPSE I     [3.6] apcorr=1.50 (n=29, spread 0.20)  X= 0.075 mJy  c= 2.072  R=  63.94  empty-aperture: median 0.085 sigma 0.252 mJy  -> X 3-sigma limit 0.832 mJy
+2004-09-05 GLIMPSE I     [4.5] apcorr=1.56 (n=28, spread 0.25)  X= 0.145 mJy  c= 1.862  R=  43.85  empty-aperture: median 0.072 sigma 0.195 mJy  -> X 3-sigma limit 0.729 mJy
+2012-11-01 Deep GLIMPSE  [3.6] apcorr=1.58 (n=29, spread 0.21)  X= 0.056 mJy  c= 2.086  R=  56.80  empty-aperture: median 0.083 sigma 0.202 mJy  -> X 3-sigma limit 0.661 mJy
+2012-11-01 Deep GLIMPSE  [4.5] apcorr=1.61 (n=28, spread 0.30)  X= 0.114 mJy  c= 1.856  R=  45.75  empty-aperture: median 0.070 sigma 0.186 mJy  -> X 3-sigma limit 0.672 mJy
+2017-06-19 APOGLIMPSE    [3.6] apcorr=1.61 (n=29, spread 0.23)  X= 0.037 mJy  c= 2.442  R=  58.50  empty-aperture: median 0.127 sigma 0.248 mJy  -> X 3-sigma limit 0.782 mJy
+2017-06-19 APOGLIMPSE    [4.5] apcorr=nan (n=0, spread nan)  X=   nan mJy  c=   nan  R=    nan  empty-aperture: median nan sigma nan mJy  -> X 3-sigma limit nan mJy

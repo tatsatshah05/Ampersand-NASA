@@ -1,0 +1,78 @@
+"""Spectrum per visit from my forced PSF fluxes; blackbody fits (with and without a time term and extinction)."""
+import json, os, sys
+import numpy as np
+from scipy.optimize import least_squares
+sys.path.insert(0, os.path.dirname(__file__))
+from common import W
+
+P = json.load(open(f"{W}/out/per_exposure.json"))
+h, c, k = 6.62607e-34, 2.99792e8, 1.380649e-23
+
+
+def bnu(lam_um, T):
+    nu = c / (lam_um * 1e-6)
+    return 2 * h * nu ** 3 / c ** 2 / np.expm1(h * nu / (k * T))
+
+
+# extinction relative to K (Indebetouw et al. 2005 points; lambda^-1.9 shortward of J), interpolated in log-log
+LX = np.array([0.7, 1.24, 1.66, 2.16, 3.6, 4.5, 5.0]); LA = np.array([2.5 * (1.24 / 0.7) ** 1.9, 2.50, 1.55, 1.0, 0.56, 0.43, 0.43])
+
+
+def alam_over_ak(lam):
+    return np.exp(np.interp(np.log(lam), np.log(LX), np.log(LA)))
+
+
+FLOOR = float(os.environ.get("FLOOR", "0.10"))
+out = {}
+for ep in (1, 2):
+    pts = [p for p in P if p["ep"] == ep and p["forced"] is not None and p["wave"]]
+    lam = np.array([p["wave"] for p in pts]); F = np.array([p["forced"] for p in pts]); t = np.array([p["mjd"] for p in pts])
+    eF = np.array([p["forced_err"] for p in pts]); det = np.array([p["det"] for p in pts])
+    # use points where the source is measured (D2-D6); D1 points are upper limits around 0
+    use = det >= 2
+    lam, F, t, eF, det = lam[use], F[use], t[use], eF[use], det[use]
+    err = np.sqrt(eF ** 2 + (FLOOR * np.abs(F)) ** 2 + 0.5 ** 2)
+    t0 = np.median(t)
+    res = {}
+
+    def fit(model, p0, lo, hi, name):
+        r = least_squares(lambda p: (model(p) - F) / err, p0, bounds=(lo, hi))
+        chi2 = float(np.sum(r.fun ** 2)); dof = len(F) - len(p0)
+        J = r.jac
+        try:
+            cov = np.linalg.inv(J.T @ J) * max(chi2 / dof, 1)
+            pe = np.sqrt(np.diag(cov))
+        except np.linalg.LinAlgError:
+            pe = np.full(len(p0), np.nan)
+        res[name] = {"p": r.x.tolist(), "pe": pe.tolist(), "chi2": chi2, "dof": dof, "chi2r": chi2 / dof,
+                     "resid": ((F - model(r.x)) / model(r.x)).tolist()}
+        return r.x
+    # 1) pure blackbody  F = A * B_nu(T)
+    m1 = lambda p: p[0] * bnu(lam, p[1]) / bnu(4.6, p[1])
+    fit(m1, [500, 700], [0, 100], [1e6, 5000], "bb")
+    # 2) blackbody x exp(k (t - t0))
+    m2 = lambda p: p[0] * bnu(lam, p[1]) / bnu(4.6, p[1]) * np.exp(p[2] * (t - t0))
+    fit(m2, [500, 700, 0.0], [0, 100, -1], [1e6, 5000, 1], "bb_time")
+    # 3) blackbody x extinction (A_K free) x time
+    m3 = lambda p: p[0] * bnu(lam, p[1]) / bnu(4.6, p[1]) * np.exp(p[2] * (t - t0)) * 10 ** (-0.4 * p[3] * alam_over_ak(lam))
+    fit(m3, [500, 1000, 0.0, 2.0], [0, 100, -1, 0], [1e7, 20000, 1, 30], "bb_ext_time")
+    out[f"ep{ep}"] = {"n": int(len(F)), "t0": float(t0), "lam": lam.tolist(), "F": F.tolist(), "t": t.tolist(), "det": det.tolist(),
+                      "err": err.tolist(), "fits": res}
+    print(f"=== visit {ep}: {len(F)} points D2-D6, error floor {FLOOR:.0%}")
+    for n, r in res.items():
+        p, pe = r["p"], r["pe"]
+        extra = ""
+        if n != "bb":
+            extra += f", rate {p[2]*100:+.2f} +/- {pe[2]*100:.2f} %/day"
+        if n == "bb_ext_time":
+            extra += f", A_K {p[3]:.2f} +/- {pe[3]:.2f}"
+        print(f"  {n}: T = {p[1]:.0f} +/- {pe[1]:.0f} K, F(4.6um) = {p[0]:.0f} mJy{extra}; chi2/dof = {r['chi2']:.1f}/{r['dof']} = {r['chi2r']:.2f}")
+    # residuals of the best (bb_time) by wavelength window: ice / gas features
+    rb = np.array(res["bb_time"]["resid"])
+    for lo, hi, lab in [(2.4, 2.8, "2.4-2.8"), (2.85, 3.25, "water ice 2.85-3.25"), (3.3, 3.8, "3.3-3.8"), (3.8, 4.15, "3.8-4.15"),
+                        (4.18, 4.36, "CO2 ice 4.18-4.36"), (4.36, 4.55, "4.36-4.55"), (4.58, 4.76, "CO 4.58-4.76"), (4.76, 5.0, "4.76-5.0"),
+                        (1.6, 2.0, "1.6-2.0"), (2.0, 2.45, "2.0-2.45"), (1.1, 1.65, "1.1-1.65")]:
+        k_ = (lam >= lo) & (lam < hi)
+        if k_.sum():
+            print(f"     residual (data/model - 1) {lab}: median {np.median(rb[k_]):+.2f} (n={k_.sum()})")
+json.dump(out, open(f"{W}/out/sed_fits.json", "w"))

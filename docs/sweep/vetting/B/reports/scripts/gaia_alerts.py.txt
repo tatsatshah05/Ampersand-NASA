@@ -1,0 +1,20 @@
+import sys, csv
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+rows = list(csv.reader(open(sys.argv[1])))
+hdr, rows = rows[0], [r for r in rows[1:] if len(r) >= 10]
+ra = [float(r[2]) for r in rows]; de = [float(r[3]) for r in rows]
+cat = SkyCoord(ra, de, unit="deg")
+print("alerts:", len(rows), "latest alert date:", max(r[1] for r in rows))
+# control: a known Gaia alert object position taken from the file itself is circular; instead use Gaia16aye-like known names
+for name, (r0, d0) in {"B": (253.18044, -44.67687), "V7994Sgr": (270.96983, -31.45739), "V462Lup": (227.01362, -40.14308)}.items():
+    s = SkyCoord(r0, d0, unit="deg").separation(cat).arcsec
+    near = sorted([(s[i], rows[i]) for i in range(len(rows)) if s[i] < 3600], key=lambda x: x[0])
+    print(f"== {name}: within 60\": {sum(1 for x in near if x[0] < 60)}; within 1 deg: {len(near)}")
+    for sep, r in near[:8]:
+        print(f"   {sep:8.1f}\"  {r[0]} {r[1]} {r[2]} {r[3]} mag {r[4]} class {r[7]} | {r[9][:90]}")
+# positive control: a well-known Galactic alert by name
+for nm in ("Gaia16aye", "Gaia17bpi", "Gaia19bey", "Gaia21bty"):
+    for r in rows:
+        if r[0] == nm:
+            print("control name present:", r[:4], r[7], r[9][:80])

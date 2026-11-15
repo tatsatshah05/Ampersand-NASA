@@ -1,0 +1,53 @@
+2026-11-15T04:55:07Z	200	122837	text/html; charset=UTF-8	https://www.wis-tns.org/search?ra=241.70931&decl=-52.20484&radius=60&coords_unit=arcsec	docs/sweep/vetting/C/reports/dl/tns/target.html
+2026-11-15T04:55:10Z	200	148340	text/html; charset=UTF-8	https://www.wis-tns.org/search?ra=227.01362&decl=-40.14308&radius=60&coords_unit=arcsec	docs/sweep/vetting/C/reports/dl/tns/ctrl_v462lup.html
+2026-11-15T04:55:11Z	200	122837	text/html; charset=UTF-8	https://www.wis-tns.org/search?ra=270.96983&decl=-31.45739&radius=60&coords_unit=arcsec	docs/sweep/vetting/C/reports/dl/tns/ctrl_v7994sgr.html
+2026-11-15T04:55:12Z	200	350	application/json	https://www.aavso.org/vsx/index.php?view=api.list&ra=241.70931&dec=-52.20484&radius=0.016667&format=json	docs/sweep/vetting/C/reports/dl/vsx/target_1arcmin.json
+2026-11-15T04:55:14Z	200	307	application/json	https://www.aavso.org/vsx/index.php?view=api.list&ra=227.01362&dec=-40.14308&radius=0.016667&format=json	docs/sweep/vetting/C/reports/dl/vsx/ctrl_v462lup.json
+2026-11-15T04:55:16Z	200	2016	application/json	https://www.aavso.org/vsx/index.php?view=api.list&ra=270.96983&dec=-31.45739&radius=0.016667&format=json	docs/sweep/vetting/C/reports/dl/vsx/ctrl_v7994sgr.json
+2026-11-15T04:55:18Z	200	2397436	application/json	https://www.aavso.org/vsx/index.php?view=api.list&ra=241.70931&dec=-52.20484&radius=1&format=json	docs/sweep/vetting/C/reports/dl/vsx/target_1deg.json
+2026-11-15T04:57:09Z	404	4245	text/html	https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V462+Lup&output.format=ASCII	docs/sweep/vetting/C/reports/dl/simbad/cds_v462lup.txt
+2026-11-15T04:59:53Z	200	8659702	text/html; charset=UTF-8	https://www.astronomy.ohio-state.edu/asassn/transients.html	docs/sweep/vetting/C/reports/dl/asassn/transients.html
+2026-11-15T04:59:53Z	200	108	application/json	https://api.alerce.online/ztf/v1/objects/?ra=241.70931&dec=-52.20484&radius=60	docs/sweep/vetting/C/reports/dl/alerce/target.json
+2026-11-15T04:59:53Z	200	108	application/json	https://api.alerce.online/ztf/v1/objects/?ra=270.96983&dec=-31.45739&radius=60	docs/sweep/vetting/C/reports/dl/alerce/ctrl_v7994sgr.json
+2026-11-15T04:59:53Z	404	4850	text/html; charset=utf-8	https://www.massey.ac.nz/~iabond/moa/alert2025/alert.php	docs/sweep/vetting/C/reports/dl/moa/alert2025.html
+2026-11-15T04:59:53Z	404	4850	text/html; charset=utf-8	https://www.massey.ac.nz/~iabond/moa/alert2026/alert.php	docs/sweep/vetting/C/reports/dl/moa/alert2026.html
+2026-11-15T04:59:53Z	200	272134	text/html	https://ogle.astrouw.edu.pl/ogle4/ews/2026/ews.html	docs/sweep/vetting/C/reports/dl/ogle/ews2026.html
+2026-11-15T04:59:53Z	200	431507	text/html	https://ogle.astrouw.edu.pl/ogle4/ews/2025/ews.html	docs/sweep/vetting/C/reports/dl/ogle/ews2025.html
+2026-11-15T04:59:53Z	200	125927	text/html; charset=utf-8	https://asd.gsfc.nasa.gov/Koji.Mukai/novae/novae.html	docs/sweep/vetting/C/reports/dl/mukai/novae.html
+2026-11-15T04:59:53Z	200	426709	text/html; charset=UTF-8	http://www.cbat.eps.harvard.edu/unconf/tocp.html	docs/sweep/vetting/C/reports/dl/cbat/tocp.html
+2026-11-15T04:59:53Z	200	1830977	text/html; charset=UTF-8	https://kmtnet.kasi.re.kr/~ulens/event/2025/	docs/sweep/vetting/C/reports/dl/kmt/2025.html
+2026-11-15T04:59:53Z	200	1171640	text/html; charset=UTF-8	https://kmtnet.kasi.re.kr/~ulens/event/2026/	docs/sweep/vetting/C/reports/dl/kmt/2026.html
+2026-11-15T04:59:53Z	200	3959851	text/csv	http://gsaweb.ast.cam.ac.uk/alerts/alerts.csv	docs/sweep/vetting/C/reports/dl/gaia/alerts.csv
+2026-11-15T05:01:01Z	200	126718	text/html; charset=utf-8	https://moaprime.massey.ac.nz/alerts/index/moa/2025	docs/sweep/vetting/C/reports/dl/moa/prime2025.html
+2026-11-15T05:01:02Z	200	7951	text/html; charset=utf-8	https://moaprime.massey.ac.nz/alerts/index/moa/2026	docs/sweep/vetting/C/reports/dl/moa/prime2026.html
+2026-11-15T05:04:13Z	200	198730	text/html; charset=utf-8	https://arxiv.org/html/2602.07129	docs/sweep/vetting/C/reports/dl/arxiv/2602.07129.html
+2026-11-15T05:04:14Z	200	49309	text/html; charset=utf-8	https://arxiv.org/abs/2610.19018	docs/sweep/vetting/C/reports/dl/arxiv/2610.19018_abs.html
+2026-11-15T05:04:14Z	200	333903	text/html; charset=utf-8	https://arxiv.org/html/2610.19018	docs/sweep/vetting/C/reports/dl/arxiv/2610.19018.html
+2026-11-15T05:04:15Z	200	46185	text/html; charset=utf-8	https://arxiv.org/abs/2509.04560	docs/sweep/vetting/C/reports/dl/arxiv/2509.04560_abs.html
+2026-11-15T05:04:44Z	200	684362	application/pdf	https://arxiv.org/pdf/2602.07129	docs/sweep/vetting/C/reports/dl/arxiv/2602.07129.pdf
+2026-11-15T05:05:36Z	403	772	text/html;charset=utf-8	https://www.aanda.org/articles/aa/full_html/2026/06/aa56647-25/aa56647-25.html	docs/sweep/vetting/C/reports/dl/arxiv/aa56647-25.html
+2026-11-15T05:05:37Z	200	2457216	application/pdf	https://arxiv.org/pdf/2604.24402	docs/sweep/vetting/C/reports/dl/arxiv/2604.24402.pdf
+2026-11-15T05:05:38Z	200	46803	text/html; charset=utf-8	https://arxiv.org/abs/2607.00543	docs/sweep/vetting/C/reports/dl/arxiv/2607.00543_abs.html
+2026-11-15T05:05:38Z	403	772	text/html;charset=utf-8	https://www.aanda.org/articles/aa/pdf/forth/aa60798-26.pdf	docs/sweep/vetting/C/reports/dl/arxiv/aa60798-26.pdf
+2026-11-15T05:06:14Z	200	6426668	application/pdf	https://arxiv.org/pdf/2604.19551	docs/sweep/vetting/C/reports/dl/arxiv/2604.19551.pdf
+2026-11-15T05:06:51Z	200	41873	text/html; charset=utf-8	https://arxiv.org/abs/2406.18303	docs/sweep/vetting/C/reports/dl/arxiv/2406.18303_abs.html
+2026-11-15T05:06:58Z	200	1066197	application/gzip	https://arxiv.org/e-print/2406.18303	docs/sweep/vetting/C/reports/dl/src_2406.18303/src.tar.gz
+2026-11-15T05:07:25Z	200	33186	text/html; charset=utf-8	https://www.astronomerstelegram.org/?search=Norma	docs/sweep/vetting/C/reports/dl/atel/search_norma.html
+2026-11-15T05:07:26Z	200	33186	text/html; charset=utf-8	https://www.astronomerstelegram.org/?search=V462+Lup	docs/sweep/vetting/C/reports/dl/atel/search_ctrl_v462lup.html
+2026-11-15T05:07:26Z	200	12168	text/xml	https://www.astronomerstelegram.org/?rss	docs/sweep/vetting/C/reports/dl/atel/rss.xml
+2026-11-15T05:07:27Z	401	52	application/json	https://api.adsabs.harvard.edu/v1/search/query?q=SPHEREx&fl=bibcode	docs/sweep/vetting/C/reports/dl/atel/ads_noauth.json
+2026-11-15T05:07:49Z	200	10216	text/html; charset=utf-8	http://www.astronomerstelegram.org/?listxml	docs/sweep/vetting/C/reports/dl/atel/listxml.html
+2026-11-15T05:08:03Z	200	10464	text/xml	https://www.astronomerstelegram.org/?rss+Nova	docs/sweep/vetting/C/reports/dl/atel/rss_Nova.xml
+2026-11-15T05:08:03Z	200	12679	text/xml	https://www.astronomerstelegram.org/?rss+Transient	docs/sweep/vetting/C/reports/dl/atel/rss_Transient.xml
+2026-11-15T05:08:04Z	200	570	text/xml	https://www.astronomerstelegram.org/?rss+Young+Stellar+Object	docs/sweep/vetting/C/reports/dl/atel/rss_Young_Stellar_Object.xml
+2026-11-15T05:08:05Z	200	576	text/xml	https://www.astronomerstelegram.org/?rss+Pre-Main-Sequence+Star	docs/sweep/vetting/C/reports/dl/atel/rss_Pre-Main-Sequence_Star.xml
+2026-11-15T05:08:05Z	200	13174	text/xml	https://www.astronomerstelegram.org/?rss+Variables	docs/sweep/vetting/C/reports/dl/atel/rss_Variables.xml
+2026-11-15T05:08:06Z	200	15410	text/xml	https://www.astronomerstelegram.org/?rss+Star	docs/sweep/vetting/C/reports/dl/atel/rss_Star.xml
+2026-11-15T05:08:15Z	200	1383	text/xml	https://www.astronomerstelegram.org/?rss+17228	docs/sweep/vetting/C/reports/dl/atel/atel_17228.xml
+2026-11-15T05:09:03Z	200	1715	text/xml	https://www.astronomerstelegram.org/?rss+17229	docs/sweep/vetting/C/reports/dl/atel/rss_one_17229.xml
+2026-11-15T05:09:04Z	200	1502	text/xml	https://www.astronomerstelegram.org/?rss+17600	docs/sweep/vetting/C/reports/dl/atel/rss_one_17600.xml
+2026-11-15T05:09:06Z	200	1685	text/xml	https://www.astronomerstelegram.org/?rss+18000	docs/sweep/vetting/C/reports/dl/atel/rss_one_18000.xml
+2026-11-15T05:09:57Z	200	41589	text/html	https://astro-richweb.net/astro/novae_2026.htm	docs/sweep/vetting/C/reports/dl/novae2026/richweb_2026.html
+2026-11-15T05:09:57Z	200	31710	text/html	https://astro-richweb.net/astro/novae_2025.htm	docs/sweep/vetting/C/reports/dl/novae2026/richweb_2025.html
+2026-11-15T05:12:23Z	200	187314	text/html; charset=UTF-8	https://www.wis-tns.org/search?ra=241.70931&decl=-52.20484&radius=1&coords_unit=deg&num_page=100	docs/sweep/vetting/C/reports/dl/tns/target_1deg.html
+2026-11-15T05:14:23Z	200	34246	text/html; charset=UTF-8	https://www.wis-tns.org/object/2026epw	docs/sweep/vetting/C/reports/dl/tns/AT2026epw.html

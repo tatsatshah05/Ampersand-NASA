@@ -1,0 +1,29 @@
+"""Parse a VizieR all-catalogue asu-tsv answer: per table, number of rows and the nearest _r."""
+import sys
+cur = None; title = {}; name = None; tables = {}; state = None; header = None
+for line in open(sys.argv[1], errors="replace"):
+    line = line.rstrip("\n")
+    if line.startswith("#Name:"):
+        name = line.split(":", 1)[1].strip()
+    elif line.startswith("#Title:"):
+        title[name] = line.split(":", 1)[1].strip()
+    elif line.startswith("#Table"):
+        cur = name; tables.setdefault(cur, []); state = "head"; header = None
+    elif line.startswith("#") or not line.strip():
+        if not line.strip():
+            state = None if state == "data" else state
+        continue
+    elif cur is not None:
+        if state == "head":
+            header = line.split("\t"); state = "units"
+        elif state == "units":
+            state = "dash"
+        elif state == "dash":
+            state = "data"
+        elif state == "data":
+            tables[cur].append(dict(zip(header, line.split("\t"))))
+rows = [(t, r) for t, r in tables.items() if r]
+print(len(tables), "tables listed,", len(rows), "with rows")
+for t, r in sorted(rows, key=lambda x: float((x[1][0].get("_r") or "999").strip() or 999)):
+    rr = sorted(float(x.get("_r", "999").strip() or 999) for x in r)
+    print(f"{t:28s} n={len(r):4d} nearest={rr[0]:6.1f}\"  {title.get(t, '')[:90]}")

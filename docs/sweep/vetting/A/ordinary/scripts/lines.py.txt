@@ -1,0 +1,42 @@
+"""Look for emission lines in A's own low-resolution SPHEREx spectrum without mixing times.
+
+Within one detector, SPHEREx takes a few exposures minutes apart at neighbouring
+wavelengths. For every run of 3 such exposures (same detector, consecutive, all within
+15 minutes), compare the middle one with the mean of its two neighbours, for A (forced
+two-source fit, out/forced.csv) and, as a control, for the bright neighbour N in the same
+exposures. Channels whose band (centre +- bandwidth/2, from the sweep's light-curve file)
+contains a known line are named. Read-only.
+Usage: lines.py forced.csv
+"""
+import csv, json, math, sys
+from pathlib import Path
+
+LINES = {"HeI 1.0830": 1.0830, "Pa-gamma 1.0938": 1.0938, "OI 1.1287": 1.1287, "Pa-beta 1.2818": 1.2818,
+         "Br12 1.6407": 1.6407, "Br11 1.6806": 1.6806, "Pa-alpha 1.8751": 1.8751, "Br-delta 1.9446": 1.9446,
+         "HeI 2.0581": 2.0581, "Br-gamma 2.1661": 2.1661, "CO(2-0) 2.2935": 2.2935, "Br-beta 2.6252": 2.6252,
+         "Pf-gamma 3.7406": 3.7406, "Br-alpha 4.0523": 4.0523, "Pf-beta 4.6538": 4.6538}
+pts = json.load(open("<repository>/backend/cache/sweep/photometry/2c3c31c3c37a6a21.json"))["points"]
+bw = {(p["obs_id"], p["detector"]): p["bandwidth_um"] for p in pts}
+rows = [r for r in csv.DictReader(open(sys.argv[1])) if float(r["A_core_ok"]) >= 0.8]
+rows.sort(key=lambda r: (r["det"], float(r["mjd"])))
+print("epoch det  wl(mid)  band         A: left  MID  right  mid/mean(nb)  sig  |  N: mid/mean(nb)   lines in band")
+for i in range(1, len(rows) - 1):
+    a, b, c = rows[i - 1], rows[i], rows[i + 1]
+    if not (a["det"] == b["det"] == c["det"]):
+        continue
+    t = [float(x["mjd"]) for x in (a, b, c)]
+    if t[2] - t[0] > 15 / 1440:
+        continue
+    fa, fb, fc = (float(x["A_mjy"]) for x in (a, b, c))
+    ea, eb, ec = (float(x["A_err"]) for x in (a, b, c))
+    na, nb_, nc = (float(x["N_mjy"]) for x in (a, b, c))
+    mean = (fa + fc) / 2
+    if mean <= 5:
+        continue
+    err = math.sqrt(eb ** 2 + (ea ** 2 + ec ** 2) / 4)
+    sig = (fb - mean) / err
+    w = float(b["wl"]); half = bw.get((b["obs_id"], int(b["det"])), 0.03) / 2
+    inband = [k for k, v in LINES.items() if w - half <= v <= w + half]
+    nratio = nb_ / ((na + nc) / 2) if (na + nc) > 0 else float("nan")
+    flag = " <==" if abs(sig) >= 3 else ""
+    print(f"  {b['epoch']}   D{b['det']}  {w:6.3f}  {w-half:5.3f}-{w+half:5.3f}  {fa:7.1f} {fb:7.1f} {fc:7.1f}   {fb/mean:5.2f}   {sig:+5.1f}  |  {nratio:5.2f}   {', '.join(inband)}{flag}")

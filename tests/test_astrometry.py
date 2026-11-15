@@ -213,6 +213,53 @@ def test_gaia_cone_turns_missing_values_into_none_and_caches(monkeypatch: pytest
     assert len(list((tmp_path / "queries").glob("gaia_*.json"))) == 1
 
 
+def test_gaia_cone_asks_the_cfa_copy_when_the_archive_does_not_answer(monkeypatch: pytest.MonkeyPatch, tmp_path):
+    """ESA's Gaia archive took no connections on 2026-11-15: the same table at CfA's VizieR answers instead."""
+    # What the copy sends, in its own layout: comments, names, units, dashes, then rows (one star has no motion).
+    answer = "\n".join([
+        "#RESOURCE=yCat_1355", "#Table I_355_gaiadr3:", "",
+        "Source\tRA_ICRS\tDE_ICRS\tpmRA\tpmDE\tPlx\tGmag", "\tdeg\tdeg\tmas/yr\tmas/yr\tmas\tmag",
+        "-------------------\t---------------\t---------------\t---------\t---------\t---------\t---------",
+        "5964332611942790272\t253.18363009405\t-44.68053733379\t   -4.187\t   -2.701\t   0.5166\t17.237220",
+        "4472832130942575872\t269.44850253009\t+04.73942500000\t -801.551\t10362.394\t 546.9759\t 8.193497",
+        "5964332611928383104\t253.17394341001\t-44.67517592747\t         \t         \t         \t16.786690",
+        "",
+    ]).encode()
+    asked: list[str] = []
+
+    def fake_http_get(url: str, params: dict | None = None, **_: object) -> bytes:
+        asked.append(url)
+        if url == astrometry.GAIA_TAP:
+            raise astrometry.ArchiveError("ConnectTimeout")
+        assert params is not None and params["-source"] == "I/355/gaiadr3" and params["Gmag"] == "<17.0"
+        return answer
+
+    monkeypatch.setattr(astrometry, "http_get", fake_http_get)
+    monkeypatch.setattr(astrometry, "CACHE", tmp_path)
+
+    stars = astrometry.gaia_cone(253.18038, -44.67697, 0.01)
+    assert asked == [astrometry.GAIA_TAP, astrometry.GAIA_COPY]
+    # Brightest first, as the archive orders them; the same fields; a missing motion is None.
+    assert [s["source_id"] for s in stars] == ["4472832130942575872", "5964332611928383104", "5964332611942790272"]
+    assert stars[0] == {"source_id": "4472832130942575872", "ra": 269.44850253009, "dec": 4.739425, "pmra": -801.551,
+                        "pmdec": 10362.394, "parallax": 546.9759, "gmag": 8.193497}
+    assert (stars[1]["pmra"], stars[1]["pmdec"], stars[1]["parallax"]) == (None, None, None)
+    # Cached like the archive's answer: the next call asks nobody.
+    assert astrometry.gaia_cone(253.18038, -44.67697, 0.01) == stars
+    assert len(asked) == 2
+
+
+def test_gaia_cone_says_so_when_neither_answers(monkeypatch: pytest.MonkeyPatch, tmp_path):
+    def down(url: str, params: dict | None = None, **_: object) -> bytes:
+        raise astrometry.ArchiveError(f"HTTP 502 from {url}")
+
+    monkeypatch.setattr(astrometry, "http_get", down)
+    monkeypatch.setattr(astrometry, "CACHE", tmp_path)
+    with pytest.raises(astrometry.ArchiveError, match="CfA copy"):
+        astrometry.gaia_cone(253.18038, -44.67697, 0.01)
+    assert not list(tmp_path.rglob("gaia_*.json"))
+
+
 # SIMBAD's `basic` row for an object, in the column order of astrometry._BASIC.
 BARNARD_IN_SIMBAD = [1, "NAME Barnard's star", 269.4520769586187, 4.693364966576667, -801.551, 10362.394, 546.9759,
                      "BY*", "2020yCat.1350....0G", "2020yCat.1350....0G"]

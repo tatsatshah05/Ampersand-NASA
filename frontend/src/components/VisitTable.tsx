@@ -3,14 +3,16 @@
 // (a hairline and bold weight, so it is seen without colour, plus aria-current). Pressing a
 // row's button shows that visit, like pressing its thumbnail.
 //
-// Beginner: the visit (number and month) and how far it had moved, in plain words.
+// Beginner: the visit (number and month) and how far it had moved, in plain words; or, under a
+// headline about something that appeared or faded (wording.ts, changeHeadline), how clearly it is
+// seen in each visit.
 // Expert: two lines per visit. The first has the measured shift since the start (east, north
 // and total), the shift the catalogue predicts and how far the two differ; the second the
 // dates, exposures, how clearly it is detected, the position's error and short warnings.
 import { useLayoutEffect, useRef } from 'react'
 import type { FramesReady } from '../api'
 import { releaseFocusAfterPointer } from '../focus'
-import { expertCells, plainResult, rowMonth, rowName, tableCaption, tableRows } from '../wording'
+import { expertCells, plainColumn, plainResult, rowMonth, rowName, tableCaption, tableRows } from '../wording'
 
 interface Props {
   data: FramesReady
@@ -27,6 +29,13 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
   const rows = tableRows(data)
   const table = useRef<HTMLTableElement>(null)
 
+  // A new view starts with its block scrolled to the top, so the sentence over the table is in
+  // sight (the block is the same element from one target to the next and kept its scroll).
+  useLayoutEffect(() => {
+    const box = table.current?.closest('.readout-block')
+    if (box instanceof HTMLElement) box.scrollTop = 0
+  }, [data.key])
+
   // Keep the marked row inside the readout block when the visitor steps to it. Only the block
   // scrolls, never the page; and never while playing, so nothing moves by itself.
   useLayoutEffect(() => {
@@ -35,7 +44,9 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
     const row = table.current?.querySelector<HTMLElement>('[aria-current="true"]')
     if (!(box instanceof HTMLElement) || !row) return
     const top = row.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
-    const bottom = top + (row.closest('tbody')?.offsetHeight ?? row.offsetHeight)
+    // The marked element is the visit's own: a row in Beginner, the visit's two-row body in Expert. (The
+    // body around a Beginner row holds every visit, which scrolled the sentence over the table away.)
+    const bottom = top + row.offsetHeight
     if (top < box.scrollTop) box.scrollTop = top
     else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight
   }, [follow, current])
@@ -56,8 +67,10 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
   )
 
   if (!expert) {
+    // How far it moved; or, for something that appears or fades, how clearly it is seen in each visit.
+    const column = plainColumn(data)
     return (
-      <table className="visit-table" ref={table} aria-label="Every visit, and how far it had moved since the start">
+      <table className="visit-table" ref={table} aria-label={column.label}>
         <colgroup>
           <col className="c-visit" />
           <col className="c-moved" />
@@ -65,7 +78,7 @@ export function VisitTable({ data, current, expert, disabled, onShow, follow }: 
         <thead>
           <tr>
             <th scope="col">Visit</th>
-            <th scope="col">Moved (arcseconds)</th>
+            <th scope="col">{column.header}</th>
           </tr>
         </thead>
         <tbody>

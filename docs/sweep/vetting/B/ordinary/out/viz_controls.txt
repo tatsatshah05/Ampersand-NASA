@@ -1,0 +1,27 @@
+J/AJ/136/2413/table2 CONTROL at its own row 266.248000 -28.852100: cone(5") returned 1 rows; nearest _r=0.0
+J/MNRAS/458/3479/clasi-ii CONTROL at its own row 104.318613600 -00.558560500: cone(5") returned 1 rows; nearest _r=0.000
+II/360/catalog CONTROL: could not fetch a first row
+J/MNRAS/465/3011/table2 CONTROL at its own row 175.3965000 -62.3487528: cone(5") returned 1 rows; nearest _r=0.000
+J/ApJS/237/28/table2 CONTROL at its own row 147.0518200 +09.5802100: cone(5") returned 1 rows; nearest _r=0.00
+J/ApJS/260/46/miras CONTROL at its own row 256.3686250 -32.7395556: cone(5") returned 1 rows; nearest _r=0.00
+J/A+A/582/A68/oh_maser CONTROL at its own row 257.49795833 -35.01611389: cone(5") returned 2 rows; nearest _r=0.000
+VIII/96/catalog CONTROL at its own row 256.2953750 -41.4850556: cone(5") returned 2 rows; nearest _r=0.00
+J/MNRAS/416/1764/table2 CONTROL at its own row 266.649583 -29.004167: cone(5") returned 1 rows; nearest _r=0.0
+J/ApJS/208/11/table1 CONTROL at its own row 271.3045833 -19.8429722: cone(5") returned 1 rows; nearest _r=0.00
+J/A+A/568/A41/atl-csc CONTROL at its own row 266.35841 -28.90893: cone(5") returned 1 rows; nearest _r=0
+V/84/main CONTROL at its own row 273.3251205 -32.3286158: cone(5") returned 1 rows; nearest _r=0.02
+IX/58/2sxps CONTROL at its own row 006.3230000 +64.0810900: cone(5") returned 1 rows; nearest _r=0.00
+IX/69/xmm4d13s CONTROL at its own row 000.00098111 -55.35174500: cone(5") returned 1 rows; nearest _r=0.000
+IX/70/csc21mas CONTROL at its own row 259.9233039421362 -35.9772304920089: cone(5") returned 1 rows; nearest _r=0.000
+J/A+A/588/A103/cat2rxs CONTROL at its own row 183.5028700 +87.1971300: cone(5") returned 1 rows; nearest _r=0.00
+J/A+A/682/A34/erass1-m CONTROL at its own row 7.4052489913496 -31.0361025559522: cone(5") returned 1 rows; nearest _r=0.000
+J/ApJS/223/15/table2 CONTROL at its own row 001.00600 +70.32100: cone(5") returned 1 rows; nearest _r=0
+J/A+AS/146/407/catalog CONTROL at its own row 007.295417 -74.960806: cone(5") returned 1 rows; nearest _r=0.00
+J/A+A/635/A14/table2 CONTROL at its own row 002.175508600 +63.009353500: cone(5") returned 1 rows; nearest _r=0.000
+J/AJ/149/64/catalog CONTROL at its own row 276.72025806 -11.97359111: cone(5") returned 1 rows; nearest _r=0.000
+II/297/irc CONTROL at its own row 000.0003800 -05.4942900: cone(5") returned 1 rows; nearest _r=0.00
+V/114/msx6_gp CONTROL at its own row 248.879000 -50.536300: cone(5") returned 1 rows; nearest _r=0.0
+II/125/main CONTROL at its own row 000.644768 -3.710515: cone(5") returned 1 rows; nearest _r=0.0
+J/ApJS/235/4/table3 CONTROL at its own row 000.2282656700 -07.1642180700: cone(5") returned 1 rows; nearest _r=0.000
+J/MNRAS/458/3479/clasiii CONTROL at its own row 103.818923500 -00.510799900: cone(5") returned 1 rows; nearest _r=0.000
+J/ApJS/254/33/table1 CONTROL at its own row 125.66481111 -37.55134889: cone(5") returned 1 rows; nearest _r=0.000

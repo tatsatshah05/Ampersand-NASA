@@ -1,0 +1,125 @@
+"""Colour temperatures, extinction, rates and luminosities for C.
+
+Two inputs:
+ (A) the sweep's per-detector medians (its numbers, NOT reproduced here; used because the task asks);
+ (B) this work's per-exposure photometry (own_phot.jsonl), continuum channels only: every channel within
+     0.8 bandwidth of a line seen in C (H I Pa/Br/Pf/Hu, the 4.298 and 4.73-4.78 features, [Mg IV] 4.487)
+     is left out, as are readings with more than 15 per cent of the aperture flagged. The flare spectrum is the
+     2.5-pixel reading minus the median 2.5-pixel reading of the same detector in Jul-Aug 2025 (neighbours cancel).
+Extinction law: A_lambda/A_K from Indebetouw et al. 2005 (J 2.50, H 1.55, K 1.00, [3.6] 0.56, [4.5] 0.43,
+[5.8] 0.43), interpolated in log wavelength; below 1.235 um extrapolated as lambda^-1.61 (the J-H slope).
+"""
+import json
+import math
+import sys
+
+import numpy as np
+from scipy.optimize import least_squares
+
+H, C, K = 6.62607e-34, 2.99792e8, 1.380649e-23
+LAW = np.array([[1.235, 2.50], [1.662, 1.55], [2.159, 1.00], [3.545, 0.56], [4.442, 0.43], [5.675, 0.43]])
+
+
+def a_over_ak(lam):
+    lam = np.atleast_1d(lam).astype(float)
+    out = np.interp(np.log(lam), np.log(LAW[:, 0]), LAW[:, 1])
+    lo = lam < 1.235
+    out[lo] = 2.50 * (lam[lo] / 1.235) ** -1.61
+    return out
+
+
+def bnu(lam_um, t):
+    nu = C / (lam_um * 1e-6)
+    return 2 * H * nu ** 3 / C ** 2 / np.expm1(H * nu / (K * t))
+
+
+def fit_bb(lam, f, err, ak=None):
+    """Blackbody (scale, T) with A_K fixed (ak given) or free (ak None)."""
+    def model(p):
+        s, t = math.exp(p[0]), p[1]
+        a = ak if ak is not None else p[2]
+        return s * bnu(lam, t) / bnu(np.array([4.0]), t)[0] * 10 ** (-0.4 * a * a_over_ak(lam))
+    best = None
+    for t0 in (500, 800, 1200, 2000, 4000, 8000):
+        p0 = [math.log(max(f.max(), 1)), t0] + ([] if ak is not None else [1.0])
+        lb = [-50, 150] + ([] if ak is not None else [0.0])
+        ub = [50, 30000] + ([] if ak is not None else [8.0])
+        try:
+            r = least_squares(lambda p: (model(p) - f) / err, p0, bounds=(lb, ub))
+        except Exception:
+            continue
+        if best is None or r.cost < best.cost:
+            best = r
+    chi2 = 2 * best.cost
+    dof = len(f) - len(best.x)
+    return best.x, chi2, dof, model(best.x)
+
+
+def fit_flat(lam, f, err):
+    """Optically thin free-free at 10^4 K (F_nu ~ nu^-0.1 exp(-h nu / k T)) with A_K free."""
+    def model(p):
+        nu = C / (lam * 1e-6)
+        shape = (nu / 1e14) ** -0.1 * np.exp(-H * nu / (K * 1e4))
+        return math.exp(p[0]) * shape * 10 ** (-0.4 * p[1] * a_over_ak(lam))
+    r = least_squares(lambda p: (model(p) - f) / err, [math.log(50), 1.0], bounds=([-50, 0], [50, 10]))
+    return r.x, 2 * r.cost, len(f) - 2, model(r.x)
+
+
+def report(label, lam, f, err):
+    print(f"\n### {label}: {len(lam)} points, {lam.min():.2f}-{lam.max():.2f} um")
+    for ak in (0.0, 1.0, 2.0, 3.0):
+        x, chi2, dof, _ = fit_bb(lam, f, err, ak=ak)
+        print(f"  blackbody, A_K fixed {ak:.1f}: T = {x[1]:6.0f} K  chi2/dof = {chi2:7.1f}/{dof}")
+    x, chi2, dof, _ = fit_bb(lam, f, err, ak=None)
+    print(f"  blackbody, A_K free: T = {x[1]:6.0f} K, A_K = {x[2]:.2f}  chi2/dof = {chi2:7.1f}/{dof}")
+    x, chi2, dof, _ = fit_flat(lam, f, err)
+    print(f"  free-free 10^4 K (flat F_nu), A_K free: A_K = {x[1]:.2f}  chi2/dof = {chi2:7.1f}/{dof}")
+
+
+# ---- (A) the sweep's medians (its numbers) ----
+centres = {1: 0.92, 2: 1.35, 3: 1.98, 4: 3.06, 5: 4.11, 6: 4.70}   # geometric centres of the detector ranges
+sweep = {0: {1: 2.15, 2: 1.75, 3: 8.48, 4: 9.30, 5: 8.42, 6: 3.86},
+         1: {1: 1.97, 2: 6.31, 3: 53.7, 4: 82.59, 5: 123.7, 6: 109.65},
+         3: {1: 1.76, 2: 3.06, 3: 8.51, 4: 7.93, 5: 12.28, 6: 8.0}}
+print("(A) sweep medians, flare minus Jul-Aug 2025, detectors 2-6 (1.1-5.0 um):")
+lamA = np.array([centres[d] for d in (2, 3, 4, 5, 6)])
+fA = np.array([sweep[1][d] - sweep[0][d] for d in (2, 3, 4, 5, 6)])
+print("   ", dict(zip((2, 3, 4, 5, 6), np.round(fA, 1))))
+print("    ratio Feb-Mar 2026 / Jul-Aug 2025 per detector:", {d: round(sweep[1][d] / sweep[0][d], 1) for d in range(1, 7)})
+print("    ratio Jul-Sep 2026 / Jul-Aug 2025 per detector:", {d: round(sweep[3][d] / sweep[0][d], 2) for d in range(1, 7)})
+report("(A) sweep medians, flare minus quiescent", lamA, fA, 0.1 * fA + 1.0)
+
+# ---- (B) own photometry ----
+recs = [json.loads(l) for l in open(sys.argv[1])]
+recs = [r for r in recs if r.get("status") == "measured" and r.get("f2.5") is not None]
+LINES = [1.0830, 1.0941, 1.2822, 1.8756, 2.1661, 2.6259, 3.0392, 3.2970, 3.7406, 4.0523, 4.2954, 4.3765, 4.4867,
+         4.5295, 4.6538, 4.6725, 4.7635]
+
+
+def is_cont(r):
+    return all(abs(r["um"] - L) > 0.8 * r["bw_um"] for L in LINES) and not (4.72 < r["um"] < 4.79)
+
+
+q = {}
+for d in range(1, 7):
+    v = [r["f2.5"] for r in recs if 60850 < r["mjd"] < 60920 and r["det"] == d and r["badshare2.5"] < 0.15]
+    q[d] = (float(np.median(v)), 1.4826 * float(np.median(np.abs(np.array(v) - np.median(v)))), len(v))
+print("\n(B) quiescent (Jul-Aug 2025) 2.5-px median per detector [mJy, scatter, n]:", {d: tuple(round(x, 1) for x in q[d][:2]) + (q[d][2],) for d in q})
+for lab, lo, hi in (("Feb-Mar 2026", 61080, 61110), ("Jul-Sep 2026", 61240, 61300)):
+    pts = [r for r in recs if lo < r["mjd"] < hi and r["badshare2.5"] < 0.15 and is_cont(r) and r["um"] >= 1.1]
+    lam = np.array([r["um"] for r in pts])
+    f = np.array([r["f2.5"] - q[r["det"]][0] for r in pts])
+    err = np.array([math.hypot(q[r["det"]][1], 0.05 * abs(r["f2.5"]) + 0.5) for r in pts])
+    o = np.argsort(lam)
+    lam, f, err = lam[o], f[o], err[o]
+    # binned view
+    print(f"\n(B) {lab} continuum, flare minus quiescent, 2.5 px, binned:")
+    for a, b in ((1.1, 1.3), (1.3, 1.5), (1.5, 1.65), (1.65, 1.85), (1.95, 2.15), (2.2, 2.45), (2.45, 3.0), (3.0, 3.6),
+                 (3.6, 3.85), (3.85, 4.0), (4.1, 4.4), (4.4, 4.7), (4.8, 5.05)):
+        s = (lam >= a) & (lam < b)
+        if s.any():
+            print(f"   {a:.2f}-{b:.2f} um: median {np.median(f[s]):7.1f} mJy (n={s.sum()})")
+    if lab.startswith("Feb"):
+        report(f"(B) own, {lab}", lam, f, err)
+        report(f"(B) own, {lab}, 1.9-5.0 um only", lam[lam > 1.9], f[lam > 1.9], err[lam > 1.9])
+        np.savetxt(sys.argv[2], np.c_[lam, f, err], header="um flux_mJy err_mJy (flare minus Jul-Aug 2025, 2.5 px, continuum channels)")
