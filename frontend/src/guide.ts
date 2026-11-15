@@ -32,15 +32,17 @@ export interface Step {
   state: StepState
 }
 
-const STEP_LABELS = ['Choose a star above', 'Flip through the visits', 'Read what changed'] as const
+const STEP_LABELS = ['Choose a star above', 'Watch the visits flip', 'Read what changed'] as const
+/** Step 2 for someone whose system asks for less motion: the pictures start still. */
+const STILL_STEP_2 = 'Press Play to flip the visits'
 
 /** The three steps. Done ones are those the visitor did; "now" is the first one not done. */
-export function guideSteps(progress: Progress): Step[] {
+export function guideSteps(progress: Progress, still = false): Step[] {
   const done = [progress.chose, progress.flipped, progress.read]
   const now = done.indexOf(false)
-  return STEP_LABELS.map((label, i) => ({
+  return STEP_LABELS.map((was, i) => ({
     n: (i + 1) as 1 | 2 | 3,
-    label,
+    label: i === 1 && still ? STILL_STEP_2 : was,
     state: done[i] ? 'done' : i === now ? 'now' : 'later',
   }))
 }
@@ -108,7 +110,7 @@ export function pictureInfo(data: FramesReady | null, frame: Frame | null): stri
   }
   return [
     story.join(' '),
-    'Scroll or pinch to zoom, and drag to move. North is up and east is left. A flat white patch is too bright to measure. The space bar plays and pauses, and the arrow keys step.',
+    'The amber ring shows where we measured the star in this visit. Scroll or pinch to zoom, and drag to move. North is up and east is left. A flat white patch is too bright to measure. The space bar plays and pauses, and the arrow keys step.',
   ]
 }
 

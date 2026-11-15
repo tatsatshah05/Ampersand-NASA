@@ -117,7 +117,7 @@ describe('the picture', () => {
     expect(pictureInfo(data([frame(1, { n_exposures: 1 })]), null)[0]).toContain('In all, 1 exposure went into 1 visit picture')
   })
   it('says how to move around in the picture', () => {
-    expect(pictureInfo(null, null)[1]).toContain('Scroll or pinch to zoom')
+    expect(pictureInfo(null, null)[1]).toContain('amber ring')
   })
   it('formats a date from its text, not through a time zone', () => {
     expect(dayMonthYear('2025-08-15')).toBe('15 Aug 2025')
