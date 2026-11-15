@@ -3,7 +3,7 @@ import type { UiLevel } from '../address'
 import { releaseFocusAfterPointer } from '../focus'
 
 export const EXPERT_ADDS =
-  'Expert adds the six detectors, difference and sum views, overlays, spectra, brightness charts, the search of a patch and asteroid labels.'
+  'Expert adds the six detectors, difference and sum views, overlays, spectra, brightness charts, the search of a patch, asteroid labels and the search for a distant world (Planet X).'
 
 const SIDES: { level: UiLevel; label: string }[] = [
   { level: 'beginner', label: 'Beginner' },
