@@ -439,6 +439,82 @@ def headline_transits(r: dict) -> dict:
 
 HEADLINES = {"reflex": headline_reflex, "colourwalk": headline_colourwalk, "transits": headline_transits}
 
+
+# ------------------------------------------------------------------------------------------- write-up parts
+# Pure functions: a write-up's text in, the few facts the screen takes from it out (the review's own
+# measurements that results.json does not hold). `--check` recomputes them, so a changed write-up
+# makes the lab file out of date. A fact the write-up no longer states becomes unavailable, never guessed.
+
+NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9}
+
+
+def flat_text(text: str) -> str:
+    """The write-up as one line of words: markdown bold dropped, every run of white space one space."""
+    return re.sub(r"\s+", " ", text.replace("**", ""))
+
+
+def sentence_with(text: str, phrase: str) -> str | None:
+    # A sentence ends at a full stop followed by a space and a capital, so "0.5 mJy" does not end one.
+    found = next((s for s in re.split(r"(?<=[.:])\s+(?=[A-Z(#-])", text) if phrase in s), None)
+    return found.strip()[:300] if found else None
+
+
+def writeup_reflex(text: str) -> dict:
+    t = flat_text(text)
+    dev = sentence_with(t, "made after a probe had already found Eris")
+    m = re.search(
+        r"(\d+)% of the 1/d information sits in (\w+) exposures of that first day, where Eris is ([\d.]+) arcsec "
+        r"from a fixed star as bright as itself",
+        t,
+    )
+    n_exp = (NUMBER_WORDS.get(m.group(2)) or (int(m.group(2)) if m.group(2).isdigit() else None)) if m else None
+    first_day = (
+        {
+            "info_share": int(m.group(1)) / 100,
+            "n_exposures": n_exp,
+            "neighbour_arcsec": float(m.group(3)),
+            "neighbour_as_bright": True,
+            "source": "docs/reflex.md (a review measurement, not re-run by the module)",
+        }
+        if m and n_exp
+        else unavailable("docs/reflex.md does not give the first day's share of the bend and its neighbour")
+    )
+    return {
+        "development_object": dev is not None,
+        "development_object_evidence": dev,
+        "candidate": {"first_day": first_day},
+    }
+
+
+def writeup_transits(text: str) -> dict:
+    t = flat_text(text)
+    ind = re.search(
+        r"The fakes overlap \((\d+) per cent of pairs share a reading\); the reviewer counts about (\d+) "
+        r"independent, so p is below about ([\d.]+) per cent",
+        t,
+    )
+    pub = re.search(r"Published depths of this planet range from ([\d.]+) to ([\d.]+) per cent", t)
+    return {
+        "d5": {
+            "fakes_independent": {
+                "share_of_pairs_sharing_a_reading": int(ind.group(1)) / 100,
+                "n_independent_about": int(ind.group(2)),
+                "p_below": round(float(ind.group(3)) / 100, 6),
+                "source": "docs/transits.md (the reviewer's count, not re-run by the module)",
+            }
+            if ind
+            else unavailable("docs/transits.md does not say how many fakes are independent")
+        },
+        "planet": {
+            "published_depth_range_pct": [float(pub.group(1)), float(pub.group(2))]
+            if pub
+            else unavailable("docs/transits.md does not give the range of published depths")
+        },
+    }
+
+
+WRITEUP_PARTS = {"reflex": writeup_reflex, "colourwalk": lambda text: {}, "transits": writeup_transits}
+
 # Fields the screen needs (section 7 of the spec, as adapted; see the report). `--check` and the tests ask for them.
 REQUIRED = {
     "reflex": [
@@ -1591,6 +1667,7 @@ def export_transits(cache_root: Path) -> tuple[dict, dict[str, bytes]]:
         "with why, where it refuses); depth_fixed_model: the module's model on the same kept readings with only the "
         "trapezoid's period changed, a reference only",
         "min_in_transit": T.MIN_IN_TRANSIT,
+        "aperture_px": T.APERTURE_PX,
         "window_h": TRANSIT_WINDOW_H,
         "wasp100": {
             "n_clear": n_clear,
@@ -1718,7 +1795,7 @@ def build(tool: str, cache_root: Path) -> tuple[dict, dict[str, bytes]]:
     head = HEADLINES[tool](res)
     computed, pngs = EXPORTERS[tool](cache_root)
     final, evidence = final_flag(tool, ROOT)
-    doc = deep_merge(sig(computed), head)
+    doc = deep_merge(deep_merge(sig(computed), head), WRITEUP_PARTS[tool]((ROOT / WRITEUPS[tool]).read_text()))
     if tool == "reflex":
         status = status_reflex(head)
     elif tool == "colourwalk":
@@ -1764,7 +1841,8 @@ def check(lab: Path, root: Path) -> list[str]:
                 f"{f.name}: made from a different {RESULTS[tool]} (run scripts/export_lab.py --tool {tool})"
             )
         head = HEADLINES[tool](json.loads(res_path.read_text()))
-        for path, value in leaves(head):
+        part = WRITEUP_PARTS[tool]((root / WRITEUPS[tool]).read_text())
+        for path, value in [*leaves(head), *leaves(part)]:
             try:
                 got = get_path(doc, path)
             except KeyError:
@@ -1772,7 +1850,8 @@ def check(lab: Path, root: Path) -> list[str]:
                 continue
             if json.dumps(got, sort_keys=True) != json.dumps(value, sort_keys=True):
                 problems.append(
-                    f"{f.name}: {'.'.join(path)} is {json.dumps(got)[:80]}, results say {json.dumps(value)[:80]}"
+                    f"{f.name}: {'.'.join(path)} is {json.dumps(got)[:80]}, the results and write-up say "
+                    f"{json.dumps(value)[:80]}"
                 )
         for field in REQUIRED[tool]:
             try:
