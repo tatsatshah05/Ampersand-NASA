@@ -1,8 +1,14 @@
 // The watchlist screen (address: ?watchlist=1): what the blind searches found, for people to look at.
 // Each card: the picture, what the machine saw, what the catalogues say, NEOWISE's second opinion,
 // and three vote buttons. Everything is a candidate; a vote is an opinion. The wording is
-// src/search.ts's (reused) and src/watchlist.ts's.
+// src/search.ts's (reused) and src/watchlist.ts's. The bar of features is at the top, as on
+// every screen, with Vote as the current one, and the level switch in its dock at the bottom right.
 import { useCallback, useEffect, useState } from 'react'
+import { chooseUiLevel, DEFAULT_SELECTION, readStoredLevel, storeLevel, TOOLS_ADDRESS, withTool, withUi, type UiLevel } from '../address'
+import { newSeed, trainingAddress } from '../training'
+import { FeatureBar, type FeatureLinks } from './FeatureBar'
+import { LevelDock } from './LevelDock'
+import { ScienceFold } from './ScienceFold'
 import {
   answeredSentence,
   candidateSentence,
@@ -33,11 +39,14 @@ import {
   neowiseSentence,
   NOTE_MAX,
   ORDER_SENTENCE,
+  PLAIN_INTRO,
+  PLAIN_TABS,
   pictureUrl,
   TABS,
   tallySentence,
   viewerAddress,
   voterId,
+  WATCHLIST_ADDRESS,
   type Answer,
   type Group,
   type WatchRow,
@@ -91,69 +100,111 @@ export function WatchlistView() {
   const replaceRow = (g: Group, row: WatchRow) =>
     setTabs((t) => ({ ...t, [g]: { ...t[g], rows: t[g].rows.map((r) => (r.id === row.id ? row : r)) } }))
 
+  // The level is the app's: kept in the address and on this device, and carried by every link.
+  const [level, setLevel] = useState<UiLevel>(() => chooseUiLevel(window.location.search, readStoredLevel()))
+  const changeLevel = (ui: UiLevel) => {
+    storeLevel(ui)
+    setLevel(ui)
+    try {
+      window.history.replaceState(null, '', withUi(window.location.search, ui))
+    } catch {
+      // Some places (a page opened as a local file) do not allow it; the screen still works.
+    }
+  }
+  // The bar: this list is the current feature; Watch and the tools go back to the viewer.
+  const [practiceSeed] = useState(newSeed)
+  const links: FeatureLinks = {
+    practise: withUi(trainingAddress(DEFAULT_SELECTION, practiceSeed), level),
+    vote: withUi(WATCHLIST_ADDRESS, level),
+    tools: withUi(TOOLS_ADDRESS, level),
+    viewer: (tool) => withTool(withUi('', level), tool),
+  }
+
   const tab = tabs[group]
+  const tabWords = level === 'beginner' ? PLAIN_TABS : TABS
+  const about = (
+    <>
+      <p className="intro">{INTRO}</p>
+      <p className="intro">{ORDER_SENTENCE}</p>
+      <p className="hint">
+        {patches !== null && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
+        A search of a new patch takes minutes.
+      </p>
+      <p>
+        <a className="button-link" href={EXPORT_CSV_URL} download>
+          For scientists: download the whole list (CSV)
+        </a>
+      </p>
+    </>
+  )
   return (
-    <main className="watchlist">
-      <header>
-        <p>
-          <a href={new URLSearchParams(window.location.search).get('ui') === 'expert' ? '/?ui=expert' : '/'}>Back to the viewer</a>
-        </p>
-        <h1>Vote on what the search found</h1>
-        <p className="intro">{INTRO}</p>
-        <p className="intro">{ORDER_SENTENCE}</p>
-        <p className="hint">
-          {patches !== null && `The list covers the ${patches} patches of sky that have been searched so far, and only those. `}
-          A search of a new patch takes minutes.
-        </p>
-        <p>
-          <a className="button-link" href={EXPORT_CSV_URL} download>
-            For scientists: download the whole list (CSV)
-          </a>
-        </p>
+    <>
+      <header className="topbar screen-topbar">
+        <p className="brand">SPHEREx sky-change viewer</p>
+        <FeatureBar level={level} current="vote" links={links} />
       </header>
+      <main className="watchlist">
+        <header>
+          <h1>Vote on what the search found</h1>
+          {level === 'beginner' ? (
+            <>
+              {PLAIN_INTRO.map((line) => (
+                <p key={line} className="intro">
+                  {line}
+                </p>
+              ))}
+              {/* The machine's own words about the order, the votes and the list, for those who want them. */}
+              <ScienceFold>{about}</ScienceFold>
+            </>
+          ) : (
+            about
+          )}
+        </header>
 
-      <div className="tabs" role="tablist" aria-label="Groups">
-        {GROUPS.map((g) => (
-          <button
-            key={g}
-            type="button"
-            role="tab"
-            aria-selected={g === group}
-            className={g === group ? 'tab on' : 'tab'}
-            onClick={() => setGroup(g)}
-          >
-            {TABS[g].label} {counts ? `(${counts[g]})` : ''}
-          </button>
-        ))}
-      </div>
-      <p className="hint tab-explain">{TABS[group].explain}</p>
+        <div className="tabs" role="tablist" aria-label="Groups">
+          {GROUPS.map((g) => (
+            <button
+              key={g}
+              type="button"
+              role="tab"
+              aria-selected={g === group}
+              className={g === group ? 'tab on' : 'tab'}
+              onClick={() => setGroup(g)}
+            >
+              {tabWords[g].label} {counts ? `(${counts[g]})` : ''}
+            </button>
+          ))}
+        </div>
+        <p className="hint tab-explain">{tabWords[group].explain}</p>
 
-      {tab.error && (
-        <p role="alert" className="notice">
-          The list could not be loaded: {tab.error}{' '}
-          <button type="button" onClick={() => load(group, 0)}>
-            Try again
-          </button>
-        </p>
-      )}
-      {tab.loading && tab.rows.length === 0 && !tab.error && <p role="status">Loading the list…</p>}
-      {!tab.loading && !tab.error && tab.rows.length === 0 && (
-        <p className="hint">Nothing is in this group yet: the list holds only what real searches have reported.</p>
-      )}
+        {tab.error && (
+          <p role="alert" className="notice">
+            The list could not be loaded: {tab.error}{' '}
+            <button type="button" onClick={() => load(group, 0)}>
+              Try again
+            </button>
+          </p>
+        )}
+        {tab.loading && tab.rows.length === 0 && !tab.error && <p role="status">Loading the list…</p>}
+        {!tab.loading && !tab.error && tab.rows.length === 0 && (
+          <p className="hint">Nothing is in this group yet: the list holds only what real searches have reported.</p>
+        )}
 
-      <ol className="cards">
-        {tab.rows.map((row) => (
-          <Card key={row.id} row={row} voter={voter} onChange={(r) => replaceRow(group, r)} />
-        ))}
-      </ol>
-      {tab.rows.length < tab.total && (
-        <p>
-          <button type="button" disabled={tab.loading} onClick={() => load(group, tab.rows.length)}>
-            Show more ({tab.total - tab.rows.length} left)
-          </button>
-        </p>
-      )}
-    </main>
+        <ol className="cards">
+          {tab.rows.map((row) => (
+            <Card key={row.id} row={row} voter={voter} level={level} onChange={(r) => replaceRow(group, r)} />
+          ))}
+        </ol>
+        {tab.rows.length < tab.total && (
+          <p>
+            <button type="button" disabled={tab.loading} onClick={() => load(group, tab.rows.length)}>
+              Show more ({tab.total - tab.rows.length} left)
+            </button>
+          </p>
+        )}
+      </main>
+      <LevelDock level={level} onChange={changeLevel} />
+    </>
   )
 }
 
@@ -178,7 +229,7 @@ function Picture({ row }: { row: WatchRow }) {
   )
 }
 
-function Card({ row, voter, onChange }: { row: WatchRow; voter: string; onChange: (r: WatchRow) => void }) {
+function Card({ row, voter, level, onChange }: { row: WatchRow; voter: string; level: UiLevel; onChange: (r: WatchRow) => void }) {
   const o = asObject(row)
   const rejected = asRejected(row)
   const example = exampleSentence(row.group)
@@ -248,7 +299,7 @@ function Card({ row, voter, onChange }: { row: WatchRow; voter: string; onChange
       <Voting row={row} voter={voter} onChange={onChange} />
 
       <p>
-        <a className="button-link" href={viewerAddress(row)}>
+        <a className="button-link" href={withUi(viewerAddress(row), level)}>
           Look at it in the viewer
         </a>
       </p>

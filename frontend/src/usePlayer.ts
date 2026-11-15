@@ -11,6 +11,10 @@
 // the timer rests. The state does not change, so Play or Pause keeps its label and nothing
 // on the page changes; when the picture is back in sight the visits carry on by themselves.
 // A visitor's own Pause is a state, so it stays paused.
+//
+// Every other view opens paused on its first visit, on every machine: nothing on the page moves
+// or changes until the visitor presses Play, Blink, an arrow or a visit (three people who tried
+// the page could not read the side column while the film ran by itself).
 import { useCallback, useEffect, useState, type RefObject } from 'react'
 
 export type Playback = 'playing' | 'blinking' | 'paused'
@@ -21,6 +25,9 @@ export const SPEEDS = [
   { label: 'Normal', ms: 500 },
   { label: 'Fast', ms: 250 },
 ] as const
+
+/** How every view opens: still, on its first visit, until the visitor presses something. */
+export const INITIAL_PLAYBACK: Playback = 'paused'
 
 const prefersStillness = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
@@ -47,8 +54,9 @@ export const nextIndex = (playback: Playback, index: number, count: number, pair
  * `resting` the timer stops and nothing else changes (useResting says when).
  */
 export function usePlayer(framesKey: string, count: number, resting = false, pair: Pair | null = null) {
-  // People who ask their system for less motion start paused; play is one key away.
-  const [playback, setPlayback] = useState<Playback>(() => (prefersStillness() ? 'paused' : 'playing'))
+  // Still until the visitor presses Play or Blink; play is one key away. (A before-and-after
+  // pair is the one exception, below: Dev's candidates open blinking on their "before" frame.)
+  const [playback, setPlayback] = useState<Playback>(INITIAL_PLAYBACK)
   const [speedMs, setSpeedMs] = useState<number>(SPEEDS[1].ms)
   const [at, setAt] = useState({ key: framesKey, index: 0 })
   // A set of frames with a before-and-after pair opens on "before", blinking (once per set).

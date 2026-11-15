@@ -28,6 +28,11 @@ import {
   type TransitView,
 } from '../tools'
 import { PAGE, T1, T2, T3 } from '../toolsWording'
+import { chooseUiLevel, readAddress, readStoredLevel, storeLevel, TOOLS_ADDRESS, withTool, withUi, type UiLevel } from '../address'
+import { newSeed, trainingAddress } from '../training'
+import { WATCHLIST_ADDRESS } from '../watchlist'
+import { FeatureBar, type FeatureLinks } from './FeatureBar'
+import { LevelDock } from './LevelDock'
 import './ToolsView.css'
 
 const TOOL_IDS = [T1.id, T2.id, T3.id]
@@ -59,7 +64,39 @@ export function ToolsView() {
     if (settled) landed.current = true
   }, [settled])
   const retry = (name: LabName) => setAttempts((a) => ({ ...a, [name]: a[name] + 1 }))
-  return <ToolsPage reflex={reflex} colourwalk={colourwalk} transits={transits} back={toolsBackAddress(search)} onRetry={retry} />
+
+  // The level is the app's: kept in the address and on this device, and carried by every link.
+  // This screen has one wording; the level changes the bar's words and is passed on.
+  const [level, setLevel] = useState<UiLevel>(() => chooseUiLevel(search, readStoredLevel()))
+  const changeLevel = (ui: UiLevel) => {
+    storeLevel(ui)
+    setLevel(ui)
+    try {
+      window.history.replaceState(null, '', `${withUi(window.location.search, ui)}${window.location.hash}`)
+    } catch {
+      // Some places (a page opened as a local file) do not allow it; the screen still works.
+    }
+  }
+  // Back to the sky viewer: the place the visitor came from, in the level in use.
+  const backTo = toolsBackAddress(search)
+  const back = withUi(backTo === '/' ? '' : backTo, level)
+  const [practiceSeed] = useState(newSeed)
+  const links: FeatureLinks = {
+    practise: withUi(trainingAddress(readAddress(backTo === '/' ? '' : backTo).selection, practiceSeed), level),
+    vote: withUi(WATCHLIST_ADDRESS, level),
+    tools: withUi(search || TOOLS_ADDRESS, level),
+    viewer: (tool) => withTool(back, tool),
+  }
+  return (
+    <>
+      <header className="topbar screen-topbar">
+        <p className="brand">SPHEREx sky-change viewer</p>
+        <FeatureBar level={level} current="tools" links={links} />
+      </header>
+      <ToolsPage reflex={reflex} colourwalk={colourwalk} transits={transits} back={back} onRetry={retry} />
+      <LevelDock level={level} onChange={changeLevel} />
+    </>
+  )
 }
 
 /** Scroll a tool into view with its "Tool n of 3" line and verdict showing, and focus its heading. */

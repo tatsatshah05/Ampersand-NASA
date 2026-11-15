@@ -1,0 +1,66 @@
+/* Beginner's tool panels (the words are in src/plain.ts). New class names only, and colour only
+   through the page's tokens, so the restyle of index.css carries over. */
+.plain-intro {
+  margin: 4px 0 8px;
+  max-width: 72ch;
+  color: var(--muted);
+}
+
+.plain-result {
+  margin: 8px 0;
+  max-width: 72ch;
+  font-size: var(--size-read);
+  color: var(--text);
+}
+
+.plain-caution {
+  margin: 4px 0;
+  max-width: 72ch;
+  color: var(--text);
+  padding-left: 10px;
+  border-left: 2px solid var(--line-strong);
+}
+
+.plain-list {
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plain-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+/* The line's words take the room left beside the number, so the number never sits alone on a line. */
+.plain-list li > span:not(.plain-number) {
+  flex: 1 1 12em;
+  min-width: 0;
+}
+
+.plain-list .plain-number {
+  min-width: 1.6em;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.plain-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.science-fold {
+  margin-top: 12px;
+}
+
+.science-fold-body {
+  padding-top: 8px;
+}

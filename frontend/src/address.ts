@@ -3,10 +3,13 @@
 // shared link brings the same view back:
 //     ?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal
 // plus, when they apply: pmra, pmdec, parallax (the object's known motion, as
-// /api/resolve returns it), reference (difference mode), track (sum mode), name, and
-// ui (`expert`, or `beginner` where an address would otherwise be taken for an expert's).
+// /api/resolve returns it), reference (difference mode), track (sum mode), name,
+// ui (`expert`, or `beginner` where an address would otherwise be taken for an expert's),
+// and tool (the tool open under the picture: features.ts's keys; absent while Watch is the
+// feature on screen).
 import type { FramesQuery, Mode, Reference, Track } from './api'
 import type { SearchTarget } from './components/SearchBar'
+import { isToolKey, TOOL_KEYS, type ToolKey } from './features'
 import { FINDS, type Find } from './finds'
 
 /** The six SPHEREx detectors and the wavelengths each one sees, in micrometres. */
@@ -295,8 +298,53 @@ export function readAddress(search: string, stored: string | null = null): { sel
     notes.push('Beginner shows the normal view, so that is used.')
   }
 
+  // The tool to open is read by toolFrom; here only a name that is not a tool is reported.
+  const toolRaw = p.get('tool')
+  if (toolRaw !== null && !isToolKey(toolRaw)) {
+    notes.push(`The address asks to open a tool called ${quote(toolRaw)}. The tools are ${TOOL_KEYS.join(', ')}, so none is opened.`)
+  }
+
   return { selection: s, notes }
 }
+
+/** The tool an address asks to open under the picture (`tool=<key>`), or null. An unknown name is null (readAddress notes it). */
+export function toolFrom(search: string): ToolKey | null {
+  const raw = new URLSearchParams(search).get('tool')
+  return raw !== null && isToolKey(raw) ? raw : null
+}
+
+/** `address` with `tool` set to the tool on screen, or without it (Watch). Every other parameter stays as it is. */
+export function withTool(address: string, tool: ToolKey | null): string {
+  const p = new URLSearchParams(address)
+  if (tool) p.set('tool', tool)
+  else p.delete('tool')
+  return `?${p}`
+}
+
+/** Put the tool on screen in the browser's address bar, in place, as the other parameters are. */
+export function writeTool(tool: ToolKey | null) {
+  const next = withTool(window.location.search, tool)
+  if (next === window.location.search || (next === '?' && window.location.search === '')) return
+  try {
+    window.history.replaceState(null, '', next)
+  } catch {
+    // Some places (a page opened as a local file) do not allow it; the view still works.
+  }
+}
+
+/**
+ * `address` with the level said outright (`ui=beginner` or `ui=expert`). The links between
+ * screens carry it this way, so the next screen opens in the level in use whatever this
+ * device stored before.
+ */
+export function withUi(address: string, level: UiLevel): string {
+  const p = new URLSearchParams(address)
+  p.set('ui', level)
+  return `?${p}`
+}
+
+/** The screen about three planet-finding methods (built separately). */
+export const TOOLS_ADDRESS = '?tools=1'
 
 // The parameters this module owns. Anything else in the address is left as it is.
 const OWN_KEYS = ['ra', 'dec', 'fov', 'det', 'detector', 'mode', 'pmra', 'pmdec', 'parallax', 'reference', 'track', 'name', 'train', 'level', 'ui']

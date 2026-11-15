@@ -9,6 +9,8 @@ import {
   neowiseHeadline,
   neowiseSentence,
   ORDER_SENTENCE,
+  PLAIN_INTRO,
+  PLAIN_TABS,
   tallySentence,
   viewerAddress,
   type Neowise,
@@ -80,5 +82,17 @@ describe('rows as the search shapes', () => {
     const row = { ...base, group: 'eyes', verdict: 'clean', catalogue_status: {}, evidence: {} } as unknown as WatchRow
     expect(asObject(row)).not.toBeNull()
     expect(asRejected(row)).toBeNull()
+  })
+})
+
+describe("Beginner's opening of the voting screen", () => {
+  it('says why the screen is there and what a vote is, in plain words, and never "discovery"', () => {
+    const all = [...PLAIN_INTRO, ...Object.values(PLAIN_TABS).flatMap((t) => [t.label, t.explain])].join(' ')
+    expect(all).toMatch(/None is confirmed/)
+    expect(all).toMatch(/does not change the list/)
+    expect(all).toMatch(/only a candidate/)
+    expect(all).not.toMatch(/discover|new object|new planet|sigma|S\/N|artefact|noise|CSV|gamed/i)
+    const texts = [...PLAIN_INTRO, ...Object.values(PLAIN_TABS).map((t) => t.explain)]
+    for (const s of texts.flatMap((x) => x.split(/(?<=[.!?])\s+/))) expect(s.split(/\s+/).length, s).toBeLessThanOrEqual(20)
   })
 })

@@ -1,14 +1,15 @@
-// The Beginner / Expert switch, and the few plain sentences Beginner shows about the picture.
+// The Beginner / Expert switch (shown in LevelDock, at the bottom right of every screen), and
+// Beginner's step guide.
 import type { ReactNode } from 'react'
 import type { UiLevel } from '../address'
 import { releaseFocusAfterPointer } from '../focus'
 import { GO_FURTHER, guideSteps, stepName, type Progress } from '../guide'
 
 export const EXPERT_ADDS =
-  'Expert adds the six detectors, difference and sum views, overlays, spectra, brightness charts, the search of a patch, asteroid labels and the search for a distant world (Planet X).'
+  'Every tool written for scientists, with all the numbers, plus the six detectors, the difference and sum views and the overlays.'
 
 const SIDES: { level: UiLevel; label: string; about: string }[] = [
-  { level: 'beginner', label: 'Beginner', about: 'The picture and what moved.' },
+  { level: 'beginner', label: 'Beginner', about: 'Every tool, written in plain words.' },
   { level: 'expert', label: 'Expert', about: EXPERT_ADDS },
 ]
 
@@ -40,11 +41,11 @@ export function LevelSwitch({ level, onChange }: { level: UiLevel; onChange: (le
  * is marked by the hairline and the text colour only, inside badges of one fixed size, so
  * nothing moves when a step is done. It is a list, not a set of buttons: it never gets in the way.
  */
-export function StepGuide({ progress, still = false, info }: { progress: Progress; still?: boolean; info?: ReactNode }) {
+export function StepGuide({ progress, info }: { progress: Progress; info?: ReactNode }) {
   return (
     <section className="guide" aria-label="Where to start">
       <ol className="guide-steps">
-        {guideSteps(progress, still).map((step) => (
+        {guideSteps(progress).map((step) => (
           <li key={step.n} data-state={step.state} aria-current={step.state === 'now' ? 'step' : undefined}>
             <span className="guide-n" role="img" aria-label={stepName(step)}>
               {step.n}

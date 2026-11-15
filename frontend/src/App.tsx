@@ -8,20 +8,39 @@
 // and the strip of visits under it, and on the right an "inspector" that says what is on
 // the plate. Together they fill the window and never move: text that changes with the
 // visit sits in a block of fixed height, and while a new view loads the old pictures stay
-// on the plate, dimmed. Expert's tool panels open below, and the page scrolls to them.
+// on the plate, dimmed. The bar at the top (FeatureBar) lists every feature: its tools open
+// as panels below, at both levels (the level changes how they are written, not what they
+// show), and the page scrolls to them. The Beginner | Expert switch is in a dock at the
+// bottom right (LevelDock).
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { addressOf, DEFAULT_SELECTION, readAddress, readStoredLevel, storeLevel, toFramesQuery, withTarget, writeAddress, type Selection, type UiLevel } from './address'
+import {
+  DEFAULT_SELECTION,
+  readAddress,
+  readStoredLevel,
+  storeLevel,
+  toFramesQuery,
+  toolFrom,
+  withTarget,
+  withUi,
+  writeAddress,
+  writeTool,
+  type Selection,
+  type UiLevel,
+} from './address'
 import { framesUrl, NATIVE_PIXEL_ARCSEC } from './api'
 import { BeforeAfter } from './components/BeforeAfter'
 import { BrightnessPanel } from './components/BrightnessPanel'
 import { ContextView } from './components/ContextView'
+import { ObjectCard } from './components/ObjectCard'
+import { FeatureBar, type FeatureLinks } from './components/FeatureBar'
 import { FieldStars } from './components/FieldStars'
 import { isMarginal } from './detection'
 import { VisitDetails } from './components/VisitDetails'
 import { VisitTable } from './components/VisitTable'
 import { GaiaOverlay, GaiaReadout } from './components/GaiaOverlay'
 import { InfoButton } from './components/InfoButton'
-import { LevelSwitch, StepGuide } from './components/LevelSwitch'
+import { LevelDock } from './components/LevelDock'
+import { StepGuide } from './components/LevelSwitch'
 import { ApertureMark, MotionLayer, MotionLegend } from './components/MotionLayer'
 import { SearchField, SkySearch, TargetButtons, type SearchTarget } from './components/SearchBar'
 import { DistantMarkers, DistantPanel } from './components/DistantPanel'
@@ -32,12 +51,13 @@ import { SpectrumPanel } from './components/SpectrumPanel'
 import { Stage } from './components/Stage'
 import { TrainingView } from './components/TrainingView'
 import { ToolsView } from './components/ToolsView'
-import { isToolsAddress } from './tools'
+import { isToolsAddress, toolsAddress } from './tools'
 import { Transport, VisitStrip, type Visit } from './components/Transport'
 import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
 import { PlateLoading, PlateMessage } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
+import type { FeatureKey, ToolKey } from './features'
 import { brightLine, infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
 import { isRealShift, measuredPath, overallEnds, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
@@ -52,6 +72,7 @@ import { isHeldFind } from './finds'
 import {
   beforeAfter,
   expertResult,
+  expertVerdict,
   failuresSentence,
   flagsNote,
   frameLabel,
@@ -66,12 +87,10 @@ import {
 } from './wording'
 import { startBox, type Point, type ZoomBox } from './zoom'
 import './App.css'
+import './inspector.css'
 
 /** The circle /api/spectrum adds up: 2.5 SPHEREx pixels in radius (backend/photometry.py). */
 const SPECTRUM_APERTURE_ARCSEC = 2.5 * NATIVE_PIXEL_ARCSEC
-
-/** The tool panels that open below the picture, by the id of the slot each opens in ("tool-<name>"). */
-type Tool = 'spectrum' | 'brightness' | 'search' | 'distant' | 'smallbodies'
 
 const prefersStillness = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
 
@@ -111,13 +130,24 @@ export function Viewer() {
   // Issue #12: the same patch of sky in other surveys. Off until asked for: it loads a
   // large sky-atlas library and depends on servers in Strasbourg that are not always up.
   const [showContext, setShowContext] = useState(false)
+  // The tool last opened (from the bar, or a spot clicked for its spectrum): the bar's current
+  // feature while its panel is open. Watch otherwise.
+  const [focusTool, setFocusTool] = useState<ToolKey | null>(null)
+  // The tool the address asks for (tool=<key>), opened once the first pictures are ready.
+  const [addressedTool] = useState(() => toolFrom(window.location.search))
+  const pendingTool = useRef<ToolKey | null>(addressedTool)
+  // Counts the browser's Back and Forward, so the tool of the entry returned to is opened even when its view is already on screen.
+  const [popped, setPopped] = useState(0)
+  // The practice round the bar's Practise link starts: chosen once, so the link holds still.
+  const [practiceSeed] = useState(newSeed)
   // Issue #10: the Gaia stars of the view, placed on every visit's frame, and the view they belong to.
   const [stars, setStars] = useState<{ view: string; data: StarsResponse } | { view: string; error: string } | null>(null)
   // The target button last pressed, and where it took the page, so the button can be shown as the one on screen.
   const [picked, setPicked] = useState<{ name: string; ra: number; dec: number } | null>(null)
 
-  // Beginner shows the picture and what moved; Expert shows everything. Nothing is mounted for
-  // Beginner that only Expert has, and the choices made in Expert (which overlays, which panels) wait unchanged.
+  // Both levels have every tool; Beginner writes them in plain words and Expert as a scientist
+  // would. Only Expert has the view settings (detector, field, mode, overlays): they wait
+  // unchanged while Beginner is on.
   const expert = selection.ui === 'expert'
 
   const url = framesUrl(toFramesQuery(selection))
@@ -141,11 +171,9 @@ export function Viewer() {
   const [spokenFor, setSpokenFor] = useState<string | null>(null)
   const dataKey = data?.key ?? null
 
-  // Beginner's step guide: what the visitor has actually done. The player starts playing by
-  // itself, so only a press of theirs counts as flipping through the visits.
+  // Beginner's step guide: what the visitor has actually done. Every view opens still
+  // (usePlayer.ts), so the guide says to press Play or Blink, and only a press counts.
   const [progress, setProgress] = useState<Progress>(NO_PROGRESS)
-  // The player opens playing, so the visits flip by themselves; with reduced motion asked for it opens still and the guide says to press Play.
-  const [startedStill] = useState(prefersStillness)
   const mark = useCallback((what: keyof Progress) => setProgress((was) => (was[what] ? was : { ...was, [what]: true })), [])
   const { pause: pausePlayer, togglePlay: playerTogglePlay, toggleBlink: playerToggleBlink, step: playerStep, show: playerShow } = player
   const togglePlay = useCallback(() => {
@@ -196,6 +224,12 @@ export function Viewer() {
     if (!sameTarget) {
       setSpectrum(null)
       setBrightness(null)
+    }
+    // The two searches belong to the patch they searched: its place and its size. A search of
+    // another patch must never be shown under this one (the bar and the address then fall back to Watch).
+    if (!sameTarget || next.fov !== was.fov) {
+      setSearch(null)
+      setSearchFound([])
       setDistant(null)
     }
     setSelection(next)
@@ -233,9 +267,17 @@ export function Viewer() {
     writeAddress(fromAddress.selection, 'replace')
     const onPop = () => {
       const read = readAddress(window.location.search, readStoredLevel())
+      // Every panel closes, and the tool this entry's address names opens again once its pictures are ready.
       setSpectrum(null)
       setBrightness(null)
+      setSearch(null)
+      setSearchFound([])
       setDistant(null)
+      setShowSmallBodies(false)
+      setShowContext(false)
+      setFocusTool(null)
+      pendingTool.current = toolFrom(window.location.search)
+      setPopped((n) => n + 1)
       setSelection(read.selection)
       setNotes(read.notes)
     }
@@ -243,7 +285,11 @@ export function Viewer() {
     return () => window.removeEventListener('popstate', onPop)
   }, [fromAddress])
 
-  /** Switch level without losing the place: same target, frame and zoom. Beginner closes the expert panels. */
+  /**
+   * Switch level without losing the place: same target, frame and zoom, and the same tools
+   * open (each is then written for the new level). Beginner goes back to the normal view at
+   * the usual size, which its words describe.
+   */
   const changeLevel = (ui: UiLevel) => {
     storeLevel(ui)
     if (ui === 'expert') {
@@ -251,13 +297,6 @@ export function Viewer() {
       return
     }
     const wasChanged = selection.mode !== DEFAULT_SELECTION.mode || selection.fov !== DEFAULT_SELECTION.fov
-    setSpectrum(null)
-    setBrightness(null)
-    setSearch(null)
-    setSearchFound([])
-    setDistant(null)
-    setShowSmallBodies(false)
-    setShowContext(false)
     show({ ...selection, ui, mode: DEFAULT_SELECTION.mode, fov: DEFAULT_SELECTION.fov }, 'replace')
     if (wasChanged) setNotes(['Beginner shows the normal view at the usual size, so the picture has gone back to that.'])
   }
@@ -362,12 +401,26 @@ export function Viewer() {
   const bench = useRef<HTMLElement>(null)
   const scrollBehavior = (): ScrollBehavior => (prefersStillness() ? 'auto' : 'smooth')
   // The panel just opened, which the page then scrolls to. `n` makes pressing the same button again scroll again.
-  const [opened, setOpened] = useState<{ tool: Tool; n: number } | null>(null)
-  const openTool = (tool: Tool) => setOpened((was) => ({ tool, n: (was?.n ?? 0) + 1 }))
+  // Opened from the keyboard, the focus goes to the panel's title, so the next Tab reaches its controls
+  // (a title is not a control, so the space bar still plays).
+  const [opened, setOpened] = useState<{ tool: ToolKey; n: number; focus: boolean } | null>(null)
+  const openTool = (tool: ToolKey, focus = false) => {
+    setOpened((was) => ({ tool, n: (was?.n ?? 0) + 1, focus }))
+    setFocusTool(tool)
+  }
   useEffect(() => {
-    if (opened) document.getElementById(`tool-${opened.tool}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+    if (!opened) return
+    const slot = document.getElementById(`tool-${opened.tool}`)
+    slot?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+    if (opened.focus && slot) {
+      const title = slot.querySelector<HTMLElement>('h2, h3') ?? slot
+      if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1')
+      title.focus({ preventScroll: true })
+    }
   }, [opened])
+  /** Watch: the picture back in view, and the feature on screen. */
   const backToPicture = () => {
+    setFocusTool(null)
     shell.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
     // The picture takes the focus, so the space bar and the arrow keys play and step again
     // (the button that was pressed goes away once the picture is in view).
@@ -382,7 +435,27 @@ export function Viewer() {
     watch.observe(el)
     return () => watch.disconnect()
   }, [])
-  const anyTool = expert && (spectrum !== null || brightness !== null || search !== null || distant !== null || showSmallBodies)
+  /** Whether a tool's panel is open under the picture. */
+  const isOpen = (tool: ToolKey): boolean => {
+    switch (tool) {
+      case 'spectrum':
+        return spectrum !== null
+      case 'brightness':
+        return brightness !== null
+      case 'search':
+        return search !== null
+      case 'distant':
+        return distant !== null
+      case 'smallbodies':
+        return showSmallBodies && data !== null
+      case 'context':
+        return showContext
+    }
+  }
+  const anyTool = spectrum !== null || brightness !== null || search !== null || distant !== null || showSmallBodies || showContext
+  // The bar's current feature: the tool last opened while its panel is open (closing it, or a
+  // new target closing it, makes Watch current again).
+  const current: FeatureKey = focusTool && isOpen(focusTool) ? focusTool : 'watch'
 
   // Search mode's "Look at this one": zoom to the object if it is in this picture, else move the view to it.
   const lookAt = (ra: number, dec: number) => {
@@ -410,6 +483,69 @@ export function Viewer() {
   // The tools need the view on screen; while a new one loads they wait.
   const ready = busy ? null : data
 
+  /**
+   * What an item of the bar does on this screen: a tool opens its panel for the object on
+   * screen (the same request its button in the side column used to make) and the page scrolls
+   * to it; Watch brings the picture back. A panel already open for this object is only scrolled
+   * to: pressing its item again never sends its request again (a first measurement takes minutes).
+   */
+  const openFeature = (key: 'watch' | ToolKey, how: 'keyboard' | 'pointer' = 'pointer') => {
+    if (key === 'watch') {
+      backToPicture()
+      return
+    }
+    if (!ready) return
+    const forTarget = (r: SpectrumRequest | null) => r !== null && r.kind === 'target' && r.ra === ready.ra && r.dec === ready.dec
+    const forPatch = (q: { ra: number; dec: number; fov: number } | null) => q !== null && q.ra === ready.ra && q.dec === ready.dec && q.fov === selection.fov
+    if (key === 'spectrum') {
+      if (!forTarget(spectrum)) setSpectrum({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
+    } else if (key === 'brightness') {
+      if (!forTarget(brightness)) setBrightness({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
+    } else if (key === 'search') {
+      if (!forPatch(search)) {
+        setSearchFound([])
+        setSearch({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
+      }
+    } else if (key === 'distant') {
+      if (!forPatch(distant)) setDistant({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
+    } else if (key === 'smallbodies') setShowSmallBodies(true)
+    else setShowContext(true)
+    openTool(key, how === 'keyboard')
+  }
+  const closeSearch = () => {
+    setSearch(null)
+    setSearchFound([])
+  }
+  const openNow = useRef(openFeature)
+  useEffect(() => {
+    openNow.current = openFeature
+  })
+
+  // The address's tool, once the pictures of the view it names are ready (the tools need them):
+  // on arrival, and after Back or Forward.
+  const readyKey = fresh !== null && !busy ? fresh.key : null
+  useEffect(() => {
+    const tool = pendingTool.current
+    if (!tool || readyKey === null) return
+    pendingTool.current = null
+    openNow.current(tool)
+  }, [readyKey, popped])
+
+  // The address says which tool is on screen (tool=<key>), in place; none while Watch is.
+  // While the address's own tool waits for the pictures, it is left as it is.
+  const addressTool = current === 'watch' ? null : (current as ToolKey)
+  useEffect(() => {
+    if (!pendingTool.current) writeTool(addressTool)
+  }, [addressTool, selection])
+
+  // The bar's links to the other screens, in the level in use.
+  const links: FeatureLinks = {
+    practise: withUi(trainingAddress(selection, practiceSeed), selection.ui),
+    vote: withUi(WATCHLIST_ADDRESS, selection.ui),
+    // The methods screen keeps the place the visitor came from, for its way back.
+    tools: withUi(toolsAddress({ ra: selection.ra, dec: selection.dec, name: shownName ?? selection.name }), selection.ui),
+  }
+
   const visits: Visit[] = data ? data.frames.map((f) => ({ src: f.image, label: frameLabel(f, data), ...visitCaption(f, data) })) : []
 
   // Beginner's small "i" buttons: what exactly is going on, in words computed from what is on screen (guide.ts). None in Expert.
@@ -432,33 +568,24 @@ export function Viewer() {
   const result = data ? (expert ? expertResult(data) : overallResult(data)) : null
   const seen = data && !expert ? seenLine(data) : null
   const underTable = data ? tableNotes(data, expert ? 'expert' : 'beginner') : []
+  const verdict = data && expert ? expertVerdict(data) : null
 
   return (
     <div className="app">
       <div className="shell" ref={shell}>
-        {/* Issue #6: a name or coordinates, or a target button. What they find goes to applyTarget. */}
+        {/* Every feature, in the bar at the top. The tools wait for the first pictures. */}
+        <header className="topbar">
+          <h1 className="brand">SPHEREx sky-change viewer</h1>
+          <FeatureBar level={selection.ui} current={current} links={links} onOpen={openFeature} ready={ready !== null} />
+        </header>
+
+        {/* Issue #6: what to look at, in one row: a name or coordinates, or a target button. What they find goes to applyTarget. */}
         <SkySearch onSelect={applyTarget}>
           {(skySearch) => (
-            <>
-              <header className="topbar">
-                <h1 className="brand">SPHEREx sky-change viewer</h1>
-                <SearchField search={skySearch} />
-                <LevelSwitch level={selection.ui} onChange={changeLevel} />
-                {infoButton('level')}
-              </header>
-
-              <nav className="targets" aria-label="Targets">
-                <TargetButtons search={skySearch} picked={pickedHere} shown={selection.name} />
-                <div className="target-actions">
-                  <button type="button" className="quiet" onClick={() => window.location.assign(trainingAddress(selection, newSeed()))}>
-                    Practise spotting a moving object
-                  </button>
-                  <a className="quiet" href={expert ? `${WATCHLIST_ADDRESS}&ui=expert` : WATCHLIST_ADDRESS}>
-                    Vote on what the search found
-                  </a>
-                </div>
-              </nav>
-            </>
+            <nav className="targets" aria-label="Targets">
+              <SearchField search={skySearch} />
+              <TargetButtons search={skySearch} picked={pickedHere} shown={selection.name} />
+            </nav>
           )}
         </SkySearch>
 
@@ -507,8 +634,9 @@ export function Viewer() {
                         {expert && showGaia && (
                           <GaiaOverlay frames={gaiaFrames} current={gaiaCurrent} sizePx={data.size_px} pixelArcsec={data.pixel_arcsec} target={data.target} />
                         )}
-                        {expert && search && searchFound.length > 0 && <SearchMarkers objects={searchFound} grid={grid} scale={scale} />}
-                        {expert && distant && distantFound.candidates.length > 0 && !distantFound.simulation && (
+                        {/* What the open tools mark on the picture, at both levels. */}
+                        {search && searchFound.length > 0 && <SearchMarkers objects={searchFound} grid={grid} scale={scale} />}
+                        {distant && distantFound.candidates.length > 0 && !distantFound.simulation && (
                           <DistantMarkers
                             candidates={distantFound.candidates}
                             grid={grid}
@@ -517,7 +645,7 @@ export function Viewer() {
                             simulation={distantFound.simulation}
                           />
                         )}
-                        {expert && aperture && <ApertureMark sizePx={grid.sizePx} at={aperture} radiusPx={SPECTRUM_APERTURE_ARCSEC / grid.pixelArcsec} />}
+                        {aperture && <ApertureMark sizePx={grid.sizePx} at={aperture} radiusPx={SPECTRUM_APERTURE_ARCSEC / grid.pixelArcsec} />}
                       </>
                     )}
                   </Stage>
@@ -576,12 +704,16 @@ export function Viewer() {
 
           <aside className={expert ? 'inspector' : 'inspector beginner'} aria-label="What is on the picture">
             <div className="object">
-              {shownName && <h2 className="object-name">{shownName}</h2>}
-              <p className={shownName ? 'object-where' : 'object-where object-name'}>
-                <abbr title="right ascension">RA</abbr> {`${selection.ra.toFixed(5)}°, `}
-                <abbr title="declination">Dec</abbr> {`${selection.dec >= 0 ? '+' : '-'}${Math.abs(selection.dec).toFixed(5)}°`}
-                {expert && givenMotion !== null && `; moving ${givenMotion.toFixed(2)}″ a year`}
-              </p>
+              {/* A long name ("Young star in Serpens South") is set a size smaller, so it stays on one line and the column below it does not move. */}
+              {shownName && <h2 className={shownName.length > 20 ? 'object-name long-name' : 'object-name'}>{shownName}</h2>}
+              {/* The sky position is a scientist's line: Beginner shows it only when it is all the name there is (a typed position). */}
+              {(expert || !shownName) && (
+                <p className={shownName ? 'object-where' : 'object-where object-name'}>
+                  <abbr title="right ascension">RA</abbr> {`${selection.ra.toFixed(5)}°, `}
+                  <abbr title="declination">Dec</abbr> {`${selection.dec >= 0 ? '+' : '-'}${Math.abs(selection.dec).toFixed(5)}°`}
+                  {expert && givenMotion !== null && `; moving ${givenMotion.toFixed(2)}″ a year`}
+                </p>
+              )}
             </div>
 
             {/* Rare notes (about the address, the level, downloads that failed). They sit here, so the picture never moves for them. */}
@@ -627,6 +759,8 @@ export function Viewer() {
                   {infoButton('detection')}
                 </p>
               )}
+              {/* Expert: the whole run against the catalogue in one line, in a scientist's units, over the table. */}
+              {data && verdict && <p className="expert-verdict">{verdict}</p>}
               {data && <VisitTable data={data} current={player.current} expert={expert} disabled={busy} onShow={showVisit} follow={voice !== ''} />}
               {result?.after?.map((line) => (
                 <p key={line} className="result-more result-after">
@@ -638,7 +772,6 @@ export function Viewer() {
                   {line}
                 </p>
               ))}
-              {result?.pointer && <p className="table-note result-pointer">{result.pointer}</p>}
               {expert && saturation && <p className="notice">{saturation}</p>}
               {/* Shown at both levels and whether or not the overlay is on: it warns about shapes in the picture itself. */}
               {starsData?.bright_note && (
@@ -702,74 +835,6 @@ export function Viewer() {
                   )}
                 </section>
 
-                {/* Two columns of tools. A short label shows; the button's name keeps the long one. */}
-                <section className="ins-section" aria-labelledby="ins-tools">
-                  <h3 id="ins-tools">Measure and search</h3>
-                  <div className="tool-buttons two-columns">
-                    <button
-                      type="button"
-                      aria-label="Spectrum of the target"
-                      title="Spectrum of the target"
-                      disabled={!ready}
-                      onClick={() => {
-                        if (!ready) return
-                        setSpectrum({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
-                        openTool('spectrum')
-                      }}
-                    >
-                      Spectrum
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!ready}
-                      onClick={() => {
-                        if (!ready) return
-                        setBrightness({ kind: 'target', ra: ready.ra, dec: ready.dec, motion: targetMotion(ready.target) })
-                        openTool('brightness')
-                      }}
-                    >
-                      Brightness over time
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Search this patch for anything that moved or changed"
-                      title="Search this patch for anything that moved or changed"
-                      disabled={!ready}
-                      onClick={() => {
-                        if (!ready) return
-                        setSearch({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
-                        openTool('search')
-                      }}
-                    >
-                      Moved or changed
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Search for a distant world (Planet X)"
-                      title="Search for a distant world (Planet X)"
-                      disabled={!ready}
-                      onClick={() => {
-                        if (!ready) return
-                        setDistant({ ra: ready.ra, dec: ready.dec, fov: selection.fov })
-                        openTool('distant')
-                      }}
-                    >
-                      Distant world
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!ready}
-                      onClick={() => {
-                        setShowSmallBodies(true)
-                        openTool('smallbodies')
-                      }}
-                    >
-                      Asteroids and comets
-                    </button>
-                    {/* New Expert tools: add their button here (and their panel in .tool-panels below, after DistantPanel). */}
-                  </div>
-                </section>
-
                 {/* Only what does not depend on the visit: what the marks mean and the other Gaia
                     stars. The measured-against-predicted comparison of every visit is the table. */}
                 <Fold title="Catalogue notes">
@@ -807,22 +872,9 @@ export function Viewer() {
                 <Fold title="Visit details">
                   {data ? <VisitDetails data={data} /> : <p className="hint">No visits yet.</p>}
                 </Fold>
-
-                <Fold title="Sky context">
-                  {showContext ? (
-                    <ContextView ra={selection.ra} dec={selection.dec} fov={selection.fov} />
-                  ) : (
-                    <>
-                      <p className="hint">The same patch of sky in other surveys (WISE, 2MASS, optical), from the Aladin sky atlas.</p>
-                      <button type="button" onClick={() => setShowContext(true)}>
-                        Show other surveys
-                      </button>
-                    </>
-                  )}
-                </Fold>
               </>
             ) : (
-              <StepGuide progress={progress} still={startedStill} info={infoButton('steps')} />
+              <StepGuide progress={progress} info={infoButton('steps')} />
             )}
 
             <footer className="credits">
@@ -830,40 +882,37 @@ export function Viewer() {
                 Images: NASA/JPL-Caltech SPHEREx, from <abbr title="NASA/IPAC Infrared Science Archive">IRSA</abbr>. Stars:
                 ESA Gaia DR3.
               </p>
-              {expert && (
-                <p>
-                  <a href={`viewer.html${addressOf(selection)}`}>Open this view in the earlier single-page viewer</a>
-                </p>
-              )}
             </footer>
           </aside>
         </main>
       </div>
 
-      {/* Expert's tool panels, full width under the picture, in the order they were added. */}
+      {/* The tool panels, full width under the picture, in the order they were added, at both
+          levels: each is written for the level in use. Opened from the bar at the top. */}
       <div className="tool-panels">
-        {expert && spectrum && (
+        {spectrum && (
           <div className="tool-slot" id="tool-spectrum">
-            <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} />
+            <SpectrumPanel request={spectrum} onClose={() => setSpectrum(null)} level={selection.ui} />
           </div>
         )}
-        {expert && brightness && (
+        {brightness && (
           <div className="tool-slot" id="tool-brightness">
-            <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} />
+            <BrightnessPanel request={brightness} onClose={() => setBrightness(null)} level={selection.ui} />
           </div>
         )}
-        {expert && search && (
+        {search && (
           <div className="tool-slot" id="tool-search">
             <SearchPanel
               key={`${search.ra},${search.dec},${search.fov}`}
               query={search}
-              onClose={() => setSearch(null)}
+              onClose={closeSearch}
               onObjects={setSearchFound}
               onLook={lookAt}
+              level={selection.ui}
             />
           </div>
         )}
-        {expert && distant && (
+        {distant && (
           <div className="tool-slot" id="tool-distant">
             <DistantPanel
               key={`${distant.ra},${distant.dec},${distant.fov}`}
@@ -871,16 +920,35 @@ export function Viewer() {
               onClose={() => setDistant(null)}
               onCandidates={onDistantCandidates}
               onLook={lookAt}
+              level={selection.ui}
             />
           </div>
         )}
-        {/* New tool panels go here, after DistantPanel: a .tool-slot with id "tool-<name>", opened with openTool('<name>'). */}
-        {expert && showSmallBodies && data && (
+        {/* New tool panels go here: a .tool-slot with id "tool-<key>", its key and labels in features.ts, opened with openFeature('<key>'). */}
+        {showSmallBodies && data && (
           <div className="tool-slot" id="tool-smallbodies">
             <SmallBodiesPanel
               query={{ ra: data.ra, dec: data.dec, fov: data.fov, detector: data.detector }}
               onClose={() => setShowSmallBodies(false)}
+              level={selection.ui}
             />
+          </div>
+        )}
+        {/* The same patch in other surveys, with its own Close beside its title like the other panels. */}
+        {showContext && (
+          <div className="tool-slot context-slot" id="tool-context">
+            <ContextView
+              ra={selection.ra}
+              dec={selection.dec}
+              fov={selection.fov}
+              level={selection.ui}
+              onClose={() => setShowContext(false)}
+              target={data?.target ?? null}
+              name={shownName}
+            >
+              {/* What the catalogues know about the object at the centre (Dev's ObjectCard), then the same patch in older surveys. */}
+              <ObjectCard ra={selection.ra} dec={selection.dec} name={shownName ?? undefined} level={selection.ui} />
+            </ContextView>
           </div>
         )}
       </div>
@@ -890,6 +958,16 @@ export function Viewer() {
           Back to the picture
         </button>
       )}
+
+      {/* The Beginner | Expert switch, at the bottom right; the side column keeps room for it. */}
+      <LevelDock
+        level={selection.ui}
+        onChange={changeLevel}
+        onInfoOpen={() => {
+          mark('read')
+          pausePlayer()
+        }}
+      />
     </div>
   )
 }

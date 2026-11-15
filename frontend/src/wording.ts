@@ -229,9 +229,11 @@ export function shiftDoubt(row: VisitRow, data: FramesReady): 'within error' | '
 }
 
 /**
- * Beginner's cell: what happened to it in this visit, in plain words. "start", "5.9 north,
- * 0.9 west", "1.2 south, 1.2 east, within error", "maybe another spot", "not found"; "only
- * just seen" is added for a marginal detection.
+ * Beginner's cell: how far it was from where it started at this visit, in arcseconds (the
+ * column says so): "start", "6.0", "1.7, within error", "maybe another spot", "same place",
+ * "not found"; "only just seen" is added for a marginal detection. The way it went is said
+ * once, for the whole run, in the sentence over the table (Expert's table has each visit's
+ * east and north).
  */
 export function plainResult(row: VisitRow, data: FramesReady): string {
   let words: string
@@ -243,10 +245,14 @@ export function plainResult(row: VisitRow, data: FramesReady): string {
   else if (row.start) words = 'start'
   else if (!row.frame.centroid || !row.shift) words = 'not found'
   else {
-    // When nothing moved, the sentence over the table already says every shift is within error.
+    // A row's doubt is left out only when the sentence over the table says the same thing:
+    // "No movement seen" says every shift is within error, and "The marked spot shifted" that it
+    // may be a different spot. Any other doubt stays in its row.
     const doubt = shiftDoubt(row, data)
-    const said = overallKind(data) === 'still' || overallKind(data) === 'other spot'
-    words = `${shiftWords(row.shift)}${said || !doubt ? '' : doubt === 'within error' ? ', within error' : ', maybe another spot'}`
+    const kind = overallKind(data)
+    const said = (kind === 'still' && doubt === 'within error') || (kind === 'other spot' && doubt === 'another spot')
+    const far = row.shift.total < 0.05 ? 'same place' : row.shift.total.toFixed(1)
+    words = `${far}${said || !doubt ? '' : doubt === 'within error' ? ', within error' : ', maybe another spot'}`
   }
   return isMarginal(row.frame) ? `${words}, only just seen` : words
 }
@@ -344,7 +350,8 @@ export function tableCaption(data: FramesReady): string {
     return `Shift since visit ${from} in ″, east and north; + marks its corrected place, where it is held (no catalogue gives it a motion).`
   }
   const by = predictedBy(data.target)
-  return `Shift since visit ${from} in ″, east and north${by ? `; + from ${by}` : ''}.`
+  // "px" in the Differ column is SPHEREx's own pixel, not the 2″ squares the picture is drawn on.
+  return `Shift since visit ${from} in ″, east and north${by ? `; + from ${by}. px: SPHEREx pixels of ${NATIVE_PIXEL_ARCSEC}″` : ''}.`
 }
 
 /** Why there is no prediction to compare with; null when there is one. GaiaReadout's words. */
@@ -381,6 +388,28 @@ function warnings(data: FramesReady) {
 }
 
 /**
+ * Why a visit has no position, in plain words, from the backend's own reason (pipeline.py):
+ * something was found but too far from where the object should be, what is there is not shaped
+ * like a star, the place is off the picture, or nothing clear was detected there.
+ */
+export type NotFoundWhy = 'too far' | 'not star-shaped' | 'off the picture' | 'no clear spot'
+export function notFoundWhy(frame: Pick<Frame, 'centroid' | 'centroid_reason'>): NotFoundWhy | null {
+  if (frame.centroid) return null
+  const why = frame.centroid_reason ?? ''
+  if (/too far to be the target/.test(why)) return 'too far'
+  if (/not shaped like a star/.test(why)) return 'not star-shaped'
+  if (/off the picture/.test(why)) return 'off the picture'
+  return 'no clear spot'
+}
+
+export const NOT_FOUND_WORDS: Record<NotFoundWhy, string> = {
+  'too far': 'a spot was found, but too far from where it should be',
+  'not star-shaped': 'the spot there is not shaped like a star',
+  'off the picture': 'that place is at the edge of the picture, or has no data',
+  'no clear spot': 'no clear spot could be measured there',
+}
+
+/**
  * The notes under the table, each said once for the visits it applies to. Expert gets every
  * caution the per-visit sentences used to carry; Beginner the few it needs.
  */
@@ -396,7 +425,12 @@ export function tableNotes(data: FramesReady, level: 'beginner' | 'expert'): str
     if ((withinError.length || inPositionError.length) && overallKind(data) === 'moved') {
       notes.push('Within error: too small to be sure.')
     }
-    if (notFound.length) notes.push(`Not found in ${listVisits(notFound)}: no clear spot could be measured there.`)
+    // Why, from the backend's own reason, one note per reason.
+    const lost = tableRows(data).filter((r) => !r.start && !r.frame.centroid)
+    for (const why of Object.keys(NOT_FOUND_WORDS) as NotFoundWhy[]) {
+      const these = epochsOf(lost.filter((r) => notFoundWhy(r.frame) === why))
+      if (these.length) notes.push(`Not found in ${listVisits(these)}: ${NOT_FOUND_WORDS[why]}.`)
+    }
     return notes
   }
   // Expert shows the headline over its table (expertResult); one of our candidates' notes come first under it.
@@ -406,7 +440,9 @@ export function tableNotes(data: FramesReady, level: 'beginner' | 'expert'): str
   if (isAlone(data)) notes.push('This is the only visit so far with this detector, so there is nothing to compare it with yet.')
   if (data.mode === 'difference') {
     const ref = data.reference_frame?.epoch
-    if (ref != null) notes.push(`Visit ${ref} is the one subtracted, so the shifts are measured from it.`)
+    const from = startEpoch(data)
+    if (ref != null && from === ref) notes.push(`Visit ${ref} is the one subtracted, so the shifts are measured from it.`)
+    else if (ref != null && from !== null) notes.push(`Visit ${ref} is the one subtracted. It has no measured position, so the shifts are measured from visit ${from}.`)
     notes.push("The positions were measured in each visit's own image, not in the difference.")
   }
   if (withinError.length) {
@@ -555,7 +591,8 @@ function seenWords(f: VisitFrame): string {
 export function plainColumn(data: FramesReady): { header: string; label: string } {
   return changeHeadline(data)
     ? { header: 'Seen', label: 'Every visit, and how clearly it is seen in it' }
-    : { header: 'Moved (arcseconds)', label: 'Every visit, and how far it had moved since the start' }
+    : // "Shift", not "Moved": the sentence over the table says when a shift is not movement.
+      { header: 'Shift (arcseconds)', label: 'Every visit, and how far its marked spot was from its first place' }
 }
 
 /** The one line said under the headline for any place that is not one of our candidates. */
@@ -647,13 +684,23 @@ function overallKind(data: FramesReady): OverallKind {
   if (measured.length === 0) return 'none found'
   if (measured.length === 1) return 'found once'
   const last = measured[measured.length - 1]
-  // Movement is said only for a real shift (motion.ts) of a known object at the centre.
-  if (!data.target && last.shift && last.shift.total >= SMALL_SHIFT_ARCSEC) return 'other spot'
+  // Movement is said only for a real shift (motion.ts) of a known object at the centre. With no
+  // known object there, a shift of a third of a pixel or more in any visit may be the fit landing
+  // on another spot, even when the last place is near the first.
+  if (!data.target && measured.some((r) => r.shift && r.shift.total >= SMALL_SHIFT_ARCSEC)) return 'other spot'
   if (last.real) return 'moved'
   return measured.some((r) => r.real) ? 'came back' : 'still'
 }
 
-const BRIGHTNESS_ELSEWHERE = 'For brightness, see Expert’s Brightness over time.'
+/**
+ * True when the run shows no movement to speak of (nothing moved, it came back, or the marked
+ * spot may be another one): then what changed may be its brightness, and the movement line's
+ * "i" points to the Brightness tool in the bar at the top.
+ */
+export function brightnessMayBeTheChange(data: FramesReady): boolean {
+  const kind = overallKind(data)
+  return kind === 'still' || kind === 'came back' || kind === 'other spot'
+}
 
 /**
  * Beginner's sentence about the whole run, from the first visit with a position to the last,
@@ -667,6 +714,7 @@ export interface Result {
   more: string[]
   /** Lines in normal type under the table (one of our candidates in Beginner: its allowed sentence). */
   after?: string[]
+  /** A line of its own under the table; none now: the pointer to Brightness is said in the line under the sentence. */
   pointer: string | null
 }
 
@@ -680,9 +728,10 @@ export function overallResult(data: FramesReady): Result {
     const lines = changeLines(data, 'beginner')
     // One of our candidates: its allowed sentence under the table, so the headline and the visits stay
     // together at the top of the column in a short window (the sentence for C alone is 73 words).
+    // Anywhere else, CHANGE_CAUTION already names the brightness tool.
     return findAt(data.ra, data.dec)
       ? { sentence: change.sentence, more: [], after: lines, pointer: null }
-      : { sentence: change.sentence, more: lines, pointer: BRIGHTNESS_ELSEWHERE }
+      : { sentence: change.sentence, more: lines, pointer: null }
   }
   const rows = visitRows(data)
   const measured = measuredRows(rows)
@@ -700,28 +749,38 @@ export function overallResult(data: FramesReady): Result {
     : `between visit ${a.epoch} (${monthYearLong(a.date_mean)}) and visit ${b.epoch} (${monthYearLong(b.date_mean)})`
   const overall = last.shift as Shift // a measured row after the start
   const check = catalogueLine(data)
+  const most = Math.max(...measured.map((r) => r.shift?.total ?? 0))
   if (kind === 'moved') {
     return { sentence: `It moved ${overall.total.toFixed(1)} arcseconds ${compassWord(overall)} ${when}.`, more: check ? [check] : [], pointer: null }
   }
   if (kind === 'other spot') {
+    const upTo = most - overall.total >= 0.05 ? `by up to ${most.toFixed(1)}` : overall.total.toFixed(1)
     return {
-      sentence: `The marked spot shifted ${overall.total.toFixed(1)} arcseconds ${when}.`,
-      more: ['No known object is listed at the centre, so this may be a different spot, not movement.'],
-      pointer: BRIGHTNESS_ELSEWHERE,
+      sentence: `The marked spot shifted ${upTo} arcseconds ${when}.`,
+      more: [`No known object is listed at the centre, so this may be a different spot, not movement. ${BRIGHTNESS_LINE}`],
+      pointer: null,
     }
   }
   if (kind === 'came back') {
-    const most = Math.max(...measured.map((r) => r.shift?.total ?? 0))
     return {
       sentence: `Its place changed by up to ${most.toFixed(1)} arcseconds ${when}, then came back.`,
-      more: ['Its first and last places are within the measuring error of each other.', ...(check ? [check] : [])],
-      pointer: BRIGHTNESS_ELSEWHERE,
+      more: ['Its first and last places are within the measuring error of each other.', `${check ? `${check} ` : ''}${BRIGHTNESS_LINE}`],
+      pointer: null,
     }
   }
-  // The honest reason, and the catalogue's own expectation, in one line.
-  const why = overall.total < SMALL_SHIFT_ARCSEC ? 'Any shift was under a third of a pixel.' : 'Any shift was within the measuring error.'
-  return { sentence: `No movement seen ${when}.`, more: [check ? `${why} ${check}` : `${why} It may be a measuring error.`], pointer: BRIGHTNESS_ELSEWHERE }
+  // The honest reason, judged over every visit (not only the last). A catalogue that agrees is
+  // said in the movement line's "i"; one that does not agree is a caution, so it stays here.
+  const why = most < SMALL_SHIFT_ARCSEC ? 'Any shift was under a third of a pixel.' : 'Any shift was within the measuring error.'
+  const disagree = check !== null && catalogueCheck(data)?.agree === false
+  return { sentence: `No movement seen ${when}.`, more: [`${disagree ? `${why} ${check}` : why} ${BRIGHTNESS_LINE}`], pointer: null }
 }
+
+/**
+ * Beginner's visible pointer under a run that shows no movement to speak of: what changed may be
+ * its brightness, and that tool is in the bar at the top (its Beginner name). A question, as
+ * the side column does not know the answer.
+ */
+export const BRIGHTNESS_LINE = 'Did its brightness change? Press Brightness at the top.'
 
 /**
  * Expert's headline over its table, for a place where something appeared or faded (null for
@@ -764,20 +823,67 @@ export function catalogueCheck(data: FramesReady): CatalogueCheck | null {
   return { by, measured: last.shift.total, expected, differ: last.differ, bar: last.bar, agree: last.differ < last.bar }
 }
 
+/** A position angle, degrees east of north, 0 to 360. */
+const positionAngle = (p: { east: number; north: number }) => (((Math.atan2(p.east, p.north) * 180) / Math.PI) % 360 + 360) % 360
+
+/**
+ * Expert's one line over the table: the whole run against the catalogue, in a scientist's units.
+ * "Visit 1 → 3 (1.0 yr): measured 10.4 ± 1.4″ at PA 348°; Gaia DR3 predicts 10.3″ at PA 356°;
+ * residual 1.4″ (1.0σ): consistent." The error is that of the difference of the two positions
+ * (their errors in quadrature: an overexposed core's 1″ floor included), σ is the residual over
+ * it, and "consistent" is the page's own rule (motion.ts: under the larger of a third of a pixel
+ * and 3σ), the one the table and Beginner's words use. A position angle is given only for a
+ * shift of at least a third of a pixel. Null when nothing is predicted or fewer than two visits
+ * have a position.
+ */
+export function expertVerdict(data: FramesReady): string | null {
+  const by = predictedBy(data.target)
+  const ends = runEnds(data)
+  if (!by || !ends || isSum(data) || isAlone(data)) return null
+  const [first, last] = ends
+  const a = first.frame
+  const b = last.frame
+  if (!last.shift || !last.predicted || last.differ == null || last.bar == null || !a.centroid || !b.centroid) return null
+  const years = (Date.parse(b.date_mean) - Date.parse(a.date_mean)) / (365.25 * 86_400_000)
+  const err = Math.hypot(a.centroid.err_arcsec ?? 0, b.centroid.err_arcsec ?? 0)
+  const predicted = Math.hypot(last.predicted.east, last.predicted.north)
+  const pa = (p: { east: number; north: number }, total: number) => (total >= SMALL_SHIFT_ARCSEC ? ` at PA ${Math.round(positionAngle(p)) % 360}°` : '')
+  const who = by === 'Gaia' ? 'Gaia DR3 predicts' : 'the given motion predicts'
+  const sigma = err > 0 ? ` (${(last.differ / err).toFixed(1)}σ)` : ''
+  const verdict = last.differ < last.bar ? 'consistent' : 'not consistent'
+  return (
+    `Visit ${a.epoch} → ${b.epoch} (${years.toFixed(1)} yr): measured ${last.shift.total.toFixed(1)}${err > 0 ? ` ± ${errWords(Number(err.toFixed(2)))}` : ''}″${pa(last.shift, last.shift.total)}; ` +
+    `${who} ${predicted.toFixed(1)}″${pa(last.predicted, predicted)}; residual ${last.differ.toFixed(1)}″${sigma}: ${verdict}.`
+  )
+}
+
+/**
+ * True when the measurement and the catalogue agree that it moved: a real shift (motion.ts),
+ * an expected one of at least a third of a pixel, and the two within error of each other.
+ * Only then is it said to be drifting across the sky (in the movement line's "i").
+ */
+export function isDrifting(data: FramesReady): boolean {
+  const check = catalogueCheck(data)
+  const ends = runEnds(data)
+  return check !== null && check.agree && ends !== null && ends[1].real && check.expected >= SMALL_SHIFT_ARCSEC
+}
+
 /**
  * Beginner's line under the overall sentence: what the catalogue expected over the same dates
- * and whether the two agree. "Drifting across the sky" is said only when both say it moved.
+ * and whether the two agree. What that means ("drifting across the sky") is in the movement
+ * line's "i", so the side column stays short.
  */
 export function catalogueLine(data: FramesReady): string | null {
   const check = catalogueCheck(data)
   if (!check) return null
-  const who = check.by === 'Gaia' ? 'Gaia, a star catalogue,' : 'Its catalogue motion'
-  const expected = check.expected.toFixed(1)
-  if (!check.agree) return `${who} expected ${expected}. The two do not agree, so take care.`
-  const ends = runEnds(data)
-  const moved = ends !== null && ends[1].real && check.expected >= SMALL_SHIFT_ARCSEC
-  if (moved) return `${who} expected ${expected}. The two agree: this nearby object really is drifting across the sky.`
-  return `${who} expected ${expected}: it barely moves.`
+  const who = check.by === 'Gaia' ? "Gaia's star map" : 'Its catalogue motion'
+  const expected = check.expected < 0.05 ? 'almost no shift' : `${check.expected.toFixed(1)} ${check.expected.toFixed(1) === '1.0' ? 'arcsecond' : 'arcseconds'}`
+  if (!check.agree) return `${who} predicted ${expected}. The two do not agree, so take care.`
+  if (isDrifting(data)) return `${who} predicted ${expected}: they agree.`
+  // "Barely moves" only for an object expected to move less than a third of a pixel; a larger
+  // expected shift that agrees only because the error is large is said as that.
+  if (check.expected < SMALL_SHIFT_ARCSEC) return `${who} predicted ${expected}: it barely moves.`
+  return `${who} predicted ${expected}. The two agree only because the measuring error is large here.`
 }
 
 /**
@@ -803,7 +909,7 @@ export function seenLine(data: FramesReady): string | null {
   const lines = seen.length ? [`Seen ${seen.join(', ')}.`] : []
   const none = where('none')
   const unknown = where('unknown')
-  if (none.length) lines.push(`Not seen in ${which(none)}.`)
+  if (none.length) lines.push(none.length === n && n > 1 && !isSum(data) ? `Not seen in any of the ${n} visits.` : `Not seen in ${which(none)}.`)
   if (unknown.length) lines.push(`How clearly is not known for ${which(unknown)}.`)
   return lines.join(' ')
 }
@@ -831,7 +937,8 @@ export function rowAnnouncement(data: FramesReady, index: number): string {
   if (row.shift.total < 0.05) return `${head}: in the same place as at the start.`
   const doubt = shiftDoubt(row, data)
   const after = doubt === 'within error' ? ', within measuring error' : doubt === 'another spot' ? ', which may be a different spot' : ''
-  return `${head}: ${doubt === null ? 'moved' : 'shifted'} ${shiftWords(row.shift, 'arcseconds')}${after}.`
+  // The total first, as the table shows it, then its parts.
+  return `${head}: ${doubt === null ? 'moved' : 'shifted'} ${row.shift.total.toFixed(1)} arcseconds (${shiftWords(row.shift)})${after}.`
 }
 
 /**

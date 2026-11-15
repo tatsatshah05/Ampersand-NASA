@@ -25,9 +25,25 @@ import {
   type Measure,
 } from '../lightcurve'
 import type { SpectrumRequest } from '../spectrum'
+import type { UiLevel } from '../address'
 import { circleStarsSentence, measuredSentence } from '../detection'
+import {
+  BRIGHTNESS_ERROR,
+  BRIGHTNESS_INTRO,
+  BRIGHTNESS_LOADING,
+  BRIGHTNESS_TITLE,
+  bandCaption,
+  bandVerdicts,
+  brightnessAxis,
+  brightnessResult,
+  brightnessTip,
+  measureCautions,
+  plainMeasure,
+} from '../plain'
+import { PlainWords, ScienceFold } from './ScienceFold'
 import './SpectrumPanel.css'
 import './BrightnessPanel.css'
+import './Scroll.css'
 
 // Same visit colours as the spectrum panel (validated together on the panel background).
 const VISIT_COLOURS = ['#3987e5', '#d95926', '#199e70']
@@ -245,24 +261,25 @@ type Load = { state: 'loading' } | { state: 'error'; message: string } | { state
 interface Props {
   request: SpectrumRequest
   onClose: () => void
+  /** How it is written: Expert as it always was, Beginner in plain words with the rest in one closed fold. */
+  level?: UiLevel
 }
 
-export function BrightnessPanel({ request, onClose }: Props) {
+export function BrightnessPanel({ request, onClose, level = 'expert' }: Props) {
   // A different request gets a fresh panel: remounting resets what is loaded and shown.
   const key = `${request.ra},${request.dec},${JSON.stringify(request.motion ?? null)}`
-  return <Panel key={key} request={request} onClose={onClose} />
+  return <Panel key={key} request={request} onClose={onClose} level={level} />
 }
 
-function Panel({ request, onClose }: Props) {
+function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const [measureChoice, setMeasureChoice] = useState<Measure | null>(null)
   const [hidden, setHidden] = useState<ReadonlySet<number>>(new Set())
   const [hover, setHover] = useState<{ detector: number; dot: Dot } | null>(null)
   const section = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    section.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [load.state])
+  // No scrolling here: the page scrolls to a panel once, when it is opened from the bar (App.tsx).
+  // An answer that arrives later must not pull the page back down after the visitor has moved on.
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -293,23 +310,6 @@ function Panel({ request, onClose }: Props) {
   const missing = useMemo(() => (data ? leftOut(data, measure) : null), [data, measure])
   const counts = data ? { flux: countValues(data, 'flux'), wing: countValues(data, 'wing') } : null
 
-  function onMove(det: number, dots: Dot[], e: PointerEvent<SVGSVGElement>) {
-    const box = e.currentTarget.getBoundingClientRect()
-    const k = W / box.width
-    const mx = (e.clientX - box.left) * k
-    const my = (e.clientY - box.top) * k
-    let best: Dot | null = null
-    let bestDistance = 20
-    for (const d of dots) {
-      const dist = Math.hypot(d.x - mx, d.y - my)
-      if (dist < bestDistance) {
-        bestDistance = dist
-        best = d
-      }
-    }
-    setHover(best ? { detector: det, dot: best } : null)
-  }
-
   function toggleDetector(det: number) {
     const next = new Set(hidden)
     if (next.has(det)) next.delete(det)
@@ -323,14 +323,17 @@ function Panel({ request, onClose }: Props) {
     : []
   const allDetectors = data ? [...new Set((data.bins ?? []).map((b) => b.detector))].sort((a, b) => a - b) : []
 
-  return (
-    <section className="panel brightness" aria-label="Brightness over time" ref={section}>
-      <div className="spectrum-head">
-        <h2>Brightness over time</h2>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
-      </div>
+  const head = (title: string) => (
+    <div className="spectrum-head">
+      <h2>{title}</h2>
+      <button type="button" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  )
+  // Everything under the title, as Expert has always shown it. Beginner keeps it in its fold.
+  const body = (
+    <>
       <p className="spectrum-what">{data ? describeTarget(request, data) : `RA ${request.ra.toFixed(5)}°, Dec ${request.dec.toFixed(5)}°`}</p>
       {data && circleStarsSentence(data.stars_in_circle) && (
         <p className="spectrum-what stars-in-circle">{circleStarsSentence(data.stars_in_circle)}</p>
@@ -389,104 +392,10 @@ function Panel({ request, onClose }: Props) {
           </div>
 
           <p className="brightness-axis">{MEASURE_LABEL[measure]}</p>
-          <div className="brightness-grid">
-            {chart.charts.map((c) => (
-              <figure key={c.detector} className="brightness-chart">
-                <figcaption>
-                  <b>D{c.detector}</b>
-                  {c.range && ` · ${c.range[0].toFixed(2)}–${c.range[1].toFixed(2)} µm`}
-                </figcaption>
-                <div className="spectrum-plot">
-                  <svg
-                    viewBox={`0 0 ${W} ${H}`}
-                    role="img"
-                    aria-label={`Detector ${c.detector}: ${MEASURE_LABEL[measure]} against date`}
-                    onPointerMove={(e) => onMove(c.detector, c.dots, e)}
-                    onPointerLeave={() => setHover(null)}
-                  >
-                    <rect width={W} height={H} fill="transparent" />
-                    {chart.yTicks.map((t) => (
-                      <g key={t.text}>
-                        <line x1={M.l} x2={W - M.r} y1={t.y} y2={t.y} className={t.one ? 'spectrum-axis' : 'spectrum-grid'} />
-                        <text x={M.l - 6} y={t.y + 4} textAnchor="end">
-                          {t.text}
-                        </text>
-                      </g>
-                    ))}
-                    {chart.xTicks.map((t) => (
-                      <g key={t.text}>
-                        <line x1={t.x} x2={t.x} y1={M.t + PH} y2={M.t + PH + 4} className="spectrum-axis" />
-                        <text x={t.x} y={H - 8} textAnchor={t.x > W - 16 ? 'end' : 'middle'}>
-                          {t.text}
-                        </text>
-                      </g>
-                    ))}
-                    {c.lines.map((l) => (
-                      <path
-                        key={l.bin}
-                        d={l.d}
-                        fill="none"
-                        className={hover?.detector === c.detector && hover.dot.bin.bin === l.bin ? 'brightness-line on' : 'brightness-line'}
-                      />
-                    ))}
-                    {/* Error bars first, then the dots on top of them. */}
-                    {c.dots.map((d) =>
-                      d.shape === 'dot' && d.errTop !== undefined ? (
-                        <line
-                          key={`e${d.point.obs_id}-${d.bin.bin}`}
-                          x1={d.x}
-                          x2={d.x}
-                          y1={d.errTop}
-                          y2={d.errBottom}
-                          stroke={visitColour(d.point.epoch)}
-                          strokeOpacity={0.45}
-                        />
-                      ) : null,
-                    )}
-                    {c.dots.map((d) => {
-                      const k = `${d.point.obs_id}-${d.bin.bin}`
-                      const colour = visitColour(d.point.epoch)
-                      if (d.shape === 'dot') return <circle key={k} cx={d.x} cy={d.y} r={3} fill={colour} className="spectrum-mark" />
-                      const s = d.shape === 'above' ? -1 : 1
-                      return (
-                        <path
-                          key={k}
-                          d={`M${d.x} ${d.y + 5 * s} L${d.x - 4} ${d.y - 3 * s} L${d.x + 4} ${d.y - 3 * s} Z`}
-                          fill={colour}
-                          className="spectrum-mark"
-                        />
-                      )
-                    })}
-                    {hover?.detector === c.detector && <circle cx={hover.dot.x} cy={hover.dot.y} r={6} className="spectrum-ring" />}
-                  </svg>
-                  {hover?.detector === c.detector && (
-                    <div
-                      className="spectrum-tip"
-                      style={{
-                        left: `${(hover.dot.x / W) * 100}%`,
-                        top: `${(hover.dot.y / H) * 100}%`,
-                        transform: `translate(${hover.dot.x > W * 0.55 ? 'calc(-100% - 12px)' : '12px'}, ${hover.dot.y < 70 ? '10px' : 'calc(-100% - 8px)'})`,
-                      }}
-                    >
-                      <b>
-                        {hover.dot.value.toFixed(3)}
-                        {hover.dot.err !== null && ` ± ${hover.dot.err.toFixed(3)}`} × usual
-                      </b>
-                      <div>
-                        Bin {hover.dot.bin.wavelength_um[0].toFixed(3)}–{hover.dot.bin.wavelength_um[1].toFixed(3)} µm
-                      </div>
-                      <div>
-                        <i style={{ background: visitColour(hover.dot.point.epoch) }} />
-                        Visit {hover.dot.point.epoch}, {hover.dot.point.date.slice(0, 10)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </figure>
-            ))}
-          </div>
+          <SmallCharts chart={chart} measure={measure} hover={hover} onHover={setHover} />
 
           {summary.length > 0 && (
+            <div className="table-scroll">
             <table className="brightness-table">
               <caption>
                 Change from first to last visit, per detector. Each wavelength bin is compared with itself; the table
@@ -519,6 +428,7 @@ function Panel({ request, onClose }: Props) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
 
           <div className="spectrum-foot">
@@ -563,6 +473,222 @@ function Panel({ request, onClose }: Props) {
           </div>
         </>
       )}
+    </>
+  )
+
+  if (level === 'beginner') {
+    return (
+      <section className="panel brightness plain-panel" aria-label="Brightness over time" ref={section}>
+        {head(BRIGHTNESS_TITLE)}
+        <p className="plain-intro">{BRIGHTNESS_INTRO}</p>
+        {load.state === 'loading' && <p className="plain-intro">{BRIGHTNESS_LOADING}</p>}
+        {load.state === 'error' && (
+          <p className="status error">
+            {BRIGHTNESS_ERROR} {load.message}
+          </p>
+        )}
+        {data && <PlainBrightness data={data} />}
+        {data && <ScienceFold>{body}</ScienceFold>}
+      </section>
+    )
+  }
+  return (
+    <section className="panel brightness" aria-label="Brightness over time" ref={section}>
+      {head('Brightness over time')}
+      {body}
     </section>
   )
+}
+
+type Hover = { detector: number; dot: Dot } | null
+
+/**
+ * The small charts, one per detector, on shared scales. Expert's captions and hover text name
+ * the detector and the wavelength bin; Beginner's (plain) name the band of infrared colours and
+ * say the value as "times its usual brightness".
+ */
+function SmallCharts({ chart, measure, hover, onHover, plain = false }: { chart: Layout; measure: Measure; hover: Hover; onHover: (h: Hover) => void; plain?: boolean }) {
+  function onMove(det: number, dots: Dot[], e: PointerEvent<SVGSVGElement>) {
+    const box = e.currentTarget.getBoundingClientRect()
+    const k = W / box.width
+    const mx = (e.clientX - box.left) * k
+    const my = (e.clientY - box.top) * k
+    let best: Dot | null = null
+    let bestDistance = 20
+    for (const d of dots) {
+      const dist = Math.hypot(d.x - mx, d.y - my)
+      if (dist < bestDistance) {
+        bestDistance = dist
+        best = d
+      }
+    }
+    onHover(best ? { detector: det, dot: best } : null)
+  }
+  const axis = plain ? brightnessAxis(measure) : MEASURE_LABEL[measure]
+  return (
+    <div className="brightness-grid">
+      {chart.charts.map((c) => (
+        <figure key={c.detector} className="brightness-chart">
+          <figcaption>
+            {plain ? (
+              bandCaption(c.detector)
+            ) : (
+              <>
+                <b>D{c.detector}</b>
+                {c.range && ` · ${c.range[0].toFixed(2)}–${c.range[1].toFixed(2)} µm`}
+              </>
+            )}
+          </figcaption>
+          <div className="spectrum-plot">
+            <svg
+              viewBox={`0 0 ${W} ${H}`}
+              role="img"
+              aria-label={plain ? `${bandCaption(c.detector)}: ${axis}, by date` : `Detector ${c.detector}: ${MEASURE_LABEL[measure]} against date`}
+              onPointerMove={(e) => onMove(c.detector, c.dots, e)}
+              onPointerLeave={() => onHover(null)}
+            >
+              <rect width={W} height={H} fill="transparent" />
+              {chart.yTicks.map((t) => (
+                <g key={t.text}>
+                  <line x1={M.l} x2={W - M.r} y1={t.y} y2={t.y} className={t.one ? 'spectrum-axis' : 'spectrum-grid'} />
+                  <text x={M.l - 6} y={t.y + 4} textAnchor="end">
+                    {t.text}
+                  </text>
+                </g>
+              ))}
+              {chart.xTicks.map((t) => (
+                <g key={t.text}>
+                  <line x1={t.x} x2={t.x} y1={M.t + PH} y2={M.t + PH + 4} className="spectrum-axis" />
+                  <text x={t.x} y={H - 8} textAnchor={t.x > W - 16 ? 'end' : 'middle'}>
+                    {t.text}
+                  </text>
+                </g>
+              ))}
+              {c.lines.map((l) => (
+                <path
+                  key={l.bin}
+                  d={l.d}
+                  fill="none"
+                  className={hover?.detector === c.detector && hover.dot.bin.bin === l.bin ? 'brightness-line on' : 'brightness-line'}
+                />
+              ))}
+              {/* Error bars first, then the dots on top of them. */}
+              {c.dots.map((d) =>
+                d.shape === 'dot' && d.errTop !== undefined ? (
+                  <line
+                    key={`e${d.point.obs_id}-${d.bin.bin}`}
+                    x1={d.x}
+                    x2={d.x}
+                    y1={d.errTop}
+                    y2={d.errBottom}
+                    stroke={visitColour(d.point.epoch)}
+                    strokeOpacity={0.45}
+                  />
+                ) : null,
+              )}
+              {c.dots.map((d) => {
+                const k = `${d.point.obs_id}-${d.bin.bin}`
+                const colour = visitColour(d.point.epoch)
+                if (d.shape === 'dot') return <circle key={k} cx={d.x} cy={d.y} r={3} fill={colour} className="spectrum-mark" />
+                const s = d.shape === 'above' ? -1 : 1
+                return (
+                  <path
+                    key={k}
+                    d={`M${d.x} ${d.y + 5 * s} L${d.x - 4} ${d.y - 3 * s} L${d.x + 4} ${d.y - 3 * s} Z`}
+                    fill={colour}
+                    className="spectrum-mark"
+                  />
+                )
+              })}
+              {hover?.detector === c.detector && <circle cx={hover.dot.x} cy={hover.dot.y} r={6} className="spectrum-ring" />}
+            </svg>
+            {hover?.detector === c.detector && (
+              <div
+                className="spectrum-tip"
+                style={{
+                  left: `${(hover.dot.x / W) * 100}%`,
+                  top: `${(hover.dot.y / H) * 100}%`,
+                  transform: `translate(${hover.dot.x > W * 0.55 ? 'calc(-100% - 12px)' : '12px'}, ${hover.dot.y < 70 ? '10px' : 'calc(-100% - 8px)'})`,
+                }}
+              >
+                {plain ? (
+                  <b>{brightnessTip(hover.dot.value, hover.dot.err, measure)}</b>
+                ) : (
+                  <>
+                    <b>
+                      {hover.dot.value.toFixed(3)}
+                      {hover.dot.err !== null && ` ± ${hover.dot.err.toFixed(3)}`} × usual
+                    </b>
+                    <div>
+                      Bin {hover.dot.bin.wavelength_um[0].toFixed(3)}–{hover.dot.bin.wavelength_um[1].toFixed(3)} µm
+                    </div>
+                  </>
+                )}
+                <div>
+                  <i style={{ background: visitColour(hover.dot.point.epoch) }} />
+                  Visit {hover.dot.point.epoch}, {hover.dot.point.date.slice(0, 10)}
+                </div>
+              </div>
+            )}
+          </div>
+        </figure>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Beginner's part of the panel, for an answer that has arrived: the sentences about this object
+ * (plain.ts, from the tool's own same-colour comparison), the cautions, and the chart of the
+ * measure those sentences are about, in plain words. Exported for the tests.
+ */
+export function PlainBrightness({ data }: { data: LightcurveResponse }) {
+  const [hover, setHover] = useState<Hover>(null)
+  const groups = useMemo(() => plainChartGroups(data), [data])
+  const visits = [...new Set((data.bins ?? []).flatMap((b) => b.points.map((p) => p.epoch)))].sort((a, b) => a - b)
+  return (
+    <>
+      <PlainWords lines={brightnessResult(data)} cautions={measureCautions(data)} />
+      {groups.length > 0 && (
+        <div className="spectrum-visits">
+          {visits.map((ep) => (
+            <span key={ep} className="brightness-visit">
+              <i style={{ background: visitColour(ep) }} />
+              Visit {ep}
+            </span>
+          ))}
+        </div>
+      )}
+      {groups.map((g) => (
+        <div key={g.measure} className="plain-chart-group">
+          <p className="brightness-axis">{brightnessAxis(g.measure)}</p>
+          <SmallCharts chart={g.chart} measure={g.measure} hover={hover} onHover={setHover} plain />
+        </div>
+      ))}
+    </>
+  )
+}
+
+/**
+ * The charts Beginner sees: each band drawn in the measure its sentence is about. When the
+ * sentences use both (RW Aurigae: the star itself in its shortest colours, the light around it
+ * in its longest), the bands read from the light around the star get charts of that measure
+ * under their own axis line; the other bands keep the measured brightness. Otherwise one set.
+ */
+function plainChartGroups(data: LightcurveResponse): { measure: Measure; chart: Layout }[] {
+  const decided = bandVerdicts(data).filter((v) => v.verdict !== 'too few bins')
+  const ringBands = new Set(decided.filter((v) => v.measure === 'wing').map((v) => v.detector))
+  const mixed = ringBands.size > 0 && decided.some((v) => v.measure === 'flux')
+  if (!mixed) {
+    const measure = plainMeasure(data)
+    const chart = layout(data, measure, new Set())
+    return chart.charts.length ? [{ measure, chart }] : []
+  }
+  const all = [...new Set((data.bins ?? []).map((b) => b.detector))]
+  const own = layout(data, 'flux', ringBands)
+  const ring = layout(data, 'wing', new Set(all.filter((d) => !ringBands.has(d))))
+  return [
+    ...(own.charts.length ? [{ measure: 'flux' as const, chart: own }] : []),
+    ...(ring.charts.length ? [{ measure: 'wing' as const, chart: ring }] : []),
+  ]
 }

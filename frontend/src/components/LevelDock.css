@@ -1,0 +1,45 @@
+/* The dock of the Beginner | Expert switch (LevelDock.tsx): fixed 16px from the bottom right
+   corner of the window, over the page, 32px tall. Each screen keeps room for it at its foot
+   (App.css, --dock-room), so it covers no picture, visit or control. Colours only through the
+   tokens. The switch keeps the page's segmented control (a grey track); the level in use is a
+   black pill with white words in a bolder weight, the way the page marks "this one" in a
+   choice, so it is seen without colour. */
+
+.level-dock {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Where the page scrolls under it (a phone, the tool panels, the other screens), a margin of
+     the page's own white keeps the words underneath from running into it. */
+  border-radius: 999px;
+  background: var(--bg);
+  box-shadow: 0 0 0 6px var(--bg);
+}
+
+.level-dock .level-switch {
+  margin-left: 0;
+  background: var(--surface-hover);
+}
+
+.level-dock .level-switch .segment[aria-pressed='true'],
+.level-dock .level-switch .segment[aria-pressed='true']:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--on-ink);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+/* Over the page while it scrolls (a phone, the tool panels): the "i" is opaque too. */
+.level-dock .info-button {
+  background: var(--bg);
+}
+
+.level-dock .info-button:hover:not(:disabled),
+.level-dock .info-button:focus-visible,
+.level-dock .info-button[aria-expanded='true'] {
+  background: var(--surface);
+}

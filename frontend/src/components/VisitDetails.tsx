@@ -38,7 +38,11 @@ export function VisitDetails({ data }: { data: FramesReady }) {
               <dt>Saturated pixels</dt>
               <dd>
                 {frame.saturated_pixels}
-                {frame.saturated_pixels > 0 && ' (a bright core is overexposed here; detectors 5 and 6 are often, not always, better)'}
+                {/* "The target's core" only when the fit says so; the advice about detectors 5 and 6 only outside them. */}
+                {frame.saturated_pixels > 0 &&
+                  ` (${frame.centroid?.saturated_core ? "the target's core is overexposed here" : 'some bright pixels are overexposed'}${
+                    data.detector <= 4 ? '; detectors 5 and 6 are often, not always, better' : ''
+                  })`}
               </dd>
               <dt>Glitchy readings dropped</dt>
               <dd>{frame.rejected_readings}</dd>

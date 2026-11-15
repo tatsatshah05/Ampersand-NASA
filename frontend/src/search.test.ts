@@ -22,16 +22,18 @@ const status = (over: Partial<S.SearchStatus>): S.SearchStatus => ({
 
 describe('progress', () => {
   it('says which detector and how long', () => {
-    expect(S.progressSentence(status({ detector_now: 3, detectors_done: 2, seconds: 40.2 }))).toBe(
-      'Searching detector 3: 2 of 6 done, 40 seconds so far.',
+    expect(S.progressSentence(status({ detector_now: 3, detectors_done: 2, seconds: 40.2 }))).toBe('Searching 6 detectors one after another.')
+    // The words hold still: the same at every second and every detector.
+    expect(S.progressSentence(status({ detector_now: 4, detectors_done: 3, seconds: 51 }))).toBe(
+      S.progressSentence(status({ detector_now: 3, detectors_done: 2, seconds: 40.2 })),
     )
   })
   it('says it is waiting when queued', () => {
-    expect(S.progressSentence(status({ status: 'queued' }))).toBe('Waiting for another search to finish.')
-    expect(S.progressSentence(status({ status: 'queued', searches_ahead: 2 }))).toContain('2 other searches')
+    expect(S.progressSentence(status({ status: 'queued' }))).toBe('Waiting for another search to finish before this one starts.')
+    expect(S.progressSentence(status({ status: 'queued', searches_ahead: 2 }))).toBe(S.progressSentence(status({ status: 'queued' })))
   })
   it('says the catalogues are being checked once every detector is done', () => {
-    expect(S.progressSentence(status({ detectors_done: 6, seconds: 31 }))).toBe('Checking the catalogues, 31 seconds so far.')
+    expect(S.progressSentence(status({ detectors_done: 6, seconds: 31 }))).toBe('Checking the catalogues.')
   })
 })
 

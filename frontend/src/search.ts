@@ -233,19 +233,15 @@ export function listWords(items: (string | number)[]): string {
   return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
 }
 
-/** Progress while the search runs. */
+/**
+ * Progress while the search runs, in words that hold still: the stage only (waiting, searching,
+ * checking the catalogues), never a count of seconds or detectors, so nothing on the page ticks
+ * while the visits play (the words-hold-still rule). The answer replaces it when it comes.
+ */
 export function progressSentence(s: SearchStatus): string {
-  if (s.status === 'queued') {
-    const n = s.searches_ahead
-    return n > 0
-      ? `Waiting for ${plural(n, 'other search', 'other searches')} to finish before this one starts.`
-      : 'Waiting for another search to finish.'
-  }
-  const seconds = Math.round(s.seconds)
-  const taken = `${plural(seconds, 'second', 'seconds')} so far`
-  if (s.detector_now !== null) return `Searching detector ${s.detector_now}: ${s.detectors_done} of ${s.detectors_total} done, ${taken}.`
-  if (s.detectors_done >= s.detectors_total && s.detectors_total > 0) return `Checking the catalogues, ${taken}.`
-  return `Starting, ${taken}.`
+  if (s.status === 'queued') return 'Waiting for another search to finish before this one starts.'
+  if (s.detectors_done >= s.detectors_total && s.detectors_total > 0) return 'Checking the catalogues.'
+  return `Searching ${s.detectors_total > 0 ? plural(s.detectors_total, 'detector', 'detectors') : 'the detectors'} one after another.`
 }
 
 /** Compass point for a bearing in degrees east of north. */

@@ -29,7 +29,7 @@
   grid-template-rows: var(--topbar-h) var(--targets-h) minmax(0, 1fr);
 }
 
-/* ---- the top bar: title, search, level ------------------------------------------------- */
+/* ---- the top bar: title and the bar of features (FeatureBar.css) ------------------------ */
 
 /* Its own layer, so the search box's pop-up stays above the plate under it. */
 .topbar {
@@ -53,11 +53,6 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
-}
-
-.topbar .searchbar {
-  flex: 1 1 auto;
-  max-width: 440px;
 }
 
 /* A segmented control: a grey track, the chosen side a white pill with a soft shadow. Both
@@ -196,14 +191,15 @@
   outline-offset: 2px;
 }
 
-.target-actions {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* The search field opens the target row: choosing what to look at is one job. The top bar
+   holds the bar of features instead, so the page has no more rows than before. */
+.targets .searchbar {
+  flex: 0 1 260px;
+  min-width: 160px;
 }
 
-/* Quiet ways off the page: grey words that turn black on hover. */
+/* Quiet ways off the page: grey words that turn black on hover (Dev's rule; the methods screen
+   uses it for its way back and its next-tool links). */
 .quiet {
   display: inline-flex;
   align-items: center;
@@ -811,11 +807,6 @@
   margin-top: 12px;
 }
 
-/* Where to look instead (brightness): a pointer, in small type. */
-.inspector .result-pointer {
-  margin: 0 0 8px;
-}
-
 /* The four switches under the menus of the same section. */
 .inspector .chips.on-picture {
   margin-top: 8px;
@@ -1197,34 +1188,7 @@
   margin: 12px 0 0;
 }
 
-.tool-buttons {
-  display: grid;
-  gap: 8px;
-}
-
-/* Each tool opens a panel below: a grey tile with a chevron. */
-.tool-buttons button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 44px;
-  padding: 10px 16px;
-  border-radius: 12px;
-  font-size: 15px;
-  text-align: left;
-}
-
-/* Expert's five tools in two columns, with short labels (each button's name keeps the long one). */
-.tool-buttons.two-columns {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-
-.tool-buttons.two-columns button {
-  padding: 6px 12px;
-}
-
-/* Folded extras: catalogue notes, frame details, sky context. */
+/* Folded extras of Expert's side column: catalogue notes and visit details. */
 .fold {
   border-top: 1px solid var(--line);
 }
@@ -1358,6 +1322,114 @@
   background: var(--ink-hover);
 }
 
+/* ---- room for the Beginner | Expert dock at the bottom right (LevelDock) ------------------- */
+
+/* The dock is 32px tall, 16px from the bottom. The side column ends above it (it scrolls
+   inside itself), and the foot of the tool panels and of the other screens keeps room for it,
+   so it covers nothing at rest and the last line can always be scrolled clear of it. */
+.app,
+main.training,
+main.watchlist {
+  --dock-room: 56px;
+}
+
+@media (min-width: 1000px) {
+  .bench > .inspector {
+    margin-bottom: var(--dock-room);
+  }
+
+  /* Beginner's block of the sentence and the table gives up the dock's room. */
+  .bench > .inspector.beginner .readout-block {
+    height: clamp(300px, calc(100dvh - 440px), 440px);
+  }
+
+  .bench > .inspector .credits {
+    padding-top: 12px;
+  }
+}
+
+/* A short window: Beginner's steps and the credits closer together, and Expert's "View"
+   heading kept for screen readers only, so the side column still fits over the dock. */
+@media (min-width: 1000px) and (max-height: 800px) {
+  .bench > .inspector.beginner .readout-block {
+    height: clamp(300px, calc(100dvh - 406px), 440px);
+  }
+
+  .bench > .inspector .readout-block {
+    margin-top: 8px;
+  }
+
+  .bench > .inspector .guide {
+    padding-top: 8px;
+  }
+
+  .bench > .inspector .guide-steps {
+    gap: 4px;
+  }
+
+  .bench > .inspector .guide-further {
+    margin-top: 6px;
+  }
+
+  .bench > .inspector .credits {
+    padding-top: 6px;
+  }
+
+  .bench > .inspector {
+    padding-bottom: 0;
+  }
+
+  .bench > .inspector:not(.beginner) .readout-block {
+    height: 214px;
+  }
+
+  .bench > .inspector:not(.beginner) .fold summary {
+    padding: 4px 0;
+  }
+
+  .bench > .inspector:not(.beginner) #ins-view {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A short, wide window (1280x720): the picture is as tall as the window allows and no wider,
+   so the side column takes the width it leaves (the picture keeps its size), and Expert's four
+   switches of what is drawn sit on one line. The column ends at the dock's top edge. */
+@media (min-width: 1200px) and (max-height: 800px) {
+  .app {
+    --inspector-w: 640px;
+    --dock-room: 48px;
+  }
+}
+
+/* Beginner's line under the steps (now a pointer to the bar at the top) is a sentence, so it is
+   set no smaller than the page's secondary text. */
+.inspector .guide-further {
+  font-size: var(--size-body);
+}
+
+.tool-panels:not(:empty) {
+  padding-bottom: var(--dock-room);
+}
+
+/* "Back to the picture" sits over the dock (32px tall, 16px from the bottom), 8px above it. */
+.app > .back-to-plate {
+  right: 16px;
+  bottom: 56px;
+}
+
+/* The same patch in other surveys, as a panel under the picture: a sky atlas of a sensible
+   size instead of the panel's full width. */
+.context-slot .aladin {
+  max-width: min(100%, 640px);
+}
+
 /* ---- narrower windows -------------------------------------------------------------------- */
 
 @media (max-width: 1199px) {
@@ -1431,12 +1503,6 @@
     padding: 0 10px;
   }
 
-  .topbar .searchbar {
-    order: 3;
-    flex: 1 1 100%;
-    max-width: none;
-  }
-
   .targets {
     flex-wrap: wrap;
     gap: 0;
@@ -1447,12 +1513,6 @@
     flex: 1 1 100%;
     height: var(--targets-h);
     padding: 0 12px;
-  }
-
-  .target-actions {
-    flex: 1 1 100%;
-    padding: 0 8px 8px;
-    flex-wrap: wrap;
   }
 
   .bench {
@@ -1550,6 +1610,33 @@
   .back-to-plate {
     right: 16px;
     bottom: 16px;
+  }
+
+  /* The search field on a line of its own over the target buttons. */
+  .targets .searchbar {
+    flex: 1 1 100%;
+    padding: 8px 16px 0;
+  }
+
+  /* The page scrolls: its foot keeps room for the dock, so the last line can be read clear of it. */
+  .app {
+    --col-gap: 8px;
+    padding-bottom: var(--dock-room);
+  }
+
+  /* A little tighter above the strip of visits, so on a phone the dock at the bottom right
+     clears the strip when the page opens. */
+  .bench > .stagecol {
+    padding-top: 4px;
+  }
+
+  .bench .transport {
+    row-gap: 6px;
+  }
+
+  .bench > .inspector.beginner .guide {
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 
@@ -1983,6 +2070,34 @@ main.training > footer {
   grid-column: 1 / -1;
 }
 
+/* The practice and watchlist screens have the same top bar as the viewer (52px, as the
+   viewer's --topbar-h), and room at their foot for the dock of the level switch. */
+.topbar.screen-topbar {
+  height: 52px;
+}
+
+main.training,
+main.watchlist {
+  padding-bottom: calc(16px + var(--dock-room));
+}
+
+/* The methods screen (ToolsView) has the same bar on top and the same room at its foot. */
+main.tools {
+  --dock-room: 56px;
+  padding-bottom: calc(16px + var(--dock-room));
+}
+
+/* Whatever scrolls to an element (Tab, a jump link) keeps it clear of the dock at the bottom right. */
+html {
+  scroll-padding-bottom: 64px;
+}
+
+@media (max-width: 999px) {
+  .topbar.screen-topbar {
+    height: auto;
+  }
+}
+
 main.training > header {
   grid-row: 1;
 }
@@ -2020,7 +2135,8 @@ main.training .frame-label {
   main.training {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
-    padding: 24px 16px 40px;
+    /* The foot keeps the dock's room here too, so the last line scrolls clear of the switch. */
+    padding: 24px 16px calc(16px + var(--dock-room));
   }
 
   .viewer,

@@ -109,6 +109,28 @@ export const TABS: Record<Group, { label: string; explain: string }> = {
   },
 }
 
+/** Beginner's words for the three groups: what each holds, in plain words (the groups are the machine's, as in TABS). */
+export const PLAIN_TABS: Record<Group, { label: string; explain: string }> = {
+  eyes: {
+    label: 'In no catalogue',
+    explain: 'No catalogue we asked lists these, and they passed every test for false alarms. Each is only a candidate.',
+  },
+  known: {
+    label: 'Already known',
+    explain: 'Catalogues already list these as moving or changing. They show what real ones look like.',
+  },
+  artefact: {
+    label: 'Set aside as false alarms',
+    explain: 'The search threw these out: they look like a reflection, two stars blended, or glowing gas.',
+  },
+}
+
+/** Beginner's opening: why the screen is here, and what a vote is (and is not). */
+export const PLAIN_INTRO = [
+  'Our computer search marked these spots because they moved or changed brightness between SPHEREx’s visits.',
+  'None is confirmed. Your vote says what you think the pictures show. It does not change the list.',
+]
+
 export const ORDER_SENTENCE =
   'The order is the machine’s, and votes never change it: a clean result comes before one with caution flags, then the ones that reached 5 times the noise in more detectors, then the stronger ones.'
 

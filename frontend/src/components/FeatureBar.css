@@ -1,0 +1,136 @@
+/* The bar of features in the top bar of every screen (FeatureBar.tsx). Colours only through
+   the page's tokens: the items are the page's readable grey (--muted), and the current one is
+   black (--ink), semibold, with a black line under it, so it is seen without colour; its width
+   is kept for the semibold type in advance, so marking another item moves nothing. In a window
+   too narrow for all ten the bar scrolls sideways inside itself, on one line, and the page never
+   does. */
+
+.feature-bar {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.feature-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.feature-list {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature-li {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+}
+
+/* The three screens of their own, after a short divider. */
+.feature-first-screen::before {
+  content: '';
+  align-self: center;
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--line-strong);
+}
+
+.feature-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--size-body);
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.feature-item:hover:not([aria-disabled='true']) {
+  background: transparent;
+  color: var(--ink);
+}
+
+.feature-item:active:not([aria-disabled='true']) {
+  background: transparent;
+  color: var(--ink);
+}
+
+.feature-item:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* The label, with room kept for its bold form (the hidden copy has no text for screen readers). */
+.feature-text {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.feature-text::after {
+  content: attr(data-text);
+  content: attr(data-text) / '';
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 600;
+  user-select: none;
+  pointer-events: none;
+}
+
+.feature-item[aria-current='page'] {
+  color: var(--ink, var(--text));
+  font-weight: 600;
+}
+
+.feature-item[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: 0;
+  height: 2px;
+  background: var(--ink, var(--text));
+}
+
+/* A tool before the first pictures have arrived: there, but not yet to be pressed. */
+/* Not yet to be pressed (the first pictures are on their way): the same grey as the other items,
+   never lighter than --muted, with no hover. */
+.feature-item[aria-disabled='true'] {
+  color: var(--muted);
+  cursor: default;
+}
+
+/* In the top bar. */
+.topbar .feature-bar {
+  height: 100%;
+}
+
+/* Stacked windows: the brand on its own line, the bar under it across the whole width. */
+@media (max-width: 999px) {
+  .topbar:has(.feature-bar) {
+    row-gap: 2px;
+    padding-bottom: 0;
+  }
+
+  .topbar .feature-bar {
+    flex: 1 1 100%;
+    order: 2;
+    height: 36px;
+    margin: 0 -16px;
+    padding: 0 8px;
+  }
+}

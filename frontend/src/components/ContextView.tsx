@@ -1,8 +1,12 @@
 // Issue #12, part 3: Aladin Lite v3 context view centred on the search position, with
 // WISE / 2MASS / optical sky images, Gaia DR3 stars, and a box showing the SPHEREx field.
 // Aladin's terms ask that its logo and link stay visible at the bottom right of the view.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Aladin, Layer } from 'aladin-lite'
+import type { UiLevel } from '../address'
+import type { Target } from '../api'
+import { CONTEXT_CREDIT, CONTEXT_FAILED, CONTEXT_INTRO, CONTEXT_NO_IMAGE, CONTEXT_PICK, CONTEXT_TITLE, SURVEY_WORDS, contextResult, thenAndNow } from '../plain'
+import { PlainWords, ScienceFold } from './ScienceFold'
 
 // Each survey is a full HiPS address on a mirror, tried in order, so Aladin never has to look a
 // survey id up at the Strasbourg servers (which were down on 14 November). Each address answered
@@ -64,11 +68,22 @@ interface Props {
   ra: number
   dec: number
   fov: number // SPHEREx field of view in degrees
+  /** How it is written: Expert as it always was, Beginner in plain words with the rest in one closed fold. */
+  level?: UiLevel
+  /** When given, a Close button beside the title (as the other tool panels have). */
+  onClose?: () => void
+  /** The object at the centre, with its catalogue motion when known: a moving one is somewhere else in an older picture. */
+  target?: Target | null
+  /** Its name on the page. */
+  name?: string | null
+  /** What goes first under the title: the object card (what the catalogues know about it). */
+  children?: ReactNode
 }
 
 type AladinModule = typeof import('aladin-lite').default
 
-export function ContextView({ ra, dec, fov }: Props) {
+export function ContextView({ ra, dec, fov, level = 'expert', onClose, target = null, name = null, children }: Props) {
+  const plain = level === 'beginner'
   const divRef = useRef<HTMLDivElement>(null)
   const [viewer, setViewer] = useState<{
     A: AladinModule
@@ -77,7 +92,8 @@ export function ContextView({ ra, dec, fov }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [survey, setSurvey] = useState<string>(SURVEYS[0].id)
   const [imageFailed, setImageFailed] = useState(false)
-  const [showGaia, setShowGaia] = useState(true)
+  // Beginner starts with the bare sky picture; the catalogue's marks are one switch away in the fold.
+  const [showGaia, setShowGaia] = useState(!plain)
   // Which position the Gaia stars were last loaded for, and whether that worked.
   const [gaiaLoad, setGaiaLoad] = useState<{ key: string; ok: boolean } | null>(null)
   const posKey = `${ra},${dec},${fov}`
@@ -249,33 +265,85 @@ export function ContextView({ ra, dec, fov }: Props) {
     }
   }, [showGaia, gaiaNote])
 
+  // With the object card in it (the bar's "Object card"), Expert's panel is called that too.
+  const title = plain ? CONTEXT_TITLE : children ? 'Object card' : 'Sky context'
+  const surveyPicker = (
+    <label>
+      {plain ? CONTEXT_PICK : 'Sky image'}{' '}
+      <select value={survey} onChange={(e) => setSurvey(e.target.value)}>
+        {SURVEYS.map((s) => (
+          <option key={s.id} value={s.id}>
+            {plain ? (SURVEY_WORDS[s.id]?.label ?? s.label) : s.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+  const gaiaSwitch = (
+    <label>
+      <input type="checkbox" checked={showGaia} onChange={(e) => setShowGaia(e.target.checked)} />{' '}
+      <span className="key gaia">Gaia DR3 stars</span>
+    </label>
+  )
+  const credit = <p className="hint">Sky atlas: Aladin Lite (CDS, Strasbourg). Star catalogue: ESA Gaia DR3 via VizieR.</p>
+
+  // The sky atlas keeps its place among the section's children at both levels, so a change of
+  // level never takes its element away from it.
   return (
-    <section className="panel context" aria-label="Sky context">
-      <h2>Sky context</h2>
-      <p className="hint">
-        Other surveys around the same spot. The <span className="key measured">orange box</span> is the SPHEREx field
-        shown on the left.
-      </p>
-      {error ? <p className="status error">{error}</p> : <div ref={divRef} className="aladin" />}
-      <div className="context-controls">
-        <label>
-          Sky image{' '}
-          <select value={survey} onChange={(e) => setSurvey(e.target.value)}>
-            {SURVEYS.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <input type="checkbox" checked={showGaia} onChange={(e) => setShowGaia(e.target.checked)} />{' '}
-          <span className="key gaia">Gaia DR3 stars</span>
-        </label>
-      </div>
-      {imageFailed && <p className="hint">{NO_IMAGE}</p>}
-      {gaiaNote && <p className="hint">{gaiaNote}</p>}
-      <p className="hint">Sky atlas: Aladin Lite (CDS, Strasbourg). Star catalogue: ESA Gaia DR3 via VizieR.</p>
+    <section className={plain ? 'panel context plain-panel' : 'panel context'} aria-label={title}>
+      {onClose ? (
+        <div className="spectrum-head">
+          <h2>{title}</h2>
+          <button type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      ) : (
+        <h2>{title}</h2>
+      )}
+      {children}
+      {plain ? (
+        <>
+          <p className="plain-intro">{CONTEXT_INTRO}</p>
+          <PlainWords lines={[...contextResult(survey, fov), ...thenAndNow(survey, target, { ra, dec }, name, 'beginner')]} />
+        </>
+      ) : (
+        <>
+          <p className="hint">
+            Other surveys around the same spot. The <span className="key measured">orange box</span> is the SPHEREx field
+            shown in the picture above.
+          </p>
+          {thenAndNow(survey, target, { ra, dec }, name, 'expert').map((line) => (
+            <p key={line} className="hint">
+              {line}
+            </p>
+          ))}
+        </>
+      )}
+      {error ? <p className="status error">{plain ? CONTEXT_FAILED : error}</p> : <div ref={divRef} className="aladin" />}
+      {plain ? (
+        <>
+          <div className="plain-pick">{surveyPicker}</div>
+          {imageFailed && <p className="hint">{CONTEXT_NO_IMAGE}</p>}
+          <p className="hint">{CONTEXT_CREDIT}</p>
+          <ScienceFold>
+            {error && <p className="status error">{error}</p>}
+            <div className="context-controls">{gaiaSwitch}</div>
+            {gaiaNote && <p className="hint">{gaiaNote}</p>}
+            {credit}
+          </ScienceFold>
+        </>
+      ) : (
+        <>
+          <div className="context-controls">
+            {surveyPicker}
+            {gaiaSwitch}
+          </div>
+          {imageFailed && <p className="hint">{NO_IMAGE}</p>}
+          {gaiaNote && <p className="hint">{gaiaNote}</p>}
+          {credit}
+        </>
+      )}
     </section>
   )
 }
