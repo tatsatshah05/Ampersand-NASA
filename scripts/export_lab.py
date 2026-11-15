@@ -1774,11 +1774,11 @@ def check(lab: Path, root: Path) -> list[str]:
                 problems.append(
                     f"{f.name}: {'.'.join(path)} is {json.dumps(got)[:80]}, results say {json.dumps(value)[:80]}"
                 )
-        for path in REQUIRED[tool]:
+        for field in REQUIRED[tool]:
             try:
-                get_path(doc, path)
+                get_path(doc, field)
             except KeyError:
-                problems.append(f"{f.name}: required field {path} missing")
+                problems.append(f"{f.name}: required field {field} missing")
         for name, digest in doc.get("files", {}).items():
             p = lab / name
             if not p.exists():
