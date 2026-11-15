@@ -611,7 +611,7 @@ def fit_shapes(ch: list[dict[str, Any]], *, error_scale: float = 1.0, glow: bool
         out.update(verdict="too_few_channels", verdict_text=f"only {n} shared channels")
         return out
     if float(wave.max() / wave.min()) < MIN_WAVE_SPAN:
-        out.update(verdict="narrow_coverage", verdict_text="the shared channels cover too narrow a range of wavelengths")
+        out.update(verdict="narrow_coverage", verdict_text="the shared channels span too narrow a range of wavelengths")
         return out
     null_chi2 = _chi2(np.ones(n), ratio, err)
     out["no_change"] = {"chi2": null_chi2, "dof": n, "p": float(stats_chi2_sf(null_chi2, n))}
