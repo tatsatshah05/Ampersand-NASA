@@ -15,7 +15,8 @@ Method, in the order the code runs
 1. The stacked image of every visit, built exactly as for /api/frames
    (`training.epoch_stacks`, which is the real stack and plants nothing).
 2. Sources in each visit on its own: a matched filter the width of a star image, on a
-   locally measured background and noise. A source needs 5 times the noise.
+   locally measured background and noise. A source needs 4 times the noise to be
+   listed; a link needs two sources at 5 times the noise or more.
 3. Sources that come and go: a source of one visit that is missing at the same place in
    at least one other visit. Everything else is an ordinary star and is set aside.
    Those with a catalogued infrared source (CatWISE2020) at their place, bright enough
@@ -61,7 +62,7 @@ from astropy.coordinates import get_body_barycentric
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from astropy.wcs import WCS
-from scipy.ndimage import gaussian_filter, maximum_filter, zoom
+from scipy.ndimage import gaussian_filter, maximum_filter, median_filter, zoom
 from scipy.stats import chi2 as chi2_dist
 
 from . import astrometry, pipeline, search, spherex, training
@@ -70,17 +71,23 @@ VERSION = 1
 DISTANT_DIR = spherex.CACHE / "distant"
 ARCSEC_PER_RADIAN = 206264.806
 
-DETECT_SIGMA = 5.0          # a source of one visit needs this many times the local noise
+DETECT_SIGMA = 5.0          # two of a link's sources need this many times the local noise ...
+MEMBER_SIGMA = 4.0          # ... and the others this many
 MIN_COVER = 0.7             # share of the star image that must fall on pixels with data
 EDGE_PX = 6                 # nothing is looked for this close to the edge of the picture
-BLOCK_PX = 64               # background and noise are measured in blocks this wide
+BLOCK_PX = 64               # the background is measured in blocks this wide
+NOISE_BLOCK_PX = 32         # ... and the noise in blocks this wide (never below what its neighbours say)
+CLEAR_NOISE = 1.5           # "clear sky": the noise is at most this many times the picture's usual noise
 PEAK_BOX_PX = 7             # a source is the highest point within this box
 BRIGHT_STAR_SIGMA = 15.0    # sources this strong, seen in every visit, calibrate "point-like"
 POINT_LIKE = (0.7, 1.4)     # allowed width measure, relative to the picture's own stars
 SHAPE_SLACK = 1.5           # the allowance widens by this over the detection strength
 
 GONE_SHARE = 0.4            # "missing" in another visit: under this share of its brightness there ...
-GONE_SIGMA = 3.5            # ... and lower by this many times the two noises combined
+GONE_BELOW = 2.5            # ... and under this many times that visit's noise
+THERE_SHARE = 0.6           # "still there" in another visit: at least this share of its brightness ...
+THERE_SIGMA = 3.0           # ... and this many times that visit's noise
+AWAY_ARCSEC = 20.0          # a link's source may not be "still there" in a visit that puts the body this far off
 MIN_JUMP_ARCSEC = 12.0      # a smaller jump overlaps the source's own image in the other visit
 SEED_LEVERAGE = 0.8         # two visits start a link only if the Earth moved this far between them (AU, on the sky)
 NEAREST_AU = 100.0          # nothing nearer is tried: it would cross any picture within one visit
@@ -101,9 +108,10 @@ DISTANCES_AU = (300, 500, 700, 1000, 1500, 2000, 3000, 5000, 10000, 20000, 30000
 WISE_ZERO_JY = {"w1": 309.54, "w2": 171.787}    # WISE Explanatory Supplement, flux of magnitude zero
 
 LIMITS_TEXT = (
-    "This search needs an object to be seen as a point of light in at least three visits, at 5 times the "
-    "noise in each, to stay inside the picture in all of them, and to be clear of bright stars and of "
-    "catalogued infrared sources. It cannot find anything in a field with fewer than three visits, anything "
+    "This search needs an object to be seen as a point of light in at least three visits (5 times the noise "
+    "in two of them and 4 times in a third), to stay inside the picture in all of them, and to be clear of "
+    "bright stars and of catalogued infrared sources. It cannot find anything in a field with fewer than three "
+    "visits, anything "
     "that changes brightness a lot from visit to visit, or an object so near that it smears within a visit "
     "(the table gives the limit at each distance). Catalogues built from ten years of WISE data reach fainter "
     "than one SPHEREx visit at these wavelengths, so finding nothing is the expected answer.")
@@ -228,14 +236,20 @@ def fit_body(ra: np.ndarray, dec: np.ndarray, err: np.ndarray, visits: list[dict
 # ---------------------------------------------------------------------------
 
 def _block_stat(image: np.ndarray, use: np.ndarray, spread: bool) -> np.ndarray:
-    """Median (or robust scatter) of the usable pixels in blocks, spread back smoothly over the picture."""
+    """Median (or robust scatter) of the usable pixels in blocks, spread back smoothly over the picture.
+
+    The scatter is measured in smaller blocks, so that the glow of a bright star raises the
+    noise only around that star. A small block gives a rough figure, so no block's noise is
+    taken to be lower than the middle value of it and its eight neighbours.
+    """
     n = image.shape[0]
-    nb = max(1, int(math.ceil(n / BLOCK_PX)))
-    side = nb * BLOCK_PX
+    block = NOISE_BLOCK_PX if spread else BLOCK_PX
+    nb = max(1, int(math.ceil(n / block)))
+    side = nb * block
     padded = np.full((side, side), np.nan)
     padded[:n, :n] = np.where(use, image, np.nan)
-    blocks = padded.reshape(nb, BLOCK_PX, nb, BLOCK_PX).transpose(0, 2, 1, 3).reshape(nb, nb, -1)
-    enough = np.isfinite(blocks).sum(axis=2) >= 0.2 * BLOCK_PX * BLOCK_PX
+    blocks = padded.reshape(nb, block, nb, block).transpose(0, 2, 1, 3).reshape(nb, nb, -1)
+    enough = np.isfinite(blocks).sum(axis=2) >= 0.2 * block * block
     with np.errstate(invalid="ignore"), warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)       # a block with no data at all
         value = np.nanmedian(blocks, axis=2)
@@ -245,9 +259,11 @@ def _block_stat(image: np.ndarray, use: np.ndarray, spread: bool) -> np.ndarray:
     if not np.isfinite(value).any():
         return np.full((n, n), np.nan)
     value = np.where(np.isfinite(value), value, np.nanmedian(value))
+    if spread and nb >= 3:
+        value = np.maximum(value, median_filter(value, size=3, mode="nearest"))
     if nb == 1:
         return np.full((n, n), float(value[0, 0]))
-    return zoom(value, BLOCK_PX, order=1, mode="nearest", grid_mode=True)[:n, :n]
+    return zoom(value, block, order=1, mode="nearest", grid_mode=True)[:n, :n]
 
 
 def _amplitude(resid: np.ndarray, valid: np.ndarray, sigma_px: float) -> tuple[np.ndarray, np.ndarray]:
@@ -281,13 +297,14 @@ def _top(lo: float, mid: float, hi: float) -> float:
 
 
 def find_sources(maps: dict[str, np.ndarray], grid: WCS) -> list[dict]:
-    """Every point of light in one visit that stands DETECT_SIGMA above the noise."""
+    """Every point of light in one visit that stands MEMBER_SIGMA above the noise."""
     height, noise = maps["height"], maps["noise"]
     n = height.shape[0]
     with np.errstate(invalid="ignore"):
         strength = height / noise
     filled = np.where(np.isfinite(strength), strength, -np.inf)
-    peak = (filled == maximum_filter(filled, size=PEAK_BOX_PX, mode="constant", cval=-np.inf)) & (filled >= DETECT_SIGMA)
+    highest = maximum_filter(filled, size=PEAK_BOX_PX, mode="constant", cval=-np.inf)
+    peak = (filled == highest) & (filled >= MEMBER_SIGMA)
     peak[:EDGE_PX] = peak[-EDGE_PX:] = False
     peak[:, :EDGE_PX] = peak[:, -EDGE_PX:] = False
     out = []
@@ -324,7 +341,8 @@ def come_and_go(sources: dict[int, list[dict]], maps: dict[int, dict[str, np.nda
     """The sources that are missing from the same place in at least one other visit.
 
     Each gets `visit` (its own) and `elsewhere`: per other visit, the height found at its
-    place and whether that counts as missing (None where that visit has no data there).
+    place, whether that counts as missing (`gone`) and whether the source is plainly still
+    there (`there`); both None where that visit has no data at the place.
     Also sets `width_ratio`: the width measure over that of the picture's steady stars.
     """
     visits = sorted(sources)
@@ -339,12 +357,13 @@ def come_and_go(sources: dict[int, list[dict]], maps: dict[int, dict[str, np.nda
                     continue
                 got = _sample(maps[m], s["x"], s["y"])
                 if got is None:
-                    s["elsewhere"][m] = {"height": None, "gone": None}
+                    s["elsewhere"][m] = {"height": None, "gone": None, "there": None}
                     continue
-                there, noise_there = got
-                gone = (there < GONE_SHARE * s["height"]
-                        and s["height"] - there >= GONE_SIGMA * math.hypot(s["noise"], noise_there))
-                s["elsewhere"][m] = {"height": there, "gone": bool(gone)}
+                found, noise_there = got
+                s["elsewhere"][m] = {
+                    "height": found,
+                    "gone": bool(found < GONE_SHARE * s["height"] and found < GONE_BELOW * noise_there),
+                    "there": bool(found >= THERE_SHARE * s["height"] and found >= THERE_SIGMA * noise_there)}
             seen = [e["gone"] for e in s["elsewhere"].values() if e["gone"] is not None]
             s["comes_and_goes"] = any(seen)
             if seen and not any(seen) and s["strength"] >= BRIGHT_STAR_SIGMA:
@@ -413,7 +432,8 @@ def mark_catalogued(members: list[dict], rows: list[dict], sigma_px: float, year
         s["catalogued"] = None
         if near.any():
             i = int(np.argmax(np.where(near, cflux, -1.0)))
-            s["catalogued"] = {"catalogue": "CatWISE2020", "separation_arcsec": round(float(np.hypot(east[i], north[i])), 1),
+            s["catalogued"] = {"catalogue": "CatWISE2020",
+                               "separation_arcsec": round(float(np.hypot(east[i], north[i])), 1),
                                "w1": rows[i]["w1"], "w2": rows[i]["w2"]}
 
 
@@ -462,11 +482,13 @@ def _judge(chosen: dict[int, dict], visits: list[dict], psf_arcsec: float, stren
     if (bright[hi] > FLUX_RATIO * bright[lo]
             and bright[hi] - bright[lo] > FLUX_SIGMA * math.hypot(bright_err[hi], bright_err[lo])):
         return None
-    # Missing wherever the fit says it has moved away.
+    if sum(1 for k in order if chosen[k]["strength"] >= DETECT_SIGMA) < 2:
+        return None
+    # Not still there in a visit in which the fit has moved the body well away.
     for k in order:
         for m, seen in chosen[k]["elsewhere"].items():
-            away = _separation(chosen[k]["ra"], chosen[k]["dec"], *places[m]) >= MIN_JUMP_ARCSEC
-            if away and seen["gone"] is False:
+            away = _separation(chosen[k]["ra"], chosen[k]["dec"], *places[m]) >= AWAY_ARCSEC
+            if away and seen["there"]:
                 return None
     # A visit left out of the link must be one that could not have shown the object.
     skipped = []
@@ -588,21 +610,32 @@ def in_view(distance_au: float, visits: list[dict], ra: float, dec: float, fov: 
     return float(np.prod(np.clip(1.0 - span / width, 0.0, 1.0)))
 
 
+def clear_share(maps: dict[int, dict[str, np.ndarray]]) -> float:
+    """Share of the picture where every visit has data and no more than CLEAR_NOISE times its
+    usual noise: the part the quoted limit holds for. The rest is edge, gaps, saturated stars
+    and the glow around bright ones, where only a brighter object would show."""
+    clear = None
+    for m in maps.values():
+        ok = np.isfinite(m["height"]) & (m["noise"] <= CLEAR_NOISE * float(np.nanmedian(m["noise"])))
+        clear = ok if clear is None else clear & ok
+    return float(clear.mean()) if clear is not None else 0.0
+
+
 def limit_table(visits: list[dict], noise_mjy: dict[int, float], ra: float, dec: float, fov: float,
-                psf_arcsec: float) -> list[dict]:
+                psf_arcsec: float, clear: float = 1.0) -> list[dict]:
     """For each distance: the faintest object the search would have found, and where it could look."""
     rows = []
     for d in DISTANCES_AU:
         plx = ARCSEC_PER_RADIAN / d
         jump = plx * max(float(np.hypot(*(parallax_factor(a["earth"], ra, dec) - parallax_factor(b["earth"], ra, dec))))
                          for a in visits for b in visits)
-        share = in_view(d, visits, ra, dec, fov)
+        share = in_view(d, visits, ra, dec, fov) * clear
         if jump < MIN_JUMP_ARCSEC or share < MIN_IN_VIEW:
             continue
-        needed = sorted(DETECT_SIGMA * noise_mjy[k] / _loss(plx, v, psf_arcsec) for k, v in enumerate(visits))
+        noise = sorted(noise_mjy[k] / _loss(plx, v, psf_arcsec) for k, v in enumerate(visits))
         rows.append({"distance_au": d, "jump_arcsec": round(jump, 1), "share_of_picture": round(share, 2),
-                     # Three visits must show it: the third most sensitive visit sets the limit.
-                     "faintest_mjy": round(needed[2], 3),
+                     # Three visits must show it: two at DETECT_SIGMA and a third at MEMBER_SIGMA.
+                     "faintest_mjy": round(max(DETECT_SIGMA * noise[1], MEMBER_SIGMA * noise[2]), 3),
                      "smear_arcsec": round(max(plx * v["smear"] for v in visits), 1)})
     return rows
 
@@ -636,11 +669,12 @@ def search_stacks(grid: WCS, n: int, images: dict[int, np.ndarray], items: dict[
     links = link(usable, visits, psf_arcsec, strength_at) if can_search else []
     chance = link(usable, visits, psf_arcsec, strength_at, reverse=True) if can_search else []
     noise_mjy = {k: flux_mjy(float(np.nanmedian(maps[k]["noise"])), sigma_px) for k in maps}
+    clear = clear_share(maps)
     return {"detector": detector, "visits": visits, "epochs": epochs, "maps": maps, "grid": grid, "n": n,
             "sigma_px": sigma_px, "psf_arcsec": psf_arcsec, "sources": sources, "members": members,
             "usable": usable, "links": links, "chance_links": chance, "can_search": can_search,
-            "noise_mjy": noise_mjy, "catalogue_answered": catalogue is not None,
-            "limit": limit_table(visits, noise_mjy, ra, dec, fov, psf_arcsec) if can_search else []}
+            "noise_mjy": noise_mjy, "catalogue_answered": catalogue is not None, "clear_share": clear,
+            "limit": limit_table(visits, noise_mjy, ra, dec, fov, psf_arcsec, clear) if can_search else []}
 
 
 def _planted_images(ra: float, dec: float, fov: float, detector: int, grid: WCS, n: int, stacks: dict[int, dict],
@@ -698,7 +732,7 @@ def _candidate(verdict: dict, field: dict, others: list[dict], truth: dict | Non
         positions.append({"epoch": field["epochs"][k] + 1,
                           "date": Time(field["visits"][k]["mjd"], format="mjd").iso[:10],
                           "ra": round(s["ra"], 6), "dec": round(s["dec"], 6),
-                          "x": round(s["x"], 2), "y": round(field["n"] - 1 - s["y"], 2),     # y from the top, as in the PNGs
+                          "x": round(s["x"], 2), "y": round(field["n"] - 1 - s["y"], 2),     # y from the top (PNG)
                           "times_noise": round(s["strength"], 1),
                           "flux_mjy": round(flux_mjy(s["height"], field["sigma_px"]), 3),
                           "misfit_arcsec": round(fit["misfit_arcsec"][sorted(verdict["members"]).index(k)], 2),
@@ -732,7 +766,8 @@ def _candidate(verdict: dict, field: dict, others: list[dict], truth: dict | Non
     if truth is not None:
         nearest = min(_separation(p["ra"], p["dec"], t["ra"], t["dec"])
                       for p in positions for t in truth["positions"] if t["epoch"] == p["epoch"])
-        out["is_planted_object"] = bool(truth["detector"] == field["detector"] and nearest <= training.FOUND_WITHIN_ARCSEC)
+        out["is_planted_object"] = bool(truth["detector"] == field["detector"]
+                                        and nearest <= training.FOUND_WITHIN_ARCSEC)
     return out
 
 
@@ -746,8 +781,13 @@ def _answer(candidates: list[dict], fields: list[dict], best_limit: list[dict], 
         if got:
             return (f"SIMULATION. The search found the planted object and puts it {got[0]['distance_au']:,} times as "
                     f"far from the Sun as the Earth is. It was planted at {truth['distance_au']:,.0f}.")
-        return ("SIMULATION. The search did not find the planted object. That happens when it is too faint in one "
-                "of the visits or too close to a star.")
+        seen = sorted((p["times_noise"] for p in truth["positions"] if p.get("times_noise") is not None), reverse=True)
+        why = ""
+        if len(seen) >= 3 and (seen[1] < DETECT_SIGMA or seen[2] < MEMBER_SIGMA):
+            why = (f" It stands {', '.join(str(v) for v in seen)} times above the noise in the visits; the search "
+                   f"needs {DETECT_SIGMA:.0f} in two of them and {MEMBER_SIGMA:.0f} in a third.")
+        return ("SIMULATION. The search did not find the planted object." + (why or " That happens when it lies "
+                "in the glow of a star or on a catalogued source."))
     if candidates:
         c = candidates[0]
         return (f"{len(candidates)} candidate(s). The strongest fits an object about {c['distance_au']:,} times as far "
@@ -807,11 +847,18 @@ def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int
         images = {ep: st["image"] for ep, st in stacks.items()}
         if planted is not None and planted["detector"] == det:
             if len(stacks) < 2:
-                raise spherex.BadRequest("A planted object needs at least two visits of this position in this detector.")
+                raise spherex.BadRequest("A planted object needs at least two visits of this position in this "
+                                         "detector.")
             images, truth = _planted_images(ra, dec, fov, det, grid, n, stacks, items, planted["level"],
                                             int(planted["seed"]))
         fields.append(search_stacks(grid, n, images, items, det, ra, dec, fov, catalogue=catalogue,
                                     as_planted=simulated))
+        if truth is not None and truth["detector"] == det:
+            # How strongly each visit shows the planted object at its true place: why it was or was not found.
+            for k, spot in enumerate(truth["positions"]):
+                x, y = grid.all_world2pix(spot["ra"], spot["dec"], 0)
+                got = _sample(fields[-1]["maps"][k], float(x), float(y))
+                spot["times_noise"] = round(got[0] / got[1], 1) if got and got[1] > 0 else None
     if not fields:
         raise spherex.BadRequest("SPHEREx has no images of this position in the detectors asked for.")
 
@@ -852,14 +899,14 @@ def distant_search(ra: float, dec: float, fov: float = 0.2, detectors: tuple[int
                         "date_end": Time(v["mjd_end"], format="mjd").iso[:10], "n_exposures": v["n_exposures"],
                         "sources": len(f["sources"][k]),
                         "come_and_go": sum(1 for s in f["members"] if s["visit"] == k),
-                        "faintest_mjy": round(DETECT_SIGMA * f["noise_mjy"][k], 3),
+                        "faintest_mjy": round(DETECT_SIGMA * f["noise_mjy"][k], 3),      # 5 times this visit's noise
                         "smear_per_arcsec_of_parallax": round(v["smear"], 4)}
                        for k, v in enumerate(f["visits"])],
             "come_and_go": len(f["members"]),
             "set_aside_catalogued": sum(1 for s in f["members"] if s["catalogued"]),
             "set_aside_not_point_like": sum(1 for s in f["members"] if not s["point_like"] and not s["catalogued"]),
             "linked_from": len(f["usable"]), "links": len(f["links"]), "chance_links": len(f["chance_links"]),
-            "limit": f["limit"]} for f in fields],
+            "clear_share": round(f["clear_share"], 2), "limit": f["limit"]} for f in fields],
         "catalogue": {"name": "CatWISE2020", "asked": catalogues, "answered": catalogue is not None,
                       "sources_in_field": len(catalogue) if catalogue is not None else None, "error": catalogue_error},
         "failures": failures, "limits": LIMITS_TEXT,

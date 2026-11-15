@@ -104,7 +104,8 @@ def test_fit_recovers_the_distance_from_three_places(distance_au):
 
 
 def test_fit_refuses_visits_all_on_one_side_of_the_orbit():
-    items = {ep: [{"mjd": Time(d).mjd, "weight": 1.0}] for ep, d in enumerate(("2025-09-20", "2025-09-21", "2025-09-22"))}
+    days = ("2025-09-20", "2025-09-21", "2025-09-22")
+    items = {ep: [{"mjd": Time(d).mjd, "weight": 1.0}] for ep, d in enumerate(days)}
     visits = distant.visits_from(items, RA, DEC)
     body = _body(2000.0)
     places = np.array([distant.place_in_visit(body, v) for v in visits])
@@ -190,3 +191,83 @@ def test_in_view_falls_to_nothing_for_a_near_object():
     visits = distant.visits_from(_items(), RA, DEC)
     assert distant.in_view(200.0, visits, RA, DEC, FOV) == 0.0
     assert distant.in_view(30000.0, visits, RA, DEC, FOV) > 0.9
+
+
+# ---------------------------------------------------------------------------
+# On real SPHEREx images (the nine Barnard's Star cutouts kept in the repository)
+# ---------------------------------------------------------------------------
+
+def _wait(client, params: dict) -> dict:
+    import time
+    deadline = time.time() + 120
+    body: dict = {}
+    while time.time() < deadline:
+        body = client.get("/api/distant", params=params).json()
+        if body["status"] in ("done", "failed"):
+            break
+        time.sleep(0.3)
+    return body
+
+
+def test_the_endpoint_searches_real_images_and_reports_a_limit(client, barnard, monkeypatch):
+    from backend import spherex
+    monkeypatch.setattr(spherex, "find_exposures", lambda ra, dec: barnard.exposures_on_disk)
+    body = _wait(client, {"ra": barnard.ra, "dec": barnard.dec, "fov": 0.1, "detectors": "5"})
+    assert body["status"] == "done", body.get("error")
+    assert body["simulation"] is False
+    result = body["result"]
+    assert result["simulation"] is False and "planted" not in result
+    assert result["status"] in ("nothing_found", "candidates")
+    assert [v["n_exposures"] for v in result["per_detector"][0]["visits"]] == [3, 3, 3]
+    # The catalogue could not be asked (no network in tests), and the answer says so.
+    assert result["catalogue"]["answered"] is False
+    # A 0.1 degree picture is 360 arcsec wide: the 412 arcsec jump of an object at 1,000 AU leaves it.
+    assert result["limit"] and result["limit"][0]["distance_au"] > 1000
+    assert result["limit"][0]["share_of_picture"] < result["limit"][-1]["share_of_picture"]
+    assert all(row["faintest_mjy"] > 0 for row in result["limit"])
+    assert "candidate" not in result["answer"].lower() or result["candidates"]
+
+
+def test_planted_practice_objects_are_found_when_bright_enough_and_always_labelled(client, barnard, monkeypatch):
+    from backend import spherex
+    monkeypatch.setattr(spherex, "find_exposures", lambda ra, dec: barnard.exposures_on_disk)
+    found_seed = None
+    for seed in range(1, 9):
+        result = distant.distant_search(barnard.ra, barnard.dec, 0.1, (5,), catalogues=False,
+                                        planted={"level": "easy", "seed": seed, "detector": 5})
+        assert result["simulation"] is True and result["notice"] == training.NOTICE
+        assert result["answer"].startswith("SIMULATION")
+        truth = result["planted"]
+        # The same object the practice screen shows for this level and seed.
+        shown = training.build_training(barnard.ra, barnard.dec, 0.1, 5, "normal", "easy", seed)["planted"]
+        assert truth["distance_au"] == pytest.approx(shown["distance_au"])
+        for mine, theirs in zip(truth["positions"], shown["positions"], strict=True):
+            assert (mine["ra"], mine["dec"]) == pytest.approx((theirs["ra"], theirs["dec"]), abs=1e-9)
+        hits = [c for c in result["candidates"] if c.get("is_planted_object")]
+        seen = sorted((p["times_noise"] for p in truth["positions"]), reverse=True)
+        if seen[1] >= distant.DETECT_SIGMA + 0.5 and seen[2] >= distant.MEMBER_SIGMA + 0.5:
+            # Bright enough in three visits: it must be found, with its distance.
+            assert len(hits) == 1, (seed, seen, result["answer"])
+        if hits:
+            assert hits[0]["distance_au"] == pytest.approx(truth["distance_au"], rel=0.1)
+            assert "found the planted object" in result["answer"]
+            found_seed = found_seed or seed
+        else:
+            assert "did not find" in result["answer"]
+    assert found_seed is not None, "none of eight easy practice objects was found"
+
+    # The same through the endpoint, and a real search of the field never sees the planted object.
+    params = {"ra": barnard.ra, "dec": barnard.dec, "fov": 0.1, "detectors": "5"}
+    body = _wait(client, {**params, "plant": "easy", "seed": found_seed, "plant_detector": 5})
+    assert body["status"] == "done", body.get("error")
+    assert body["simulation"] is True and body["result"]["simulation"] is True
+    assert any(c.get("is_planted_object") for c in body["result"]["candidates"])
+    real = _wait(client, params)["result"]
+    assert real["simulation"] is False and "planted" not in real
+    assert not any("is_planted_object" in c for c in real["candidates"])
+
+
+def test_a_bad_plant_level_is_explained(client):
+    response = client.get("/api/distant", params={"ra": 10.0, "dec": 10.0, "plant": "impossible"})
+    assert response.status_code == 400
+    assert "easy" in response.json()["detail"]
