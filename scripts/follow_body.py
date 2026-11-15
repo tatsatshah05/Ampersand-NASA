@@ -99,7 +99,9 @@ def table(res: dict) -> str:
     return "\n".join(lines)
 
 
-def _panel(file: Path, ra: float, dec: float, out: Path, label: str, lim: tuple[float, float] | None) -> Image.Image:
+def _panel(
+    file: Path, ra: float, dec: float, out: Path, label: str, lim: tuple[float, float] | None
+) -> tuple[Image.Image, tuple[float, float]]:
     """One 120 arcsec single-exposure picture, with a caption."""
     wide_n = int(round(smallbodies.PICTURE_ARCSEC * 5 / pipeline.GRID_ARCSEC))
     wide, wn = pipeline.make_grid(ra, dec, wide_n * pipeline.GRID_ARCSEC / 3600.0)
@@ -112,13 +114,13 @@ def _panel(file: Path, ra: float, dec: float, out: Path, label: str, lim: tuple[
     pipeline.to_png({"image": item["data"], "saturated": item["saturated"]}, use, out)
     im = Image.open(out).convert("RGB")
     im = im.resize((im.width * 2, im.height * 2), Image.NEAREST) if im.width < 200 else im
-    return stack_vertical([im, caption_block(im.width, [label], size=11)], pad=2)
+    return stack_vertical([im, caption_block(im.width, [label], size=11)], pad=2), use
 
 
 def strip(res: dict, outdir: Path, slug: str, n: int) -> Path | None:
     """Pictures: top row, the body's own exposures from n different dates; bottom row, the same sky place in an
-    exposure of another day (no body there). Each pair shares one stretch, set from the body's exposure's
-    surroundings."""
+    exposure of another day (no body there). Both pictures of a pair use the same brightness stretch,
+    set from the sky round the body in its own exposure."""
     pts = [p for p in res["points"] if p["status"] in ("ok", "star_in_the_way") and p.get("other_files")]
     days = {}
     for p in pts:
@@ -131,7 +133,7 @@ def strip(res: dict, outdir: Path, slug: str, n: int) -> Path | None:
     tmp.mkdir(parents=True, exist_ok=True)
     for i, p in enumerate(chosen):
         try:
-            top = _panel(
+            top, lim = _panel(
                 Path(p["file"]),
                 p["ra"],
                 p["dec"],
@@ -141,13 +143,13 @@ def strip(res: dict, outdir: Path, slug: str, n: int) -> Path | None:
             )
             of = next(f for f in p["other_files"] if Path(f).exists())
             # the same stretch for both: take the limits from the body's own picture's surroundings
-            bottom = _panel(
+            bottom, _ = _panel(
                 Path(of),
                 p["ra"],
                 p["dec"],
                 tmp / f"b{i}.png",
                 f"same place, other day ({Path(of).name.split('_')[0][:8]})",
-                None,
+                lim,
             )
         except Exception as e:  # noqa: BLE001
             print(f"  no picture for {p['time']}: {e}")
