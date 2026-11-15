@@ -210,7 +210,14 @@ def positions_at(name: str, mjds: list[float]) -> list[dict]:
     command = horizons_command(name)
     for s in range(0, len(mjds), HORIZONS_BATCH):
         chunk = mjds[s : s + HORIZONS_BATCH]
-        rows = _table(command, {"TLIST": " ".join(f"'{m + 2400000.5:.6f}'" for m in chunk)})
+        if len(set(chunk)) == 1:
+            # Horizons refuses a list in which every time is the same (and reads a list of one as a start date):
+            # ask for the time and one a second later, and use the first answer for all
+            asked = [chunk[0], chunk[0] + 1.0 / 86400.0]
+            first = _table(command, {"TLIST": " ".join(f"'{m + 2400000.5:.6f}'" for m in asked)})[0]
+            rows = [dict(first) for _ in chunk]
+        else:
+            rows = _table(command, {"TLIST": " ".join(f"'{m + 2400000.5:.6f}'" for m in chunk)})
         if len(rows) != len(chunk):
             raise FollowError(f"Horizons gave {len(rows)} positions for {len(chunk)} times")
         for m, r in zip(chunk, rows, strict=True):
