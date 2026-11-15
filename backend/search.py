@@ -139,6 +139,11 @@ FIT_HALF_PX = 6                   # the Gaussian is fitted in a 13 x 13 pixel (2
 FIT_MAX_SHIFT_PX = 4.0            # the fitted centre may not wander further than this (8 arcsec) from the peak
 DEFAULT_STAR_WIDTH_PX = 2.3       # Gaussian sigma of a star in the stacks, used when a field has too few stars
 MOVER_SIGMA = 5.0
+# A real motion is the same at every wavelength. Detectors that disagree on it by this much (as a
+# Gaussian equivalent) mean the centre shifted for another reason, usually a blend with a star that
+# changed brightness. Barnard's Star, WISE 0855 and Epsilon Indi B agree to 0.0, 0.6 and 0.4; the
+# blend in NGC 7129 that prompted this rule disagrees by 19.4 (8.3 arcsec/yr in detector 1, 0.4 in 4).
+COLOUR_DISAGREE_SIGMA = 5.0
 COMBINE_SIGMA = 3.0               # weakest single-detector evidence that counts towards a combined candidate
 MIN_REFERENCE_STARS = 8           # fewer than this: no registration and no error scaling for the field
 
@@ -2293,6 +2298,18 @@ def search_detectors(ra: float, dec: float, fov: float = 0.1, detectors: tuple[i
                 agreement = {"pm_east": round(me, 3), "pm_north": round(mn, 3),
                              "pm_err": round(float(w.sum() ** -0.5), 3), "n_detectors": len(seen),
                              "disagreement_sigma": round(apart, 1)}
+                if apart >= COLOUR_DISAGREE_SIGMA:
+                    rates = ", ".join(f"{math.hypot(m['pm_east'], m['pm_north']):.1f} in detector {d}"
+                                      for d, m in sorted(usable.items())
+                                      if m["sigma"] >= COMBINE_SIGMA and m.get("pm_err"))
+                    rejected.append({
+                        "detector": lead["detector"], "id": lead["id"], "kind": lead["kind"], "sigma": lead["sigma"],
+                        "ra": lead["ra"], "dec": lead["dec"], "flags": lead["flags"], "figure": lead.get("figure"),
+                        "reasons": [f"its motion is not the same in every colour ({rates} arcsec a year), far beyond "
+                                    "the measuring errors. A real motion is the same at every wavelength; a centre "
+                                    "that shifts by a different amount in each colour is a blend with a star that "
+                                    "changed brightness"]})
+                    continue
         objects.append({
             "kind": lead["kind"], "ra": lead["ra"], "dec": lead["dec"], "label": lead["label"],
             "category": lead["category"], "summary": lead["catalogue"].get("summary"),

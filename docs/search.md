@@ -46,6 +46,16 @@ Each candidate ends with a verdict: **rejected** (it has an artefact's signature
 are written out and it never becomes a reported object), **caution** (it has flags a person must
 look at), or **clean**.
 
+**Added on the evening of 14 November, after a second hunt: a mover must move the same way in
+every colour.** In NGC 7129 the search graded a "mover" clean although it moved 8.3 arcsec a year
+in detector 1, 1.3 in detector 2 and 0.4 in detectors 3 and 4. A real motion is the same at every
+wavelength, so this is a blend: the star there is a listed variable, and when one of two close
+stars changes brightness their shared centre shifts, most at the wavelengths where it changed
+most. Movers whose detectors disagree by 5 or more (as a Gaussian equivalent) are now rejected.
+The rule was written after seeing that case. It was then checked on the three real movers,
+which it must not reject: their detectors disagree by 0.0 (Barnard's Star, two detectors), 0.6
+(WISE 0855, two) and 0.4 (Epsilon Indi B, five), against 19.4 for the blend.
+
 ## Recovery test, run blind
 
 The search was given only each field's centre (where the cached cutouts are) and a 0.1 degree
