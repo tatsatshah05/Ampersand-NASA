@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import type { Frame } from './api'
-import { blendSentences, circleStarsSentence, detectionSentence, isMarginal, measuredSentence, positionSentence } from './detection'
+import {
+  blendNotes,
+  blendSentences,
+  circleStarsSentence,
+  coreNotes,
+  detectionNotes,
+  detectionSentence,
+  detectionShort,
+  isMarginal,
+  measuredSentence,
+  notFoundSentence,
+  positionSentence,
+} from './detection'
 
 // A frame with only the fields every response has; the honesty fields are added per test.
 // The numbers here are made up for the test and never shown to a visitor.
@@ -139,5 +151,58 @@ describe('measuredSentence and circleStarsSentence', () => {
   it('is silent with no stars or in an older response', () => {
     expect(circleStarsSentence({ known: true, stars: [] })).toBeNull()
     expect(circleStarsSentence(undefined)).toBeNull()
+  })
+})
+
+// The words for the table of every visit: a short word per row, and notes said once.
+describe('detectionShort, for a row', () => {
+  it('says the class and the number, with ">1000" for a very bright star', () => {
+    expect(detectionShort(frame({ detection: 'clear', detection_sigma: 95495 }))).toBe('clear, >1000×')
+    expect(detectionShort(frame({ detection: 'clear', detection_sigma: 14.64 }))).toBe('clear, 15×')
+    expect(detectionShort(frame({ detection: 'marginal', detection_sigma: 3.39 }))).toBe('marginal, 3.4×')
+    expect(detectionShort(frame({ detection: 'none', detection_sigma: 2.1 }))).toBe('not seen, 2.1×')
+    expect(detectionShort(frame({ detection: 'none', detection_sigma: -0.8 }))).toBe('not seen')
+    expect(detectionShort(frame({ detection: 'saturated', detection_sigma: null }))).toBe('saturated')
+    expect(detectionShort(frame({}))).toBeNull()
+  })
+})
+
+describe('notes said once for the visits they apply to', () => {
+  const at = (epoch: number, extra: Partial<Frame>) => frame({ epoch, ...extra })
+  it('one note for the overexposed cores that share an error', () => {
+    const fs = [1, 2, 3].map((n) => at(n, { centroid: centroid({ saturated_core: n < 3, err_arcsec: n < 3 ? 1 : 0.02 }) }))
+    expect(coreNotes(fs)).toEqual(['The core is overexposed in visits 1 and 2, so each position is good to about 1″, not the much smaller error of the fit.'])
+    expect(coreNotes([at(1, { centroid: centroid({}) })])).toEqual([])
+  })
+  it('one note per neighbouring star, with the visits and its share', () => {
+    const star = (share: number | null, d = 4.37) => [{ source_id: '7', gmag: 16.31, distance_arcsec: d, light_share: share }]
+    expect(blendNotes([at(1, {}), at(2, {}), at(3, { blend: star(0.25) })])).toEqual([
+      'Visit 3: a neighbouring star (Gaia G 16.3, 4.4″ away) supplies about a quarter of the light.',
+    ])
+    expect(blendNotes([at(1, { blend: star(null, 1.66) }), at(2, { blend: star(null, 1.64) })])).toEqual([
+      'Visits 1 and 2: a star 1.6″ to 1.7″ away (Gaia G 16.3) is too close to separate from the target, so the position and brightness include its light.',
+    ])
+  })
+  it('marginal, not seen and unknown, each once', () => {
+    const fs = [at(1, { detection: 'marginal' }), at(2, { detection: 'none' }), at(3, { detection: 'unknown' }), at(4, { detection: 'clear' })]
+    expect(detectionNotes(fs)).toEqual([
+      'Only a marginal detection in visit 1 (3 to 5 times the background scatter; 5 or more is clear): treat it with care.',
+      'Not detected in visit 2: at least 3 times the background scatter is needed.',
+      'How strongly it is detected could not be worked out in visit 3: too few empty places to compare with.',
+    ])
+  })
+})
+
+describe('notFoundSentence', () => {
+  it("gives the backend's reason and what was found instead", () => {
+    const reason = 'The nearest source is 7.2 arcsec from the predicted position, too far to be the target.'
+    const f = frame({
+      centroid: null,
+      centroid_reason: reason,
+      nearest_source: { ra: 0, dec: 0, x: 1, y: 1, offset_arcsec: { east: 7, north: 1, total: 7.2 }, detection: 'clear', detection_sigma: 12 },
+    })
+    expect(notFoundSentence(f)).toBe(`No position could be measured in this frame. ${reason} That source: detected clearly, 12 times the background scatter.`)
+    expect(notFoundSentence(frame({ centroid: null }))).toBe('No position could be measured in this frame.')
+    expect(notFoundSentence(frame({ centroid: centroid({}) }))).toBeNull()
   })
 })

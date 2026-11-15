@@ -1,0 +1,164 @@
+{
+ "key": "54b4f11c94d85021",
+ "ra": 269.446267,
+ "dec": 4.768222,
+ "fov": 0.1,
+ "detector": 5,
+ "mode": "difference",
+ "size_px": 180,
+ "pixel_arcsec": 2.0,
+ "target": {
+  "origin": "gaia_nearest",
+  "ref_epoch": 2016.0,
+  "source_id": "4472832130942575872",
+  "ra": 269.44850252543836,
+  "dec": 4.739420051112412,
+  "pmra": -801.5509783684709,
+  "pmdec": 10362.394206546573,
+  "parallax": 546.975939730948,
+  "gmag": 8.193974494934082
+ },
+ "gaia_error": null,
+ "reference": "first",
+ "reference_frame": {
+  "epoch": 1,
+  "date_start": "2025-08-21",
+  "date_end": "2025-08-30",
+  "mjd_mean": 60913.56460331517,
+  "date_mean": "2025-08-26",
+  "n_exposures": 18,
+  "wavelength_um": [
+   3.82170033454895,
+   4.407001495361328
+  ],
+  "flagged_fraction": 0.018437213039485766,
+  "saturated_pixels": 0,
+  "photometry_saturated_exposures": 18,
+  "rejected_readings": 63,
+  "centroid": {
+   "ra": 269.44661281367496,
+   "dec": 4.7672241796355,
+   "x": 88.87968876153093,
+   "y": 91.29607650068623,
+   "err_arcsec": 1.0,
+   "err_arcsec_fit": 0.03650115108464817,
+   "saturated_core": true,
+   "snr": 61.82704560501304,
+   "fwhm_arcsec": 10.809805622644962,
+   "blended": false
+  },
+  "centroid_offset_arcsec": {
+   "east": 1.449565500394943,
+   "north": -0.032179344123761666,
+   "total": 1.44992263590975
+  },
+  "centroid_reason": null,
+  "nearest_source": null,
+  "predicted": {
+   "ra": 269.4462087587868,
+   "dec": 4.767233118342201,
+   "x": 89.60447151523722,
+   "y": 91.27998697979709
+  },
+  "detection_sigma": 95494.92,
+  "detection": "clear",
+  "blend": []
+ },
+ "failures": [],
+ "frames": [
+  {
+   "epoch": 2,
+   "reference_epoch": 1,
+   "date_start": "2026-03-15",
+   "date_end": "2026-03-22",
+   "mjd_mean": 61116.75652388904,
+   "date_mean": "2026-03-17",
+   "n_exposures": 19,
+   "wavelength_um": [
+    3.8105132579803467,
+    4.407315731048584
+   ],
+   "flagged_fraction": 0.022652401674773493,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 19,
+   "rejected_readings": 65,
+   "centroid": {
+    "ra": 269.4463547366135,
+    "dec": 4.768862748759778,
+    "x": 89.34262080562989,
+    "y": 88.34665222231844,
+    "err_arcsec": 1.0,
+    "err_arcsec_fit": 0.025883548494170593,
+    "saturated_core": true,
+    "snr": 87.18890874584704,
+    "fwhm_arcsec": 10.66679924476511,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.06889836368233226,
+    "north": 0.23308746631052202,
+    "total": 0.24305709508089177
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 269.4463739415308,
+    "dec": 4.7687980022413585,
+    "x": 89.30817160735612,
+    "y": 88.46319595061945
+   },
+   "detection_sigma": 113704.96,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/54b4f11c94d85021/diff2.png",
+   "difference_valid_fraction": 1.0
+  },
+  {
+   "epoch": 3,
+   "reference_epoch": 1,
+   "date_start": "2026-08-18",
+   "date_end": "2026-09-22",
+   "mjd_mean": 61274.425580543095,
+   "date_mean": "2026-08-22",
+   "n_exposures": 25,
+   "wavelength_um": [
+    3.803985595703125,
+    4.429477214813232
+   ],
+   "flagged_fraction": 0.023610787263007135,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 23,
+   "rejected_readings": 292,
+   "centroid": {
+    "ra": 269.4459961371933,
+    "dec": 4.770047214872051,
+    "x": 89.98586439657427,
+    "y": 86.21461313371141,
+    "err_arcsec": 1.0,
+    "err_arcsec_fit": 0.02916461569964925,
+    "saturated_core": true,
+    "snr": 77.38001317025589,
+    "fwhm_arcsec": 11.134532866595912,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": 0.011456605666543471,
+    "north": -0.12412031690445247,
+    "total": 0.124647931719144
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 269.4459929437421,
+    "dec": 4.7700816927378575,
+    "x": 89.99159267489499,
+    "y": 86.15255297288806
+   },
+   "detection_sigma": 105415.39,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/54b4f11c94d85021/diff3.png",
+   "difference_valid_fraction": 1.0
+  }
+ ]
+}

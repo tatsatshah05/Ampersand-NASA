@@ -1,0 +1,170 @@
+{
+ "key": "ad4901ed29dcb4c4",
+ "ra": 133.759765,
+ "dec": -7.242182,
+ "fov": 0.1,
+ "detector": 6,
+ "mode": "normal",
+ "size_px": 180,
+ "pixel_arcsec": 2.0,
+ "target": {
+  "source_id": null,
+  "ra": 133.759765,
+  "dec": -7.242182,
+  "pmra": -8123.7,
+  "pmdec": 673.2,
+  "parallax": 439.0,
+  "gmag": null,
+  "ref_epoch": 2026.0,
+  "origin": "request"
+ },
+ "gaia_error": null,
+ "failures": [],
+ "frames": [
+  {
+   "epoch": 1,
+   "date_start": "2025-05-05",
+   "date_end": "2025-05-05",
+   "mjd_mean": 60800.75232653477,
+   "date_mean": "2025-05-05",
+   "n_exposures": 3,
+   "wavelength_um": [
+    4.859958171844482,
+    5.003282070159912
+   ],
+   "flagged_fraction": 0.01669889453980363,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 0,
+   "centroid": {
+    "ra": 133.76094623004437,
+    "dec": -7.242143051462703,
+    "x": 87.39074833279501,
+    "y": 89.42989537378182,
+    "err_arcsec": 0.45079811673725917,
+    "err_arcsec_fit": 0.45079811673725917,
+    "saturated_core": false,
+    "snr": 5.006139664338205,
+    "fwhm_arcsec": 9.91348539505949,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.6971766740738287,
+    "north": 0.4593369400456737,
+    "total": 0.8348926514008662
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 133.7611414476571,
+    "dec": -7.24227064505716,
+    "x": 87.04216064174709,
+    "y": 89.65956482473067
+   },
+   "detection_sigma": 3.39,
+   "detection": "marginal",
+   "blend": [],
+   "image": "/frames/ad4901ed29dcb4c4/epoch1.png"
+  },
+  {
+   "epoch": 2,
+   "date_start": "2025-11-10",
+   "date_end": "2025-12-13",
+   "mjd_mean": 60996.743351328885,
+   "date_mean": "2025-11-17",
+   "n_exposures": 21,
+   "wavelength_um": [
+    4.417682647705078,
+    4.982087135314941
+   ],
+   "flagged_fraction": 0.019261058299067702,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 197,
+   "centroid": {
+    "ra": 133.75982129495708,
+    "dec": -7.2420993681768095,
+    "x": 89.39947746066582,
+    "y": 89.35126272446296,
+    "err_arcsec": 0.12137713399384303,
+    "err_arcsec_fit": 0.12137713399384303,
+    "saturated_core": false,
+    "snr": 18.592980259004047,
+    "fwhm_arcsec": 12.958625231841133,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": -1.1855885416033807,
+    "north": 0.5270659942507194,
+    "total": 1.2974662817494451
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 133.76015327357283,
+    "dec": -7.242245775397435,
+    "x": 88.80668331874858,
+    "y": 89.61479601153508
+   },
+   "detection_sigma": 14.64,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/ad4901ed29dcb4c4/epoch2.png"
+  },
+  {
+   "epoch": 3,
+   "date_start": "2026-04-21",
+   "date_end": "2026-05-11",
+   "mjd_mean": 61156.0970693502,
+   "date_mean": "2026-04-26",
+   "n_exposures": 21,
+   "wavelength_um": [
+    4.423742294311523,
+    4.967403888702393
+   ],
+   "flagged_fraction": 0.021217918713493895,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 559,
+   "centroid": {
+    "ra": 133.75877189360153,
+    "dec": -7.241841395099521,
+    "x": 91.2733317384207,
+    "y": 88.88691311644345,
+    "err_arcsec": 0.08238505831402532,
+    "err_arcsec_fit": 0.08238505831402532,
+    "saturated_core": false,
+    "snr": 27.392810993069833,
+    "fwhm_arcsec": 9.915089316621051,
+    "blended": true
+   },
+   "centroid_offset_arcsec": {
+    "east": -0.5619969964870389,
+    "north": 0.9217045065355478,
+    "total": 1.0795275917865141
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 133.7589292592426,
+    "dec": -7.242097424129114,
+    "x": 90.99233231290982,
+    "y": 89.3477648044514
+   },
+   "detection_sigma": 11.15,
+   "detection": "clear",
+   "blend": [
+    {
+     "source_id": "5756956644387831296",
+     "gmag": 16.31,
+     "distance_arcsec": 4.37,
+     "east_arcsec": -2.73,
+     "north_arcsec": 3.41,
+     "flux_mjy": 0.1653,
+     "light_share": 0.25
+    }
+   ],
+   "image": "/frames/ad4901ed29dcb4c4/epoch3.png"
+  }
+ ]
+}

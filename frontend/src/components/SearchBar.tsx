@@ -62,7 +62,7 @@ const PRESETS: readonly Preset[] = [
   { name: 'Epsilon Indi B', about: 'A pair of brown dwarfs beside a bright star' },
   {
     name: 'WISE 0855',
-    about: 'A very cold brown dwarf that only the longest-wavelength detector (6) can see',
+    about: 'A very cold brown dwarf that only the longest infrared colour can see',
     det: 6,
     also: ['WISE 0855-0714'],
   },

@@ -2,8 +2,9 @@
 //   - an arrow showing which way and how far Gaia says the target moves in one year,
 //   - a small "+" at the position Gaia predicts for each frame's date,
 //   - a circle at the position the backend measured in the current frame.
-// The readout below the image compares measured and predicted shifts since the first frame.
-import { NATIVE_PIXEL_ARCSEC, skyOffsetArcsec, type Frame, type GaiaStar } from '../api'
+// The readout in the Catalogue notes says what those marks are; the table of visits compares
+// measured and predicted shifts for every visit.
+import { NATIVE_PIXEL_ARCSEC, type Frame, type GaiaStar } from '../api'
 
 interface OverlayProps {
   frames: Frame[]
@@ -74,21 +75,18 @@ export function GaiaOverlay({ frames, current, sizePx, pixelArcsec, target }: Ov
   )
 }
 
-function describe(east: number, north: number) {
-  const ns = `${Math.abs(north).toFixed(1)}″ ${north >= 0 ? 'north' : 'south'}`
-  const ew = `${Math.abs(east).toFixed(1)}″ ${east >= 0 ? 'east' : 'west'}`
-  return `${ns}, ${ew}`
-}
-
 interface ReadoutProps {
-  frames: Frame[]
-  current: number
   target: GaiaStar | null
   gaiaError?: string | null
   pixelArcsec?: number // the picture's pixel size; the SPHEREx pixel when not given
 }
 
-export function GaiaReadout({ frames, current, target, gaiaError, pixelArcsec }: ReadoutProps) {
+/**
+ * What the Gaia marks on the picture are: whose motion and how fast, or why there is none.
+ * The same for every visit (the measured-against-predicted comparison of each visit is in
+ * the table of visits), so it never changes while the visits play.
+ */
+export function GaiaReadout({ target, gaiaError, pixelArcsec }: ReadoutProps) {
   if (!target) {
     return (
       <p className="readout">
@@ -108,46 +106,18 @@ export function GaiaReadout({ frames, current, target, gaiaError, pixelArcsec }:
   }
   const pmTotal = Math.hypot(target.pmra, target.pmdec) / 1000
   // A target described by the request (a motion from /api/resolve) has no Gaia identifier.
-  const who = target.source_id ? 'Gaia' : 'the motion given for this object'
-  const f0 = frames[0]
-  const f = frames[current]
-  const header = (
-    <p className="readout">
-      <span className="key gaia">→</span> {target.source_id ? `Gaia DR3 ${target.source_id}` : 'The motion given for this object'}:
-      moves {pmTotal.toFixed(2)}″ per year{' '}
-      {yearMotionPx(target, pixelArcsec ?? NATIVE_PIXEL_ARCSEC) < MIN_ARROW_IMAGE_PX
-        ? '(too small to draw as an arrow).'
-        : '(arrow shows one year).'}
-    </p>
-  )
-  if (current === 0) {
-    return (
-      <>
-        {header}
-        <p className="readout">This is the first frame. Step forward to compare the measured shift with {who}.</p>
-      </>
-    )
-  }
-  if (!f0?.centroid || !f?.centroid || !f0.predicted || !f.predicted) {
-    return (
-      <>
-        {header}
-        <p className="readout">The star could not be measured in frame 1 or this frame, so no comparison is shown.</p>
-      </>
-    )
-  }
-  const m = skyOffsetArcsec(f0.centroid, f.centroid)
-  const p = skyOffsetArcsec(f0.predicted, f.predicted)
-  const diff = Math.hypot(m.east - p.east, m.north - p.north)
   return (
     <>
-      {header}
       <p className="readout">
-        Since frame 1: <span className="key measured">○</span> measured shift {describe(m.east, m.north)}.{' '}
-        <span className="key gaia">+</span> {who} predicts {describe(p.east, p.north)}.
+        <span className="key gaia">→</span> {target.source_id ? `Gaia DR3 ${target.source_id}` : 'The motion given for this object'}:
+        moves {pmTotal.toFixed(2)}″ per year{' '}
+        {yearMotionPx(target, pixelArcsec ?? NATIVE_PIXEL_ARCSEC) < MIN_ARROW_IMAGE_PX
+          ? '(too small to draw as an arrow).'
+          : '(arrow shows one year).'}
       </p>
       <p className="readout">
-        They differ by {diff.toFixed(1)}″, which is {(diff / NATIVE_PIXEL_ARCSEC).toFixed(2)} of a SPHEREx pixel.
+        <span className="key gaia">+</span> marks where that motion puts it on each visit's middle date; the table of
+        visits compares those places with the measured ones.
       </p>
     </>
   )

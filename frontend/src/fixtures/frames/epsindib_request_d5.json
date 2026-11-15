@@ -1,0 +1,205 @@
+{
+ "key": "09c48080e3bcf763",
+ "ra": 331.096653,
+ "dec": -56.800663,
+ "fov": 0.1,
+ "detector": 5,
+ "mode": "normal",
+ "size_px": 180,
+ "pixel_arcsec": 2.0,
+ "target": {
+  "source_id": null,
+  "ra": 331.096653,
+  "dec": -56.800663,
+  "pmra": 3981.97666296105,
+  "pmdec": -2466.8318147663504,
+  "parallax": 270.6580324694526,
+  "gmag": null,
+  "ref_epoch": 2026.0,
+  "origin": "request"
+ },
+ "gaia_error": null,
+ "failures": [],
+ "frames": [
+  {
+   "epoch": 1,
+   "date_start": "2025-04-24",
+   "date_end": "2025-06-07",
+   "mjd_mean": 60810.37860307022,
+   "date_mean": "2025-05-15",
+   "n_exposures": 31,
+   "wavelength_um": [
+    3.8291738033294678,
+    4.423807144165039
+   ],
+   "flagged_fraction": 0.06648159976318287,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 2,
+   "rejected_readings": 96,
+   "centroid": {
+    "ra": 331.09562486672513,
+    "dec": -56.80034767709874,
+    "x": 90.51333294950467,
+    "y": 88.93242638545361,
+    "err_arcsec": 0.01507360944217301,
+    "err_arcsec_fit": 0.01507360944217301,
+    "saturated_core": false,
+    "snr": 149.71585582296336,
+    "fwhm_arcsec": 10.131265028712344,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": 0.23013723987224968,
+    "north": -0.5055365684597746,
+    "total": 0.5554551027995888
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 331.0955081176788,
+    "dec": -56.80020725027417,
+    "x": 90.62840558034922,
+    "y": 88.6796599271248
+   },
+   "detection_sigma": 2226.5,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/09c48080e3bcf763/epoch1.png"
+  },
+  {
+   "epoch": 2,
+   "date_start": "2025-10-02",
+   "date_end": "2025-11-08",
+   "mjd_mean": 60959.95467284496,
+   "date_mean": "2025-10-11",
+   "n_exposures": 24,
+   "wavelength_um": [
+    3.8313746452331543,
+    4.396224498748779
+   ],
+   "flagged_fraction": 0.06652470320878112,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 52,
+   "centroid": {
+    "ra": 331.09621382240226,
+    "dec": -56.80067413437818,
+    "x": 89.93285171909226,
+    "y": 89.5200432688879,
+    "err_arcsec": 0.022547543102535372,
+    "err_arcsec_fit": 0.022547543102535372,
+    "saturated_core": false,
+    "snr": 100.08888014812722,
+    "fwhm_arcsec": 10.096907519671715,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": 0.2089093342239041,
+    "north": -0.4134341688711629,
+    "total": 0.46321800689962833
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 331.09610784135265,
+    "dec": -56.80055929155349,
+    "x": 90.03730787206166,
+    "y": 89.31332693525167
+   },
+   "detection_sigma": 2506.69,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/09c48080e3bcf763/epoch2.png"
+  },
+  {
+   "epoch": 3,
+   "date_start": "2026-04-24",
+   "date_end": "2026-04-30",
+   "mjd_mean": 61155.65167197885,
+   "date_mean": "2026-04-25",
+   "n_exposures": 7,
+   "wavelength_um": [
+    3.828866481781006,
+    4.320093154907227
+   ],
+   "flagged_fraction": 0.057991450979793455,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 18,
+   "centroid": {
+    "ra": 331.09763511125743,
+    "dec": -56.80089127279796,
+    "x": 88.53204059983499,
+    "y": 89.91089797815489,
+    "err_arcsec": 0.03766789200376975,
+    "err_arcsec_fit": 0.03766789200376975,
+    "saturated_core": false,
+    "snr": 59.91198937058081,
+    "fwhm_arcsec": 10.517819318646014,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": 0.4511012811548291,
+    "north": -0.18688105877515682,
+    "total": 0.48827952648913286
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 331.09740626315715,
+    "dec": -56.80083936139275,
+    "x": 88.75759005631258,
+    "y": 89.81745459059567
+   },
+   "detection_sigma": 1221.01,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/09c48080e3bcf763/epoch3.png"
+  },
+  {
+   "epoch": 4,
+   "date_start": "2026-09-28",
+   "date_end": "2026-10-02",
+   "mjd_mean": 61313.9680308966,
+   "date_mean": "2026-09-30",
+   "n_exposures": 24,
+   "wavelength_um": [
+    3.813432455062866,
+    4.415177822113037
+   ],
+   "flagged_fraction": 0.05493475613282961,
+   "saturated_pixels": 0,
+   "photometry_saturated_exposures": 0,
+   "rejected_readings": 242,
+   "centroid": {
+    "ra": 331.0981455997065,
+    "dec": -56.80141507975391,
+    "x": 88.02892865187037,
+    "y": 90.85375959082891,
+    "err_arcsec": 0.014036265865861033,
+    "err_arcsec_fit": 0.014036265865861033,
+    "saturated_core": false,
+    "snr": 160.7805347315619,
+    "fwhm_arcsec": 10.038548003028039,
+    "blended": false
+   },
+   "centroid_offset_arcsec": {
+    "east": 0.12306553646767102,
+    "north": -0.6724447020587832,
+    "total": 0.6836131973513979
+   },
+   "centroid_reason": null,
+   "nearest_source": null,
+   "predicted": {
+    "ra": 331.098083166594,
+    "dec": -56.80122828955889,
+    "x": 88.09045424422419,
+    "y": 90.51753592656078
+   },
+   "detection_sigma": 2289.67,
+   "detection": "clear",
+   "blend": [],
+   "image": "/frames/09c48080e3bcf763/epoch4.png"
+  }
+ ]
+}
