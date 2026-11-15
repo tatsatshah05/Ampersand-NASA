@@ -433,6 +433,7 @@ MODELS = ("grey", "dust", "warm", "hot")
 N_PARAMS = {"none": 0, "grey": 1, "dust": 1, "warm": 2, "hot": 2}
 FIT_P = 0.01                     # a shape "fits within the errors" when its chi-square has p above this
 TIE_SCORE = 2.0                  # shapes whose chi2 + 2 x parameters is within this of the best are tied
+MIN_WAVE_SPAN = 2.0              # the channels must span at least this ratio of wavelengths (longest / shortest)
 MIN_SIGNIFICANCE = 3.0           # below this many sigma of change the verdict is "no clear change"
 
 
@@ -608,6 +609,9 @@ def fit_shapes(ch: list[dict[str, Any]], *, error_scale: float = 1.0, glow: bool
     out: dict[str, Any] = {"n_channels": n, "error_scale": error_scale, "fits": {}}
     if n < MIN_COMMON_CHANNELS:
         out.update(verdict="too_few_channels", verdict_text=f"only {n} shared channels")
+        return out
+    if float(wave.max() / wave.min()) < MIN_WAVE_SPAN:
+        out.update(verdict="narrow_coverage", verdict_text="the shared channels cover too narrow a range of wavelengths")
         return out
     null_chi2 = _chi2(np.ones(n), ratio, err)
     out["no_change"] = {"chi2": null_chi2, "dof": n, "p": float(stats_chi2_sf(null_chi2, n))}
@@ -999,14 +1003,16 @@ def break_ice_change(rec: dict[str, Any], band: str, a: int, b: int, pull_sd: fl
 
 CLASS_NAMES = {"grey": "grey (the same at every colour)", "dust": "dust-like (more at short wavelengths)",
                "warm": "warm glow", "hot": "hot glow", "cannot_tell": "cannot tell",
-               "none_of_these": "none of these", "no_clear_change": "too small to tell"}
+               "none_of_these": "none of these", "no_clear_change": "too small to tell",
+               "narrow_coverage": "too narrow a range of wavelengths", "too_few_channels": "too few channels"}
 
 
 def plain_sentence(res: dict[str, Any]) -> str:
     """One plain sentence about the colour of an object's change (its headline pair). A description, not a cause."""
     h = res.get("headline")
     if not h:
-        return "Too few channels were measured in two visits to tell the colour of its change."
+        return ("Too few channels, or too narrow a range of wavelengths, were measured in two visits "
+                "to tell the colour of its change.")
     fit = res["pairs"][h]["fit"]
     v = fit["verdict"]
     if v == "grey":
@@ -1028,7 +1034,8 @@ def plain_sentence(res: dict[str, Any]) -> str:
         return "Its change fits none of the simple shapes."
     if v == "no_clear_change":
         return "Its change is too small to tell the colour of."
-    return "Too few channels were measured in two visits to tell the colour of its change."
+    return ("Too few channels, or too narrow a range of wavelengths, were measured in two visits "
+            "to tell the colour of its change.")
 
 
 def ratio_at(ch: list[dict[str, Any]], lo: float, hi: float) -> float | None:

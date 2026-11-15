@@ -3,11 +3,12 @@
  "n_ring_objects": 3,
  "n_with_headline_pair": 111,
  "classes": {
-  "none_of_these": 69,
-  "warm": 27,
+  "none_of_these": 67,
+  "warm": 26,
   "grey": 7,
   "no_clear_change": 2,
-  "hot": 5,
+  "hot": 4,
+  "narrow_coverage": 4,
   "dust": 1
  },
  "classes_by_catalogue": {
@@ -20,11 +21,12 @@
    "grey": 3
   },
   "known_variable": {
-   "none_of_these": 53,
-   "warm": 20,
+   "none_of_these": 51,
+   "warm": 19,
    "grey": 4,
    "no_clear_change": 1,
-   "hot": 2
+   "hot": 1,
+   "narrow_coverage": 4
   }
  },
  "exposures_without_cutout": {
@@ -658,11 +660,11 @@
   "dust": "changer-277.4305s02.0506"
  },
  "readings_in_headline_pairs": {
-  "saturated": 1922,
-  "flagged_or_other": 5380,
-  "clean": 19360
+  "saturated": 1959,
+  "flagged_or_other": 5365,
+  "clean": 19393
  },
- "saturated_channels_in_headline_pairs": 888,
+ "saturated_channels_in_headline_pairs": 879,
  "pca": {
   "ok": true,
   "share_threshold": 0.8,
@@ -725,7 +727,7 @@
   "band_share": [
    0.8288,
    0.8378,
-   0.9009,
+   0.9099,
    0.9189,
    0.9009,
    0.7568,
@@ -3049,92 +3051,6 @@
    }
   },
   {
-   "id": "changer-193.3212s77.1197",
-   "ra": 193.3212,
-   "dec": -77.1197,
-   "group": "known",
-   "catalogue": "known_variable",
-   "ring": false,
-   "headline_pair": "0-2",
-   "visits": [
-    "2025-07-23 to 2025-09-13",
-    "2026-07-21 to 2026-09-13"
-   ],
-   "n_channels": 17,
-   "verdict": "none_of_these",
-   "sigma": 45.5054,
-   "sentence": "Its change fits none of the simple shapes.",
-   "ratios": {
-    "0.75-1.1": 5.6875,
-    "1.1-1.65": 5.5663,
-    "1.65-2.4": null,
-    "2.4-3.8": null,
-    "3.8-4.4": null,
-    "4.4-5.0": null
-   },
-   "reduced_chi2": {
-    "grey": 10.1511,
-    "dust": 28.6781,
-    "warm": 12.5071,
-    "hot": 53.8155
-   },
-   "tilt": {
-    "ratio_5_to_1": 0.4041,
-    "err": 0.0672
-   },
-   "readings_left_out": {
-    "saturated": 276,
-    "flagged_or_other": 32,
-    "clean": 67
-   },
-   "n_saturated_channels": 78,
-   "two_part_that_fit": [],
-   "fit_warm": {
-    "params": {
-     "amplitude_mjy_at_ref": 3866.968,
-     "temperature_k": 1256.3886
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 85.4999,
-     "temperature_k": 20.7294
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_hot": {
-    "params": {
-     "amplitude_mjy_at_ref": 56.2905,
-     "temperature_k": 2500.0
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 1.4907,
-     "temperature_k": 1.362
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_dust": {
-    "params": {
-     "tau_1": -1.4037
-    },
-    "errors": {
-     "tau_1": 0.016
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_grey": {
-    "params": {
-     "factor": 4.8289
-    },
-    "errors": {
-     "factor": 0.0841
-    },
-    "fits": false,
-    "p": 0.0
-   }
-  },
-  {
    "id": "changer-246.7690s24.4546",
    "ra": 246.769,
    "dec": -24.4546,
@@ -3647,66 +3563,6 @@
     },
     "errors": {
      "factor": 0.0087
-    },
-    "fits": false,
-    "p": 0.0
-   }
-  },
-  {
-   "id": "changer-248.1670n66.7549",
-   "ra": 248.167,
-   "dec": 66.7549,
-   "group": "known",
-   "catalogue": "known_variable",
-   "ring": true,
-   "headline_pair": "0-2",
-   "visits": [
-    "2025-05-16 to 2025-07-22",
-    "2026-04-22 to 2026-07-16"
-   ],
-   "n_channels": 20,
-   "verdict": "none_of_these",
-   "sigma": 69.1513,
-   "sentence": "Its change fits none of the simple shapes.",
-   "ratios": {
-    "0.75-1.1": null,
-    "1.1-1.65": null,
-    "1.65-2.4": null,
-    "2.4-3.8": null,
-    "3.8-4.4": 0.6068,
-    "4.4-5.0": 0.5168
-   },
-   "reduced_chi2": {
-    "grey": 12.1278,
-    "dust": 33.9558
-   },
-   "tilt": {
-    "ratio_5_to_1": 0.146,
-    "err": 0.0311
-   },
-   "readings_left_out": {
-    "saturated": 241,
-    "flagged_or_other": 0,
-    "clean": 81
-   },
-   "n_saturated_channels": 80,
-   "two_part_that_fit": [],
-   "fit_dust": {
-    "params": {
-     "tau_1": 8.0
-    },
-    "errors": {
-     "tau_1": 0.0032
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_grey": {
-    "params": {
-     "factor": 0.5426
-    },
-    "errors": {
-     "factor": 0.0066
     },
     "fits": false,
     "p": 0.0
@@ -9897,84 +9753,35 @@
    "group": "known",
    "catalogue": "known_variable",
    "ring": false,
-   "headline_pair": "0-2",
+   "headline_pair": "1-2",
    "visits": [
-    "2025-07-23 to 2025-09-13",
+    "2026-02-03 to 2026-04-03",
     "2026-07-21 to 2026-09-13"
    ],
-   "n_channels": 17,
-   "verdict": "none_of_these",
-   "sigma": 45.5054,
-   "sentence": "Its change fits none of the simple shapes.",
+   "n_channels": 16,
+   "verdict": "narrow_coverage",
+   "sigma": 0.0,
+   "sentence": "Too few channels, or too narrow a range of wavelengths, were measured in two visits to tell the colour of its change.",
    "ratios": {
-    "0.75-1.1": 5.6875,
-    "1.1-1.65": 5.5663,
+    "0.75-1.1": 2.2244,
+    "1.1-1.65": 1.6619,
     "1.65-2.4": null,
     "2.4-3.8": null,
     "3.8-4.4": null,
     "4.4-5.0": null
    },
-   "reduced_chi2": {
-    "grey": 10.1511,
-    "dust": 28.6781,
-    "warm": 12.5071,
-    "hot": 53.8155
-   },
+   "reduced_chi2": {},
    "tilt": {
-    "ratio_5_to_1": 0.4041,
-    "err": 0.0672
+    "ratio_5_to_1": 0.1699,
+    "err": 0.0299
    },
    "readings_left_out": {
-    "saturated": 276,
-    "flagged_or_other": 32,
-    "clean": 67
+    "saturated": 272,
+    "flagged_or_other": 23,
+    "clean": 70
    },
-   "n_saturated_channels": 78,
-   "two_part_that_fit": [],
-   "fit_warm": {
-    "params": {
-     "amplitude_mjy_at_ref": 3866.968,
-     "temperature_k": 1256.3886
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 85.4999,
-     "temperature_k": 20.7294
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_hot": {
-    "params": {
-     "amplitude_mjy_at_ref": 56.2905,
-     "temperature_k": 2500.0
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 1.4907,
-     "temperature_k": 1.362
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_dust": {
-    "params": {
-     "tau_1": -1.4037
-    },
-    "errors": {
-     "tau_1": 0.016
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_grey": {
-    "params": {
-     "factor": 4.8289
-    },
-    "errors": {
-     "factor": 0.0841
-    },
-    "fits": false,
-    "p": 0.0
-   }
+   "n_saturated_channels": 79,
+   "two_part_that_fit": null
   },
   {
    "id": "changer-246.7690s24.4546",
@@ -10587,58 +10394,35 @@
    "group": "known",
    "catalogue": "known_variable",
    "ring": true,
-   "headline_pair": "0-2",
+   "headline_pair": "1-2",
    "visits": [
-    "2025-05-16 to 2025-07-22",
+    "2025-10-17 to 2026-01-13",
     "2026-04-22 to 2026-07-16"
    ],
-   "n_channels": 20,
-   "verdict": "none_of_these",
-   "sigma": 69.1513,
-   "sentence": "Its change fits none of the simple shapes.",
+   "n_channels": 31,
+   "verdict": "narrow_coverage",
+   "sigma": 0.0,
+   "sentence": "Too few channels, or too narrow a range of wavelengths, were measured in two visits to tell the colour of its change.",
    "ratios": {
     "0.75-1.1": null,
     "1.1-1.65": null,
     "1.65-2.4": null,
     "2.4-3.8": null,
-    "3.8-4.4": 0.6068,
-    "4.4-5.0": 0.5168
+    "3.8-4.4": 0.7932,
+    "4.4-5.0": 0.6568
    },
-   "reduced_chi2": {
-    "grey": 12.1278,
-    "dust": 33.9558
-   },
+   "reduced_chi2": {},
    "tilt": {
-    "ratio_5_to_1": 0.146,
-    "err": 0.0311
+    "ratio_5_to_1": 0.0422,
+    "err": 0.0082
    },
    "readings_left_out": {
-    "saturated": 241,
+    "saturated": 276,
     "flagged_or_other": 0,
-    "clean": 81
+    "clean": 109
    },
-   "n_saturated_channels": 80,
-   "two_part_that_fit": [],
-   "fit_dust": {
-    "params": {
-     "tau_1": 8.0
-    },
-    "errors": {
-     "tau_1": 0.0032
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_grey": {
-    "params": {
-     "factor": 0.5426
-    },
-    "errors": {
-     "factor": 0.0066
-    },
-    "fits": false,
-    "p": 0.0
-   }
+   "n_saturated_channels": 71,
+   "two_part_that_fit": null
   },
   {
    "id": "changer-277.4566n01.2566",
@@ -13813,84 +13597,35 @@
    "group": "known",
    "catalogue": "known_variable",
    "ring": false,
-   "headline_pair": "0-2",
+   "headline_pair": "1-2",
    "visits": [
-    "2025-09-07 to 2025-10-13",
+    "2026-03-31 to 2026-05-11",
     "2026-09-04 to 2026-10-04"
    ],
    "n_channels": 6,
-   "verdict": "hot",
-   "sigma": 28.0639,
-   "sentence": "Its change has the colours of a hot glow (about 3,207 K) being added.",
+   "verdict": "narrow_coverage",
+   "sigma": 0.0,
+   "sentence": "Too few channels, or too narrow a range of wavelengths, were measured in two visits to tell the colour of its change.",
    "ratios": {
-    "0.75-1.1": 3.2438,
+    "0.75-1.1": 2.879,
     "1.1-1.65": null,
     "1.65-2.4": null,
     "2.4-3.8": null,
     "3.8-4.4": null,
     "4.4-5.0": null
    },
-   "reduced_chi2": {
-    "grey": 5.4924,
-    "dust": 3.1852,
-    "warm": 48.7107,
-    "hot": 0.5232
-   },
+   "reduced_chi2": {},
    "tilt": {
-    "ratio_5_to_1": 0.1242,
-    "err": 0.0596
+    "ratio_5_to_1": 0.3016,
+    "err": 0.1014
    },
    "readings_left_out": {
-    "saturated": 196,
-    "flagged_or_other": 15,
-    "clean": 22
+    "saturated": 202,
+    "flagged_or_other": 9,
+    "clean": 24
    },
-   "n_saturated_channels": 90,
-   "two_part_that_fit": null,
-   "fit_warm": {
-    "params": {
-     "amplitude_mjy_at_ref": 14407.9568,
-     "temperature_k": 1500.0
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 590.7513,
-     "temperature_k": 1.197
-    },
-    "fits": false,
-    "p": 0.0
-   },
-   "fit_hot": {
-    "params": {
-     "amplitude_mjy_at_ref": 441.9724,
-     "temperature_k": 3206.6999
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 15.7488,
-     "temperature_k": 272.9564
-    },
-    "fits": true,
-    "p": 0.7187
-   },
-   "fit_dust": {
-    "params": {
-     "tau_1": -0.7392
-    },
-    "errors": {
-     "tau_1": 0.0158
-    },
-    "fits": false,
-    "p": 0.0071
-   },
-   "fit_grey": {
-    "params": {
-     "factor": 2.9784
-    },
-    "errors": {
-     "factor": 0.0717
-    },
-    "fits": false,
-    "p": 0.0
-   }
+   "n_saturated_channels": 89,
+   "two_part_that_fit": null
   },
   {
    "id": "changer-325.7485n66.0761",
@@ -15898,9 +15633,9 @@
     "2026-08-16 to 2026-09-05"
    ],
    "n_channels": 18,
-   "verdict": "warm",
-   "sigma": 13.5586,
-   "sentence": "Its change has the colours of a warm glow (about 649 K) being added.",
+   "verdict": "narrow_coverage",
+   "sigma": 0.0,
+   "sentence": "Too few channels, or too narrow a range of wavelengths, were measured in two visits to tell the colour of its change.",
    "ratios": {
     "0.75-1.1": null,
     "1.1-1.65": null,
@@ -15909,12 +15644,7 @@
     "3.8-4.4": 1.15,
     "4.4-5.0": 1.2762
    },
-   "reduced_chi2": {
-    "grey": 1.2418,
-    "dust": 2.3539,
-    "warm": 0.6126,
-    "hot": 1.3029
-   },
+   "reduced_chi2": {},
    "tilt": {
     "ratio_5_to_1": 2.3598,
     "err": 0.6311
@@ -15925,51 +15655,7 @@
     "clean": 63
    },
    "n_saturated_channels": 69,
-   "two_part_that_fit": null,
-   "fit_warm": {
-    "params": {
-     "amplitude_mjy_at_ref": 85.3301,
-     "temperature_k": 649.3744
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 6.2934,
-     "temperature_k": 145.8901
-    },
-    "fits": true,
-    "p": 0.8768
-   },
-   "fit_hot": {
-    "params": {
-     "amplitude_mjy_at_ref": 130.1571,
-     "temperature_k": 2500.0
-    },
-    "errors": {
-     "amplitude_mjy_at_ref": 9.9017,
-     "temperature_k": 230.2101
-    },
-    "fits": true,
-    "p": 0.1845
-   },
-   "fit_dust": {
-    "params": {
-     "tau_1": -3.2828
-    },
-    "errors": {
-     "tau_1": 0.2415
-    },
-    "fits": false,
-    "p": 0.0013
-   },
-   "fit_grey": {
-    "params": {
-     "factor": 1.2113
-    },
-    "errors": {
-     "factor": 0.0161
-    },
-    "fits": true,
-    "p": 0.2214
-   }
+   "two_part_that_fit": null
   },
   {
    "id": "changer-056.1562n32.2062",

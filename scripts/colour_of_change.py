@@ -38,7 +38,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DET_COLOURS = {1: (90, 140, 230), 2: (60, 170, 200), 3: (60, 170, 90), 4: (225, 170, 40), 5: (230, 100, 50),
                6: (160, 60, 160)}
 CLASS_COLOURS = {"grey": GREY, "dust": BLUE, "warm": ORANGE, "hot": RED, "cannot_tell": TEAL,
-                 "none_of_these": PURPLE, "no_clear_change": (190, 190, 190)}
+                 "none_of_these": PURPLE, "no_clear_change": (190, 190, 190), "narrow_coverage": (225, 225, 120),
+                 "too_few_channels": (225, 225, 120)}
 KNOWN = {"RW Aurigae": "changer-076.9564n30.4012", "Serpens South star": "changer-277.5055s02.0620",
          "V371 Ser": "changer-277.4633n01.2778"}
 NOVAE = {"V462 Lup": (227.01362, -40.14308), "V7994 Sgr": (270.96983, -31.45739)}
@@ -183,6 +184,8 @@ def class_gallery(res_obj: dict[str, Any], scale: float, out: Path) -> dict[str,
         if f["n_channels"] < 12:
             continue
         v = f["verdict"]
+        if v in ("narrow_coverage", "too_few_channels"):
+            continue
         if v == "none_of_these":
             score = f["change_sigma"]
         else:
@@ -222,7 +225,7 @@ def object_row(r: dict[str, Any], info: dict[str, Any], scale: float) -> dict[st
         f = p["fit"]
         ch = p["table"]["channels"]
         row.update(visits=[visit_dates(r, v) for v in p["visits"]], n_channels=f["n_channels"], verdict=f["verdict"],
-                   sigma=f["change_sigma"], sentence=colour.plain_sentence(r),
+                   sigma=f.get("change_sigma", 0.0), sentence=colour.plain_sentence(r),
                    ratios={"0.75-1.1": colour.ratio_at(ch, 0.75, 1.1), "1.1-1.65": colour.ratio_at(ch, 1.1, 1.65),
                            "1.65-2.4": colour.ratio_at(ch, 1.65, 2.42), "2.4-3.8": colour.ratio_at(ch, 2.42, 3.82),
                            "3.8-4.4": colour.ratio_at(ch, 3.82, 4.42), "4.4-5.0": colour.ratio_at(ch, 4.42, 5.1)},
