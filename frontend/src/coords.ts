@@ -28,8 +28,25 @@
 
 export type CoordsResult = { ok: true; ra: number; dec: number } | { ok: false; reason: string }
 
-/** Inputs shown to people as examples of what works. The tests check each one is accepted. */
-export const COORD_EXAMPLES = ['269.4463 4.7682', '17h57m48.5s +04d41m36s'] as const
+/**
+ * Inputs shown to people as examples of what works. The tests check each one is accepted, and
+ * that both are the same place: where Barnard's Star is in 2026, so that typing either one
+ * shows the star in the middle of the picture. (Its catalogue position for the year 2000,
+ * 17h57m48.5s +04d41m36s, is 4.5 arcminutes away: outside the picture the page opens with.)
+ */
+export const COORD_EXAMPLES = ['269.4463 4.7682', '17h57m47.1s +04d46m06s'] as const
+
+/**
+ * How to type a position, in the words shown beside every box that takes one. The only kind
+ * read is equatorial: right ascension and declination as catalogues list them (J2000, ICRS).
+ */
+export const COORD_HOW = {
+  /** The order, to follow "a position:" or "Coordinates are". */
+  order: 'right ascension (RA) first, then declination (Dec)',
+  degrees: 'Both in degrees',
+  hours: 'RA in hours, Dec in degrees',
+  note: 'Colons or spaces work in place of the letters. Use J2000 coordinates, the kind catalogues list. Other kinds, such as galactic, are not read.',
+} as const
 
 const WHY = {
   notCoordinates: 'This does not look like coordinates.',

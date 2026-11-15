@@ -6,11 +6,17 @@
 // file are the fixed ones of OWN_LOOKS. Either way the result goes to `onSelect`, and a
 // line under the box says what was found. The box opens the row of target buttons (choosing
 // what to look at is one job); useSkySearch holds what both share.
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+//
+// How a position is typed is said twice: in the empty box, in as many words as it has room
+// for (useFittingPlaceholder; clicked, the box widens and has room for all of them), and in
+// full in the card that opens under it (the order, both ways of writing a position, and which
+// kind of coordinates is read).
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { FINDS, findAt, findTarget, type Find } from '../finds'
 import { releaseFocusAfterPointer } from '../focus'
 import {
   COORD_EXAMPLES,
+  COORD_HOW,
   formatDecDeg,
   formatDecDms,
   formatRaDeg,
@@ -395,12 +401,52 @@ function targetNamed(name: string | null): string | null {
 }
 
 /**
+ * What the empty box says, longest first: the longest one that fits is shown, so none is ever
+ * cut short. Beside the row of target buttons the box is narrow (108 to 220 px in a laptop
+ * window, where only the last two fit); clicked, it widens (SearchBar.css) and says the
+ * first, as it does on a phone, where it is as wide as the page. The last one always fits.
+ */
+const PLACEHOLDERS = [
+  'A name, or right ascension and declination',
+  'A name, or RA and Dec',
+  'Name, or RA Dec',
+  'Search the sky',
+  'Search',
+] as const
+
+/** The longest of PLACEHOLDERS that fits in `input` at its present width. */
+function useFittingPlaceholder(input: RefObject<HTMLInputElement | null>): string {
+  const [text, setText] = useState<string>(PLACEHOLDERS[PLACEHOLDERS.length - 1])
+  // Before the first paint, so the words are not seen to change when the page opens.
+  useLayoutEffect(() => {
+    const el = input.current
+    const pen = document.createElement('canvas').getContext('2d')
+    if (!el || !pen) return
+    const pick = () => {
+      const style = getComputedStyle(el)
+      const room = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+      pen.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+      // Two pixels to spare: the browser may draw the words a fraction wider than it measures them.
+      setText(PLACEHOLDERS.find((words) => pen.measureText(words).width + 2 <= room) ?? PLACEHOLDERS[PLACEHOLDERS.length - 1])
+    }
+    pick()
+    if (typeof ResizeObserver === 'undefined') return
+    const watch = new ResizeObserver(pick)
+    watch.observe(el)
+    return () => watch.disconnect()
+  }, [input])
+  return text
+}
+
+/**
  * The search box. What it found or what went wrong shows in a small box under it while
  * it is in use, laid over the page so nothing moves; screen readers hear the same from
  * two live regions that are always there.
  */
 export function SearchField({ search }: { search: SearchState }) {
   const id = useId()
+  const box = useRef<HTMLInputElement>(null)
+  const placeholder = useFittingPlaceholder(box)
   const { text, status } = search
   const hintId = `${id}-hint`
   const errorId = `${id}-error`
@@ -420,13 +466,14 @@ export function SearchField({ search }: { search: SearchState }) {
     >
       <div className="searchbar-row">
         <input
+          ref={box}
           id={`${id}-input`}
           className="searchbar-input"
           type="search"
           value={text}
           onChange={(e) => search.edit(e.target.value)}
-          aria-label="Search by name or coordinates"
-          placeholder="Search the sky"
+          aria-label="Search by name, or by right ascension and declination"
+          placeholder={placeholder}
           maxLength={200}
           autoComplete="off"
           autoCapitalize="none"
@@ -446,10 +493,30 @@ export function SearchField({ search }: { search: SearchState }) {
 
       <div className="searchbar-pop" data-show={showAlways || undefined}>
         {status.kind === 'idle' ? (
-          <p id={hintId} className="searchbar-hint">
-            Type a name such as <Example>Barnard's Star</Example> or a position, RA then Dec, such as{' '}
-            <Example>{COORD_EXAMPLES[0]}</Example> or <Example>{COORD_EXAMPLES[1]}</Example>
-          </p>
+          <div id={hintId} className="searchbar-hint">
+            <p className="searchbar-lead">Type a name, or a position: {COORD_HOW.order}.</p>
+            <dl className="searchbar-ways">
+              <div>
+                <dt>A name</dt>
+                <dd>
+                  <Example>Barnard's Star</Example>
+                </dd>
+              </div>
+              <div>
+                <dt>{COORD_HOW.degrees}</dt>
+                <dd>
+                  <Example>{COORD_EXAMPLES[0]}</Example>
+                </dd>
+              </div>
+              <div>
+                <dt>{COORD_HOW.hours}</dt>
+                <dd>
+                  <Example>{COORD_EXAMPLES[1]}</Example>
+                </dd>
+              </div>
+            </dl>
+            <p>{COORD_HOW.note}</p>
+          </div>
         ) : (
           <p aria-hidden="true" className={status.kind === 'error' ? 'searchbar-error' : 'searchbar-status'} data-busy={status.kind === 'working' || undefined}>
             {status.text}

@@ -47,6 +47,15 @@
   font-size: 16px;
 }
 
+/* Under the field: how to type a position, in grey. */
+.watch-how {
+  max-width: 72ch;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: var(--size-body);
+  line-height: 1.5;
+}
+
 .region-picker button.primary {
   min-height: 44px;
   background: var(--ink);

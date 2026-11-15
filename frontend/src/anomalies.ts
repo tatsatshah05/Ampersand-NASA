@@ -9,6 +9,7 @@
 // "never seen before", or "new" without "that we found in no catalogue or report we checked".
 import { addressOf, DEFAULT_SELECTION, type Selection, type UiLevel } from './address'
 import { framesUrl, skyOffsetArcsec, type Frame } from './api'
+import { COORD_EXAMPLES, COORD_HOW } from './coords'
 import { CANDIDATE_LINE, FIND_RADIUS_ARCSEC, findAt, FINDS, type Find } from './finds'
 import { progressSentence, type SearchStatus } from './search'
 import type { Group, PatchRegion, PatchRegions } from './watchlist'
@@ -468,7 +469,16 @@ export const PICK_INTRO: Record<UiLevel, string> = {
 }
 
 export const FIELD_LABEL = 'A name or coordinates'
-export const FIELD_PLACEHOLDER = 'Barnard’s Star, or 269.4463 4.7682'
+export const FIELD_PLACEHOLDER = `Barnard’s Star, or ${COORD_EXAMPLES[0]}`
+/** Under the field: how to type a position (the same words and examples as the search box's card). */
+export const FIELD_HINT =
+  `Coordinates are ${COORD_HOW.order}: both in degrees, ${whole(COORD_EXAMPLES[0])}, or with RA in hours, ${whole(COORD_EXAMPLES[1])}. ` +
+  'Use J2000 coordinates, the kind catalogues list.'
+
+/** An example kept on one line: its spaces become no-break spaces (coords.ts reads those as spaces when it is pasted back). */
+function whole(example: string): string {
+  return example.replace(/ /g, '\u00a0')
+}
 export const WATCH_BUTTON = 'Watch this patch'
 export const CHOOSE_WATCHED = 'Or choose a patch that is already being watched:'
 

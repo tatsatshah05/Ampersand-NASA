@@ -62,6 +62,37 @@
   cursor: pointer;
 }
 
+/* Beside the row of target buttons the box is narrow (108 to 220 px in a laptop window): too
+   narrow to say how a position is typed, or to show one while it is being typed. So while it
+   is in use it widens to the width of the card under it, lying over the first buttons. The
+   form keeps its place and its size, so nothing in the row moves. A phone's box is already
+   as wide as the page. */
+@media (min-width: 1000px) {
+  .searchbar {
+    height: 36px;
+  }
+
+  .searchbar-row {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .searchbar:focus-within .searchbar-row {
+    z-index: 41;
+    width: max(100%, 440px);
+    max-width: calc(100vw - 32px);
+  }
+}
+
+/* An empty box has nothing to clear. Chrome keeps the button's 24 px free even so, which cut
+   the words in the empty box short ("Search the s…" in a 1024 px window); without it they
+   have the whole box, and SearchBar.tsx picks the longest wording that fits. */
+.searchbar-input:placeholder-shown::-webkit-search-cancel-button {
+  display: none;
+}
+
 .searchbar-submit {
   flex: none;
   display: grid;
@@ -118,6 +149,40 @@
 
 .searchbar-hint {
   color: var(--muted);
+}
+
+/* How to type it: one sentence in the page's black, then each way of writing it beside an
+   example, then the small print in grey. */
+.searchbar-lead {
+  color: var(--text);
+}
+
+.searchbar-ways {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+/* One way per line, its example at the right; on a phone the example drops under its words. */
+.searchbar-ways > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 16px;
+}
+
+.searchbar-ways dt,
+.searchbar-ways dd {
+  margin: 0;
+}
+
+.searchbar-ways dt {
+  color: var(--text);
+}
+
+.searchbar-hint > p:last-child {
+  line-height: 1.5;
 }
 
 .searchbar-error {

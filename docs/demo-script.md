@@ -28,7 +28,8 @@ How the page is laid out (the names are the page's own):
   planet, Asteroids, What is it?, Practise, Observe anomalies, Three tools. In Expert: Viewer, Light curve,
   Spectrum, Blind search, Planet X search, Small bodies, Object card, Training, Anomalies, Methods.
 - **The switch** "Beginner | Expert" is at the bottom right of every screen.
-- **The row of buttons** beside the search box ("Search the sky"): Candidate A, Candidate B, Candidate C,
+- **The row of buttons** beside the search box (the pill with the magnifier; it says "Search" in a laptop window
+  and widens when clicked to say "A name, or right ascension and declination"): Candidate A, Candidate B, Candidate C,
   Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae, R Draconis, Serpens South, V462 Lupi, V572 Velorum.
 - **The side column** beside the picture: one sentence about the whole run of visits and one table of all
   visits. These words do not change while the pictures play; only the mark of the visit on screen moves.

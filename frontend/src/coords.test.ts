@@ -505,6 +505,21 @@ describe('the examples shown to people', () => {
   it.each([...COORD_EXAMPLES])('%j is accepted', (example) => {
     expect(parseCoords(example).ok).toBe(true)
   })
+
+  it('are the same place written two ways: Barnard\'s Star in 2026, to within an arcsecond', () => {
+    const [degrees, hours] = COORD_EXAMPLES.map((example) => parseCoords(example))
+    if (!degrees.ok || !hours.ok) throw new Error('an example was not read')
+    const arcsec = (a: { ra: number; dec: number }, b: { ra: number; dec: number }) =>
+      3600 * Math.hypot((a.ra - b.ra) * Math.cos((a.dec * Math.PI) / 180), a.dec - b.dec)
+    expect(arcsec(degrees, hours)).toBeLessThan(1)
+    // /api/resolve's position for the star on 2026.0 (CLAUDE.md, "Verified facts").
+    expect(arcsec(degrees, { ra: 269.446267, dec: 4.768222 })).toBeLessThan(1)
+    expect(arcsec(hours, { ra: 269.446267, dec: 4.768222 })).toBeLessThan(1)
+  })
+
+  it.each([...COORD_EXAMPLES])('%j reads the same with no-break spaces, as copied from a line that keeps it whole', (example) => {
+    expect(parseCoords(example.replace(/ /g, '\u00a0'))).toEqual(parseCoords(example))
+  })
 })
 
 describe('formatting', () => {

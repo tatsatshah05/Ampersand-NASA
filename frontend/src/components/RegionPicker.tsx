@@ -10,6 +10,7 @@ import type { UiLevel } from '../address'
 import {
   CHOOSE_WATCHED,
   EVERYWHERE,
+  FIELD_HINT,
   FIELD_LABEL,
   FIELD_PLACEHOLDER,
   PICK_HEADING,
@@ -73,12 +74,16 @@ export function RegionPicker({ level, value, options, patches, sweep, problem, o
             placeholder={FIELD_PLACEHOLDER}
             autoComplete="off"
             spellCheck={false}
+            aria-describedby="watch-how"
             onChange={(e) => setTyped(e.target.value)}
           />
           <button type="submit" className="primary watch-button">
             {WATCH_BUTTON}
           </button>
         </div>
+        <p id="watch-how" className="watch-how">
+          {FIELD_HINT}
+        </p>
       </form>
       <div className="watch-status" aria-live="polite">
         {lines.map((line) => (

@@ -237,6 +237,7 @@ describe('the screen', () => {
       'Type a star’s name or a place in the sky.',
       'A name or coordinates',
       'Watch this patch',
+      'Coordinates are right ascension (RA) first, then declination (Dec): both in degrees, 269.4463\u00a04.7682,',
       'Or choose a patch that is already being watched:',
       'Not reported anywhere we could find',
       'class="anomaly-card"',

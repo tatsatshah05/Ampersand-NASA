@@ -1,6 +1,6 @@
 # Browser checks that guard the page
 
-Two checks that load the running app in a headless Chromium and fail when the page breaks a rule the team set.
+Three checks that load the running app in a headless Chromium and fail when the page breaks a rule the team set.
 They were written on 14 and 15 November 2026 in temporary folders and copied here so that they survive. Each
 copy is the latest version as of 15 November, 05:30: `stilltext_check.js` from 04:45 (its "FINDER REPAIRED
 (15 Nov, finish-page)" notes) and `features_check.js` from 04:32. Both were written for the page as it now is:
@@ -11,6 +11,7 @@ the joined page of `agent/finish-page` (commit `49de312`, merged into `Dev`) and
 |---|---|
 | `stilltext_check.js` | The words on the page hold still while the visits play. While the pictures play or blink, no visible word changes, in Beginner and in Expert, with every fold of the side column open and with each Beginner "i" explanation open. Words change only when the visitor does something. Also: in Expert the measured-against-Gaia comparison (on Barnard's Star, reached by pressing its button) is in the window without scrolling, every control of the side column is in view at 1440 x 900, stepping by hand moves the mark of the visit on screen, and with a tool panel open and the picture scrolled out of sight the visits stop playing and start again when the picture comes back. |
 | `features_check.js` | Every feature is in one bar that stays in view (a list down the left edge of a window 1200 px or wider, a strip along the top of one under 1000 px; since 15 Nov), in the order of `frontend/src/features.ts`, in the words of the level in use; the Beginner \| Expert switch is fixed at the bottom right and covers nothing; each tool opens from the bar in its level's words, and a Beginner panel shows none of the words a newcomer should not meet (sigma, flux, epoch, detector, centroid, mJy and others) outside a closed fold; the switch rewrites the bar; the screens of their own (practice, the watchlist, the three tools) carry the same bar and keep the level. |
+| `searchbox_check.js` | The boxes that take a position say how to type one. At five window widths (390, 1024, 1280, 1440, 1680 px) the words in the empty search box are whole, never cut short; clicked, the box says "A name, or right ascension and declination" (in a laptop window it widens to do so, and the form and the target buttons do not move) and the card under it gives the order (right ascension first, then declination), both ways of writing a position and J2000; each example on the card, typed into the box, is read as coordinates, and a declination typed first is refused with the order; the box of "Pick a patch of sky" has the same instruction under it. Written on 15 November 2026 (afternoon); `ALL PASS` (44 tests, under a minute) on `Dev` with the features list at the left. It loads no new view from the archive. |
 
 ## How they behave
 

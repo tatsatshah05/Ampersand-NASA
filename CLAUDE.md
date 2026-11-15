@@ -1264,6 +1264,16 @@ Rules of the page:
   side column hides the last object's words behind one line, "Loading the pictures of ...".
 - **The name shown for a typed search** is the one the visitor knows (`identify.ts`, `nameToShow`): "Altair", not
   SIMBAD's "alf Aql"; an abbreviation is spelled out ("eps Ind B" becomes "Epsilon Indi B").
+- **The boxes that take a position say how to type one** (2026-11-15; `coords.ts` `COORD_HOW`, `COORD_EXAMPLES`). The
+  only kind read is right ascension then declination (J2000, ICRS), both in degrees or with RA in hours; galactic or
+  ecliptic coordinates are not read (typed, they are looked up as a name and not found). The search box is only 108
+  to 220 px wide beside the target buttons, so its empty words are the longest of `PLACEHOLDERS` (`SearchBar.tsx`)
+  that fits, never cut short ("Search" at 1280 px); clicked, in a window of 1000 px or more it widens to 440 px over
+  the first buttons (`SearchBar.css`; the form keeps its place, nothing in the row moves) and says "A name, or right
+  ascension and declination", and the card under it gives the order, both ways of writing a position and the kind
+  read. The box of "Pick a patch of sky" has the same instruction under it (`anomalies.ts` `FIELD_HINT`). Both
+  examples are one place, Barnard's Star in 2026 (`269.4463 4.7682`, `17h57m47.1s +04d46m06s`): the old second
+  example was its place in 2000, 4.5 arcminutes off, outside the picture. `scripts/checks/searchbox_check.js` guards it.
 
 The sweep's three candidates, in three lines (detail, numbers and evidence: `docs/sweep.md`; the ruling:
 `docs/sweep/vetting/ruling.json`; every search for an earlier report and the checklist for a person:
@@ -1287,6 +1297,9 @@ behaves):
   keeps its own copy of the ten labels (`FEATURES`, line 27 for the ninth): change it together with `features.ts`. It
   expects Observe anomalies / Anomalies, so on an older build without that screen it fails and then stops with a
   TimeoutError.
+- `scripts/checks/searchbox_check.js`: the empty search box's words are whole at five window widths; clicked, it says
+  "A name, or right ascension and declination" and the card gives the order and both ways of writing a position; each
+  example typed in is read; the form and the target buttons do not move; the patch box has the instruction under it.
 - `layout_check.js` (the page fits the window; nothing moves when the visit or the star changes) is not in the
   repository. On 2026-11-15 it was in a temporary folder,
   `/private/tmp/claude-501/-Users-tatsatshah-Desktop-NASA-Hackathon/f9f1be33-c465-4da8-a5bb-6363d5f480f1/scratchpad/layout_check.js`,
