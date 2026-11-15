@@ -59,7 +59,7 @@ describe('the bar of features at the top', () => {
 
   it('shows the tools before the first pictures arrive, there but not yet to be pressed', () => {
     const top = topBar(viewerAt('?ui=expert'))
-    for (const label of ['Light curve', 'Spectrum', 'Blind search', 'Planet X search', 'Small bodies', 'Sky context']) {
+    for (const label of ['Light curve', 'Spectrum', 'Blind search', 'Planet X search', 'Small bodies', 'Object card']) {
       expect(top).toMatch(new RegExp(`<button [^>]*aria-disabled="true"[^>]*><span class="feature-text" data-text="${label}">`))
     }
   })

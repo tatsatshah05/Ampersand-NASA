@@ -80,10 +80,10 @@ export const FEATURES: readonly Feature[] = [
   {
     key: 'context',
     kind: 'tool',
-    label: { beginner: 'Other telescopes', expert: 'Sky context' },
+    label: { beginner: 'What is it?', expert: 'Object card' },
     about: {
-      beginner: 'The same patch of sky as other telescopes saw it.',
-      expert: 'Sky context: the same field in WISE, 2MASS and DSS images, with Gaia DR3 stars, from the Aladin sky atlas.',
+      beginner: 'What the catalogues know about this object, and the same patch seen by other telescopes.',
+      expert: 'Catalogue identity and parameters of the object, and the patch in other surveys.',
     },
   },
   {

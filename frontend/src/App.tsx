@@ -55,7 +55,7 @@ import { WatchlistView } from './components/WatchlistView'
 import { isWatchlistAddress, WATCHLIST_ADDRESS } from './watchlist'
 import { PlateLoading, PlateMessage } from './components/StatusCard'
 import { keyBelongsToControl, releaseFocusAfterPointer } from './focus'
-import { feature, type FeatureKey, type ToolKey } from './features'
+import type { FeatureKey, ToolKey } from './features'
 import { brightLine, infoFor, INFO_NAMES, NO_PROGRESS, PICTURE_INFO_ID, type InfoKey, type Progress } from './guide'
 import { isRealShift, measuredPath, overallEnds, startCentroid, toPicture } from './motion'
 import { skyToPixel, type Grid } from './projection'
@@ -873,15 +873,10 @@ export function Viewer() {
             />
           </div>
         )}
-        {/* The same patch in other surveys. The panel has no Close of its own, so the slot gives it one. */}
+        {/* The same patch in other surveys, with its own Close beside its title like the other panels. */}
         {showContext && (
           <div className="tool-slot context-slot" id="tool-context">
-            <div className="tool-slot-close">
-              <button type="button" aria-label={`Close ${feature('context').label[selection.ui]}`} onClick={() => setShowContext(false)}>
-                Close
-              </button>
-            </div>
-            <ContextView ra={selection.ra} dec={selection.dec} fov={selection.fov} level={selection.ui} />
+            <ContextView ra={selection.ra} dec={selection.dec} fov={selection.fov} level={selection.ui} onClose={() => setShowContext(false)} />
           </div>
         )}
       </div>

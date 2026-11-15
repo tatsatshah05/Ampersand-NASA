@@ -219,7 +219,7 @@ describe('the page with a view loaded', () => {
       ['Blind search', 'Blind search: everything in the field that moved or changed brightness'],
       ['Planet X search', 'Planet X search: looks for a body'],
       ['Small bodies', 'Small bodies: known asteroids and comets'],
-      ['Sky context', 'Sky context: the same field in WISE, 2MASS and DSS images'],
+      ['Object card', 'Catalogue identity and parameters of the object'],
     ]) {
       expect(top).toMatch(new RegExp(`<button class="feature-item" title="${title}[^"]*" type="button"><span class="feature-text" data-text="${label}">`))
     }

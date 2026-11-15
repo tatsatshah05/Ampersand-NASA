@@ -5,7 +5,27 @@
 // is a tick on a rail above the chart, never a value.
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { fetchSpectrum, type SpectrumPoint, type SpectrumRequest, type SpectrumResponse } from '../spectrum'
+import type { UiLevel } from '../address'
 import { circleStarsSentence, measuredSentence } from '../detection'
+import {
+  SPECTRUM_AXIS_X,
+  SPECTRUM_AXIS_Y,
+  SPECTRUM_ERROR,
+  SPECTRUM_INTRO,
+  SPECTRUM_LOADING,
+  SPECTRUM_RAILS,
+  SPECTRUM_SPOT_ASK,
+  SPECTRUM_SPOT_BUTTON,
+  SPECTRUM_SPOT_TITLE,
+  SPECTRUM_TITLE,
+  measureCautions,
+  spectrumEmpty,
+  spectrumResult,
+  spectrumTip,
+  spectrumTipValue,
+  spectrumVisit,
+} from '../plain'
+import { PlainWords, ScienceFold } from './ScienceFold'
 import './SpectrumPanel.css'
 
 // Visits 1 to 3 get a colour each (checked to stay distinguishable with colour-blindness
@@ -198,16 +218,17 @@ type Load = { state: 'loading' } | { state: 'error'; message: string } | { state
 interface Props {
   request: SpectrumRequest
   onClose: () => void
-  level?: import('../address').UiLevel
+  /** How it is written: Expert as it always was, Beginner in plain words with the rest in one closed fold. */
+  level?: UiLevel
 }
 
-export function SpectrumPanel({ request, onClose }: Props) {
+export function SpectrumPanel({ request, onClose, level = 'expert' }: Props) {
   // A different request gets a fresh panel: remounting resets what is loaded and shown.
   const key = `${request.kind},${request.ra},${request.dec},${JSON.stringify(request.motion ?? null)}`
-  return <Panel key={key} request={request} onClose={onClose} />
+  return <Panel key={key} request={request} onClose={onClose} level={level} />
 }
 
-function Panel({ request, onClose }: Props) {
+function Panel({ request, onClose, level }: Props & { level: UiLevel }) {
   // The target is measured at the centre of the view, whose exposures the backend
   // already holds. Any other spot is new to it (a few hundred downloads from NASA's
   // archive), so that is asked about first.
@@ -245,25 +266,6 @@ function Panel({ request, onClose }: Props) {
   const chart = useMemo(() => (data ? layout(data, hidden) : null), [data, hidden])
   const place = `RA ${request.ra.toFixed(5)}°, Dec ${request.dec.toFixed(5)}°`
 
-  function onMove(e: PointerEvent<SVGSVGElement>) {
-    // The nearest mark to the pointer, so a small dot does not have to be hit exactly.
-    if (!chart) return
-    const box = e.currentTarget.getBoundingClientRect()
-    const k = W / box.width
-    const mx = (e.clientX - box.left) * k
-    const my = (e.clientY - box.top) * k
-    let best: Mark | null = null
-    let bestDistance = 24
-    for (const m of chart.marks) {
-      const d = Math.hypot(m.x - mx, m.y - my)
-      if (d < bestDistance) {
-        bestDistance = d
-        best = m
-      }
-    }
-    setHover(best)
-  }
-
   function toggleVisit(epoch: number) {
     const next = new Set(hidden)
     if (next.has(epoch)) next.delete(epoch)
@@ -272,14 +274,17 @@ function Panel({ request, onClose }: Props) {
     setHover(null)
   }
 
-  return (
-    <section className="panel spectrum" aria-label="Spectrum" ref={section}>
-      <div className="spectrum-head">
-        <h2>{confirmed ? 'Spectrum: brightness at each wavelength' : 'Measure the spectrum of this spot?'}</h2>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
-      </div>
+  const head = (title: string) => (
+    <div className="spectrum-head">
+      <h2>{title}</h2>
+      <button type="button" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  )
+  // Everything under the title, as Expert has always shown it. Beginner keeps it in its fold.
+  const body = (
+    <>
       <p className="spectrum-what">{data ? describeTarget(request, data) : place}</p>
       {data && circleStarsSentence(data.stars_in_circle) && (
         <p className="spectrum-what stars-in-circle">{circleStarsSentence(data.stars_in_circle)}</p>
@@ -318,100 +323,7 @@ function Panel({ request, onClose }: Props) {
             ))}
           </div>
 
-          <div className="spectrum-plot">
-            <svg
-              viewBox={`0 0 ${W} ${H}`}
-              role="img"
-              aria-label="Brightness against wavelength, one point per SPHEREx exposure"
-              onPointerMove={onMove}
-              onPointerLeave={() => setHover(null)}
-            >
-              {/* An invisible sheet over the whole chart, so the pointer is followed between the marks too. */}
-              <rect width={W} height={H} fill="transparent" />
-              {chart.bands.map((b) => (
-                <g key={b.label}>
-                  {b.shaded && <rect x={b.x} y={M.t} width={b.width} height={PH} fill="#fff" fillOpacity={0.035} />}
-                  <text x={b.x + b.width / 2} y={13} textAnchor="middle">
-                    {b.label}
-                  </text>
-                </g>
-              ))}
-              {chart.ticks.map((t) => (
-                <g key={t.text}>
-                  <line x1={M.l} x2={W - M.r} y1={t.y} y2={t.y} className={t.zero ? 'spectrum-axis' : 'spectrum-grid'} />
-                  <text x={M.l - 8} y={t.y + 4} textAnchor="end">
-                    {t.text}
-                  </text>
-                </g>
-              ))}
-              {[1, 2, 3, 4, 5].map((w) => (
-                <g key={w}>
-                  <line x1={xOf(w)} x2={xOf(w)} y1={M.t + PH} y2={M.t + PH + 5} className="spectrum-axis" />
-                  <text x={xOf(w)} y={M.t + PH + 19} textAnchor="middle">
-                    {w}
-                  </text>
-                </g>
-              ))}
-              <text x={M.l + PW / 2} y={H - 6} textAnchor="middle">
-                Wavelength (micrometres)
-              </text>
-              <text x={14} y={M.t + PH / 2} textAnchor="middle" transform={`rotate(-90 14 ${M.t + PH / 2})`}>
-                Brightness (mJy)
-              </text>
-              {chart.rails.map((r) => (
-                <text key={r.name} x={M.l - 8} y={r.y + 4} textAnchor="end" className="spectrum-rail">
-                  {r.name}
-                </text>
-              ))}
-
-              {/* Error bars first, then the marks on top of them. */}
-              {chart.marks.map((m) =>
-                m.shape === 'dot' ? (
-                  <line key={`e${m.point.obs_id}-${m.point.detector}`} x1={m.x} x2={m.x} y1={m.errTop} y2={m.errBottom} stroke={m.colour} strokeOpacity={0.5} />
-                ) : null,
-              )}
-              {chart.marks.map((m) => {
-                const key = `${m.point.obs_id}-${m.point.detector}`
-                if (m.shape === 'tick')
-                  return <line key={key} x1={m.x} x2={m.x} y1={m.y - 4} y2={m.y + 4} stroke={m.colour} strokeWidth={1.5} />
-                if (m.shape === 'dot') return <circle key={key} cx={m.x} cy={m.y} r={3.5} fill={m.colour} className="spectrum-mark" />
-                const s = m.shape === 'above' ? -1 : 1 // an arrowhead pointing off the chart
-                return (
-                  <path
-                    key={key}
-                    d={`M${m.x} ${m.y + 5 * s} L${m.x - 4.5} ${m.y - 3 * s} L${m.x + 4.5} ${m.y - 3 * s} Z`}
-                    fill={m.colour}
-                    className="spectrum-mark"
-                  />
-                )
-              })}
-              {hover && <circle cx={hover.x} cy={hover.y} r={7} className="spectrum-ring" />}
-              {chart.empty && (
-                <text x={M.l + PW / 2} y={M.t + PH / 2} textAnchor="middle" className="spectrum-empty">
-                  {chart.empty}
-                </text>
-              )}
-            </svg>
-            {hover && (
-              <div
-                className="spectrum-tip"
-                style={{
-                  left: `${(hover.x / W) * 100}%`,
-                  top: `${(hover.y / H) * 100}%`,
-                  transform: `translate(${hover.x > W * 0.6 ? 'calc(-100% - 14px)' : '14px'}, ${hover.y < 100 ? '12px' : 'calc(-100% - 8px)'})`,
-                }}
-              >
-                <b>{hoverText(hover.point)}</b>
-                <div>
-                  {hover.point.wavelength_um.toFixed(3)} µm, detector {hover.point.detector}
-                </div>
-                <div>
-                  <i style={{ background: visitColour(hover.point.epoch) }} />
-                  Visit {hover.point.epoch}, {hover.point.date.slice(0, 10)}
-                </div>
-              </div>
-            )}
-          </div>
+          <SpectrumChart chart={chart} hover={hover} onHover={setHover} />
 
           <div className="spectrum-foot">
             <p>
@@ -436,6 +348,195 @@ function Panel({ request, onClose }: Props) {
           </div>
         </>
       )}
+    </>
+  )
+
+  if (level === 'beginner') {
+    return (
+      <section className="panel spectrum plain-panel" aria-label="Spectrum" ref={section}>
+        {head(confirmed ? SPECTRUM_TITLE : SPECTRUM_SPOT_TITLE)}
+        <p className="plain-intro">{SPECTRUM_INTRO}</p>
+        {!confirmed && (
+          <>
+            <p className="plain-intro">{SPECTRUM_SPOT_ASK}</p>
+            <button type="button" onClick={() => setConfirmed(true)}>
+              {SPECTRUM_SPOT_BUTTON}
+            </button>
+          </>
+        )}
+        {confirmed && load.state === 'loading' && <p className="plain-intro">{SPECTRUM_LOADING}</p>}
+        {load.state === 'error' && (
+          <p className="status error">
+            {SPECTRUM_ERROR} {load.message}
+          </p>
+        )}
+        {data && <PlainSpectrum data={data} />}
+        {data && <ScienceFold>{body}</ScienceFold>}
+      </section>
+    )
+  }
+  return (
+    <section className="panel spectrum" aria-label="Spectrum" ref={section}>
+      {head(confirmed ? 'Spectrum: brightness at each wavelength' : 'Measure the spectrum of this spot?')}
+      {body}
     </section>
+  )
+}
+
+/**
+ * The chart: one mark per exposure, set out by wavelength. Expert's words name the detectors,
+ * the unit and the statuses; Beginner's (`plain`, with the chart's own message in `empty`) say
+ * "infrared colour", "too bright" and "not measured" instead.
+ */
+function SpectrumChart({ chart, hover, onHover, plain = false, empty }: { chart: Chart; hover: Mark | null; onHover: (m: Mark | null) => void; plain?: boolean; empty?: string | null }) {
+  function onMove(e: PointerEvent<SVGSVGElement>) {
+    // The nearest mark to the pointer, so a small dot does not have to be hit exactly.
+    const box = e.currentTarget.getBoundingClientRect()
+    const k = W / box.width
+    const mx = (e.clientX - box.left) * k
+    const my = (e.clientY - box.top) * k
+    let best: Mark | null = null
+    let bestDistance = 24
+    for (const m of chart.marks) {
+      const d = Math.hypot(m.x - mx, m.y - my)
+      if (d < bestDistance) {
+        bestDistance = d
+        best = m
+      }
+    }
+    onHover(best)
+  }
+  const message = plain ? empty : chart.empty
+  return (
+    <div className="spectrum-plot">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label={plain ? 'How bright it is in each infrared colour, one dot per photo' : 'Brightness against wavelength, one point per SPHEREx exposure'}
+        onPointerMove={onMove}
+        onPointerLeave={() => onHover(null)}
+      >
+        {/* An invisible sheet over the whole chart, so the pointer is followed between the marks too. */}
+        <rect width={W} height={H} fill="transparent" />
+        {chart.bands.map((b) => (
+          <g key={b.label}>
+            {b.shaded && <rect x={b.x} y={M.t} width={b.width} height={PH} fill="#fff" fillOpacity={0.035} />}
+            {!plain && (
+              <text x={b.x + b.width / 2} y={13} textAnchor="middle">
+                {b.label}
+              </text>
+            )}
+          </g>
+        ))}
+        {chart.ticks.map((t) => (
+          <g key={t.text}>
+            <line x1={M.l} x2={W - M.r} y1={t.y} y2={t.y} className={t.zero ? 'spectrum-axis' : 'spectrum-grid'} />
+            <text x={M.l - 8} y={t.y + 4} textAnchor="end">
+              {t.text}
+            </text>
+          </g>
+        ))}
+        {[1, 2, 3, 4, 5].map((w) => (
+          <g key={w}>
+            <line x1={xOf(w)} x2={xOf(w)} y1={M.t + PH} y2={M.t + PH + 5} className="spectrum-axis" />
+            <text x={xOf(w)} y={M.t + PH + 19} textAnchor="middle">
+              {w}
+            </text>
+          </g>
+        ))}
+        <text x={M.l + PW / 2} y={H - 6} textAnchor="middle">
+          {plain ? SPECTRUM_AXIS_X : 'Wavelength (micrometres)'}
+        </text>
+        <text x={14} y={M.t + PH / 2} textAnchor="middle" transform={`rotate(-90 14 ${M.t + PH / 2})`}>
+          {plain ? SPECTRUM_AXIS_Y : 'Brightness (mJy)'}
+        </text>
+        {chart.rails.map((r) => (
+          <text key={r.name} x={M.l - 8} y={r.y + 4} textAnchor="end" className="spectrum-rail">
+            {plain ? (SPECTRUM_RAILS[r.name] ?? r.name) : r.name}
+          </text>
+        ))}
+
+        {/* Error bars first, then the marks on top of them. */}
+        {chart.marks.map((m) =>
+          m.shape === 'dot' ? (
+            <line key={`e${m.point.obs_id}-${m.point.detector}`} x1={m.x} x2={m.x} y1={m.errTop} y2={m.errBottom} stroke={m.colour} strokeOpacity={0.5} />
+          ) : null,
+        )}
+        {chart.marks.map((m) => {
+          const key = `${m.point.obs_id}-${m.point.detector}`
+          if (m.shape === 'tick')
+            return <line key={key} x1={m.x} x2={m.x} y1={m.y - 4} y2={m.y + 4} stroke={m.colour} strokeWidth={1.5} />
+          if (m.shape === 'dot') return <circle key={key} cx={m.x} cy={m.y} r={3.5} fill={m.colour} className="spectrum-mark" />
+          const s = m.shape === 'above' ? -1 : 1 // an arrowhead pointing off the chart
+          return (
+            <path
+              key={key}
+              d={`M${m.x} ${m.y + 5 * s} L${m.x - 4.5} ${m.y - 3 * s} L${m.x + 4.5} ${m.y - 3 * s} Z`}
+              fill={m.colour}
+              className="spectrum-mark"
+            />
+          )
+        })}
+        {hover && <circle cx={hover.x} cy={hover.y} r={7} className="spectrum-ring" />}
+        {message && (
+          <text x={M.l + PW / 2} y={M.t + PH / 2} textAnchor="middle" className="spectrum-empty">
+            {message}
+          </text>
+        )}
+      </svg>
+      {hover && (
+        <div
+          className="spectrum-tip"
+          style={{
+            left: `${(hover.x / W) * 100}%`,
+            top: `${(hover.y / H) * 100}%`,
+            transform: `translate(${hover.x > W * 0.6 ? 'calc(-100% - 14px)' : '14px'}, ${hover.y < 100 ? '12px' : 'calc(-100% - 8px)'})`,
+          }}
+        >
+          <b>{plain ? spectrumTipValue(hover.point.status, hover.point.flux_mjy) : hoverText(hover.point)}</b>
+          <div>
+            {plain ? spectrumTip(hover.point.wavelength_um) : `${hover.point.wavelength_um.toFixed(3)} µm, detector ${hover.point.detector}`}
+          </div>
+          <div>
+            <i style={{ background: visitColour(hover.point.epoch) }} />
+            Visit {hover.point.epoch}, {hover.point.date.slice(0, 10)}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Beginner's part of the panel, for an answer that has arrived: what the tool states about this
+ * object (plain.ts), the cautions, the visits as the chart's legend, and the chart in plain
+ * words. Exported for the tests.
+ */
+export function PlainSpectrum({ data }: { data: SpectrumResponse }) {
+  const [hidden, setHidden] = useState<ReadonlySet<number>>(new Set())
+  const [hover, setHover] = useState<Mark | null>(null)
+  const chart = useMemo(() => layout(data, hidden), [data, hidden])
+  const epochs = data.epochs ?? []
+  const allHidden = epochs.length > 0 && epochs.every((e) => hidden.has(e.epoch))
+  function toggleVisit(epoch: number) {
+    const next = new Set(hidden)
+    if (next.has(epoch)) next.delete(epoch)
+    else next.add(epoch)
+    setHidden(next)
+    setHover(null)
+  }
+  return (
+    <>
+      <PlainWords lines={spectrumResult(data)} cautions={measureCautions(data)} />
+      <div className="spectrum-visits">
+        {epochs.map((e) => (
+          <button type="button" key={e.epoch} aria-pressed={!hidden.has(e.epoch)} onClick={() => toggleVisit(e.epoch)}>
+            <i style={{ background: visitColour(e.epoch) }} />
+            {spectrumVisit(e.epoch, e.date_start, e.date_end)}
+          </button>
+        ))}
+      </div>
+      <SpectrumChart chart={chart} hover={hover} onHover={setHover} plain empty={chart.empty ? spectrumEmpty(data, allHidden) : null} />
+    </>
   )
 }

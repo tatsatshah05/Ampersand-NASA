@@ -19,7 +19,7 @@ describe('the list of features', () => {
       ['search', 'Find changes', 'Blind search'],
       ['distant', 'Far-off planet', 'Planet X search'],
       ['smallbodies', 'Asteroids', 'Small bodies'],
-      ['context', 'Other telescopes', 'Sky context'],
+      ['context', 'What is it?', 'Object card'],
       ['practise', 'Practise', 'Training'],
       ['vote', 'Vote', 'Watchlist'],
       ['tools', 'Three tools', 'Methods'],

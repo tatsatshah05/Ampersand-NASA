@@ -37,6 +37,9 @@ import {
 } from '../distant'
 import { limitsSentences } from '../search'
 import { skyToPixel, type Grid } from '../projection'
+import type { UiLevel } from '../address'
+import { DISTANT_FAILED, DISTANT_INTRO, DISTANT_TITLE, DISTANT_WAITING, distantResult } from '../plain'
+import { PlainWords, ScienceFold } from './ScienceFold'
 import './SearchPanel.css'
 import './DistantPanel.css'
 
@@ -61,7 +64,8 @@ interface Props {
   onCandidates?: (candidates: Candidate[], simulation: boolean) => void
   /** Centre the viewer on a sky position. */
   onLook?: (ra: number, dec: number) => void
-  level?: import('../address').UiLevel
+  /** How it is written: Expert as it always was, Beginner in plain words with the rest in one closed fold. */
+  level?: UiLevel
 }
 
 /** Mount with a fresh `key` for each patch: the search starts when it appears. */
@@ -97,7 +101,7 @@ export function SimBanner({ notice }: { notice?: string }) {
   )
 }
 
-function Panel({ query, onClose, onCandidates, onLook }: Props) {
+function Panel({ query, onClose, onCandidates, onLook, level: uiLevel = 'expert' }: Props) {
   const { ra, dec } = query
   const fov = searchFov(query.fov)
   // The real answer and the practice answer are kept apart, so one is never shown as the other.
@@ -139,29 +143,36 @@ function Panel({ query, onClose, onCandidates, onLook }: Props) {
   }
   const plant = (seed: number) => setSim({ level, seed, attempt: 0, phase: { state: 'running', status: null } })
 
-  return (
-    <section className="panel search distant" aria-label="Search for a distant world">
-      {sim && shown.state !== 'done' && <SimBanner />}
-      <div className="search-head">
-        <h2>Search for a distant world (Planet X)</h2>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
-      </div>
+  const plain = uiLevel === 'beginner'
+  const head = (title: string) => (
+    <div className="search-head">
+      <h2>{title}</h2>
+      <button type="button" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  )
+  // Everything Expert shows under its title. Beginner keeps it in its fold, with the progress
+  // said in one sentence that does not change (no clock, no moving bar).
+  const body = (
+    <>
       <p className="hint">
         Patch: RA {ra.toFixed(4)}°, Dec {dec >= 0 ? '+' : '-'}
         {Math.abs(dec).toFixed(4)}°. {patchSentence(fov)}
       </p>
 
-      {shown.state === 'running' && (
-        <div role="status" className="search-progress">
-          <p>{shown.status ? progressSentence(shown.status) : 'Starting the search…'}</p>
-          <div className="progress" aria-hidden="true">
-            <span />
+      {shown.state === 'running' &&
+        (plain ? (
+          <p role="status">{DISTANT_WAITING}</p>
+        ) : (
+          <div role="status" className="search-progress">
+            <p>{shown.status ? progressSentence(shown.status) : 'Starting the search…'}</p>
+            <div className="progress" aria-hidden="true">
+              <span />
+            </div>
+            <p className="hint">{FIRST_TIME_NOTE}</p>
           </div>
-          <p className="hint">{FIRST_TIME_NOTE}</p>
-        </div>
-      )}
+        ))}
 
       {shown.state === 'failed' && (
         <div role="alert" className="search-failed">
@@ -205,6 +216,47 @@ function Panel({ query, onClose, onCandidates, onLook }: Props) {
           </>
         )}
       </div>
+    </>
+  )
+
+  if (plain) {
+    // The plain words are about the real search only; a practice run lives in the fold, with its banner.
+    return (
+      <section className="panel search distant plain-panel" aria-label="Search for a distant world">
+        {head(DISTANT_TITLE)}
+        <p className="plain-intro">{DISTANT_INTRO}</p>
+        {real.state === 'running' && (
+          <p role="status" className="plain-intro">
+            {DISTANT_WAITING}
+          </p>
+        )}
+        {real.state === 'failed' && (
+          <div role="alert" className="search-failed">
+            <p>
+              {DISTANT_FAILED} {real.message}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setReal({ state: 'running', status: null })
+                setAttempt(attempt + 1)
+              }}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        {real.state === 'done' && <PlainWords lines={distantResult(real.result)} />}
+        {sim && <SimBanner />}
+        {real.state !== 'running' && <ScienceFold>{body}</ScienceFold>}
+      </section>
+    )
+  }
+  return (
+    <section className="panel search distant" aria-label="Search for a distant world">
+      {sim && shown.state !== 'done' && <SimBanner />}
+      {head('Search for a distant world (Planet X)')}
+      {body}
     </section>
   )
 }

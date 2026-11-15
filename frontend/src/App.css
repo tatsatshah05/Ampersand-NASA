@@ -1281,15 +1281,8 @@ main.watchlist {
   bottom: var(--dock-room);
 }
 
-/* The same patch in other surveys, as a panel under the picture: its own Close, and a sky
-   atlas of a sensible size instead of the panel's full width. */
-.tool-slot-close {
-  max-width: 1280px;
-  margin: 0 auto 8px;
-  display: flex;
-  justify-content: flex-end;
-}
-
+/* The same patch in other surveys, as a panel under the picture: a sky atlas of a sensible
+   size instead of the panel's full width. */
 .context-slot .aladin {
   max-width: min(100%, 640px);
 }
