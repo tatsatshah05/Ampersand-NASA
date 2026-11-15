@@ -1,0 +1,528 @@
+{
+ "eris": {
+  "centre": [
+   27.37815,
+   -0.11998
+  ],
+  "answer": "1 unexplained moving source(s); the strongest has S/N 14.3 at about 105 AU (2 sigma 83.3 to 153.8 AU). A candidate, not a discovery. One visit reaches only about V 19 for a grey body. That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X.",
+  "visit": {
+   "mjd_first": 60866.085821,
+   "mjd_last": 60881.439791,
+   "duration_days": 15.35,
+   "n_exposures": 57,
+   "n_used": 57,
+   "mjd_t0": 60877.296038909,
+   "distance_leverage_arcsec_per_inv_au": [
+    1580,
+    604
+   ],
+   "median_of_difference_maps_mjy": -0.00018046637184816338
+  },
+  "n_trials": 24439,
+  "control": {
+   "best_reversed_snr": 6.404559431890559,
+   "place_east_north_arcsec": [
+    -72.0,
+    -231.0
+   ],
+   "n_reversed_trials": 13322,
+   "n_reversed_above_threshold": 0
+  },
+  "limit": {
+   "threshold_snr": 8.0,
+   "stacked_mean_noise_mjy": 0.00405,
+   "faintest_mean_flux_mjy": 0.0324,
+   "detectors": [
+    1,
+    2,
+    3
+   ],
+   "searched_area_deg2": 0.0169,
+   "distance_range_au": [
+    50.0,
+    "about 1000"
+   ],
+   "note": "One visit reaches only about V 19 for a grey body. That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X."
+  },
+  "top_peaks": [
+   {
+    "snr": 14.695,
+    "inv_d": 0.009,
+    "ve": 3.659,
+    "vn": -3.536,
+    "east": -3.0,
+    "north": 0.0,
+    "n_trials": 9703
+   },
+   {
+    "snr": 6.789,
+    "inv_d": 0.019,
+    "ve": 0.826,
+    "vn": -5.757,
+    "east": -27.0,
+    "north": -21.0,
+    "n_trials": 14
+   },
+   {
+    "snr": 6.475,
+    "inv_d": 0.019,
+    "ve": -1.174,
+    "vn": -0.257,
+    "east": -81.0,
+    "north": -231.0,
+    "n_trials": 9
+   },
+   {
+    "snr": 6.137,
+    "inv_d": 0.009,
+    "ve": -2.841,
+    "vn": -5.536,
+    "east": 6.0,
+    "north": 3.0,
+    "n_trials": 75
+   },
+   {
+    "snr": 6.024,
+    "inv_d": 0.018,
+    "ve": 12.945,
+    "vn": -12.369,
+    "east": 75.0,
+    "north": -78.0,
+    "n_trials": 25
+   }
+  ],
+  "candidate": {
+   "ra": 27.377769,
+   "dec": -0.11998,
+   "mjd_t0": 60877.296038909,
+   "offset_arcsec": [
+    -1.37,
+    0.0
+   ],
+   "drift_arcsec_day": [
+    4.12,
+    -3.371
+   ],
+   "snr": 14.3,
+   "coarse_snr": 14.69,
+   "mean_flux_mjy": 0.0696,
+   "per_detector": {
+    "D1": {
+     "n_exposures": 19,
+     "flux_mjy": 0.105,
+     "snr": 11.34
+    },
+    "D2": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0667,
+     "snr": 7.94
+    },
+    "D3": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0479,
+     "snr": 6.5
+    }
+   },
+   "n_detectors_with_2sigma": 3,
+   "still_there": [
+    {
+     "mjd": [
+      61035.5,
+      61060.2
+     ],
+     "n": 54,
+     "flux_mjy": -0.0022,
+     "error_mjy": 0.0039,
+     "there": false
+    },
+    {
+     "mjd": [
+      61232.7,
+      61243.4
+     ],
+     "n": 56,
+     "flux_mjy": -0.0035,
+     "error_mjy": 0.004,
+     "there": false
+    }
+   ],
+   "delta_s2_infinite": 46.2,
+   "snr_at_infinity": 12.58,
+   "reversed_earth_snr_mirror_distance": 10.18,
+   "distance_measured": true,
+   "profile": {
+    "inv_d": [
+     -0.012,
+     -0.011,
+     -0.01,
+     -0.009,
+     -0.008,
+     -0.007,
+     -0.006,
+     -0.005,
+     -0.004,
+     -0.003,
+     -0.002,
+     -0.001,
+     0.0,
+     0.001,
+     0.002,
+     0.003,
+     0.004,
+     0.005,
+     0.006,
+     0.007,
+     0.008,
+     0.009,
+     0.01,
+     0.011,
+     0.012,
+     0.013,
+     0.014,
+     0.015,
+     0.016,
+     0.017,
+     0.018,
+     0.019,
+     0.02
+    ],
+    "snr": [
+     9.64,
+     9.8,
+     10.05,
+     10.3,
+     10.75,
+     10.96,
+     11.16,
+     11.32,
+     11.45,
+     11.76,
+     12.1,
+     12.32,
+     12.58,
+     12.82,
+     13.18,
+     13.39,
+     13.53,
+     13.85,
+     14.13,
+     14.2,
+     14.25,
+     14.29,
+     14.29,
+     14.27,
+     14.23,
+     14.03,
+     14.0,
+     13.82,
+     13.6,
+     13.35,
+     13.13,
+     12.91,
+     12.63
+    ]
+   },
+   "distance_au": 105.3,
+   "interval_1sigma_au": [
+    90.9,
+    111.1
+   ],
+   "interval_2sigma_au": [
+    83.3,
+    153.8
+   ],
+   "known_body": [],
+   "verdict": "candidate (unexplained moving source; not a discovery)"
+  },
+  "scored_against_jpl": {
+   "separation_arcsec": 1.37,
+   "observer_distance_au": 95.5061410823939,
+   "jpl_linear_drift": [
+    3.914,
+    -3.606
+   ]
+  },
+  "checks": {
+   "A1 within 4 arcsec of JPL": true,
+   "A2 S/N >= 12": true,
+   "A3 no other track >= 8, reversed-Earth maximum elsewhere < 8": true,
+   "A4 2-sigma interval contains JPL distance, best within 20%": true,
+   "A5 delta S^2 vs infinity >= 25": true,
+   "A6 drift within 0.5 arcsec/day of JPL's": true
+  },
+  "passed": true,
+  "runtime_s": 244.6
+ },
+ "sedna_centre": [
+  61.78652,
+  8.82802
+ ],
+ "sedna": {
+  "centre": [
+   61.78652,
+   8.82802
+  ],
+  "answer": "Nothing moving above S/N 8 in 0.0169 square degrees, 50 to about 1000 AU, one visit: stacked mean flux limit 0.0333 mJy in D1/D2/D3. One visit reaches only about V 19 for a grey body. That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X.",
+  "n_trials": 24439,
+  "top_peaks": [
+   {
+    "snr": 10.411,
+    "inv_d": 0.003,
+    "ve": -1.014,
+    "vn": -1.832,
+    "east": 78.0,
+    "north": 183.0,
+    "n_trials": 2025
+   },
+   {
+    "snr": 7.811,
+    "inv_d": 0.016,
+    "ve": -0.588,
+    "vn": -6.724,
+    "east": 87.0,
+    "north": 180.0,
+    "n_trials": 1653
+   },
+   {
+    "snr": 7.609,
+    "inv_d": 0.015,
+    "ve": 0.421,
+    "vn": -8.125,
+    "east": 87.0,
+    "north": 195.0,
+    "n_trials": 1809
+   },
+   {
+    "snr": 7.295,
+    "inv_d": 0.019,
+    "ve": -3.104,
+    "vn": -7.922,
+    "east": 99.0,
+    "north": 198.0,
+    "n_trials": 556
+   },
+   {
+    "snr": 7.08,
+    "inv_d": 0.015,
+    "ve": 8.921,
+    "vn": -8.125,
+    "east": -48.0,
+    "north": 45.0,
+    "n_trials": 655
+   }
+  ],
+  "control": {
+   "best_reversed_snr": 6.684008749069639,
+   "place_east_north_arcsec": [
+    -3.0,
+    -84.0
+   ],
+   "n_reversed_trials": 13322,
+   "n_reversed_above_threshold": 0
+  },
+  "forced_along_jpl": {
+   "n_used": 58,
+   "all": {
+    "snr": 7.51,
+    "n_exposures": 58
+   },
+   "D1": {
+    "snr": 3.89,
+    "n_exposures": 20
+   },
+   "D2": {
+    "snr": 4.95,
+    "n_exposures": 19
+   },
+   "D3": {
+    "snr": 3.07,
+    "n_exposures": 19
+   }
+  },
+  "n_candidates": 1,
+  "passed": true,
+  "n_exposures_in_visit": 57
+ },
+ "eris_shift": {
+  "centre": [
+   27.411483406417283,
+   -0.14498
+  ],
+  "answer": "1 unexplained moving source(s); the strongest has S/N 15.6 at about 118 AU (2 sigma 90.9 to 142.9 AU). A candidate, not a discovery. One visit reaches only about V 19 for a grey body. That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X.",
+  "visit": {
+   "mjd_first": 60866.085821,
+   "mjd_last": 60881.439791,
+   "duration_days": 15.35,
+   "n_exposures": 57,
+   "n_used": 57,
+   "mjd_t0": 60877.296038909,
+   "distance_leverage_arcsec_per_inv_au": [
+    1580,
+    604
+   ],
+   "median_of_difference_maps_mjy": -0.00014863732290841482
+  },
+  "n_trials": 24439,
+  "control": {
+   "best_reversed_snr": 8.352847462770582,
+   "place_east_north_arcsec": [
+    -48.0,
+    -216.0
+   ],
+   "n_reversed_trials": 13322,
+   "n_reversed_above_threshold": 1
+  },
+  "limit": {
+   "threshold_snr": 8.0,
+   "stacked_mean_noise_mjy": 0.00401,
+   "faintest_mean_flux_mjy": 0.032,
+   "detectors": [
+    1,
+    2,
+    3
+   ],
+   "searched_area_deg2": 0.0169,
+   "distance_range_au": [
+    50.0,
+    "about 1000"
+   ],
+   "note": "One visit reaches only about V 19 for a grey body. That is about 2 magnitudes shallower than Pan-STARRS (V 21.5) and than Planet Nine's predicted brightness, so this search cannot test Planet Nine or Planet X."
+  },
+  "top_peaks": [
+   {
+    "snr": 15.065,
+    "inv_d": 0.009,
+    "ve": 3.676,
+    "vn": -3.549,
+    "east": -123.0,
+    "north": 90.0,
+    "n_trials": 7710
+   },
+   {
+    "snr": 7.9,
+    "inv_d": 0.007,
+    "ve": 0.792,
+    "vn": -1.158,
+    "east": -60.0,
+    "north": -219.0,
+    "n_trials": 1
+   },
+   {
+    "snr": 7.441,
+    "inv_d": 0.013,
+    "ve": -3.172,
+    "vn": -12.222,
+    "east": 189.0,
+    "north": 93.0,
+    "n_trials": 493
+   },
+   {
+    "snr": 7.35,
+    "inv_d": 0.018,
+    "ve": 0.98,
+    "vn": -10.395,
+    "east": -54.0,
+    "north": -195.0,
+    "n_trials": 123
+   },
+   {
+    "snr": 7.068,
+    "inv_d": 0.018,
+    "ve": 6.48,
+    "vn": -6.895,
+    "east": 168.0,
+    "north": 81.0,
+    "n_trials": 1
+   }
+  ],
+  "candidate": {
+   "ra": 27.377608,
+   "dec": -0.119869,
+   "mjd_t0": 60877.296038909,
+   "offset_arcsec": [
+    -121.95,
+    90.4
+   ],
+   "drift_arcsec_day": [
+    3.846,
+    -3.438
+   ],
+   "snr": 15.63,
+   "coarse_snr": 15.06,
+   "mean_flux_mjy": 0.0693,
+   "per_detector": {
+    "D1": {
+     "n_exposures": 19,
+     "flux_mjy": 0.1035,
+     "snr": 13.37
+    },
+    "D2": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0678,
+     "snr": 9.77
+    },
+    "D3": {
+     "n_exposures": 19,
+     "flux_mjy": 0.0466,
+     "snr": 7.0
+    }
+   },
+   "n_detectors_with_2sigma": 3,
+   "still_there": [
+    {
+     "mjd": [
+      61035.5,
+      61060.2
+     ],
+     "n": 50,
+     "flux_mjy": 0.0011,
+     "error_mjy": 0.004,
+     "there": false
+    },
+    {
+     "mjd": [
+      61232.7,
+      61243.4
+     ],
+     "n": 55,
+     "flux_mjy": -0.0026,
+     "error_mjy": 0.004,
+     "there": false
+    }
+   ],
+   "delta_s2_infinite": 54.6,
+   "snr_at_infinity": 13.78,
+   "reversed_earth_snr_mirror_distance": 12.34,
+   "distance_measured": true,
+   "distance_au": 117.6,
+   "interval_1sigma_au": [
+    105.3,
+    117.6
+   ],
+   "interval_2sigma_au": [
+    90.9,
+    142.9
+   ],
+   "known_body": [],
+   "verdict": "candidate (unexplained moving source; not a discovery)"
+  },
+  "scored_against_jpl": {
+   "separation_arcsec": 1.99,
+   "observer_distance_au": 95.5061410823939,
+   "jpl_linear_drift": [
+    3.914,
+    -3.606
+   ]
+  },
+  "checks": {
+   "A1 within 4 arcsec of JPL": true,
+   "A2 S/N >= 12": true,
+   "A3 no other track >= 8, reversed-Earth maximum elsewhere < 8": false,
+   "A4 2-sigma interval contains JPL distance, best within 20%": false,
+   "A5 delta S^2 vs infinity >= 25": true,
+   "A6 drift within 0.5 arcsec/day of JPL's": true
+  },
+  "passed": false,
+  "runtime_s": 401.9
+ }
+}
