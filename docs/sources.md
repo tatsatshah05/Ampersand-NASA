@@ -288,6 +288,8 @@ Comparison values and inspiration
 - Kirkpatrick, J. D., et al. 2021, ApJS, 253, 7 (WISE 0855 motion and parallax)
 - Kokori, A., et al. 2023, ApJS, 265, 4 (ExoClock; WASP-62 b ephemeris and depth)
 - Kuchner, M. J., et al. 2017, ApJL, 841, L19 (Backyard Worlds: Planet 9)
+- Luhman, K. L. 2014, ApJ, 781, 4 (a search of WISE data for a distant companion of the Sun; deeper than our Planet X search). doi:10.1088/0004-637X/781/1/4
+- Meisner, A. M., et al. 2017, AJ, 153, 65; 2018, AJ, 155, 166 (searches of WISE and NEOWISE data for Planet Nine; deeper than our Planet X search). doi:10.3847/1538-3881/153/2/65, doi:10.3847/1538-3881/aaae70
 
 Software
 

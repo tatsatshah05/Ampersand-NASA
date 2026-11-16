@@ -37,6 +37,8 @@ Our sweep of NASA SPHEREx's pictures of the Milky Way turned up three infrared s
 
 The tool that found them is a public website for everyone. NASA's NEOWISE telescope watched the infrared sky change for ten years and stopped in August 2024. SPHEREx now photographs the whole sky in infrared light again and again. Type a star's name or a position, and the real SPHEREx pictures of that patch of sky play like a short film, as the challenge asks. The tool also searches the pictures for things that moved or changed, and it writes every result twice: in plain words for anyone, and with the numbers for scientists. We tested it on the challenge's five targets: it measures Barnard's Star moving 10.4 arcseconds between August 2025 and August 2026, and the Gaia catalogue predicts 10.3.
 
+The challenge is named after Planet X, so the tool has a search for it. A planet far beyond Neptune does not creep across the picture. It jumps between visits, because SPHEREx sees it from opposite sides of the Earth's path round the Sun, and the size of the jump gives its distance. Our Far-off planet search looks for exactly that jump. In the 14 patches of sky searched so far it found no candidate. To test it we planted made-up objects in real pictures: it found 177 of the 205 that were bright enough, with the distance right to about one per cent. It does not see deeper than earlier searches, so it does not rule Planet X in or out. A practice round, marked SIMULATION, lets anyone learn to spot such an object.
+
 ## 3. Link to Project Demo
 
 **[TO FILL IN]** The form asks for a 7-slide presentation or a video of 30 seconds or less, at a public link that needs no sign-in. The 7-slide deck exists (`docs/pitch/`, two versions of 7 slides each) and is not uploaded anywhere public yet. Upload the final one (Google Drive with "Anyone with the link", or this repository) and paste its link here. If AI wrote the slides' text or voiced a video, say so on the last slide or in the video's description: the form asks for that.
@@ -58,7 +60,7 @@ It has ten features, which stay in view on every screen:
 - Watch: play, pause, step, blink and zoom. Beside the picture, one sentence says what happened and one table lists every visit. For a moving star it gives the measured shift and what the Gaia catalogue predicts.
 - Brightness and Colours: how bright the object was at each visit, and in each colour of infrared light that SPHEREx sees (102 colours, from 0.75 to 5 micrometres).
 - Find changes: a search of the patch for anything that moved or changed. Every find is checked against five star catalogues and against the faults we found in SPHEREx data.
-- Far-off planet: a search for a distant world such as Planet X, by the jump it would make between visits.
+- Far-off planet: the Planet X search. A world far beyond Neptune jumps between visits. The search looks for that jump in the patch, and says how bright a world at each distance would have had to be for it to show.
 - Asteroids: the known asteroids and comets that NASA/JPL predicts in the patch.
 - What is it?: what the catalogues know about any star you press.
 - Practise: real pictures with one made-up moving object, marked SIMULATION, to learn what a mover looks like.
@@ -86,7 +88,13 @@ The challenge's five targets, on real SPHEREx data:
 - RW Aurigae became about 1.6 times as bright at 0.75 to 1.1 micrometres between September 2025 and September 2026, and about half as bright at 3.9 to 5 micrometres. Ground observers (AAVSO) saw it brighten 1.7 times.
 - R Draconis overexposes every photo, so the tool gives no brightness for it. The light in a ring just around the star rises and falls by 2 to 3 times, in step with the 246-day cycle that AAVSO observers record. That is a relative measure, not a brightness.
 
-Planet X. Our search found no candidate in any patch it searched. To test it we planted made-up objects in real pictures: it found 177 of the 205 that were bright enough. Our limits are not deeper than earlier searches, so this does not rule Planet X in or out.
+Planet X. A planet far beyond Neptune does not creep across the picture. It jumps between visits, because SPHEREx sees it from opposite sides of the Earth's path round the Sun. A world 500 times as far from the Sun as the Earth, where the proposed Planet Nine would be, jumps about 14 arcminutes, nearly half the Moon's width. The size of the jump gives the distance. Our Far-off planet search (Planet X search in Expert) looks for sources that come and go between visits, and links those that one body at one distance explains.
+
+- On the real sky: no candidate in any of the 14 patches searched so far, and nothing when the same search is run with the Earth's motion reversed (a test of chance matches).
+- On made-up objects planted in real pictures: it found 177 of the 205 that were bright enough in three visits, with the distance right to about one per cent. In all 539 planted runs it linked nothing except the planted object.
+- The honest limit: around WISE 0855, an object brighter than about 0.2 millijanskys at 4 to 5 micrometres, between 1,000 and 30,000 times the Earth-Sun distance, would have been found if it lay in the part of the picture the search can use (a fifth of it at 1,000 times that distance, about two thirds at 30,000). Searches of ten years of WISE pictures go deeper (Luhman 2014; Meisner et al. 2017, 2018). So this is no new limit on Planet Nine, and it does not rule Planet X in or out.
+- What it adds: anyone can point the search at a patch, it uses a second telescope and new years (2025 and 2026), and it says plainly what it would have seen. Every new SPHEREx visit adds one more place to check, which makes a chance match less likely.
+- Two more things made for Planet X: Practise, where anyone learns to spot a made-up far-off world in real pictures (marked SIMULATION), and Follow the bend on the Three tools screen, which found the dwarf planet Eris in the pictures of one visit, in a patch centred on Eris. That is a test on a known world. It cannot test Planet Nine, which is expected to look several times fainter than the faintest thing that method can see.
 
 A sweep of the Milky Way's plane. We compared 1,162,894 sources over 472.6 square degrees between three SPHEREx visits. The sweep was not told where anything was. It found two known novae by itself, and it was left with three sources that it could not explain. Four independent AI reviewers attacked each one, each with its own code on the real data, and a referee ruled on what may be said. These are the three sentences, word for word:
 
@@ -105,7 +113,7 @@ BENEFITS
 
 WHAT WE HOPE TO ACHIEVE
 
-NASA's NEOWISE telescope watched the infrared sky change for ten years, and stopped in August 2024. SPHEREx can carry that on. We hope people use this tool on SPHEREx as they used WiseView on the WISE pictures, and that astronomers check the three candidates. SPHEREx's next visits, about February to April 2027, will show how each one has changed.
+NASA's NEOWISE telescope watched the infrared sky change for ten years, and stopped in August 2024. SPHEREx can carry that on. We hope people use this tool on SPHEREx as they used WiseView on the WISE pictures, and that astronomers check the three candidates. SPHEREx's next visits, about February to April 2027, will show how each one has changed. Each new visit also makes the Planet X search stronger, and anyone can run it on a patch nobody has searched.
 
 TOOLS
 
@@ -168,6 +176,7 @@ PAPERS
 - WISE 0855's motion: Kirkpatrick et al. 2021.
 - WiseView: Caselden et al. 2018. Backyard Worlds: Kuchner et al. 2017.
 - SPHEREx and objects that change: Karambelkar et al. 2026 (arXiv:2602.07129); Astronomer's Telegrams 17601 and 18127 (nova V572 Velorum).
+- Earlier searches of WISE pictures for a distant planet, which go deeper than ours: Luhman 2014; Meisner et al. 2017, 2018.
 - Finding a distant body's distance from a short arc, and adding up pictures along a path: Bernstein and Khushalani 2000; Rice and Laughlin 2020.
 - WASP-62 b: Hellier et al. 2012; Kokori et al. 2023.
 - The full list, with every catalogue and every search: docs/sources.md in our repository.
