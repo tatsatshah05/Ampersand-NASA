@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Submission Copy Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow working column. Text answers first, then the two link lists as rows of
+   two click-to-copy cells (name, address) with a tick for "added to the form". */
+:root {
+  --bg: #ffffff;
+  --surface: #f5f6f8;
+  --fg: #0e1114;
+  --muted: #5a6370;
+  --line: #dde1e7;
+  --ink: #0e1114;
+  --on-ink: #ffffff;
+  --ok: #0a7a4d;
+  --ok-bg: #e6f4ec;
+  --focus: #1f5fe0;
+  --font-text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1114; --surface: #171b21; --fg: #f1f3f5; --muted: #9aa3ae; --line: #2a3039;
+    --ink: #f1f3f5; --on-ink: #0e1114; --ok: #56d39d; --ok-bg: #12271e; --focus: #86adff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1114; --surface: #171b21; --fg: #f1f3f5; --muted: #9aa3ae; --line: #2a3039;
+  --ink: #f1f3f5; --on-ink: #0e1114; --ok: #56d39d; --ok-bg: #12271e; --focus: #86adff;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-block: 32px 96px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.page { max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+
+h1, h2, h3 { font-family: var(--font-head); font-weight: 600; margin: 0; text-wrap: balance; }
+h1 { font-size: 30px; line-height: 1.15; letter-spacing: -0.01em; }
+h2 { font-size: 20px; line-height: 1.25; }
+h3 { font-size: 15px; line-height: 1.3; font-family: var(--font-text); }
+p { margin: 0; }
+.lede { color: var(--muted); max-width: 62ch; margin-top: 10px; }
+
+.jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.jump a {
+  color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 14px; font-size: 13px; font-weight: 500;
+}
+.jump a:hover { background: var(--surface); }
+
+section { display: flex; flex-direction: column; gap: 16px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.section-head .count { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.section-head .spacer { flex: 1; }
+.hint { color: var(--muted); font-size: 13.5px; max-width: 70ch; }
+
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.plain {
+  background: none; border: 1px solid var(--line); border-radius: 8px; padding: 5px 12px;
+  font-size: 13px; cursor: pointer;
+}
+.plain:hover { background: var(--surface); }
+
+/* ---- text answers ---- */
+.fields { display: flex; flex-direction: column; gap: 14px; }
+.field { border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.field-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.field-head .meta { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.field-head .spacer { flex: 1; }
+.copy-main {
+  background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); border-radius: 8px;
+  padding: 7px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; min-width: 92px;
+}
+.copy-main.done { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.value {
+  background: var(--surface); border-radius: 8px; padding: 12px 14px; white-space: pre-wrap;
+  overflow-wrap: anywhere; font-size: 14px; min-width: 0;
+}
+.value.long { max-height: 260px; overflow: auto; }
+.value.url { font-family: var(--font-mono); font-size: 13px; }
+.note { font-size: 13.5px; color: var(--muted); max-width: 72ch; }
+.note strong { color: var(--fg); font-weight: 600; }
+
+/* ---- link rows ---- */
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.row {
+  display: grid; grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1.05fr) auto;
+  gap: 8px; align-items: stretch;
+}
+.tick { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; cursor: pointer; }
+.tick input { width: 18px; height: 18px; margin: 0; accent-color: var(--ok); cursor: pointer; }
+.cell {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+  cursor: pointer; min-width: 0; width: 100%;
+}
+.cell:hover { background: var(--surface); border-color: var(--muted); }
+.cell .v { min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+.cell.url .v { font-family: var(--font-mono); font-size: 12.5px; }
+.cell .tag {
+  flex: none; font-size: 11.5px; font-weight: 600; color: var(--muted); border: 1px solid var(--line);
+  border-radius: 999px; padding: 2px 9px; min-width: 58px; text-align: center;
+}
+.cell.copied { border-color: var(--ok); }
+.cell.copied .tag { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
+.open {
+  align-self: center; color: var(--muted); font-size: 12.5px; text-decoration: underline;
+  text-underline-offset: 3px; padding: 4px 2px;
+}
+.open:hover { color: var(--fg); }
+.row.added .cell { opacity: 0.5; }
+.row-note { grid-column: 2 / -1; font-size: 12.5px; color: var(--muted); margin-top: -2px; }
+
+@media (max-width: 680px) {
+  h1 { font-size: 25px; }
+  .row { grid-template-columns: minmax(0, 1fr) auto; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .tick { grid-column: 1; }
+  .open { grid-column: 2; grid-row: 1; }
+  .cell { grid-column: 1 / -1; }
+  .row-note { grid-column: 1 / -1; }
+}
+
+.live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (prefers-reduced-motion: no-preference) {
+  .cell, .copy-main { transition: background-color 120ms ease, border-color 120ms ease; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Submission copy sheet</h1>
+    <p class="lede">Every answer for the Space Apps project form. Press a button to copy that one value, then paste it into the form. In the link lists, each row is one “Add New Link”: press the name, paste it, press the address, paste it.</p>
+    <nav class="jump" aria-label="Jump to">
+      <a href="#answers">Text answers</a>
+      <a href="#nasa">NASA Data</a>
+      <a href="#other">Partner &amp; Other Data</a>
+    </nav>
+  </header>
+
+  <section id="answers" aria-labelledby="answers-h">
+    <div class="section-head"><h2 id="answers-h">Text answers</h2></div>
+    <div class="fields" id="fields"></div>
+  </section>
+
+  <section id="nasa" aria-labelledby="nasa-h">
+    <div class="section-head">
+      <h2 id="nasa-h">NASA Data</h2>
+      <span class="count" id="nasa-count"></span>
+      <span class="spacer"></span>
+      <button type="button" class="plain" id="nasa-clear">Clear ticks</button>
+    </div>
+    <p class="hint">Most important first. A row ticks itself once you have copied both its name and its address.</p>
+    <div class="rows" id="nasa-rows"></div>
+  </section>
+
+  <section id="other" aria-labelledby="other-h">
+    <div class="section-head">
+      <h2 id="other-h">Space Agency Partner &amp; Other Data</h2>
+      <span class="count" id="other-count"></span>
+      <span class="spacer"></span>
+      <button type="button" class="plain" id="other-clear">Clear ticks</button>
+    </div>
+    <p class="hint">GitHub is the first row. Most important first.</p>
+    <div class="rows" id="other-rows"></div>
+  </section>
+</div>
+<div class="live" aria-live="polite" id="live"></div>
+
+<script type="application/json" id="data">{"fields": [{"id": "name", "label": "Project Name", "value": "SPHEREx sky-change viewer", "note": "The site's top bar says Ampersand. Change this name if you want the two to match."}, {"id": "summary", "label": "Summary", "value": "Our sweep of NASA SPHEREx's pictures of the Milky Way turned up three infrared sources that we found in no catalogue or report we checked. SPHEREx could not detect them in mid-2025, and saw them more than 100, at least 250 and at least 30 times brighter in 2026. They are candidates: nobody has confirmed them. The same sweep also found two known novae.\n\nThe tool that found them is a public website. Type a star's name or a position, and SPHEREx's real infrared pictures of that patch play like a short film. It also searches them for anything that moved or changed, and writes every result twice: in plain words, and with the numbers for scientists. On the challenge's five targets, it measures Barnard's Star moving 10.4 arcseconds in a year; the Gaia catalogue predicts 10.3.\n\nFor Planet X, it looks for the jump a planet far beyond Neptune makes between visits. It found no candidate in 14 patches of sky. Of the made-up objects we planted in real pictures that were bright enough, it found 177 of 205.\n\nNASA's NEOWISE stopped watching the infrared sky change in 2024. With this tool, anyone can watch SPHEREx carry that on.", "meta": "1,129 of 1,500 characters, 200 words"}, {"id": "demo", "label": "Project Demo (link)", "noteLead": "Not ready.", "note": "Upload the 7-slide deck, or a video of 30 seconds or less, to a public link that needs no sign-in. Then paste that link in the form."}, {"id": "project", "label": "Project (link)", "value": "https://spherex-sky-change-viewer.onrender.com", "url": true, "note": "The box takes one link. Keep the website here: the GitHub link goes in Project Details and in the second link list."}, {"id": "github", "label": "GitHub link", "value": "https://github.com/tatsatshah05/Ampersand-NASA", "url": true, "note": "Already inside Project Details and the first row of Partner & Other Data. Here for anywhere else you want it."}, {"id": "details", "label": "Project Details", "value": "WHAT IT DOES\n\nSPHEREx sky-change viewer is a public website: https://spherex-sky-change-viewer.onrender.com. Its code and every write-up are public too: https://github.com/tatsatshah05/Ampersand-NASA. Type a star's name or a position (right ascension and declination), and it shows NASA SPHEREx's real infrared pictures of that patch of sky, one picture per visit, played like a short film. A visit is one pass of SPHEREx over the patch; SPHEREx comes back about every six months. Anything that moved or changed between visits stands out. The site opens on a source that appeared between two visits, blinking between the picture without it and the picture with it. That source is one of three that our own sweep turned up and that we found in no catalogue or report we checked. They are candidates, and nobody has confirmed them (see WHAT WE TESTED AND FOUND).\n\nIt has ten features, which stay in view on every screen:\n\n- Watch: play, pause, step, blink and zoom. Beside the picture, one sentence says what happened and one table lists every visit. For a moving star it gives the measured shift and what the Gaia catalogue predicts.\n- Brightness and Colours: how bright the object was at each visit, and in each colour of infrared light that SPHEREx sees (102 colours, from 0.75 to 5 micrometres).\n- Find changes: a search of the patch for anything that moved or changed. Every find is checked against five star catalogues and against the faults we found in SPHEREx data.\n- Far-off planet: the Planet X search. A world far beyond Neptune jumps between visits. The search looks for that jump in the patch, and says how bright a world at each distance would have had to be for it to show.\n- Asteroids: the known asteroids and comets that NASA/JPL predicts in the patch.\n- What is it?: what the catalogues know about any star you press.\n- Practise: real pictures with one made-up moving object, marked SIMULATION, to learn what a mover looks like.\n- Observe anomalies: everything our searches saw change, for people to look at and vote on. Type any place to have it searched and kept under watch.\n- Three tools: three more ways to look for hidden worlds, each tested on a world that astronomers already know.\n\nEvery result is written twice: Beginner, in plain words, and Expert, with the numbers. A \"Demo mode\" button gives a guided tour of the whole site.\n\nHOW IT WORKS\n\n1. It finds where the star is today. Stars move: Barnard's Star has moved 4.5 arcminutes since 2000. Positions and motions come from ESA's Gaia catalogue and the SIMBAD database.\n2. It asks NASA's archive (IRSA) for every SPHEREx photo of that place, and fetches only the small patch it needs, never the whole 65 MB file.\n3. It cleans each photo (it removes the glow of dust in the Solar System and the pixels marked as bad) and lines it up with north at the top.\n4. It adds up each visit's photos from one detector into one deeper picture. This matters: in a single SPHEREx photo the colour of light changes across the image, so two single photos differ in colour, not only in time. Adding up a visit removes that, and shows fainter objects.\n5. It draws every visit on one brightness scale, so a change on screen is a change in the data.\n6. It measures the object: where it is, how strongly it is detected, and how that compares with the catalogue.\n\nWHAT WE TESTED AND FOUND\n\nThe challenge's five targets, on real SPHEREx data:\n\n- Barnard's Star moved 10.4 arcseconds between August 2025 and August 2026. Gaia predicts 10.3.\n- Epsilon Indi B shows in all six detectors and moves 6.3 arcseconds between April 2025 and October 2026, on the catalogue's track.\n- WISE 0855 shows only at the longest wavelengths, 3.8 to 5.0 micrometres, once each visit's photos are added up. Our independent check measures it moving 8.4 arcseconds west in a year (give or take 0.4); the catalogue predicts 8.0.\n- RW Aurigae became about 1.6 times as bright at 0.75 to 1.1 micrometres between September 2025 and September 2026, and about half as bright at 3.9 to 5 micrometres. Ground observers (AAVSO) saw it brighten 1.7 times.\n- R Draconis overexposes every photo, so the tool gives no brightness for it. The light in a ring just around the star rises and falls by 2 to 3 times, in step with the 246-day cycle that AAVSO observers record. That is a relative measure, not a brightness.\n\nPlanet X. A planet far beyond Neptune does not creep across the picture. It jumps between visits, because SPHEREx sees it from opposite sides of the Earth's path round the Sun. A world 500 times as far from the Sun as the Earth, where the proposed Planet Nine would be, jumps about 14 arcminutes, nearly half the Moon's width. The size of the jump gives the distance. Our Far-off planet search (Planet X search in Expert) looks for sources that come and go between visits, and links those that one body at one distance explains.\n\n- On the real sky: no candidate in any of the 14 patches searched so far, and nothing when the same search is run with the Earth's motion reversed (a test of chance matches).\n- On made-up objects planted in real pictures: it found 177 of the 205 that were bright enough in three visits, with the distance right to about one per cent. In all 539 planted runs it linked nothing except the planted object.\n- The honest limit: around WISE 0855, an object brighter than about 0.2 millijanskys at 4 to 5 micrometres, between 1,000 and 30,000 times the Earth-Sun distance, would have been found if it lay in the part of the picture the search can use (a fifth of it at 1,000 times that distance, about two thirds at 30,000). Searches of ten years of WISE pictures go deeper (Luhman 2014; Meisner et al. 2017, 2018). So this is no new limit on Planet Nine, and it does not rule Planet X in or out.\n- What it adds: anyone can point the search at a patch, it uses a second telescope and new years (2025 and 2026), and it says plainly what it would have seen. Every new SPHEREx visit adds one more place to check, which makes a chance match less likely.\n- Two more things made for Planet X: Practise, where anyone learns to spot a made-up far-off world in real pictures (marked SIMULATION), and Follow the bend on the Three tools screen, which found the dwarf planet Eris in the pictures of one visit, in a patch centred on Eris. That is a test on a known world. It cannot test Planet Nine, which is expected to look several times fainter than the faintest thing that method can see.\n\nA sweep of the Milky Way's plane. We compared 1,162,894 sources over 472.6 square degrees between three SPHEREx visits. The sweep was not told where anything was. It found two known novae by itself, and it was left with three sources that it could not explain. Four independent AI reviewers attacked each one, each with its own code on the real data, and a referee ruled on what may be said. These are the three sentences, word for word:\n\n- Candidate A, an infrared source in Sagittarius, was too faint to detect in SPHEREx images from late August and early September 2025 and was more than 100 times brighter by late March 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.\n- Candidate B, an infrared source in Scorpius, was too faint to detect in SPHEREx images from August and September 2025, had appeared by late February 2026 and was at least 250 times brighter by August 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.\n- Candidate C, an infrared source in Norma, was too faint to detect in SPHEREx images from July and August 2025, was at least 30 times brighter in late February and early March 2026 and had faded again by August 2026; its light hints at a nova hidden behind the Milky Way's dust, but it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.\n\nWe checked more than 30 public catalogues and alert lists for each one and found no earlier report. A person must still finish those searches, and an astronomer must check the numbers, so we have reported them to no one yet. Nothing in this project is called a discovery.\n\nBENEFITS\n\n- Anyone can watch the infrared sky change in real NASA data, with no download, no account and no code.\n- It says plainly what it cannot do. It marks overexposed pixels, says when an object is not seen, labels every simulation, and calls an unexplained source a candidate.\n- Citizen scientists get a list of unexplained changes to look at, and can put any patch of sky under watch: the tool searches it again when NASA's archive has more pictures of it.\n- Scientists get the numbers, files to download, and a web address for every view.\n\nWHAT WE HOPE TO ACHIEVE\n\nNASA's NEOWISE telescope watched the infrared sky change for ten years, and stopped in August 2024. SPHEREx can carry that on. We hope people use this tool on SPHEREx as they used WiseView on the WISE pictures, and that astronomers check the three candidates. SPHEREx's next visits, about February to April 2027, will show how each one has changed. Each new visit also makes the Planet X search stronger, and anyone can run it on a patch nobody has searched.\n\nHOW IT IS CREATIVE\n\n- It turns a viewer into a searcher. The pictures that play as a film are also searched: for anything that moved or changed, for the jump of a far-off planet, and, across the Milky Way's plane, for sources that appeared between visits.\n- It tests itself on known answers before it claims anything: the five targets, two known novae that the sweep found without being told where they were, made-up objects planted in real pictures, the dwarf planet Eris, and the planet WASP-62 b passing in front of its star.\n- It writes every result twice, for a beginner and for a scientist. The words hold still while the pictures play, so the eye stays on the sky.\n- It keeps watching. Any patch a visitor chooses is searched again when NASA's archive has new pictures of it.\n- A practice round teaches what a moving object looks like, on a made-up one marked SIMULATION.\n\nWHAT WE CONSIDERED\n\n- Honesty before excitement. Real data only. An unexplained source is a candidate, never a discovery. Every simulation and every drawing is labelled. Where the tool cannot measure (an overexposed star, an object that is not seen), it says so.\n- How SPHEREx data really behaves. Each photo holds many colours, bright stars overexpose, most marked pixels are not bad pixels, and the faint reflections of very bright stars move between visits and can pass for changes.\n- Stars that have moved since their catalogue date, and motions of only one to three pixels between visits. Hence the enlarged picture, the blink between before and after, and the marker at the measured place.\n- People who are not astronomers: plain words, no jargon in Beginner, and a guided tour.\n- NASA's archive: the tool fetches only small patches, a few at a time, and keeps what it fetched.\n- Time: one weekend. Each feature had to work on the five targets before the next was started.\n\nTOOLS\n\nBackend: Python, FastAPI, Astropy, reproject, NumPy, SciPy, Pillow, requests. Website: TypeScript, React, Vite, Aladin Lite. Checks: pytest, Vitest and browser checks with Playwright, about 1,400 automated tests, many of them on real SPHEREx pictures. Hosting: Docker on Render, one small server (1 CPU, 2 GB). No special hardware: we worked on laptops. AI: Anthropic's Claude, in Claude Code (see USE OF AI). Code and every write-up: https://github.com/tatsatshah05/Ampersand-NASA\n\nUSE OF AI\n\nWe say plainly where AI was used. Anthropic's Claude, a large language model working as a coding agent in Claude Code, wrote most of the code and the tests, and drafted the write-ups, the words on the site and this text. We set the goal and the rules, chose what to build, looked at the results on real data, and decided what to keep. Before we kept a scientific claim, separate AI sessions measured it again with their own code and tried to find an ordinary explanation; claims were withdrawn or corrected as a result. AI agents also proposed and built the methods of the extra searches that we asked for (the sweep of the Milky Way's plane, and the three methods on the Three tools screen). No picture, video or sound was made by AI: every picture of the sky is real SPHEREx data, the one drawing is labelled as a drawing, and the made-up practice object is marked SIMULATION. The repository's README and the site's metadata say the same.\n\nDATA CREDITS\n\nSPHEREx images: NASA/JPL-Caltech, served by the NASA/IPAC Infrared Science Archive (IRSA). Star positions and motions: ESA Gaia DR3. Names: SIMBAD (CDS, Strasbourg). Every other source is in the two lists of links below.", "long": true, "meta": "12,716 characters, 2,258 words", "noteLead": "Confirm one sentence before pasting.", "note": "In USE OF AI: \"AI agents also proposed and built the methods of the extra searches that we asked for\". Correct it if that is not how it went."}, {"id": "si", "label": "Use of Super Intelligence (SI)", "noteLead": "Options to tick, nothing to paste.", "note": "Tick every option that covers writing code, writing or editing text, and analysing data or research. Tick slides or presentations if AI wrote the deck's words. Do not tick images, video or audio unless the deck or the video has any. Do not tick \"I did not use SI\"."}], "nasa": [{"text": "SPHEREx Level 2 spectral images, Data Release 1 (NASA/JPL-Caltech, IRSA)", "url": "https://doi.org/10.26131/IRSA678"}, {"text": "SPHEREx Level 2 spectral images, Quick Release 3 (NASA/JPL-Caltech, IRSA)", "url": "https://doi.org/10.26131/IRSA662"}, {"text": "SPHEREx at the NASA/IPAC Infrared Science Archive (IRSA)", "url": "https://irsa.ipac.caltech.edu/Missions/spherex.html"}, {"text": "IRSA image search (SIA2)", "url": "https://irsa.ipac.caltech.edu/docs/program_interface/api_images.html"}, {"text": "SPHEREx cutout service (IRSA)", "url": "https://irsa.ipac.caltech.edu/data/SPHEREx/docs/cutout_tool.html"}, {"text": "SPHEREx data on Amazon Web Services (IRSA cloud data access)", "url": "https://irsa.ipac.caltech.edu/cloud_access/"}, {"text": "SPHEREx Explanatory Supplement", "url": "https://irsa.ipac.caltech.edu/data/SPHEREx/docs/SPHEREx_Expsupp.pdf"}, {"text": "IRSA SPHEREx tutorials (notebooks)", "url": "https://caltech-ipac.github.io/irsa-tutorials/spherex-cutouts"}, {"text": "SPHEREx archive user guide", "url": "https://caltech-ipac.github.io/spherex-archive-documentation/spherex-data-access"}, {"text": "NEOWISE, AllWISE and CatWISE2020 at IRSA", "url": "https://irsa.ipac.caltech.edu/Missions/wise.html"}, {"text": "2MASS at IRSA", "url": "https://irsa.ipac.caltech.edu/Missions/2mass.html"}, {"text": "Spitzer GLIMPSE at IRSA", "url": "https://irsa.ipac.caltech.edu/data/SPITZER/GLIMPSE/"}, {"text": "IRSA catalogue search (Gator)", "url": "https://irsa.ipac.caltech.edu/applications/Gator/"}, {"text": "JPL Small-Body Identification API", "url": "https://ssd-api.jpl.nasa.gov/doc/sb_ident.html"}, {"text": "JPL Horizons", "url": "https://ssd.jpl.nasa.gov/horizons/"}, {"text": "WiseView", "url": "http://byw.tools/wiseview"}, {"text": "Backyard Worlds: Planet 9", "url": "https://www.zooniverse.org/projects/marckuchner/backyard-worlds-planet-9"}, {"text": "SPHEREx All Sky Map 2025 (background of our slides)", "url": "https://www.astropix.org/image/spherex/spherex20251218a"}, {"text": "Swift/BAT transient monitor (NASA Goddard)", "url": "https://swift.gsfc.nasa.gov/results/transients/"}, {"text": "Koji Mukai's list of recent novae (NASA Goddard)", "url": "https://asd.gsfc.nasa.gov/Koji.Mukai/novae/novae.html"}, {"text": "NASA Astrophysics Data System", "url": "https://ui.adsabs.harvard.edu", "note": "Our automated check does not open this site. Open it once yourself to confirm it."}, {"text": "NASA's SPHEREx mission page", "url": "https://science.nasa.gov/mission/spherex/"}], "other": [{"text": "Our code, tests and write-ups (GitHub)", "url": "https://github.com/tatsatshah05/Ampersand-NASA"}, {"text": "ESA Gaia Data Release 3", "url": "https://www.cosmos.esa.int/web/gaia/dr3"}, {"text": "ESA Herschel (Hi-GAL catalogue of cold dust clumps)", "url": "https://www.cosmos.esa.int/web/herschel"}, {"text": "JAXA and RIKEN MAXI nova alerts", "url": "http://maxi.riken.jp/alert/novae/index.html"}, {"text": "SIMBAD (CDS, Strasbourg; Harvard mirror)", "url": "https://simbad.harvard.edu/simbad/", "note": "The Harvard mirror: the Strasbourg original was down on 15 November."}, {"text": "VizieR catalogue service (CDS, Strasbourg)", "url": "https://vizier.cds.unistra.fr/"}, {"text": "AAVSO International Variable Star Index (VSX)", "url": "https://www.aavso.org/vsx/index.php", "note": "This site refused our automated check. Open it once yourself to confirm."}, {"text": "Aladin Lite (CDS, Strasbourg)", "url": "https://aladin.cds.unistra.fr/AladinLite/"}, {"text": "Digitized Sky Survey (STScI)", "url": "https://archive.stsci.edu/cgi-bin/dss_form"}, {"text": "VVV survey (VIRAC2 catalogue)", "url": "https://vvvsurvey.org/"}, {"text": "Transient Name Server", "url": "https://www.wis-tns.org"}, {"text": "The Astronomer's Telegram", "url": "https://www.astronomerstelegram.org", "note": "Our automated check does not open this site. Open it once yourself to confirm it."}, {"text": "CBAT Transient Objects Confirmation Page", "url": "http://www.cbat.eps.harvard.edu/unconf/tocp.html"}, {"text": "ASAS-SN transients", "url": "https://www.astronomy.ohio-state.edu/asassn/transients.html"}, {"text": "ALeRCE alert broker", "url": "https://alerce.science/"}, {"text": "ANTARES alert broker", "url": "https://antares.noirlab.edu/"}, {"text": "Fink alert broker", "url": "https://fink-broker.org/"}, {"text": "Paper: The SPHEREx Satellite Mission (Bock et al. 2026)", "url": "https://arxiv.org/abs/2511.02985"}, {"text": "Paper: The SPHEREx Image and Spectrophotometry Processing Pipeline (Akeson et al. 2026)", "url": "https://arxiv.org/abs/2511.15823"}, {"text": "Paper: SPHEREx as a frontier for infrared transients (Karambelkar et al. 2026)", "url": "https://arxiv.org/abs/2602.07129"}, {"text": "CIE colour-matching functions (CVRL)", "url": "http://www.cvrl.org/"}, {"text": "Astropy", "url": "https://www.astropy.org/"}, {"text": "NumPy", "url": "https://numpy.org/"}, {"text": "SciPy", "url": "https://scipy.org/"}, {"text": "reproject", "url": "https://reproject.readthedocs.io"}, {"text": "Pillow", "url": "https://python-pillow.org/"}, {"text": "Requests", "url": "https://requests.readthedocs.io/"}, {"text": "FastAPI", "url": "https://fastapi.tiangolo.com/"}, {"text": "React", "url": "https://react.dev/"}, {"text": "Vite", "url": "https://vite.dev/"}, {"text": "pytest", "url": "https://docs.pytest.org/"}, {"text": "Vitest", "url": "https://vitest.dev/"}, {"text": "Playwright", "url": "https://playwright.dev/"}, {"text": "Docker", "url": "https://www.docker.com/"}, {"text": "Render (hosting)", "url": "https://render.com/"}, {"text": "Claude Code, Anthropic (AI coding agent)", "url": "https://claude.com/product/claude-code"}]}</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('data').textContent)
+  var live = document.getElementById('live')
+  var KEY = 'submission-copy-sheet-added-v1'
+  var added = {}
+  try { added = JSON.parse(localStorage.getItem(KEY) || '{}') || {} } catch (e) { added = {} }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(added)) } catch (e) { /* ticks then last for this visit only */ } }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag)
+    if (cls) n.className = cls
+    if (text != null) n.textContent = text
+    return n
+  }
+
+  // Copies inside the click, with two fallbacks: the old command, then selecting the text.
+  function copyText(text, sourceNode) {
+    function legacy() {
+      var ta = document.createElement('textarea')
+      ta.value = text
+      ta.setAttribute('readonly', '')
+      ta.style.position = 'fixed'
+      ta.style.top = '-1000px'
+      document.body.appendChild(ta)
+      ta.select()
+      var ok = false
+      try { ok = document.execCommand('copy') } catch (e) { ok = false }
+      ta.remove()
+      if (!ok && sourceNode) {
+        var r = document.createRange()
+        r.selectNodeContents(sourceNode)
+        var s = window.getSelection()
+        s.removeAllRanges()
+        s.addRange(r)
+      }
+      return ok
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true }, function () { return legacy() })
+    }
+    return Promise.resolve(legacy())
+  }
+
+  // ---- text answers ----
+  var fields = document.getElementById('fields')
+  data.fields.forEach(function (f) {
+    var box = el('article', 'field')
+    var head = el('div', 'field-head')
+    head.appendChild(el('h3', null, f.label))
+    if (f.meta) head.appendChild(el('span', 'meta', f.meta))
+    head.appendChild(el('span', 'spacer'))
+    box.appendChild(head)
+    var valueNode = null
+    if (f.value) {
+      valueNode = el('div', 'value' + (f.long ? ' long' : '') + (f.url ? ' url' : ''), f.value)
+      if (f.long) valueNode.tabIndex = 0
+      var btn = el('button', 'copy-main', 'Copy')
+      btn.type = 'button'
+      btn.id = 'copy-' + f.id
+      btn.setAttribute('aria-label', 'Copy ' + f.label)
+      btn.addEventListener('click', function () {
+        copyText(f.value, valueNode).then(function (ok) {
+          btn.textContent = ok ? 'Copied' : 'Select and copy'
+          btn.classList.toggle('done', ok)
+          live.textContent = ok ? f.label + ' copied' : 'Could not copy. The text is selected: press Ctrl or Command and C.'
+          setTimeout(function () { btn.textContent = 'Copy again' }, 1600)
+        })
+      })
+      head.appendChild(btn)
+      box.appendChild(valueNode)
+    }
+    if (f.note) {
+      var note = el('p', 'note')
+      if (f.noteLead) { note.appendChild(el('strong', null, f.noteLead + ' ')) }
+      note.appendChild(document.createTextNode(f.note))
+      box.appendChild(note)
+    }
+    fields.appendChild(box)
+  })
+
+  // ---- link lists ----
+  function list(key, rows) {
+    var host = document.getElementById(key + '-rows')
+    var count = document.getElementById(key + '-count')
+    var copiedParts = {}
+    function refresh() {
+      var n = 0
+      rows.forEach(function (_, i) { if (added[key + '-' + i]) n++ })
+      count.textContent = n + ' of ' + rows.length + ' added'
+    }
+    rows.forEach(function (r, i) {
+      var id = key + '-' + i
+      var row = el('div', 'row' + (added[id] ? ' added' : ''))
+      var tick = el('label', 'tick')
+      var cb = document.createElement('input')
+      cb.type = 'checkbox'
+      cb.id = 'added-' + id
+      cb.checked = !!added[id]
+      cb.setAttribute('aria-label', 'Added to the form: ' + r.text)
+      tick.appendChild(cb)
+      tick.appendChild(el('span', null, String(i + 1)))
+      function setAdded(v) {
+        if (v) added[id] = true; else delete added[id]
+        cb.checked = v
+        row.classList.toggle('added', v)
+        save(); refresh()
+      }
+      cb.addEventListener('change', function () { setAdded(cb.checked) })
+      row.appendChild(tick)
+
+      function cell(kind, value) {
+        var b = el('button', 'cell' + (kind === 'url' ? ' url' : ''))
+        b.type = 'button'
+        b.setAttribute('aria-label', (kind === 'url' ? 'Copy address: ' : 'Copy name: ') + value)
+        var v = el('span', 'v', value)
+        var tag = el('span', 'tag', 'Copy')
+        b.appendChild(v); b.appendChild(tag)
+        b.addEventListener('click', function () {
+          copyText(value, v).then(function (ok) {
+            tag.textContent = ok ? 'Copied' : 'Select'
+            b.classList.toggle('copied', ok)
+            live.textContent = ok ? 'Copied: ' + value : 'Could not copy. The text is selected: press Ctrl or Command and C.'
+            if (ok) {
+              copiedParts[id] = copiedParts[id] || {}
+              copiedParts[id][kind] = true
+              if (copiedParts[id].text && copiedParts[id].url && !added[id]) setAdded(true)
+            }
+          })
+        })
+        return b
+      }
+      row.appendChild(cell('text', r.text))
+      row.appendChild(cell('url', r.url))
+      var open = el('a', 'open', 'Open')
+      open.href = r.url
+      open.target = '_blank'
+      open.rel = 'noopener'
+      open.setAttribute('aria-label', 'Open ' + r.text + ' in a new tab')
+      row.appendChild(open)
+      if (r.note) row.appendChild(el('p', 'row-note', r.note))
+      host.appendChild(row)
+    })
+    document.getElementById(key + '-clear').addEventListener('click', function () {
+      rows.forEach(function (_, i) { delete added[key + '-' + i] })
+      copiedParts = {}
+      save()
+      host.querySelectorAll('.row').forEach(function (row) {
+        row.classList.remove('added')
+        row.querySelector('input').checked = false
+        row.querySelectorAll('.cell').forEach(function (c) { c.classList.remove('copied'); c.querySelector('.tag').textContent = 'Copy' })
+      })
+      refresh()
+    })
+    refresh()
+  }
+  list('nasa', data.nasa)
+  list('other', data.other)
+})()
+</script>
+</html>

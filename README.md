@@ -58,6 +58,7 @@ The page opens on Candidate B. A view is shared through its address, for example
 | Following a comet or asteroid and its spectrum | [docs/comets.md](docs/comets.md) |
 | The colour of a change | [docs/colour-of-change.md](docs/colour-of-change.md) |
 | Text for the project page, and the demo video's shot list | [docs/project-page.md](docs/project-page.md), [docs/demo-script.md](docs/demo-script.md) |
+| The same answers with a copy button on each value, for filling in the form | [docs/form-copy-sheet.md](docs/form-copy-sheet.md) (made by `scripts/make_form_copy_sheet.py`) |
 | How to deploy, and the warm-up after deploying | [docs/deploy.md](docs/deploy.md); on Render: [docs/deploy-render.md](docs/deploy-render.md) |
 | The project brief and the verified facts about the SPHEREx archive | [CLAUDE.md](CLAUDE.md) |
 | Who does what, and the lint and typecheck rules | [plan.md](plan.md) |
