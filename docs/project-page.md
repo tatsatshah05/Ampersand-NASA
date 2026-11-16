@@ -4,7 +4,7 @@ Text to paste into the NASA Space Apps project page (issue #16). Rewritten on 20
 page (built from `Dev` at commit `0221046`) and the project's records, then corrected after an independent
 review of this text. On the evening of 2026-11-15 the answers were set out again in the order of the form's
 eight fields ("The form, field by field", next): paste from there. The longer text after it is kept for anyone
-who wants more detail than the form needs. The form's length limits are not known to us: check them when pasting.
+who wants more detail than the form needs. The summary's box takes 1,500 characters; the other boxes' limits are not known to us: check them when pasting.
 
 **Read before pasting.** Every number and claim below is in the code, in a results file or in a write-up in the
 repository; the write-up is named where it matters. Three things need a person and are marked **[TO FILL IN]**
@@ -33,11 +33,15 @@ SPHEREx sky-change viewer
 
 ## 2. High-Level Project Summary
 
-Our sweep of NASA SPHEREx's pictures of the Milky Way turned up three infrared sources that we found in no catalogue or report we checked. SPHEREx could not detect them in its pictures of July to September 2025, and saw them much brighter in 2026: more than 100 times, at least 250 times and at least 30 times. They are candidates: nobody has confirmed them, and nobody knows yet what they are. The same sweep found two known novae by itself, which shows that it works.
+The form's box takes 1,500 characters and suggests 50 to 200 words (seen on the form, 2026-11-15). This text is 1129 characters and 200 words.
 
-The tool that found them is a public website for everyone. NASA's NEOWISE telescope watched the infrared sky change for ten years and stopped in August 2024. SPHEREx now photographs the whole sky in infrared light again and again. Type a star's name or a position, and the real SPHEREx pictures of that patch of sky play like a short film, as the challenge asks. The tool also searches the pictures for things that moved or changed, and it writes every result twice: in plain words for anyone, and with the numbers for scientists. We tested it on the challenge's five targets: it measures Barnard's Star moving 10.4 arcseconds between August 2025 and August 2026, and the Gaia catalogue predicts 10.3.
+Our sweep of NASA SPHEREx's pictures of the Milky Way turned up three infrared sources that we found in no catalogue or report we checked. SPHEREx could not detect them in mid-2025, and saw them more than 100, at least 250 and at least 30 times brighter in 2026. They are candidates: nobody has confirmed them. The same sweep also found two known novae.
 
-The challenge is named after Planet X, so the tool has a search for it. A planet far beyond Neptune does not creep across the picture. It jumps between visits, because SPHEREx sees it from opposite sides of the Earth's path round the Sun, and the size of the jump gives its distance. Our Far-off planet search looks for exactly that jump. In the 14 patches of sky searched so far it found no candidate. To test it we planted made-up objects in real pictures: it found 177 of the 205 that were bright enough, with the distance right to about one per cent. It does not see deeper than earlier searches, so it does not rule Planet X in or out. A practice round, marked SIMULATION, lets anyone learn to spot such an object.
+The tool that found them is a public website. Type a star's name or a position, and SPHEREx's real infrared pictures of that patch play like a short film. It also searches them for anything that moved or changed, and writes every result twice: in plain words, and with the numbers for scientists. On the challenge's five targets, it measures Barnard's Star moving 10.4 arcseconds in a year; the Gaia catalogue predicts 10.3.
+
+For Planet X, it looks for the jump a planet far beyond Neptune makes between visits. It found no candidate in 14 patches of sky. Of the made-up objects we planted in real pictures that were bright enough, it found 177 of 205.
+
+NASA's NEOWISE stopped watching the infrared sky change in 2024. With this tool, anyone can watch SPHEREx carry that on.
 
 ## 3. Link to Project Demo
 
