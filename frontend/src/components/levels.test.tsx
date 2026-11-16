@@ -46,7 +46,7 @@ describe('the bar of features at the top', () => {
     expect(barLabels(viewerAt('?ui=expert'))).toEqual(FEATURES.map((f) => f.label.expert))
     for (const html of [viewerAt(''), viewerAt('?ui=expert')]) {
       const top = topBar(html)
-      expect(top).toMatch(/^<header class="topbar"><h1 class="brand">SPHEREx sky-change viewer<\/h1><nav class="feature-bar" aria-label="Features">/)
+      expect(top).toMatch(/^<header class="topbar"><h1 class="brand">Ampersand<\/h1><nav class="feature-bar" aria-label="Features">/)
       expect(top).not.toContain('role="search"')
       expect(top).not.toContain('level-switch')
     }
@@ -214,6 +214,7 @@ describe('the other screens', () => {
 
   it('the practice screen has the same bar, with Practise current, the level kept, and the dock', () => {
     const html = screenAt('?ra=269.446267&dec=4.768222&fov=0.1&det=5&mode=normal&train=12&level=easy&ui=beginner', 'practice')
+    expect(screenBar(html)).toContain('<p class="brand">Ampersand</p>')
     expect(labels(html)).toEqual(FEATURES.map((f) => f.label.beginner))
     expect(screenBar(html)).toMatch(/aria-current="page"[^>]*><span class="feature-text" data-text="Practise">/)
     expect(screenBar(html).match(/aria-current="page"/g)).toHaveLength(1)
@@ -231,6 +232,7 @@ describe('the other screens', () => {
 
   it('the Observe anomalies screen has the same bar, with it current, in the level the address or this device gives', () => {
     const expert = screenAt('?watchlist=1&ui=expert', 'watchlist')
+    expect(screenBar(expert)).toContain('<p class="brand">Ampersand</p>')
     expect(labels(expert)).toEqual(FEATURES.map((f) => f.label.expert))
     expect(screenBar(expert)).toMatch(/aria-current="page"[^>]*><span class="feature-text" data-text="Anomalies">/)
     expect(href(expert, 'Viewer')).toBe('?ui=expert')

@@ -60,6 +60,7 @@ describe('the route', () => {
     vi.stubGlobal('window', { location: { search: '?tools=1' }, localStorage: { getItem: () => null, setItem: () => undefined } })
     const html = renderToStaticMarkup(<App />)
     expect(html).toContain(PAGE.title)
+    expect(html).toContain('<p class="brand">Ampersand</p>')
     expect(html).not.toContain('class="bench"')
   })
 })

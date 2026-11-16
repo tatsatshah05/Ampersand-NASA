@@ -66,6 +66,7 @@ import {
   strengthSentence,
   verdictSentence,
 } from '../search'
+import { SITE_NAME } from '../site'
 import {
   ANSWER_LABEL,
   ANSWERS,
@@ -432,7 +433,7 @@ export function WatchlistView() {
   return (
     <>
       <header className="topbar screen-topbar">
-        <p className="brand">SPHEREx sky-change viewer</p>
+        <p className="brand">{SITE_NAME}</p>
         <FeatureBar level={level} current="vote" links={links} />
         <TourStart />
       </header>

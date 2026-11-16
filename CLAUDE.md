@@ -1264,6 +1264,10 @@ Rules of the page:
   side column hides the last object's words behind one line, "Loading the pictures of ...".
 - **The name shown for a typed search** is the one the visitor knows (`identify.ts`, `nameToShow`): "Altair", not
   SIMBAD's "alf Aql"; an abbreviation is spelled out ("eps Ind B" becomes "Epsilon Indi B").
+- **The site's name is Ampersand** (2026-11-15, asked for by Tatsat; `frontend/src/site.ts`, `SITE_NAME`): the top bar
+  of every screen says "Ampersand" and the browser tab ends with it ("Candidate B: Ampersand"); the page's first
+  title, before the app has loaded, is "Ampersand: SPHEREx sky-change viewer". The project's name in the README and
+  on the submission form (`docs/project-page.md`) is still "SPHEREx sky-change viewer", and so is the site's address.
 - **The boxes that take a position say how to type one** (2026-11-15; `coords.ts` `COORD_HOW`, `COORD_EXAMPLES`). The
   only kind read is right ascension then declination (J2000, ICRS), both in degrees or with RA in hours; galactic or
   ecliptic coordinates are not read (typed, they are looked up as a name and not found). The search box is only 108

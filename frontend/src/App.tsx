@@ -73,6 +73,7 @@ import { usePlayer, useResting } from './usePlayer'
 import { CANDIDATE_LINE, findAt, findTarget, isHeldFind } from './finds'
 import { PRESS_TO_ASK, type LookTarget } from './identify'
 import { ALL_THREE_LINK, allThreeLineOf } from './anomalies'
+import { SITE_NAME } from './site'
 import {
   beforeAfter,
   expertResult,
@@ -332,7 +333,7 @@ export function Viewer() {
   // The browser tab, and so the entries under the Back button, say which target this is.
   const whereInWords = shownName ?? `RA ${selection.ra.toFixed(4)}°, Dec ${selection.dec.toFixed(4)}°`
   useEffect(() => {
-    document.title = `${whereInWords}: SPHEREx sky-change viewer`
+    document.title = `${whereInWords}: ${SITE_NAME}`
   }, [whereInWords])
 
   // ---- keyboard: the space bar plays and pauses, the arrow keys step ---------------------
@@ -642,7 +643,7 @@ export function Viewer() {
       <div className="shell" ref={shell}>
         {/* Every feature, in the bar at the top. The tools wait for the first pictures. */}
         <header className="topbar">
-          <h1 className="brand">SPHEREx sky-change viewer</h1>
+          <h1 className="brand">{SITE_NAME}</h1>
           <FeatureBar level={selection.ui} current={current} links={links} onOpen={openFeature} ready={ready !== null} />
           <TourStart />
         </header>

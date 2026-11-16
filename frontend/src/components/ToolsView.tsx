@@ -35,6 +35,7 @@ import { FeatureBar, type FeatureLinks } from './FeatureBar'
 import { TourStart } from './TourStart'
 import { LevelDock } from './LevelDock'
 import './ToolsView.css'
+import { SITE_NAME } from '../site'
 
 const TOOL_IDS = [T1.id, T2.id, T3.id]
 
@@ -92,7 +93,7 @@ export function ToolsView() {
   return (
     <>
       <header className="topbar screen-topbar">
-        <p className="brand">SPHEREx sky-change viewer</p>
+        <p className="brand">{SITE_NAME}</p>
         <FeatureBar level={level} current="tools" links={links} />
         <TourStart />
       </header>

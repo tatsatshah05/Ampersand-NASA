@@ -50,6 +50,7 @@ import { Stage } from './Stage'
 import { LoadingCard, StatusCard } from './StatusCard'
 import './TrainingView.css'
 import './PracticeFold.css'
+import { SITE_NAME } from '../site'
 
 const LEVEL_LABELS: Record<Level, string> = {
   easy: 'Easy (bright)',
@@ -186,7 +187,7 @@ export function TrainingView() {
         <strong>SIMULATION.</strong> {banner}
       </div>
       <header className="topbar screen-topbar">
-        <p className="brand">SPHEREx sky-change viewer</p>
+        <p className="brand">{SITE_NAME}</p>
         <FeatureBar level={level} current="practise" links={links} />
         <TourStart />
       </header>
