@@ -55,6 +55,8 @@ The form's box takes one link (seen on the form, 2026-11-15): give the website. 
 
 ## 5. Detailed Project Description
 
+On the form this is "Project Details", a box with text styles (seen 2026-11-15). It asks six things, and the sections below answer them in order: what it does and how it works; benefits; intended impact; how it is creative; what the team considered; tools. Judges do not see the answer about AI (field 6), so the section USE OF AI here is where they read it. One sentence in it must be confirmed by the team before pasting: "AI agents also proposed and built the methods of the extra searches that we asked for".
+
 WHAT IT DOES
 
 SPHEREx sky-change viewer is a public website: https://spherex-sky-change-viewer.onrender.com. Its code and every write-up are public too: https://github.com/tatsatshah05/Ampersand-NASA. Type a star's name or a position (right ascension and declination), and it shows NASA SPHEREx's real infrared pictures of that patch of sky, one picture per visit, played like a short film. A visit is one pass of SPHEREx over the patch; SPHEREx comes back about every six months. Anything that moved or changed between visits stands out. The site opens on a source that appeared between two visits, blinking between the picture without it and the picture with it. That source is one of three that our own sweep turned up and that we found in no catalogue or report we checked. They are candidates, and nobody has confirmed them (see WHAT WE TESTED AND FOUND).
@@ -119,11 +121,38 @@ WHAT WE HOPE TO ACHIEVE
 
 NASA's NEOWISE telescope watched the infrared sky change for ten years, and stopped in August 2024. SPHEREx can carry that on. We hope people use this tool on SPHEREx as they used WiseView on the WISE pictures, and that astronomers check the three candidates. SPHEREx's next visits, about February to April 2027, will show how each one has changed. Each new visit also makes the Planet X search stronger, and anyone can run it on a patch nobody has searched.
 
+HOW IT IS CREATIVE
+
+- It turns a viewer into a searcher. The pictures that play as a film are also searched: for anything that moved or changed, for the jump of a far-off planet, and, across the Milky Way's plane, for sources that appeared between visits.
+- It tests itself on known answers before it claims anything: the five targets, two known novae that the sweep found without being told where they were, made-up objects planted in real pictures, the dwarf planet Eris, and the planet WASP-62 b passing in front of its star.
+- It writes every result twice, for a beginner and for a scientist. The words hold still while the pictures play, so the eye stays on the sky.
+- It keeps watching. Any patch a visitor chooses is searched again when NASA's archive has new pictures of it.
+- A practice round teaches what a moving object looks like, on a made-up one marked SIMULATION.
+
+WHAT WE CONSIDERED
+
+- Honesty before excitement. Real data only. An unexplained source is a candidate, never a discovery. Every simulation and every drawing is labelled. Where the tool cannot measure (an overexposed star, an object that is not seen), it says so.
+- How SPHEREx data really behaves. Each photo holds many colours, bright stars overexpose, most marked pixels are not bad pixels, and the faint reflections of very bright stars move between visits and can pass for changes.
+- Stars that have moved since their catalogue date, and motions of only one to three pixels between visits. Hence the enlarged picture, the blink between before and after, and the marker at the measured place.
+- People who are not astronomers: plain words, no jargon in Beginner, and a guided tour.
+- NASA's archive: the tool fetches only small patches, a few at a time, and keeps what it fetched.
+- Time: one weekend. Each feature had to work on the five targets before the next was started.
+
 TOOLS
 
-Backend: Python, FastAPI, Astropy, reproject, NumPy, SciPy, Pillow, requests. Website: TypeScript, React, Vite, Aladin Lite. Checks: pytest, Vitest and browser checks with Playwright, about 1,400 automated tests, many of them on real SPHEREx pictures. Hosting: Docker on Render, one small server (1 CPU, 2 GB). No special hardware: we worked on laptops. AI: Anthropic's Claude, working in Claude Code, wrote most of the code and drafted our write-ups under our direction, and AI reviewers checked the main claims; the README says so. Code and every write-up: https://github.com/tatsatshah05/Ampersand-NASA
+Backend: Python, FastAPI, Astropy, reproject, NumPy, SciPy, Pillow, requests. Website: TypeScript, React, Vite, Aladin Lite. Checks: pytest, Vitest and browser checks with Playwright, about 1,400 automated tests, many of them on real SPHEREx pictures. Hosting: Docker on Render, one small server (1 CPU, 2 GB). No special hardware: we worked on laptops. AI: Anthropic's Claude, in Claude Code (see USE OF AI). Code and every write-up: https://github.com/tatsatshah05/Ampersand-NASA
+
+USE OF AI
+
+We say plainly where AI was used. Anthropic's Claude, a large language model working as a coding agent in Claude Code, wrote most of the code and the tests, and drafted the write-ups, the words on the site and this text. We set the goal and the rules, chose what to build, looked at the results on real data, and decided what to keep. Before we kept a scientific claim, separate AI sessions measured it again with their own code and tried to find an ordinary explanation; claims were withdrawn or corrected as a result. AI agents also proposed and built the methods of the extra searches that we asked for (the sweep of the Milky Way's plane, and the three methods on the Three tools screen). No picture, video or sound was made by AI: every picture of the sky is real SPHEREx data, the one drawing is labelled as a drawing, and the made-up practice object is marked SIMULATION. The repository's README and the site's metadata say the same.
+
+DATA CREDITS
+
+SPHEREx images: NASA/JPL-Caltech, served by the NASA/IPAC Infrared Science Archive (IRSA). Star positions and motions: ESA Gaia DR3. Names: SIMBAD (CDS, Strasbourg). Every other source is in the two lists of links below.
 
 ## 6. Use of Super Intelligence (SI)
+
+On the form this is a list of options to select, not a box for text (seen 2026-11-15; we have not seen the options). Select every option that covers: writing code; writing or editing text; analysing data or research. Select the option for slides or presentations if AI wrote the deck's words. Do not select images, video or audio unless the deck or a video has any: the tool has none. Do not select "I did not use SI". The text below is for a text box if one appears; its substance is in Project Details under USE OF AI.
 
 Yes.
 
@@ -146,6 +175,35 @@ Where the project says so: the repository's README has a section "Use of AI", th
 
 ## 7. NASA Data
 
+The form takes pairs of Link Text and Link Url (seen 2026-11-15). Each address below answered on 2026-11-15, except NASA ADS, which our agents do not open. In order of importance.
+
+| Link Text | Link Url |
+|---|---|
+| SPHEREx Level 2 spectral images, Data Release 1 (NASA/JPL-Caltech, IRSA) | https://doi.org/10.26131/IRSA678 |
+| SPHEREx Level 2 spectral images, Quick Release 3 (NASA/JPL-Caltech, IRSA) | https://doi.org/10.26131/IRSA662 |
+| SPHEREx at the NASA/IPAC Infrared Science Archive (IRSA) | https://irsa.ipac.caltech.edu/Missions/spherex.html |
+| IRSA image search (SIA2) | https://irsa.ipac.caltech.edu/docs/program_interface/api_images.html |
+| SPHEREx cutout service (IRSA) | https://irsa.ipac.caltech.edu/data/SPHEREx/docs/cutout_tool.html |
+| SPHEREx data on Amazon Web Services (IRSA cloud data access) | https://irsa.ipac.caltech.edu/cloud_access/ |
+| SPHEREx Explanatory Supplement | https://irsa.ipac.caltech.edu/data/SPHEREx/docs/SPHEREx_Expsupp.pdf |
+| IRSA SPHEREx tutorials (notebooks) | https://caltech-ipac.github.io/irsa-tutorials/spherex-cutouts |
+| SPHEREx archive user guide | https://caltech-ipac.github.io/spherex-archive-documentation/spherex-data-access |
+| NEOWISE, AllWISE and CatWISE2020 at IRSA | https://irsa.ipac.caltech.edu/Missions/wise.html |
+| 2MASS at IRSA | https://irsa.ipac.caltech.edu/Missions/2mass.html |
+| Spitzer GLIMPSE at IRSA | https://irsa.ipac.caltech.edu/data/SPITZER/GLIMPSE/ |
+| IRSA catalogue search (Gator) | https://irsa.ipac.caltech.edu/applications/Gator/ |
+| JPL Small-Body Identification API | https://ssd-api.jpl.nasa.gov/doc/sb_ident.html |
+| JPL Horizons | https://ssd.jpl.nasa.gov/horizons/ |
+| WiseView | http://byw.tools/wiseview |
+| Backyard Worlds: Planet 9 | https://www.zooniverse.org/projects/marckuchner/backyard-worlds-planet-9 |
+| SPHEREx All Sky Map 2025 (background of our slides) | https://www.astropix.org/image/spherex/spherex20251218a |
+| Swift/BAT transient monitor (NASA Goddard) | https://swift.gsfc.nasa.gov/results/transients/ |
+| Koji Mukai's list of recent novae (NASA Goddard) | https://asd.gsfc.nasa.gov/Koji.Mukai/novae/novae.html |
+| NASA Astrophysics Data System | https://ui.adsabs.harvard.edu |
+| NASA's SPHEREx mission page | https://science.nasa.gov/mission/spherex/ |
+
+What each was used for (kept for reference; the form has no box for it):
+
 NASA's SPHEREx mission is the heart of the project. Every picture the tool shows comes from it.
 
 - SPHEREx Level 2 spectral images (NASA/JPL-Caltech), Data Release 1 (doi:10.26131/IRSA678) and Quick Release 3 (doi:10.26131/IRSA662): every picture, brightness and spectrum in the tool. For one test we also used SPHEREx's deep-field images.
@@ -159,6 +217,49 @@ NASA's SPHEREx mission is the heart of the project. Every picture the tool shows
 - The SPHEREx All Sky Map 2025 (NASA/JPL-Caltech; SPHEREx at Caltech), as the background of our slides.
 
 ## 8. Space Agency Partner Data and Other References
+
+The form takes pairs of Link Text and Link Url (seen 2026-11-15), and its heading is "Space Agency Partner & Other Data". Each address below answered on 2026-11-15, except two: AAVSO refused our automated request (open it once by hand), and The Astronomer's Telegram, which our agents do not open. SIMBAD's address is its Harvard mirror, because the Strasbourg original was down. In order of importance.
+
+| Link Text | Link Url |
+|---|---|
+| Our code, tests and write-ups (GitHub) | https://github.com/tatsatshah05/Ampersand-NASA |
+| ESA Gaia Data Release 3 | https://www.cosmos.esa.int/web/gaia/dr3 |
+| ESA Herschel (Hi-GAL catalogue of cold dust clumps) | https://www.cosmos.esa.int/web/herschel |
+| JAXA and RIKEN MAXI nova alerts | http://maxi.riken.jp/alert/novae/index.html |
+| SIMBAD (CDS, Strasbourg; Harvard mirror) | https://simbad.harvard.edu/simbad/ |
+| VizieR catalogue service (CDS, Strasbourg) | https://vizier.cds.unistra.fr/ |
+| AAVSO International Variable Star Index (VSX) | https://www.aavso.org/vsx/index.php |
+| Aladin Lite (CDS, Strasbourg) | https://aladin.cds.unistra.fr/AladinLite/ |
+| Digitized Sky Survey (STScI) | https://archive.stsci.edu/cgi-bin/dss_form |
+| VVV survey (VIRAC2 catalogue) | https://vvvsurvey.org/ |
+| Transient Name Server | https://www.wis-tns.org |
+| The Astronomer's Telegram | https://www.astronomerstelegram.org |
+| CBAT Transient Objects Confirmation Page | http://www.cbat.eps.harvard.edu/unconf/tocp.html |
+| ASAS-SN transients | https://www.astronomy.ohio-state.edu/asassn/transients.html |
+| ALeRCE alert broker | https://alerce.science/ |
+| ANTARES alert broker | https://antares.noirlab.edu/ |
+| Fink alert broker | https://fink-broker.org/ |
+| Paper: The SPHEREx Satellite Mission (Bock et al. 2026) | https://arxiv.org/abs/2511.02985 |
+| Paper: The SPHEREx Image and Spectrophotometry Processing Pipeline (Akeson et al. 2026) | https://arxiv.org/abs/2511.15823 |
+| Paper: SPHEREx as a frontier for infrared transients (Karambelkar et al. 2026) | https://arxiv.org/abs/2602.07129 |
+| CIE colour-matching functions (CVRL) | http://www.cvrl.org/ |
+| Astropy | https://www.astropy.org/ |
+| NumPy | https://numpy.org/ |
+| SciPy | https://scipy.org/ |
+| reproject | https://reproject.readthedocs.io |
+| Pillow | https://python-pillow.org/ |
+| Requests | https://requests.readthedocs.io/ |
+| FastAPI | https://fastapi.tiangolo.com/ |
+| React | https://react.dev/ |
+| Vite | https://vite.dev/ |
+| pytest | https://docs.pytest.org/ |
+| Vitest | https://vitest.dev/ |
+| Playwright | https://playwright.dev/ |
+| Docker | https://www.docker.com/ |
+| Render (hosting) | https://render.com/ |
+| Claude Code, Anthropic (AI coding agent) | https://claude.com/product/claude-code |
+
+What each was used for, the papers and the acknowledgements (kept for reference; the form has no box for them):
 
 SPACE AGENCY PARTNER DATA
 
