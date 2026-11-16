@@ -1323,6 +1323,19 @@
   margin: 0 0 4px;
 }
 
+/* The link to the code shows only where the credits already take two lines (from 1440 px up the
+   side column is 355 px wide and the credits are 398 px long), so it never adds a line. At 1280 px
+   the credits fit one line with 9 px to spare, and Beginner's column has no room for a second. */
+.credits .credits-code {
+  display: none;
+}
+
+@media (min-width: 1440px) {
+  .credits .credits-code {
+    display: inline;
+  }
+}
+
 /* ---- Expert's tool panels, below the picture ---------------------------------------------- */
 
 .tool-panels {

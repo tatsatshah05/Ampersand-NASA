@@ -51,13 +51,13 @@ NASA's NEOWISE stopped watching the infrared sky change in 2024. With this tool,
 
 https://spherex-sky-change-viewer.onrender.com
 
-(The code, if the form has room for a second link: https://github.com/tatsatshah05/Ampersand-NASA)
+The form's box takes one link (seen on the form, 2026-11-15): give the website. The code's link, https://github.com/tatsatshah05/Ampersand-NASA, is in the first paragraph and the last line of the Detailed Project Description, and the site's credits line links to it in windows 1440 px wide or wider.
 
 ## 5. Detailed Project Description
 
 WHAT IT DOES
 
-SPHEREx sky-change viewer is a public website: https://spherex-sky-change-viewer.onrender.com. Type a star's name or a position (right ascension and declination), and it shows NASA SPHEREx's real infrared pictures of that patch of sky, one picture per visit, played like a short film. A visit is one pass of SPHEREx over the patch; SPHEREx comes back about every six months. Anything that moved or changed between visits stands out. The site opens on a source that appeared between two visits, blinking between the picture without it and the picture with it. That source is one of three that our own sweep turned up and that we found in no catalogue or report we checked. They are candidates, and nobody has confirmed them (see WHAT WE TESTED AND FOUND).
+SPHEREx sky-change viewer is a public website: https://spherex-sky-change-viewer.onrender.com. Its code and every write-up are public too: https://github.com/tatsatshah05/Ampersand-NASA. Type a star's name or a position (right ascension and declination), and it shows NASA SPHEREx's real infrared pictures of that patch of sky, one picture per visit, played like a short film. A visit is one pass of SPHEREx over the patch; SPHEREx comes back about every six months. Anything that moved or changed between visits stands out. The site opens on a source that appeared between two visits, blinking between the picture without it and the picture with it. That source is one of three that our own sweep turned up and that we found in no catalogue or report we checked. They are candidates, and nobody has confirmed them (see WHAT WE TESTED AND FOUND).
 
 It has ten features, which stay in view on every screen:
 

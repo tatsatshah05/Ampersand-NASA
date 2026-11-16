@@ -1268,6 +1268,13 @@ Rules of the page:
   of every screen says "Ampersand" and the browser tab ends with it ("Candidate B: Ampersand"); the page's first
   title, before the app has loaded, is "Ampersand: SPHEREx sky-change viewer". The project's name in the README and
   on the submission form (`docs/project-page.md`) is still "SPHEREx sky-change viewer", and so is the site's address.
+- **The credits line links to the code** (2026-11-15; `site.ts` `REPO_URL`, `App.css` `.credits-code`): "Code and
+  write-ups: GitHub." follows the credits, but only in windows 1440 px wide or wider. The submission form takes one
+  link (the site), so the site leads to the repository. From 1200 to 1439 px the credits fit one line with 9 px to
+  spare and Beginner's column has no room for a second (it overflowed by 18 px at 1280 x 720 when tried); below
+  1200 px it added no line at 1024 and 390 px, and no other width was measured, so do not show it there without
+  measuring. Measured at 15 window sizes and both levels:
+  the credits' height and place, the side column and the page are the same as before the link.
 - **The boxes that take a position say how to type one** (2026-11-15; `coords.ts` `COORD_HOW`, `COORD_EXAMPLES`). The
   only kind read is right ascension then declination (J2000, ICRS), both in degrees or with RA in hours; galactic or
   ecliptic coordinates are not read (typed, they are looked up as a name and not found). The search box is only 108

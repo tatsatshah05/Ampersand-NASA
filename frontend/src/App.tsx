@@ -73,7 +73,7 @@ import { usePlayer, useResting } from './usePlayer'
 import { CANDIDATE_LINE, findAt, findTarget, isHeldFind } from './finds'
 import { PRESS_TO_ASK, type LookTarget } from './identify'
 import { ALL_THREE_LINK, allThreeLineOf } from './anomalies'
-import { SITE_NAME } from './site'
+import { REPO_URL, SITE_NAME } from './site'
 import {
   beforeAfter,
   expertResult,
@@ -951,6 +951,10 @@ export function Viewer() {
               <p>
                 Images: NASA/JPL-Caltech SPHEREx, from <abbr title="NASA/IPAC Infrared Science Archive">IRSA</abbr>. Stars:
                 ESA Gaia DR3.
+                <span className="credits-code">
+                  {' '}
+                  Code and write-ups: <a href={REPO_URL}>GitHub</a>.
+                </span>
               </p>
             </footer>
           </aside>

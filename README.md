@@ -2,6 +2,8 @@
 
 Team Ampersand's entry for NASA Space Apps 2026, "Planet X and SPHEREx".
 
+**Open the site: https://spherex-sky-change-viewer.onrender.com**
+
 NASA's SPHEREx telescope photographs the whole sky in infrared light about every six months. This web tool shows
 its real pictures of any patch, one visit after another like a short film, and searches them for what moved or
 changed, in plain words (Beginner) or a scientist's (Expert). Our first sweep of the Milky Way's plane found two
