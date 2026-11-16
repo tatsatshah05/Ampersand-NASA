@@ -10,6 +10,8 @@ what was first written in temporary folders:
   in `searches.json` beside it);
 - what has not been searched;
 - the checklist for a person, with a place to write the date and result of each check.
+- a third pass, made on 2026-11-16 by an automated reader at the team lead's request: section (e), with its logs in
+  `docs/sweep/vetting/checks_2026-11-16/`.
 
 **Nothing has been reported anywhere.** No form was filled, no account was made, nothing was sent or posted.
 Every search below only read public pages. The draft texts in `docs/sweep/report-draft.md` are not sent.
@@ -301,6 +303,16 @@ vet2/B/reports and vet2/C/reports.
 Each item is from the wider search's lists (`still_unchecked`, `not_searched`) and from the telegram check, as
 of 2026-11-15.
 
+**Update, 2026-11-16 (section (e)).** Three of these cannot be done by an automated reader at all, so they wait
+for a person:
+
+- The Astronomer's Telegram in full: the site shows "Please confirm you are not a robot. You have read many
+  Telegrams" after six telegrams, however slowly they are opened. Sixteen were read; the eighteen that the
+  checklist names were not.
+- NASA ADS: it answers a script with a robot check (HTTP 202, an empty page).
+- SIMBAD at CDS: still "Page unavailable" (HTTP 404) on 2026-11-16 at 18:48 and 18:56 UTC, and the CfA mirror
+  still fails the control (of four 2025 novae it holds one).
+
 **For all three:**
 
 - **The Astronomer's Telegram, read in full by a person.** The first round read titles and opening lines (942
@@ -401,6 +413,12 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   telegram, because the form does not search punctuation, so they tell nothing. "16:52", "16 52", "16:06" and
   "16 06" were not run.
 
+  **Automated reader, 2026-11-16, 18:55 to 19:08 UTC** (section (e), part 1): the control passed (V7994: 1 telegram,
+  17419). SPHEREx: 3 (18127, 17601 and 17556, none at the three places). Sagittarius 1, Sgr 8, Sagittarii 0;
+  Scorpius 0, Scorpii 0, Seach 9; Normae 0, Arae 0. "16:52", "16 52", "16:06", "16 06", "18:03" and "18 03" each
+  return all 942 telegrams. Sco (714), Norma (133), Nor (228) and Ara (302) match parts of other words and say
+  nothing. Names beginning J1803: 1 (17419, V7994 Sgr, 8.0 degrees from A); J1652: 0; J1606: 0. Not a person's check.
+
   **Also, from the ruling's own lists:** in the same search box, infrared (all three); Norma and Ara (B); nova
   (C). **Done:** By a person: ____________
 
@@ -418,6 +436,9 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   telegram as a web search engine indexed it (17743, 17945). The nearest is 3.5 degrees from C (18123 and 18136,
   MAXI J1609-487) and 4.6 degrees from A (18122, V8056 Sgr): section (b), parts 3 and 4. A person has not opened
   them.
+  **Automated reader, 2026-11-16:** none of these eighteen could be opened. The site showed its robot check
+  after six other telegrams (section (e), part 2), and the check was not answered. They are still for a person:
+  eighteen clicks.
 
 - Meaning: if nothing falls inside a box, write 'ATel: no report found'.
 
@@ -437,6 +458,11 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   - for C: the same with abs:Norma
 
   **Done (SPHEREx):** By a person: ____________
+  **Automated reader, 2026-11-16, 18:56 UTC:** NASA ADS answered a script with a robot check (HTTP 202, an empty
+  page), which was not answered. Nothing was searched. In its place, for the SPHEREx line only, arXiv's own
+  interface for programs was asked for every paper with SPHEREx in its abstract: 202, of which 97 since 1 Aug
+  2025; by their titles one is about Galactic transients (Karambelkar et al., arXiv:2602.07129, read in the first
+  round: the candidates are not in it). arXiv holds no telegrams or circulars, so this does not replace ADS.
   **Done (A):** 2026-11-15, by the team lead, by hand: "the Sagittarius search". The two results he opened,
   18138 (V488 Sge, in Sagitta) and 18122 (V8056 Sgr), are not candidate A. The time, the exact words typed and
   the full list of results were not written down. Repeat it and write them here: ____________
@@ -458,6 +484,8 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
 - Control: open https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V7994+Sgr . It must show a nova from 2025. If the page says it is unavailable, or shows no nova, try again another day.
 
   **Done (control):** ____________
+  **Automated reader, 2026-11-16, 18:48 and 18:56 UTC:** still "Page unavailable" (HTTP 404). The control cannot
+  run, so SIMBAD is still not searched. Try again another day.
 
 - Then open:
   - A: https://simbad.cds.unistra.fr/simbad/sim-coo?Coord=270.80408+-23.46818&Radius=5&Radius.unit=arcmin
@@ -479,6 +507,11 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   - Then open https://www.wis-tns.org/search?ra=270.80408&decl=-23.46818&radius=300&coords_unit=arcsec for A, and the same address with ra=253.18038&decl=-44.67697 for B and ra=241.70906&decl=-52.20564 for C.
   - 'No results found' means nothing is registered within 5 arcmin.
 
+  **Automated reader, 2026-11-16, 19:03 to 19:06 UTC** (not the day of publishing, so this must still be
+  repeated then): the control listed AT 2025nlr; A, B and C each answered "No results found" within 5 arcmin
+  (300 arcsec). The server's AstroNotes were searched the same way (controls passed): none within 5 arcmin of
+  A, B or C, and none with SPHEREx in its title.
+
   **Done (control):** ____________
   **Done (A):** ____________
   **Done (B):** ____________
@@ -488,6 +521,11 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   - Open http://www.cbat.eps.harvard.edu/unconf/tocp.html , press Cmd-F (Ctrl-F on Windows) and type J1803 for A, J1652 for B and J1606 for C.
   - No hit means nothing is pending there. A hit whose declination part begins -23 (A), -44 (B) or -52 (C) goes to the team.
 
+  **Automated reader, 2026-11-16, 18:48 UTC:** the list runs to 13 Nov 2026. J1803: seven names, with declinations
+  +12, -29, -28, -29, +42, -31 and -31. J1652: two names (-37 and +02). J1606: one name (-16). None begins -23,
+  -44 or -52. Measured from every entry's position: nothing since August 2025 is nearer than 2.56 degrees (A),
+  18.4 degrees (B) or 14.2 degrees (C). Must still be repeated on the day of publishing.
+
   **Done (A):** ____________
   **Done (B):** ____________
   **Done (C):** ____________
@@ -495,6 +533,8 @@ An X-ray or gamma-ray report gives a circle, called its 'error radius'. If our p
   **Also, from the ruling's own lists (C):** at https://asd.gsfc.nasa.gov/Koji.Mukai/novae/novae.html, look at
   the 2025-2026 entries for any nova in Norma. **Done:** ____________ (The first round read Mukai's lists for C
   with a control: the nearest nova is V556 Nor, of 2018, 1.74 deg away; section (a).)
+  **Automated reader, 2026-11-16, 18:48 UTC:** the page, last updated 11 Nov 2026, lists no nova in Norma for
+  2025 or 2026; its newest there is V567 Nor (2023).
 
 5. Optional: AAVSO. The automated searches were refused or held back there.
 - Open https://www.aavso.org/apps/campaigns and https://www.aavso.org/apps/campaigns/archived .
@@ -528,3 +568,99 @@ The checklist above is about searching. Filing a report is a separate decision, 
       Date: ____________ (Write who checked only with their permission.)
 
 Only then may anyone use part two of `docs/sweep/report-draft.md`.
+
+## (e) The pass of 2026-11-16
+
+Made on 2026-11-16 from 18:48 to 19:09 UTC by an automated reader (an AI agent), at the team lead's request,
+working down the checklist of (d). Reading only: nothing was submitted, no account was made, and no robot check
+was answered. It is not a person's check: the lines "By a person" in (d) stay empty. Its logs are in
+`docs/sweep/vetting/checks_2026-11-16/` (`registry.json`, `form_searches.json`, `telegrams_read.json`,
+`telegram_reads.log`, `vsx_mirror.json`); the script for the telegram site is `scripts/atel_check.py`.
+
+**Result: no report at or near A, B or C in anything that could be searched.** Three things could not be
+searched by an automated reader at all (the last part), so the verdict of (a) stands as it was and the three
+stay candidates.
+
+### 1. Registers and lists, each with a passing control
+
+| Where | Control | A | B | C |
+|---|---|---|---|---|
+| Transient Name Server, objects within 5 arcmin | AT 2025nlr listed | No results found | No results found | No results found |
+| Transient Name Server, AstroNotes within 5 arcmin | AstroNote 2026-233 found by its object and by its position | none | none | none |
+| CBAT's list of unconfirmed transients, to 13 Nov 2026 (2,697 entries, 272 since Aug 2025) | the list holds V7994 Sgr and V1935 Cen | nearest since Aug 2025: 2.56 degrees | 18.4 degrees (of any year: 44.6 arcmin, from 2018) | 14.2 degrees (of any year: 1.74 degrees, from 2018) |
+| Mukai's nova list, updated 11 Nov 2026 | V7994 Sgr and V8056 Sgr are on it | | | no Norma nova in 2025 or 2026 |
+| AAVSO's variable-star index, the copy at the CfA VizieR mirror, within 5 arcmin | V7994 Sgr found, type NA | 15 objects, none a nova or eruptive; nearest 43 arcsec | 24 objects, none a nova; nearest 37 arcsec; a Be-type variable 4.5 arcmin away | 20 objects, none a nova or eruptive; nearest 12 arcsec |
+
+No AstroNote has SPHEREx in its title. The name server refused two requests as too many (HTTP 429); each was
+repeated a few minutes later and answered. The VizieR mirror answered with an empty page four times before its
+control passed, so an answer was counted only when it named the catalogue. Three name-server searches sent at
+18:49 carried no coordinates (a mistake in the script) and are not counted; the ones in the table were checked
+to show the coordinates in the page's own form.
+
+arXiv, asked through its interface for programs for every paper with SPHEREx in its abstract: 202 papers, 97
+since 1 Aug 2025. By their titles, one is about Galactic transients (Karambelkar et al., arXiv:2602.07129, which
+the first round read: the candidates are not in it). No other is about a source that newly appeared in the
+Milky Way. arXiv holds no telegrams, circulars or conference abstracts, so this is not the NASA ADS search.
+
+### 2. The Astronomer's Telegram
+
+**The search form** (the same form as in (b); 31 searches, six seconds apart, none met a robot check). The index
+is unchanged since 15 Nov: 942 telegrams from June 2025, the newest number 18156 of 14 Nov 2026.
+
+| Word | Telegrams | What they are |
+|---|---|---|
+| V7994 (control) | 1 | 17419: the search works |
+| SPHEREx | 3 | 18127 and 17601 (the nova V572 Vel); 17556 (TCP J21220926+4926242, in the northern sky) |
+| Sagittarius, Sgr, Sagittarii | 1, 8, 0 | 17995; then 18122, 18039, 17970, 17966, 17659, 17581, 17419, 17311: all about named objects, the nearest to A being XTE J1810-197, 4.0 degrees away. 17311 has the letters SGR: it is the known magnetar 1.5 degrees from B, as in (b) |
+| Scorpius, Scorpii | 0, 0 | |
+| Normae, Arae | 0, 0 | |
+| Lupi | 5 | four about the nova V462 Lup, and 17519: the Latin forms used in nova names are found |
+| Seach | 9 | novae already known: V572 Vel, V7994 Sgr, V1935 Cen, PNV J12312434-5907133 |
+| infrared | 42 | listed in `form_searches.json`; see below |
+| nova | 264 | includes "supernova" |
+| Sco, Norma, Nor, Ara | 714, 133, 228, 302 | the form matches parts of words, so these say nothing |
+| 18:03, 18 03, 16:52, 16 52, 16:06, 16 06 | 942 each | every telegram: they say nothing |
+| J1803 | 1 | 17419: V7994 Sgr is TCP J18035278-3127240, 8.0 degrees from A |
+| J1652, J1606, 180312, 180313, 165243, 160650 | 0 each | no coordinate-style name at B's or C's right ascension, and none at A's place |
+
+Some counts differ from the log of 15 Nov (`atel_by_hand/searches.json`: Sco 1, Seach 1, Norma 1, Nor 1; SPHEREx
+2). This pass recorded the site's own line "N Selected of 18156 Telegrams" each time. Why the earlier counts
+were lower is not known; the extra telegrams are the ones named in the table.
+
+Of the 42 telegrams with "infrared", those about a newly found source in the Milky Way are 17801 and 17426 (read,
+below), 17743 and 17945 (placed in (b): 6.76 and 5.17 degrees from A), and 17804, 17379, 17660 and 17669, which
+carry Transient Name Server names and so fall under the name-server search of part 1.
+
+**Telegrams opened and read in full: 16.** The six chosen because their titles give no place:
+
+| Telegram | Object and position (J2000) | Nearest candidate |
+|---|---|---|
+| 17801 (14 May 2026), "a likely new Galactic recurrent nova" | AT 2026lck = ZTF26aatyimr, 18:43:58.56 +01:52:48.5 | 27.2 degrees from A |
+| 17426 (30 Sep 2025), PRIME25aaghjd | 17:48:14.63 -29:51:18.95 (not obtained on 15 Nov) | 7.21 degrees from A |
+| 17964 (13 Aug 2026), "a likely new X-ray transient" | EP260812c, 267.4863 -32.7155, good to 2.2 arcmin | 9.66 degrees from A |
+| 17589 (10 Jan 2026), "a new optical transient" | 06:57:45.53 +23:22:18.2 | northern sky |
+| 17646 (5 Feb 2026), "possible new object" | 07:30:08.5 +24:30:05 | northern sky |
+| 17444 (14 Oct 2025), "A descriptive title" | the nova V1935 Cen | 14.2 degrees from C |
+
+The other ten are the first telegrams of August 2025 (17317 to 17326), all about known sources; the nearest is
+CXOU J164710.2-455216, 1.54 degrees from B, as in (b).
+
+**The robot check.** The site showed "Please confirm you are not a robot. You have read many Telegrams" at the
+sixth telegram opened in a row, twice at two to three seconds apart and once at forty seconds apart. It was not
+answered, and reading stopped there. So an automated reader cannot read the telegrams in full, and it could not
+open the eighteen telegrams the checklist names (17688, 17689, 17698, 17700, 17743, 17945, 17989, 17995, 18122;
+17552, 17559, 17560, 17569, 17963, 17971, 17974, 18123, 18136), nor 17375, 17399 and 17454 (X-ray flares "possibly
+from" a star, no place in the title).
+
+### 3. What this pass could not do
+
+- **The Astronomer's Telegram in full**, and the eighteen named telegrams: the robot check. For a person.
+- **NASA ADS**: it answered a script with a robot check (HTTP 202 and an empty page), which was not answered or
+  worked around. For a person, with the search lines of (d), step 2. ADS also has an interface for programs that
+  needs a token from a person's own free account; with one, the searches of step 2 could be run and logged by a
+  script.
+- **SIMBAD at CDS**: "Page unavailable" (HTTP 404) at 18:48 and 18:56 UTC. The CfA mirror still fails the
+  control: of the 2025 novae V7994 Sgr, V462 Lup, V572 Vel and V1935 Cen it holds only the last.
+- **AAVSO's campaign pages and the Lucas et al. 2024 table** (steps 5 and 6): not opened, for the reasons in (c).
+
+The three boxes under "Before anything is filed" are as they were: none is ticked.

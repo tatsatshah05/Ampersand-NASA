@@ -1,0 +1,647 @@
+[
+ {
+  "word": "(index, no keyword)",
+  "utc": "2026-11-16T18:55:14Z",
+  "status": 200,
+  "n": 942,
+  "first": 17215,
+  "last": 18156,
+  "last_date": "2026-11-14"
+ },
+ {
+  "word": "V7994",
+  "utc": "2026-11-16T18:55:20Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 1,
+  "site_says": 1,
+  "telegrams": [
+   {
+    "n": 17419,
+    "date": "2025-09-25",
+    "title": "Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr"
+   }
+  ]
+ },
+ {
+  "word": "SPHEREx",
+  "utc": "2026-11-16T18:55:27Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 3,
+  "site_says": 3,
+  "telegrams": [
+   {
+    "n": 18127,
+    "date": "2026-10-29",
+    "title": "Detection of dust in the nova V572 Velorum from SPHEREx observations"
+   },
+   {
+    "n": 17601,
+    "date": "2026-01-15",
+    "title": "Detection of Nova V572 Vel by SPHEREx that precedes the optical discovery"
+   },
+   {
+    "n": 17556,
+    "date": "2025-12-23",
+    "title": "Evidence for an EXor - FUor accretion state transition in TCP J21220926+4926242"
+   }
+  ]
+ },
+ {
+  "word": "Sagittarius",
+  "utc": "2026-11-16T18:55:33Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 1,
+  "site_says": 1,
+  "telegrams": [
+   {
+    "n": 17995,
+    "date": "2026-08-20",
+    "title": "Liverpool Telescope spectroscopy identifies TCP J18251276-2225293 as an Fe II-type nova"
+   }
+  ]
+ },
+ {
+  "word": "Sgr",
+  "utc": "2026-11-16T18:55:39Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 8,
+  "site_says": 8,
+  "telegrams": [
+   {
+    "n": 18122,
+    "date": "2026-10-28",
+    "title": "Fermi-LAT Detection of Galactic Nova V8056 Sgr"
+   },
+   {
+    "n": 18039,
+    "date": "2026-09-12",
+    "title": "MAXI/GSC detection of bright X-ray burst-like activity positionally consistent with XTE J1810-197 and XTE J1810-189"
+   },
+   {
+    "n": 17970,
+    "date": "2026-08-15",
+    "title": "Daily photometric and spectroscopic monitoring of Nova Tau 2026 (=TCP J05210763+2338194) through its passage at maximum brightness and early decline"
+   },
+   {
+    "n": 17966,
+    "date": "2026-08-14",
+    "title": "SRG/ART-XC detection of the new X-ray transient near the Galactic Center - SRGA J174800.5-280826"
+   },
+   {
+    "n": 17659,
+    "date": "2026-02-09",
+    "title": "Swift/XRT observations of the Galactic center detect ongoing X-ray activity of the transient candidate black hole X-ray binary MAXI J1744-294"
+   },
+   {
+    "n": 17581,
+    "date": "2026-01-07",
+    "title": "MAXI detection of X-ray brightening from the black hole X-ray binary V4641 Sgr"
+   },
+   {
+    "n": 17419,
+    "date": "2025-09-25",
+    "title": "Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr"
+   },
+   {
+    "n": 17311,
+    "date": "2025-07-27",
+    "title": "A Soft Gamma Repeater burst from CXOU J164710.2-455216/PSR J1647-4552"
+   }
+  ]
+ },
+ {
+  "word": "18:03",
+  "utc": "2026-11-16T18:55:46Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 942,
+  "site_says": 942
+ },
+ {
+  "word": "18 03",
+  "utc": "2026-11-16T18:55:53Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 942,
+  "site_says": 942
+ },
+ {
+  "word": "Scorpius",
+  "utc": "2026-11-16T18:55:59Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "Sco",
+  "utc": "2026-11-16T18:56:06Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 714,
+  "site_says": 714
+ },
+ {
+  "word": "16:52",
+  "utc": "2026-11-16T18:56:12Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 942,
+  "site_says": 942
+ },
+ {
+  "word": "16 52",
+  "utc": "2026-11-16T18:56:19Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 942,
+  "site_says": 942
+ },
+ {
+  "word": "Seach",
+  "utc": "2026-11-16T18:56:26Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 9,
+  "site_says": 9,
+  "telegrams": [
+   {
+    "n": 18127,
+    "date": "2026-10-29",
+    "title": "Detection of dust in the nova V572 Velorum from SPHEREx observations"
+   },
+   {
+    "n": 17603,
+    "date": "2026-01-15",
+    "title": "Detection of an 11-Minute Period in the X-ray SSS light curve of the Nova V572 Vel"
+   },
+   {
+    "n": 17601,
+    "date": "2026-01-15",
+    "title": "Detection of Nova V572 Vel by SPHEREx that precedes the optical discovery"
+   },
+   {
+    "n": 17579,
+    "date": "2026-01-06",
+    "title": "Spectroscopic classification of PNV J12312434-5907133 as a 2025 Galactic nova"
+   },
+   {
+    "n": 17444,
+    "date": "2025-10-14",
+    "title": "A descriptive title"
+   },
+   {
+    "n": 17419,
+    "date": "2025-09-25",
+    "title": "Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr"
+   },
+   {
+    "n": 17418,
+    "date": "2025-09-24",
+    "title": "Early Swift-XRT detection of heavily-absorbed shock-powered X-rays from nova V1935 Cen = PNV J14372177-5847400"
+   },
+   {
+    "n": 17414,
+    "date": "2025-09-23",
+    "title": "Fermi-LAT Gamma-ray Detection of the Nova in Centaurus PNV J14372177-5847400"
+   },
+   {
+    "n": 17254,
+    "date": "2025-06-28",
+    "title": "Bright nova V572 Vel Has Orbital Period of 0.12317997 +- 0.00000010 days"
+   }
+  ]
+ },
+ {
+  "word": "Norma",
+  "utc": "2026-11-16T18:56:32Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 133,
+  "site_says": 133
+ },
+ {
+  "word": "Nor",
+  "utc": "2026-11-16T18:56:39Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 228,
+  "site_says": 228
+ },
+ {
+  "word": "16:06",
+  "utc": "2026-11-16T18:56:45Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 942,
+  "site_says": 942
+ },
+ {
+  "word": "16 06",
+  "utc": "2026-11-16T18:56:52Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 942,
+  "site_says": 942
+ },
+ {
+  "word": "infrared",
+  "utc": "2026-11-16T18:56:59Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 42,
+  "site_says": 42,
+  "telegrams": [
+   {
+    "n": 18129,
+    "date": "2026-10-29",
+    "title": "Nova V488 Sge Is Forming Dust"
+   },
+   {
+    "n": 18096,
+    "date": "2026-10-08",
+    "title": "Dust formation in the M31 nova AT2026aabo"
+   },
+   {
+    "n": 18048,
+    "date": "2026-09-16",
+    "title": "MDM/MIRAGE discovery of a pronounced infrared brightening in the luminous nova AT2026aabo in M31"
+   },
+   {
+    "n": 18022,
+    "date": "2026-08-31",
+    "title": "Follow-up spectroscopic observations of Nova Sge 2026 (V488 Sge) with WHUT"
+   },
+   {
+    "n": 18010,
+    "date": "2026-08-25",
+    "title": "XSPECT observation of the newly discovered black hole transient MAXI J1750-327 / EP260812c: Detection of variable low frequency QPOs"
+   },
+   {
+    "n": 18007,
+    "date": "2026-08-25",
+    "title": "ALMA + VLA observations of MAXI J1750-327"
+   },
+   {
+    "n": 17988,
+    "date": "2026-08-19",
+    "title": "PRIME early detection and pre-outburst upper limit for the NIR counterpart to MAXI J1750-327"
+   },
+   {
+    "n": 17984,
+    "date": "2026-08-18",
+    "title": "Post-outburst morphology and polarization behavior of the short-periodical comet 220P/McNaught"
+   },
+   {
+    "n": 17971,
+    "date": "2026-08-15",
+    "title": "Optical counterpart of the black hole candidate X-ray binary MAXI J1750-327 / EP J175003.0-324244"
+   },
+   {
+    "n": 17945,
+    "date": "2026-08-06",
+    "title": "PRIME discovery and IRTF confirmation of a bright nova PRIME26ahygn at the Galactic center"
+   },
+   {
+    "n": 17909,
+    "date": "2026-07-20",
+    "title": "Accurate position and spin-down measurement of the magnetar candidate EP J223759.5+531421"
+   },
+   {
+    "n": 17903,
+    "date": "2026-07-17",
+    "title": "Chandra detection of new outburst by XMMU J174445.5-295044"
+   },
+   {
+    "n": 17883,
+    "date": "2026-07-10",
+    "title": "Near-infrared observations of GRS 1915+105 during its unprecedented low-luminosity state"
+   },
+   {
+    "n": 17877,
+    "date": "2026-07-06",
+    "title": "GTC/EMIR near-infrared observations of the magnetar candidate EP J223759.5+531421"
+   },
+   {
+    "n": 17823,
+    "date": "2026-05-30",
+    "title": "Infrared Spectroscopy Confirms the Transition of IRAS 21204+4913 to an FU Ori Outburst"
+   },
+   {
+    "n": 17804,
+    "date": "2026-05-15",
+    "title": "Identification and spectroscopic classification of a reddened classical nova AT2026ldc with strong CO emission"
+   },
+   {
+    "n": 17801,
+    "date": "2026-05-14",
+    "title": "Discovery of a likely new Galactic recurrent nova with ZTF, ASAS-SN, and NEOWISE."
+   },
+   {
+    "n": 17778,
+    "date": "2026-05-07",
+    "title": "LEDA 735555: WISE detection of long-term infrared brightening and a flare in 2021"
+   },
+   {
+    "n": 17743,
+    "date": "2026-04-07",
+    "title": "PRIME discovery and IRTF confirmation of a bright nova PRIME26aaabsh at the Galactic center"
+   },
+   {
+    "n": 17724,
+    "date": "2026-03-16",
+    "title": "MAXI/GSC observes GS 1354-64 entering the soft state"
+   },
+   {
+    "n": 17700,
+    "date": "2026-02-25",
+    "title": "SOAR spectroscopic classification of the Galactic plane gamma-ray transient Fermi J1820-1648"
+   },
+   {
+    "n": 17673,
+    "date": "2026-02-12",
+    "title": "Insight-HXMT detects transient spectral softening and QPO suppression during an X-ray flare in GS 1354-64"
+   },
+   {
+    "n": 17669,
+    "date": "2026-02-11",
+    "title": "Continued fading and photometric monitoring of AT2026cex"
+   },
+   {
+    "n": 17660,
+    "date": "2026-02-09",
+    "title": "AT 2026cex / ZTF26aaedxli is likely an outburst of Gaia star 866940901044573184"
+   },
+   {
+    "n": 17652,
+    "date": "2026-02-08",
+    "title": "LFBOT ATeL#17646: infrared J band photometric observation"
+   },
+   {
+    "n": 17638,
+    "date": "2026-01-29",
+    "title": "The black hole X-ray binary GS 1354-64 in transition from the hard to the soft state"
+   },
+   {
+    "n": 17611,
+    "date": "2026-01-19",
+    "title": "ALMA and VLT HAWK-I observations of BW Cir in Outburst"
+   },
+   {
+    "n": 17556,
+    "date": "2025-12-23",
+    "title": "Evidence for an EXor - FUor accretion state transition in TCP J21220926+4926242"
+   },
+   {
+    "n": 17523,
+    "date": "2025-12-03",
+    "title": "X-ray observation of the cometary interloper C/2025 N1 (3I/ATLAS) by XRISM/Xtend"
+   },
+   {
+    "n": 17476,
+    "date": "2025-11-05",
+    "title": "Photometric and spectroscopic follow-up observations of AT 2025abao: A luminous symbiotic nova in M31?"
+   },
+   {
+    "n": 17471,
+    "date": "2025-11-03",
+    "title": "Extragalactic X-ray Binary IC 10 X-2 is in X-ray Outburst"
+   },
+   {
+    "n": 17453,
+    "date": "2025-10-25",
+    "title": "XRISM/Xtend Transient Search (XTS) detected an X-ray flare from Pul -3 540245"
+   },
+   {
+    "n": 17426,
+    "date": "2025-09-30",
+    "title": "PRIME discovery and SOAR confirmation of a very bright symbiotic nova PRIME25aaghjd near the Galactic center"
+   },
+   {
+    "n": 17379,
+    "date": "2025-09-09",
+    "title": "WINTER near-IR identification and spectroscopic observations of a likely extremely slow nova WNTR25fhdoi / AT2025sqe"
+   },
+   {
+    "n": 17368,
+    "date": "2025-09-02",
+    "title": "EP250828a: Early near-infrared follow-up with MIRAGE on the MDM 1.3m telescope"
+   },
+   {
+    "n": 17346,
+    "date": "2025-08-20",
+    "title": "Detection of very-high-energy gamma-ray emission from the FSRQ PKS 1725+123 with H.E.S.S."
+   },
+   {
+    "n": 17327,
+    "date": "2025-08-11",
+    "title": "XB-NEWS detects a new outburst of GX 339-4"
+   },
+   {
+    "n": 17304,
+    "date": "2025-07-24",
+    "title": "ASASSN-25db: A Deep Ongoing Dimming Event"
+   },
+   {
+    "n": 17283,
+    "date": "2025-07-11",
+    "title": "Initial Results from NASA/IRTF Observations of Interstellar Comet 3I/ATLAS"
+   },
+   {
+    "n": 17269,
+    "date": "2025-07-05",
+    "title": "EP250702a/GRB 250702B,C,D,E: Archival radio observations from ASKAP VAST"
+   },
+   {
+    "n": 17225,
+    "date": "2025-06-06",
+    "title": "Spectroscopic Classifications of Optical Transients with the Lick Shane telescope"
+   },
+   {
+    "n": 17220,
+    "date": "2025-06-04",
+    "title": "The Pre-Dimming Spectral Type of the Unusual Variable ASASSN-25cd"
+   }
+  ]
+ },
+ {
+  "word": "Ara",
+  "utc": "2026-11-16T18:57:05Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 302,
+  "site_says": 302
+ },
+ {
+  "word": "nova",
+  "utc": "2026-11-16T18:57:12Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 264,
+  "site_says": 264
+ },
+ {
+  "word": "(second set: coordinate-style names; the form matches parts of words)",
+  "utc": "2026-11-16T19:07:39Z"
+ },
+ {
+  "word": "V7994",
+  "utc": "2026-11-16T19:06:46Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 1,
+  "site_says": 1,
+  "telegrams": [
+   {
+    "n": 17419,
+    "date": "2025-09-25",
+    "title": "Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr"
+   }
+  ]
+ },
+ {
+  "word": "J1803",
+  "utc": "2026-11-16T19:06:53Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 1,
+  "site_says": 1,
+  "telegrams": [
+   {
+    "n": 17419,
+    "date": "2025-09-25",
+    "title": "Fermi-LAT Gamma-ray Detection of the Nova V7994 Sgr"
+   }
+  ]
+ },
+ {
+  "word": "180312",
+  "utc": "2026-11-16T19:07:00Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "180313",
+  "utc": "2026-11-16T19:07:06Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "J1652",
+  "utc": "2026-11-16T19:07:13Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "165243",
+  "utc": "2026-11-16T19:07:20Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "J1606",
+  "utc": "2026-11-16T19:07:26Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "160650",
+  "utc": "2026-11-16T19:07:33Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "Sagittarii",
+  "utc": "2026-11-16T19:08:20Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "Scorpii",
+  "utc": "2026-11-16T19:08:26Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "Normae",
+  "utc": "2026-11-16T19:08:33Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "Arae",
+  "utc": "2026-11-16T19:08:39Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 0,
+  "site_says": 0,
+  "telegrams": []
+ },
+ {
+  "word": "Lupi",
+  "utc": "2026-11-16T19:08:46Z",
+  "status": 200,
+  "robot_check": false,
+  "n": 5,
+  "site_says": 5,
+  "telegrams": [
+   {
+    "n": 17519,
+    "date": "2025-12-01",
+    "title": "FUor-like absorption-dominated spectrum of TCP J21220926+4926242"
+   },
+   {
+    "n": 17436,
+    "date": "2025-10-06",
+    "title": "V462 Lup has entered the super-soft X-ray phase"
+   },
+   {
+    "n": 17353,
+    "date": "2025-08-22",
+    "title": "Swift-X-ray detection of nova V462 Lup"
+   },
+   {
+    "n": 17290,
+    "date": "2025-07-18",
+    "title": "V462 Lupi (AT 2025nlr): SMA Detection of Bright Millimeter Emission"
+   },
+   {
+    "n": 17281,
+    "date": "2025-07-09",
+    "title": "NuSTAR upper limit on X-ray emission of nova V462 Lupi"
+   }
+  ]
+ }
+]

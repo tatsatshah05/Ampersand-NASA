@@ -1,0 +1,76 @@
+{
+ "what": "Checks for an earlier report of Candidates A, B and C made on 2026-11-16 by an automated reader (an AI agent), at the team lead's request. Reading only: nothing was submitted, no account was made, no robot check was answered. Not a person's check. Times are UTC.",
+ "positions": {"A": [270.80408, -23.46818], "B": [253.18038, -44.67697], "C": [241.70906, -52.20564]},
+ "transient_name_server_objects": {
+  "address": "https://www.wis-tns.org/search?ra=<ra>&decl=<dec>&radius=<arcsec>&coords_unit=arcsec",
+  "control": {"utc": "19:03:28", "ra": 227.01362, "dec": -40.14308, "radius_arcsec": 60, "http": 200, "lists": ["AT 2025nlr", "2025ocl"], "passed": true},
+  "A": {"utc": "19:03:36", "radius_arcsec": 300, "http": 200, "answer": "No results found"},
+  "B": {"utc": "19:03:46", "radius_arcsec": 300, "http": 200, "answer": "No results found"},
+  "C": {"utc": "19:06:15", "radius_arcsec": 300, "http": 200, "answer": "No results found", "note": "the first try at 19:03:56 was refused (HTTP 429, too many requests) and was repeated two minutes later"},
+  "note": "Three searches sent at 18:49 carried no coordinates (a mistake in the script) and are not counted. Each answer above was checked to show the coordinates in the page's own form."
+ },
+ "transient_name_server_astronotes": {
+  "address": "https://www.wis-tns.org/astronotes?...",
+  "control_by_object": {"utc": "18:56:54", "query": "related_objects=2026rdg", "lists": "AstroNote 2026-233", "passed": true},
+  "control_by_position": {"utc": "18:58:17", "ra": 288.6306926, "dec": 12.0648898, "radius_arcsec": 300, "lists": "AstroNote 2026-233", "passed": true},
+  "title_SPHEREx": {"utc": "18:57:01", "query": "title=SPHEREx", "answer": "No results found"},
+  "A": {"utc": "18:57:07", "radius_arcsec": 300, "answer": "No results found"},
+  "B": {"utc": "18:58:23", "radius_arcsec": 300, "answer": "No results found"},
+  "C": {"utc": "19:02:18", "radius_arcsec": 300, "answer": "No results found", "note": "the first try at 18:58:30 was refused (HTTP 429) and was repeated"}
+ },
+ "cbat_tocp": {
+  "address": "http://www.cbat.eps.harvard.edu/unconf/tocp.html",
+  "utc": "18:48:5x", "http": 200,
+  "entries_with_a_position": 2697, "dates": "2010-03-02 to 2026-11-13", "entries_since_2025_08": 272,
+  "names_beginning": {
+   "J1803": ["J18030904+1218140", "J18031864-2909223", "J18033275-2816054", "J18033733-2935266", "J18035185+4256430", "J18035278-3127240", "J18035290-3127298"],
+   "J1652": ["J16521887-3754189", "J16525760+0223367"],
+   "J1606": ["J16064415-1611467"]
+  },
+  "none_begins": {"A": "-23", "B": "-44", "C": "-52"},
+  "nearest": {
+   "A": {"any_year": "TCP J17520680-2343207 (2026-09-08), 2.56 deg", "since_2025_08": "the same"},
+   "B": {"any_year": "PNV J16484962-4457032 (2018-02-06), 44.6 arcmin", "since_2025_08": "TCP J17301230-2753488 (2025-09-05), 18.4 deg"},
+   "C": {"any_year": "PNV J16143400-5330050 (2018-10-13), 1.74 deg", "since_2025_08": "PNV J14372177-5847400 (2025-09-22), 14.2 deg"}
+  }
+ },
+ "mukai_nova_list": {
+  "address": "https://asd.gsfc.nasa.gov/Koji.Mukai/novae/novae.html",
+  "utc": "18:48:5x", "http": 200, "last_updated": "2026 Nov 11",
+  "control": "V7994 Sgr and V8056 Sgr are on the page",
+  "norma_entries": ["V567 Nor (Nova Normae 2023)", "Gaia21eqn", "Gaia20dfb", "V556 Nor (Nova Normae 2018)", "V555 Nor"],
+  "norma_2025_or_2026": "none"
+ },
+ "vsx_on_the_cfa_vizier_mirror": {
+  "address": "https://vizier.cfa.harvard.edu/viz-bin/asu-tsv?-source=B/vsx/vsx&-c=<ra> <dec>&-c.rm=<arcmin>",
+  "detail": "vsx_mirror.json",
+  "control": "19:05:56, V7994 Sgr (type NA) found at its place; passed at the fifth try: the mirror answered four times with an empty page (\"The database is not currently reachable\" or no table), so an answer was counted only when it named the catalogue",
+  "A": "19:05:58: 15 objects within 5 arcmin, the nearest a type L star 43 arcsec away; no nova, dwarf nova, eruptive or young-star type",
+  "B": "19:06:01: 24 objects within 5 arcmin, the nearest an RR Lyrae star 37 arcsec away; one Be-type variable (NADA-V106, type GCAS) 4.5 arcmin away; no nova or eruptive type",
+  "C": "19:06:03: 20 objects within 5 arcmin, the nearest a type RS star 12 arcsec away; no nova, dwarf nova, eruptive or young-star type"
+ },
+ "simbad_at_cds": {
+  "utc": "18:48:48", "address": "https://simbad.cds.unistra.fr/simbad/sim-id?Ident=V7994+Sgr", "http": 404, "page": "Page unavailable - CDS",
+  "again": "18:56: simbad.cds.unistra.fr TAP HTTP 404; simbad.u-strasbg.fr no connection",
+  "cfa_mirror_control": "18:56: of V7994 Sgr, V462 Lup, V572 Vel and V1935 Cen the mirror holds only V1935 Cen ('NOVA Cen 2025'): the control fails",
+  "counts_as": "not searched"
+ },
+ "nasa_ads": {
+  "utc": "18:56:17", "address": "https://ui.adsabs.harvard.edu/search/q=bibstem:ATel abs:V7994", "http": 202,
+  "answer": "an empty page with the header x-amzn-waf-action: challenge (a robot check). Not answered, not worked around.",
+  "counts_as": "not searched"
+ },
+ "arxiv_api": {
+  "utc": "18:58:44", "address": "https://export.arxiv.org/api/query?search_query=abs:SPHEREx&sortBy=submittedDate&max_results=300",
+  "papers": 202, "since_2025_08_01": 97,
+  "about_galactic_transients": ["2602.07129 (Karambelkar et al., SPHEREx as a frontier for infrared transients): checked in the first round, the candidates are not in it"],
+  "note": "Titles of all 97 were read. No other one is about a newly appeared Galactic source. This is not NASA ADS: it has no telegrams, circulars or conference abstracts."
+ },
+ "astronomers_telegram": {
+  "index": "18:55:14: 942 telegrams from June 2025, the newest 18156 of 14 Nov 2026 (the same as on 15 Nov)",
+  "form_searches": "form_searches.json (31 searches, 6 s apart, 18:55 to 19:08; none met a robot check; the first 18 words were also run at 18:52 with the same counts)",
+  "telegrams_read": "telegrams_read.json (16 telegrams); telegram_reads.log",
+  "robot_check": "\"Please confirm you are not a robot. You have read many Telegrams\" at the sixth telegram read in a row at 18:57:24 and 18:58:29 (2 to 3 s apart) and at the seventh at 19:06:11 (40 s apart). Not answered. Reading stopped there.",
+  "not_read": [17688, 17689, 17698, 17700, 17743, 17945, 17989, 17995, 18122, 17552, 17559, 17560, 17569, 17963, 17971, 17974, 18123, 18136, 17375, 17399, 17454, 17804, 17379]
+ }
+}

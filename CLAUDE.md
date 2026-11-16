@@ -1297,6 +1297,13 @@ rounds of searches, for the ruling and after it (more than 30 catalogues and ale
 tested on a known object), and a keyword search of the Astronomer's Telegrams found no earlier report. No person has
 yet read the telegrams in full, NASA ADS has had only its control and one search, and SIMBAD at CDS was down, so a
 person must still work through the checklist.
+A third pass on 2026-11-16, by an automated reader (`docs/sweep/searches-for-earlier-reports.md`, section (e); logs
+in `docs/sweep/vetting/checks_2026-11-16/`, script `scripts/atel_check.py`), repeated the Transient Name Server, its
+AstroNotes, CBAT's list, Mukai's nova list and the variable-star index, and ran the telegram site's search form:
+nothing at the three places. It also showed what a script cannot do, so do not try these again from one: the
+telegram site shows "Please confirm you are not a robot" after six telegrams however slowly they are opened (its
+search form is not limited), NASA ADS answers a script with a robot check (it would take a person's own API
+token), and SIMBAD at CDS was still down. Never answer or work around such a check.
 The app's own sentences about them are in `frontend/src/finds.ts`, quoted in `docs/sweep.md` (`finds.test.ts`).
 
 Checks that guard the page (each takes `<playwright-core path> <base url> <out dir>`). Each copy in the repository is

@@ -1,0 +1,350 @@
+{
+ "made": "2026-11-16T19:09:25Z",
+ "telegrams": [
+  {
+   "n": 17317,
+   "date": "2025-08-01",
+   "title": "Einstein Probe detection of a new outburst from IGR J20155+3827",
+   "n_positions": 0,
+   "positions": [],
+   "nearest": {},
+   "mentions": []
+  },
+  {
+   "n": 17318,
+   "date": "2025-08-03",
+   "title": "Spectroscopic Classification of Astrophysical Transients with the Lick Shane Telescope",
+   "n_positions": 3,
+   "positions": [
+    "00:11:41.362 | -22:59:09.70",
+    "16:25:01.607 | +40:56:45.72",
+    "22:48:42.279 | +27:34:57.99"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 68.331,
+     "as": "16:25:01.607 | +40:56:45.72"
+    },
+    "B": {
+     "deg": 85.848,
+     "as": "16:25:01.607 | +40:56:45.72"
+    },
+    "C": {
+     "deg": 89.071,
+     "as": "00:11:41.362 | -22:59:09.70"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17319,
+   "date": "2025-08-04",
+   "title": "Fermi-LAT detection of enhanced gamma-ray activity from the FSRQ PKS 1045-18",
+   "n_positions": 2,
+   "positions": [
+    "162.02759 deg, Dec. = -19.15992",
+    "J1048.0-1912"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 98.522,
+     "as": "162.02759 deg, Dec. = -19.15992"
+    },
+    "B": {
+     "deg": 77.444,
+     "as": "J1048.0-1912"
+    },
+    "C": {
+     "deg": 68.699,
+     "as": "J1048.0-1912"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17320,
+   "date": "2025-08-05",
+   "title": "Multi-band optical photometry of novae AT2025qdc and AT2025qsm in M31",
+   "n_positions": 0,
+   "positions": [],
+   "nearest": {},
+   "mentions": []
+  },
+  {
+   "n": 17321,
+   "date": "2025-08-05",
+   "title": "XB-NEWS detects a new outburst of Aql X-1",
+   "n_positions": 0,
+   "positions": [],
+   "nearest": {},
+   "mentions": []
+  },
+  {
+   "n": 17322,
+   "date": "2025-08-06",
+   "title": "Non-detection of radio pulses from CXOU J164710.2-455216 with Murriyang",
+   "n_positions": 14,
+   "positions": [
+    "J1647-4552",
+    "J164710.2-455216"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 27.166,
+     "as": "J164710.2-455216"
+    },
+    "B": {
+     "deg": 1.543,
+     "as": "J164710.2-455216"
+    },
+    "C": {
+     "deg": 9.123,
+     "as": "J1647-4552"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17323,
+   "date": "2025-08-06",
+   "title": "XB-NEWS detects a new outburst of SAX J1808.4-3658",
+   "n_positions": 34,
+   "positions": [
+    "J1808-3658",
+    "J1808.4-3658"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 13.538,
+     "as": "J1808-3658"
+    },
+    "B": {
+     "deg": 16.14,
+     "as": "J1808-3658"
+    },
+    "C": {
+     "deg": 26.105,
+     "as": "J1808-3658"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17324,
+   "date": "2025-08-07",
+   "title": "Einstein Probe confirms a new outburst of the Accreting Millisecond Pulsar SAX J1808.4-3658",
+   "n_positions": 23,
+   "positions": [
+    "0.09,+0.10",
+    "0.29,+0.31",
+    "0.35, +0.43",
+    "272.1138 deg and DEC = -36.9788",
+    "J1808.4-3658"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 13.544,
+     "as": "J1808.4-3658"
+    },
+    "B": {
+     "deg": 16.206,
+     "as": "J1808.4-3658"
+    },
+    "C": {
+     "deg": 26.16,
+     "as": "272.1138 deg and DEC = -36.9788"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17325,
+   "date": "2025-08-08",
+   "title": "Fermi-LAT detection of enhanced gamma-ray activity from the FSRQ B2 1324+22",
+   "n_positions": 3,
+   "positions": [
+    "201.75359 deg, Dec. = +22.18060",
+    "J1326.9+2210"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 81.179,
+     "as": "201.75359 deg, Dec. = +22.18060"
+    },
+    "B": {
+     "deg": 81.656,
+     "as": "201.75359 deg, Dec. = +22.18060"
+    },
+    "C": {
+     "deg": 82.143,
+     "as": "J1326.9+2210"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17326,
+   "date": "2025-08-10",
+   "title": "Swift/XRT follow-up observations of SAX J1808.4-3658",
+   "n_positions": 19,
+   "positions": [
+    "0.09, -0.08",
+    "0.35, +0.43",
+    "J1808.4-3658"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 13.544,
+     "as": "J1808.4-3658"
+    },
+    "B": {
+     "deg": 16.206,
+     "as": "J1808.4-3658"
+    },
+    "C": {
+     "deg": 26.161,
+     "as": "J1808.4-3658"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17426,
+   "date": "2025-09-30",
+   "title": "PRIME discovery and SOAR confirmation of a very bright symbiotic nova PRIME25aaghjd near the Galactic center",
+   "n_positions": 1,
+   "positions": [
+    "17:48:14.63 Dec -29:51:18.95"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 7.209,
+     "as": "17:48:14.63 Dec -29:51:18.95"
+    },
+    "B": {
+     "deg": 18.429,
+     "as": "17:48:14.63 Dec -29:51:18.95"
+    },
+    "C": {
+     "deg": 29.11,
+     "as": "17:48:14.63 Dec -29:51:18.95"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17444,
+   "date": "2025-10-14",
+   "title": "A descriptive title",
+   "n_positions": 0,
+   "positions": [],
+   "nearest": {},
+   "mentions": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "n": 17589,
+   "date": "2026-01-10",
+   "title": "COLIBRI discovery of a new optical transient",
+   "n_positions": 1,
+   "positions": [
+    "06:57:45.53, Dec = +23:22:18.2"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 167.492,
+     "as": "06:57:45.53, Dec = +23:22:18.2"
+    },
+    "B": {
+     "deg": 146.814,
+     "as": "06:57:45.53, Dec = +23:22:18.2"
+    },
+    "C": {
+     "deg": 136.61,
+     "as": "06:57:45.53, Dec = +23:22:18.2"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17646,
+   "date": "2026-02-05",
+   "title": "Possible new object showing a featureless blue spectrum",
+   "n_positions": 1,
+   "positions": [
+    "07:30:08.5 and Dec = +24:30:05"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 160.139,
+     "as": "07:30:08.5 and Dec = +24:30:05"
+    },
+    "B": {
+     "deg": 142.364,
+     "as": "07:30:08.5 and Dec = +24:30:05"
+    },
+    "C": {
+     "deg": 132.841,
+     "as": "07:30:08.5 and Dec = +24:30:05"
+    }
+   },
+   "mentions": []
+  },
+  {
+   "n": 17801,
+   "date": "2026-05-14",
+   "title": "Discovery of a likely new Galactic recurrent nova with ZTF, ASAS-SN, and NEOWISE.",
+   "n_positions": 1,
+   "positions": [
+    "18:43:58.56 Dec = +01:52:48.46"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 27.219,
+     "as": "18:43:58.56 Dec = +01:52:48.46"
+    },
+    "B": {
+     "deg": 52.733,
+     "as": "18:43:58.56 Dec = +01:52:48.46"
+    },
+    "C": {
+     "deg": 63.375,
+     "as": "18:43:58.56 Dec = +01:52:48.46"
+    }
+   },
+   "mentions": [
+    "B"
+   ]
+  },
+  {
+   "n": 17964,
+   "date": "2026-08-13",
+   "title": "Einstein Probe detection of a likely new X-ray transient",
+   "n_positions": 29,
+   "positions": [
+    "267.4863 deg, -32.7155",
+    "357.243 deg, -2.747",
+    "J1750-327",
+    "J175003.0-324244",
+    "J175013.2-324130"
+   ],
+   "nearest": {
+    "A": {
+     "deg": 9.657,
+     "as": "J175013.2-324130"
+    },
+    "B": {
+     "deg": 16.314,
+     "as": "267.4863 deg, -32.7155"
+    },
+    "C": {
+     "deg": 26.951,
+     "as": "267.4863 deg, -32.7155"
+    }
+   },
+   "mentions": []
+  }
+ ]
+}

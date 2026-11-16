@@ -1,0 +1,154 @@
+{
+ "control (V7994 Sgr)": {
+  "utc": "2026-11-16T19:05:56Z",
+  "answered": true,
+  "tries": 5,
+  "within_arcmin": 2,
+  "objects": 36,
+  "nearest": [
+   {
+    "arcmin": 0.0001,
+    "name": "V7994 Sgr",
+    "type": "NA"
+   },
+   {
+    "arcmin": 0.5438,
+    "name": "OGLE-BLG-ECL-280254",
+    "type": "E"
+   },
+   {
+    "arcmin": 0.7935,
+    "name": "OGLE-BLG-ECL-279910",
+    "type": "EC"
+   },
+   {
+    "arcmin": 0.8718,
+    "name": "OGLE-BLG-ECL-279826",
+    "type": "E"
+   },
+   {
+    "arcmin": 0.8784,
+    "name": "OGLE-BLG-ECL-281337",
+    "type": "EC"
+   }
+  ],
+  "nova_eruptive_or_young": [
+   {
+    "arcmin": 0.0001,
+    "name": "V7994 Sgr",
+    "type": "NA"
+   }
+  ]
+ },
+ "A": {
+  "utc": "2026-11-16T19:05:58Z",
+  "answered": true,
+  "tries": 1,
+  "within_arcmin": 5,
+  "objects": 15,
+  "nearest": [
+   {
+    "arcmin": 0.7184,
+    "name": "Gaia DR3 4069172520146611584",
+    "type": "L"
+   },
+   {
+    "arcmin": 1.4946,
+    "name": "Gaia DR3 4069173447841928576",
+    "type": "E"
+   },
+   {
+    "arcmin": 2.1982,
+    "name": "Gaia DR3 4069172348347904128",
+    "type": "L"
+   },
+   {
+    "arcmin": 2.9486,
+    "name": "[HHR2012] J180322.5-232606",
+    "type": "VAR"
+   },
+   {
+    "arcmin": 3.0712,
+    "name": "Gaia DR3 4069173619658263552",
+    "type": "RS"
+   }
+  ],
+  "nova_eruptive_or_young": []
+ },
+ "B": {
+  "utc": "2026-11-16T19:06:01Z",
+  "answered": true,
+  "tries": 1,
+  "within_arcmin": 5,
+  "objects": 24,
+  "nearest": [
+   {
+    "arcmin": 0.6189,
+    "name": "Gaia DR3 5964332646302546560",
+    "type": "RRC"
+   },
+   {
+    "arcmin": 0.9666,
+    "name": "Gaia DR3 5964332543223328000",
+    "type": "L"
+   },
+   {
+    "arcmin": 1.8874,
+    "name": "Gaia DR3 5964332264035347328",
+    "type": "E"
+   },
+   {
+    "arcmin": 2.067,
+    "name": "Gaia DR3 5964333436558830848",
+    "type": "E"
+   },
+   {
+    "arcmin": 2.333,
+    "name": "Gaia DR3 5964332130906441984",
+    "type": "ROT"
+   }
+  ],
+  "nova_eruptive_or_young": [
+   {
+    "arcmin": 4.5314,
+    "name": "NADA-V106",
+    "type": "GCAS"
+   }
+  ]
+ },
+ "C": {
+  "utc": "2026-11-16T19:06:03Z",
+  "answered": true,
+  "tries": 1,
+  "within_arcmin": 5,
+  "objects": 20,
+  "nearest": [
+   {
+    "arcmin": 0.1998,
+    "name": "Gaia DR3 5933349095879173504",
+    "type": "RS"
+   },
+   {
+    "arcmin": 1.7079,
+    "name": "Gaia DR3 5933349164598498432",
+    "type": "ROT"
+   },
+   {
+    "arcmin": 2.622,
+    "name": "Gaia DR3 5933349400764267392",
+    "type": "L"
+   },
+   {
+    "arcmin": 2.6592,
+    "name": "Gaia DR3 5933349405116808448",
+    "type": "L"
+   },
+   {
+    "arcmin": 2.6613,
+    "name": "Gaia DR3 5933349435118361088",
+    "type": "L"
+   }
+  ],
+  "nova_eruptive_or_young": []
+ }
+}
