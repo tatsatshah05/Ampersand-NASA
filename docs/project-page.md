@@ -33,9 +33,9 @@ SPHEREx sky-change viewer
 
 ## 2. High-Level Project Summary
 
-For ten years NASA's NEOWISE telescope looked at the whole sky in infrared light about twice a year, so it could see what changed. It stopped in August 2024. NASA's SPHEREx telescope now photographs the whole sky in infrared light again and again. Our web tool lets anyone type a star's name or a position and watch the real SPHEREx pictures of that patch of sky play like a short film, as the challenge asks, and it searches the pictures for things that moved or changed. Every result is written twice: in plain words for anyone, and with the numbers for scientists.
+Our sweep of NASA SPHEREx's pictures of the Milky Way turned up three infrared sources that we found in no catalogue or report we checked. SPHEREx could not detect them in its pictures of July to September 2025, and saw them much brighter in 2026: more than 100 times, at least 250 times and at least 30 times. They are candidates: nobody has confirmed them, and nobody knows yet what they are. The same sweep found two known novae by itself, which shows that it works.
 
-We tested it on the challenge's five targets. It measures Barnard's Star moving 10.4 arcseconds between August 2025 and August 2026; the Gaia catalogue predicts 10.3. Our first sweep of the Milky Way's plane found two known novae by itself, and three infrared sources that SPHEREx could not detect in its pictures of July to September 2025 and saw much brighter in 2026. We found these three in no catalogue or report we checked. They are candidates: nobody has confirmed them.
+The tool that found them is a public website for everyone. NASA's NEOWISE telescope watched the infrared sky change for ten years and stopped in August 2024. SPHEREx now photographs the whole sky in infrared light again and again. Type a star's name or a position, and the real SPHEREx pictures of that patch of sky play like a short film, as the challenge asks. The tool also searches the pictures for things that moved or changed, and it writes every result twice: in plain words for anyone, and with the numbers for scientists. We tested it on the challenge's five targets: it measures Barnard's Star moving 10.4 arcseconds between August 2025 and August 2026, and the Gaia catalogue predicts 10.3.
 
 ## 3. Link to Project Demo
 
@@ -51,7 +51,7 @@ https://spherex-sky-change-viewer.onrender.com
 
 WHAT IT DOES
 
-SPHEREx sky-change viewer is a public website: https://spherex-sky-change-viewer.onrender.com. Type a star's name or a position (right ascension and declination), and it shows NASA SPHEREx's real infrared pictures of that patch of sky, one picture per visit, played like a short film. A visit is one pass of SPHEREx over the patch; SPHEREx comes back about every six months. Anything that moved or changed between visits stands out. The site opens on a source that appeared between two visits, blinking between the picture without it and the picture with it.
+SPHEREx sky-change viewer is a public website: https://spherex-sky-change-viewer.onrender.com. Type a star's name or a position (right ascension and declination), and it shows NASA SPHEREx's real infrared pictures of that patch of sky, one picture per visit, played like a short film. A visit is one pass of SPHEREx over the patch; SPHEREx comes back about every six months. Anything that moved or changed between visits stands out. The site opens on a source that appeared between two visits, blinking between the picture without it and the picture with it. That source is one of three that our own sweep turned up and that we found in no catalogue or report we checked. They are candidates, and nobody has confirmed them (see WHAT WE TESTED AND FOUND).
 
 It has ten features, which stay in view on every screen:
 
