@@ -2,13 +2,15 @@
 
 Text to paste into the NASA Space Apps project page (issue #16). Rewritten on 2026-11-15 against the running
 page (built from `Dev` at commit `0221046`) and the project's records, then corrected after an independent
-review of this text. Check the submission form for length limits before pasting: a short and a long version
-are given.
+review of this text. On the evening of 2026-11-15 the answers were set out again in the order of the form's
+eight fields ("The form, field by field", next): paste from there. The longer text after it is kept for anyone
+who wants more detail than the form needs. The form's length limits are not known to us: check them when pasting.
 
 **Read before pasting.** Every number and claim below is in the code, in a results file or in a write-up in the
-repository; the write-up is named where it matters. One thing must be checked by a person and is marked
-**[TO CONFIRM]**: the answer about AI tools, which the team must agree is complete. Do not paste a marked
-sentence as it stands. The public web address is filled in: the site was deployed on 2026-11-15.
+repository; the write-up is named where it matters. Three things need a person and are marked **[TO FILL IN]**
+or **[TO CONFIRM]**: the link to the demo (the slides are not uploaded anywhere public yet), and two sentences
+of the answer about AI tools, which the team must agree are complete and true. Do not paste a marked sentence as
+it stands. The public web address is filled in: the site was deployed on 2026-11-15.
 
 Rules this text keeps, and any edit must keep: the three sweep sources are **candidates**, "found in no
 catalogue or report we checked" and "not confirmed"; their three sentences are the referee's, word for word
@@ -19,6 +21,174 @@ Words used: a **visit** is one pass of SPHEREx over a patch of sky (each visit i
 picture). A **detector** is one of SPHEREx's six infrared cameras.
 
 ---
+
+# The form, field by field
+
+Each paragraph below is one line in this file, so that it pastes without broken lines. The headings in capitals
+inside field 5 are plain text, in case the form does not read Markdown.
+
+## 1. Project Name
+
+SPHEREx sky-change viewer
+
+## 2. High-Level Project Summary
+
+For ten years NASA's NEOWISE telescope looked at the whole sky in infrared light about twice a year, so it could see what changed. It stopped in August 2024. NASA's SPHEREx telescope now photographs the whole sky in infrared light again and again. Our web tool lets anyone type a star's name or a position and watch the real SPHEREx pictures of that patch of sky play like a short film, as the challenge asks, and it searches the pictures for things that moved or changed. Every result is written twice: in plain words for anyone, and with the numbers for scientists.
+
+We tested it on the challenge's five targets. It measures Barnard's Star moving 10.4 arcseconds between August 2025 and August 2026; the Gaia catalogue predicts 10.3. Our first sweep of the Milky Way's plane found two known novae by itself, and three infrared sources that SPHEREx could not detect in its pictures of July to September 2025 and saw much brighter in 2026. We found these three in no catalogue or report we checked. They are candidates: nobody has confirmed them.
+
+## 3. Link to Project Demo
+
+**[TO FILL IN]** The form asks for a 7-slide presentation or a video of 30 seconds or less, at a public link that needs no sign-in. The 7-slide deck exists (`docs/pitch/`, two versions of 7 slides each) and is not uploaded anywhere public yet. Upload the final one (Google Drive with "Anyone with the link", or this repository) and paste its link here. If AI wrote the slides' text or voiced a video, say so on the last slide or in the video's description: the form asks for that.
+
+## 4. Link to Final Project
+
+https://spherex-sky-change-viewer.onrender.com
+
+(The code, if the form has room for a second link: https://github.com/tatsatshah05/Ampersand-NASA)
+
+## 5. Detailed Project Description
+
+WHAT IT DOES
+
+SPHEREx sky-change viewer is a public website: https://spherex-sky-change-viewer.onrender.com. Type a star's name or a position (right ascension and declination), and it shows NASA SPHEREx's real infrared pictures of that patch of sky, one picture per visit, played like a short film. A visit is one pass of SPHEREx over the patch; SPHEREx comes back about every six months. Anything that moved or changed between visits stands out. The site opens on a source that appeared between two visits, blinking between the picture without it and the picture with it.
+
+It has ten features, which stay in view on every screen:
+
+- Watch: play, pause, step, blink and zoom. Beside the picture, one sentence says what happened and one table lists every visit. For a moving star it gives the measured shift and what the Gaia catalogue predicts.
+- Brightness and Colours: how bright the object was at each visit, and in each colour of infrared light that SPHEREx sees (102 colours, from 0.75 to 5 micrometres).
+- Find changes: a search of the patch for anything that moved or changed. Every find is checked against five star catalogues and against the faults we found in SPHEREx data.
+- Far-off planet: a search for a distant world such as Planet X, by the jump it would make between visits.
+- Asteroids: the known asteroids and comets that NASA/JPL predicts in the patch.
+- What is it?: what the catalogues know about any star you press.
+- Practise: real pictures with one made-up moving object, marked SIMULATION, to learn what a mover looks like.
+- Observe anomalies: everything our searches saw change, for people to look at and vote on. Type any place to have it searched and kept under watch.
+- Three tools: three more ways to look for hidden worlds, each tested on a world that astronomers already know.
+
+Every result is written twice: Beginner, in plain words, and Expert, with the numbers. A "Demo mode" button gives a guided tour of the whole site.
+
+HOW IT WORKS
+
+1. It finds where the star is today. Stars move: Barnard's Star has moved 4.5 arcminutes since 2000. Positions and motions come from ESA's Gaia catalogue and the SIMBAD database.
+2. It asks NASA's archive (IRSA) for every SPHEREx photo of that place, and fetches only the small patch it needs, never the whole 65 MB file.
+3. It cleans each photo (it removes the glow of dust in the Solar System and the pixels marked as bad) and lines it up with north at the top.
+4. It adds up each visit's photos from one detector into one deeper picture. This matters: in a single SPHEREx photo the colour of light changes across the image, so two single photos differ in colour, not only in time. Adding up a visit removes that, and shows fainter objects.
+5. It draws every visit on one brightness scale, so a change on screen is a change in the data.
+6. It measures the object: where it is, how strongly it is detected, and how that compares with the catalogue.
+
+WHAT WE TESTED AND FOUND
+
+The challenge's five targets, on real SPHEREx data:
+
+- Barnard's Star moved 10.4 arcseconds between August 2025 and August 2026. Gaia predicts 10.3.
+- Epsilon Indi B shows in all six detectors and moves 6.3 arcseconds between April 2025 and October 2026, on the catalogue's track.
+- WISE 0855 shows only at the longest wavelengths, 3.8 to 5.0 micrometres, once each visit's photos are added up. Our independent check measures it moving 8.4 arcseconds west in a year (give or take 0.4); the catalogue predicts 8.0.
+- RW Aurigae became about 1.6 times as bright at 0.75 to 1.1 micrometres between September 2025 and September 2026, and about half as bright at 3.9 to 5 micrometres. Ground observers (AAVSO) saw it brighten 1.7 times.
+- R Draconis overexposes every photo, so the tool gives no brightness for it. The light in a ring just around the star rises and falls by 2 to 3 times, in step with the 246-day cycle that AAVSO observers record. That is a relative measure, not a brightness.
+
+Planet X. Our search found no candidate in any patch it searched. To test it we planted made-up objects in real pictures: it found 177 of the 205 that were bright enough. Our limits are not deeper than earlier searches, so this does not rule Planet X in or out.
+
+A sweep of the Milky Way's plane. We compared 1,162,894 sources over 472.6 square degrees between three SPHEREx visits. The sweep was not told where anything was. It found two known novae by itself, and it was left with three sources that it could not explain. Four independent AI reviewers attacked each one, each with its own code on the real data, and a referee ruled on what may be said. These are the three sentences, word for word:
+
+- Candidate A, an infrared source in Sagittarius, was too faint to detect in SPHEREx images from late August and early September 2025 and was more than 100 times brighter by late March 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.
+- Candidate B, an infrared source in Scorpius, was too faint to detect in SPHEREx images from August and September 2025, had appeared by late February 2026 and was at least 250 times brighter by August 2026; it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.
+- Candidate C, an infrared source in Norma, was too faint to detect in SPHEREx images from July and August 2025, was at least 30 times brighter in late February and early March 2026 and had faded again by August 2026; its light hints at a nova hidden behind the Milky Way's dust, but it is a candidate that we found in no catalogue or report we checked, and nobody has confirmed it yet.
+
+We checked more than 30 public catalogues and alert lists for each one and found no earlier report. A person must still finish those searches, and an astronomer must check the numbers, so we have reported them to no one yet. Nothing in this project is called a discovery.
+
+BENEFITS
+
+- Anyone can watch the infrared sky change in real NASA data, with no download, no account and no code.
+- It says plainly what it cannot do. It marks overexposed pixels, says when an object is not seen, labels every simulation, and calls an unexplained source a candidate.
+- Citizen scientists get a list of unexplained changes to look at, and can put any patch of sky under watch: the tool searches it again when NASA's archive has more pictures of it.
+- Scientists get the numbers, files to download, and a web address for every view.
+
+WHAT WE HOPE TO ACHIEVE
+
+NASA's NEOWISE telescope watched the infrared sky change for ten years, and stopped in August 2024. SPHEREx can carry that on. We hope people use this tool on SPHEREx as they used WiseView on the WISE pictures, and that astronomers check the three candidates. SPHEREx's next visits, about February to April 2027, will show how each one has changed.
+
+TOOLS
+
+Backend: Python, FastAPI, Astropy, reproject, NumPy, SciPy, Pillow, requests. Website: TypeScript, React, Vite, Aladin Lite. Checks: pytest, Vitest and browser checks with Playwright, about 1,400 automated tests, many of them on real SPHEREx pictures. Hosting: Docker on Render, one small server (1 CPU, 2 GB). No special hardware: we worked on laptops. AI: Anthropic's Claude, working in Claude Code, wrote most of the code and drafted our write-ups under our direction, and AI reviewers checked the main claims; the README says so. Code and every write-up: https://github.com/tatsatshah05/Ampersand-NASA
+
+## 6. Use of Super Intelligence (SI)
+
+Yes.
+
+The tool: Anthropic's Claude, a large language model, working as a coding agent in Claude Code. **[TO CONFIRM: add any other AI tool that a teammate used, and what for.]**
+
+How we used it:
+
+- Code. AI agents wrote most of the code: the Python backend, the React website and the automated tests. The team set the goal and the rules (real data only; an unexplained source is a candidate, never a discovery), chose what to build and in what order, looked at the results on real data, and decided what to keep.
+- Words. AI drafted the write-ups in the repository, the words on the website and the text of this project page. The team checked them.
+- Checking. Before we kept a scientific claim, separate AI sessions, each with its own code, measured it again from the real data and tried to find an ordinary explanation. This covered the three candidates (four reviewers each, then a referee who ruled on what may be said), the three methods on the "Three tools" screen, and four of the five test targets. Claims were withdrawn or corrected as a result. Two examples: the sweep's first description of its three candidates was withdrawn, because the reviewers showed that its 2025 brightness values for two of them were the light of neighbouring stars; and "RW Aurigae became 2.5 times brighter" was corrected, because it compared a dip of a few days with a normal state.
+- Searching. AI agents searched public catalogues and alert lists for earlier reports of the three candidates. They sent nothing to anyone.
+- Ideas. The way we answer the challenge follows the challenge statement: add up each visit's pictures, play the visits as a short film, and test on the five targets. **[TO CONFIRM by the team, and correct if it is not how it went:]** The team asked for searches that could find something not yet catalogued. AI agents proposed and built the methods for that (the sweep of the Milky Way's plane, and the three methods on the "Three tools" screen), and the team decided what to keep and what to show.
+
+What is not AI-generated:
+
+- No picture, video or sound in the tool was made by an AI image, video or audio model. Every picture of the sky is real SPHEREx data. The drawing in "What is it?" is drawn by our code from the catalogues' numbers and is labelled "Illustration drawn from measurements. Not a photograph." The made-up object of the practice round is added by our code and is marked SIMULATION in every picture.
+- We generated no NASA logo, flag or mission identifier.
+
+Where the project says so: the repository's README has a section "Use of AI", the web page's metadata names it, and the Detailed Project Description says it under TOOLS and where the AI reviewers are mentioned. **[TO CONFIRM: say the same for the slides or the video if AI wrote or voiced any of it.]**
+
+## 7. NASA Data
+
+NASA's SPHEREx mission is the heart of the project. Every picture the tool shows comes from it.
+
+- SPHEREx Level 2 spectral images (NASA/JPL-Caltech), Data Release 1 (doi:10.26131/IRSA678) and Quick Release 3 (doi:10.26131/IRSA662): every picture, brightness and spectrum in the tool. For one test we also used SPHEREx's deep-field images.
+- NASA/IPAC Infrared Science Archive (IRSA): its image search (SIA2) lists every SPHEREx photo of a place, and its cutout service sends only the patch we need.
+- NASA's public copy of the SPHEREx archive on Amazon Web Services (bucket nasa-irsa-spherex, AWS Open Data): the same files, read a few rows at a time, about six times faster.
+- The SPHEREx Explanatory Supplement, the IRSA SPHEREx tutorials (notebooks) and the SPHEREx archive user guide: how to read the files, which marked pixels to leave out, and how to measure brightness.
+- Catalogues at IRSA, to check every change we find: NEOWISE single exposures (a second opinion on brightness changes, 2014 to 2024), AllWISE, CatWISE2020, 2MASS and Spitzer GLIMPSE.
+- NASA/JPL Solar System Dynamics: the Small-Body Identification API (the known asteroids and comets in a patch) and Horizons (the place of the dwarf planet Eris).
+- WiseView and Backyard Worlds: Planet 9, the NASA-funded citizen science project that the challenge names: the model for our viewer.
+- For the search for earlier reports of our three candidates: NASA's Astrophysics Data System (a first search only), and the nova lists and the Swift/BAT transient monitor at NASA's Goddard Space Flight Center.
+- The SPHEREx All Sky Map 2025 (NASA/JPL-Caltech; SPHEREx at Caltech), as the background of our slides.
+
+## 8. Space Agency Partner Data and Other References
+
+SPACE AGENCY PARTNER DATA
+
+- ESA (European Space Agency), Gaia Data Release 3: the position, motion and distance of the stars. It tells the tool where a star is today, it marks the known stars on each picture, and it is the prediction we compare our measurements with (Barnard's Star: 10.4 arcseconds measured, 10.3 predicted). Read from ESA's Gaia Archive, and from copies at Harvard (VizieR) and IRSA when ESA's server did not answer.
+- ESA, Herschel Hi-GAL catalogue of cold dust clumps: used when checking Candidate C.
+- JAXA and RIKEN, MAXI nova alerts and flash reports: searched for earlier reports of our candidates.
+
+OTHER DATA
+
+- SIMBAD and VizieR (CDS, Strasbourg; mirrors at Harvard): names, object types and catalogues.
+- AAVSO: the International Variable Star Index, and observers' brightness records of RW Aurigae and R Draconis.
+- Aladin Lite and HiPS sky images (CDS): the same patch in AllWISE, 2MASS and DSS2.
+- VVV / VIRAC2, the Transient Name Server, The Astronomer's Telegram, CBAT, ASAS-SN, and the ZTF alert brokers ALeRCE, ANTARES and Fink: searched for earlier reports of the candidates.
+
+PAPERS
+
+- SPHEREx and its data: Bock et al. 2026; Akeson et al. 2026.
+- Gaia DR3: Gaia Collaboration, Vallenari et al. 2023.
+- WISE 0855's motion: Kirkpatrick et al. 2021.
+- WiseView: Caselden et al. 2018. Backyard Worlds: Kuchner et al. 2017.
+- SPHEREx and objects that change: Karambelkar et al. 2026 (arXiv:2602.07129); Astronomer's Telegrams 17601 and 18127 (nova V572 Velorum).
+- Finding a distant body's distance from a short arc, and adding up pictures along a path: Bernstein and Khushalani 2000; Rice and Laughlin 2020.
+- WASP-62 b: Hellier et al. 2012; Kokori et al. 2023.
+- The full list, with every catalogue and every search: docs/sources.md in our repository.
+
+SOFTWARE
+
+Python, FastAPI, Uvicorn, Astropy, NumPy, SciPy, reproject, Pillow, requests; TypeScript, React, Vite, Vitest, oxlint, Aladin Lite; pytest, ruff, mypy, Playwright; Docker, Render, GitHub. AI: Anthropic's Claude, in Claude Code.
+
+ACKNOWLEDGEMENTS
+
+This publication makes use of data products from the Spectro-Photometer for the History of the Universe, Epoch of Reionization and Ices Explorer (SPHEREx), which is a joint project of the Jet Propulsion Laboratory and the California Institute of Technology, and is funded by the National Aeronautics and Space Administration.
+
+This research has made use of the NASA/IPAC Infrared Science Archive, which is funded by the National Aeronautics and Space Administration and operated by the California Institute of Technology.
+
+This work has made use of data from the European Space Agency (ESA) mission Gaia (https://www.cosmos.esa.int/gaia), processed by the Gaia Data Processing and Analysis Consortium (DPAC, https://www.cosmos.esa.int/web/gaia/dpac/consortium).
+
+---
+
+# Longer text
+
+More detail than the form needs, kept for the team and for anyone who asks.
 
 ## Project name
 
@@ -170,8 +340,9 @@ Nine: such a planet is expected to look several times fainter than the faintest 
 
 ### What a visitor can do
 
-A bar across the top of every screen lists every feature, in this order. Each item has a Beginner name and an
-Expert name. The **Beginner | Expert** switch sits at the bottom right. In Beginner every tool is written in
+A list of the features stays in view on every screen (down the left edge of a wide window, along the top of a
+narrow one), in this order. Each item has a Beginner name and an Expert name. A "Demo mode" button at the top
+right starts a guided tour of 24 steps. The **Beginner | Expert** switch sits at the bottom right. In Beginner every tool is written in
 plain words; Expert adds the numbers, the detector and the settings.
 
 1. **Watch** (Expert: **Viewer**). The real pictures of the patch, one per visit, played like a short film:

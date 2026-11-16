@@ -15,8 +15,9 @@ Words used: a **visit** is one pass of SPHEREx over a patch of sky (its photos a
 
 ## What is in the app
 
-A bar across the top of every screen lists every feature, in this order (Beginner name, then Expert name). The
-**Beginner | Expert** switch is at the bottom right.
+A list of the features stays in view on every screen (down the left edge of a wide window, along the top of a
+narrow one), in this order (Beginner name, then Expert name). The **Beginner | Expert** switch is at the bottom
+right, and a "Demo mode" button at the top right starts a guided tour.
 
 | # | Beginner | Expert | What it is | Address |
 |---|---|---|---|---|
@@ -28,7 +29,7 @@ A bar across the top of every screen lists every feature, in this order (Beginne
 | 6 | Asteroids | Small bodies | Known asteroids and comets that JPL predicts in the patch | `tool=smallbodies` |
 | 7 | What is it? | Object card | What Gaia DR3 and SIMBAD know about the object, a drawing made from their numbers ("Illustration drawn from measurements. Not a photograph."), and the patch in older surveys | `tool=context` |
 | 8 | Practise | Training | SIMULATION: real pictures with one made-up moving object, to practise on | `?train=<seed>` |
-| 9 | Observe anomalies | Anomalies | What the searches found, for people to look at and vote on: first the three candidates ("Not reported anywhere we could find"), then "Choose a region" (everywhere, the Milky Way's plane, or one searched patch), then the chosen region's groups: the patch searches' "Not listed as changing", "Already known" and "Set aside as false alarms" (Expert: "Needs eyes", "Already known", "Set aside as artefacts"), with votes, and the sweep's 14 survivors in four groups | `?watchlist=1` (`&region=` keeps the choice) |
+| 9 | Observe anomalies | Anomalies | What the searches found, for people to look at and vote on: first "Pick a patch of sky" (type a place to have it searched and kept under watch, or choose everywhere, the Milky Way's plane, or one searched patch), the three candidates ("Not reported anywhere we could find"), and the chosen region's groups: the patch searches' "Not listed as changing", "Already known" and "Set aside as false alarms" (Expert: "Needs eyes", "Already known", "Set aside as artefacts"), with votes, and the sweep's 14 survivors in four groups | `?watchlist=1` (`&region=` keeps the choice) |
 | 10 | Three tools | Methods | "Three tools, three known worlds": three planet-finding methods, each tested on a known world | `?tools=1` |
 
 The page opens on Candidate B. A view is shared through its address, for example
@@ -134,6 +135,17 @@ All endpoints are `GET` unless marked. Positions are in degrees; `detector` is 1
 | `/api/smallbodies` | Known asteroids and comets predicted in a view |
 | `/api/training` | SIMULATION: real frames with one made-up moving object. Never mixed into `/api/frames` |
 | `/api/watchlist`, `/api/watchlist/{id}`, `/api/watchlist/{id}/picture.png`, `POST /api/watchlist/{id}/vote`, `/api/watchlist/export.csv`, `/api/watchlist/export.json` | The shared list of what the searches found, its pictures, votes, and the whole list for scientists |
+
+## Use of AI
+
+Most of this repository's code, its tests and its write-ups were written by AI agents (Anthropic's Claude,
+working in Claude Code), directed and checked by the team. [CLAUDE.md](CLAUDE.md) is the brief the agents worked
+from. Before a scientific claim was kept, separate AI sessions measured it again from the real data and tried to
+find an ordinary explanation ([docs/verification.md](docs/verification.md), `docs/sweep/vetting/`).
+
+No picture, video or sound here was made by an AI image, video or audio model. Every picture of the sky is real
+SPHEREx data; the drawing in What is it? is drawn by code from the catalogues' numbers and says so; the made-up
+object of the practice round is added by code and marked SIMULATION.
 
 ## Data credits
 
